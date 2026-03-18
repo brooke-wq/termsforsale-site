@@ -1,0 +1,240 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "blog/images"
+public_folder: "/blog/images"
+
+slug:
+  encoding: "ascii"
+  clean_accents: true
+  sanitize_replacement: "-"
+
+collections:
+
+  # ── DEAL SPOTLIGHT POSTS ─────────────────────────────────────
+  - name: "deal_posts"
+    label: "🏠 Deal Spotlight Posts"
+    label_singular: "Deal Post"
+    folder: "_posts/deals"
+    create: true
+    slug: "{{fields.deal_type | downcase | replace(' ', '-')}}-deal-{{fields.city | downcase | replace(' ', '-') | replace(',', '') | replace(' ', '-')}}"
+    preview_path: "blog/{{slug}}"
+    fields:
+      - label: "Post Title"
+        name: "title"
+        widget: "string"
+        hint: "e.g. Subject-To Deal — Phoenix AZ | $20K Entry, 2.75% Rate"
+
+      - label: "Publish Date"
+        name: "date"
+        widget: "datetime"
+
+      - label: "Status"
+        name: "status"
+        widget: "select"
+        options: ["Active", "Under Contract", "Sold"]
+        default: "Active"
+
+      - label: "Deal Type"
+        name: "deal_type"
+        widget: "select"
+        options: ["Cash", "Subject To", "Seller Finance", "Morby Method", "Lease Option", "Novation", "DSCR", "Hybrid"]
+
+      - label: "City / Metro"
+        name: "city"
+        widget: "string"
+        hint: "e.g. Phoenix, AZ"
+
+      - label: "State"
+        name: "state"
+        widget: "string"
+        hint: "e.g. AZ"
+
+      - label: "Deal ID"
+        name: "deal_id"
+        widget: "string"
+        hint: "From your Google Sheet (e.g. DP-001)"
+        required: false
+
+      - label: "Cover Image"
+        name: "cover_image"
+        widget: "image"
+        required: false
+        hint: "Upload a photo of the property"
+
+      # DEAL SNAPSHOT NUMBERS
+      - label: "Asking Price"
+        name: "asking_price"
+        widget: "string"
+        hint: "e.g. $155,000"
+
+      - label: "Entry Fee"
+        name: "entry_fee"
+        widget: "string"
+        hint: "e.g. $20,000"
+
+      - label: "ARV (After Repair Value)"
+        name: "arv"
+        widget: "string"
+        hint: "e.g. $210,000"
+
+      - label: "Beds / Baths"
+        name: "beds_baths"
+        widget: "string"
+        hint: "e.g. 3 bd / 2 ba"
+
+      - label: "Square Feet"
+        name: "sqft"
+        widget: "string"
+        hint: "e.g. 1,450 sqft"
+
+      - label: "Year Built"
+        name: "year_built"
+        widget: "string"
+        hint: "e.g. 2004"
+
+      - label: "Est. Monthly Rent"
+        name: "est_rent"
+        widget: "string"
+        hint: "e.g. $1,450/mo"
+
+      - label: "COE (Close of Escrow)"
+        name: "coe"
+        widget: "string"
+        hint: "e.g. May 1, 2026"
+        required: false
+
+      # SubTo specific (optional)
+      - label: "Existing Loan Balance"
+        name: "loan_balance"
+        widget: "string"
+        required: false
+        hint: "SubTo only — e.g. $135,000"
+
+      - label: "Existing Interest Rate"
+        name: "interest_rate"
+        widget: "string"
+        required: false
+        hint: "SubTo only — e.g. 2.75%"
+
+      - label: "PITI Payment"
+        name: "piti"
+        widget: "string"
+        required: false
+        hint: "SubTo only — e.g. $1,210/mo"
+
+      # SF specific (optional)
+      - label: "Seller Finance Terms"
+        name: "sf_terms"
+        widget: "string"
+        required: false
+        hint: "SF only — e.g. $22,500 down / 4.5% / 30yr"
+
+      # CONTENT SECTIONS
+      - label: "Hook (Opening Line)"
+        name: "hook"
+        widget: "text"
+        hint: "1-2 punchy sentences. Why should an investor care RIGHT NOW?"
+
+      - label: "Deal Story / Full Breakdown"
+        name: "body"
+        widget: "markdown"
+        hint: "Full write-up. Use the template structure: Why This Market, The Numbers, The Strategy, The Exit."
+
+      - label: "Who This Deal Is For"
+        name: "buyer_fit"
+        widget: "text"
+        hint: "e.g. Best for a buy-and-hold investor targeting $300+ monthly cash flow. Must be comfortable with creative finance."
+
+      - label: "Key Risks"
+        name: "risks"
+        widget: "text"
+        hint: "Be honest. e.g. HOA restrictions, older roof, rates may require refi in 5 years."
+
+      - label: "SEO Meta Description"
+        name: "description"
+        widget: "string"
+        hint: "155 characters max. Used by Google. Include city + deal type."
+        pattern: ['.{0,155}', "Must be 155 characters or less"]
+
+  # ── EDUCATION / INVESTOR GUIDE POSTS ─────────────────────────
+  - name: "education_posts"
+    label: "📚 Education & Investor Guide Posts"
+    label_singular: "Education Post"
+    folder: "_posts/education"
+    create: true
+    slug: "{{slug}}"
+    preview_path: "blog/{{slug}}"
+    fields:
+      - label: "Post Title"
+        name: "title"
+        widget: "string"
+        hint: "e.g. What Is a Subject-To Deal and Is It Right for You?"
+
+      - label: "Publish Date"
+        name: "date"
+        widget: "datetime"
+
+      - label: "Category"
+        name: "category"
+        widget: "select"
+        options:
+          - "Creative Finance 101"
+          - "Deal Analysis"
+          - "Market Insight"
+          - "Buyer Strategy"
+          - "SubTo Deep Dive"
+          - "Seller Finance Guide"
+          - "Cash Buyer Tips"
+          - "Tax & Legal"
+
+      - label: "Target Reader"
+        name: "target_reader"
+        widget: "select"
+        options:
+          - "New Investor"
+          - "Experienced Investor"
+          - "Cash Buyer"
+          - "Creative Finance Buyer"
+          - "Wholesale / Dispo Pro"
+
+      - label: "Cover Image"
+        name: "cover_image"
+        widget: "image"
+        required: false
+
+      - label: "Hook / Opening"
+        name: "hook"
+        widget: "text"
+        hint: "First 1-2 sentences. Make them keep reading."
+
+      - label: "Post Body"
+        name: "body"
+        widget: "markdown"
+        hint: "Full article. Use H2s for sections. Aim for 600-1200 words."
+
+      - label: "Key Takeaways"
+        name: "takeaways"
+        widget: "list"
+        hint: "3-5 bullet points. What should the reader walk away knowing?"
+
+      - label: "CTA Type"
+        name: "cta_type"
+        widget: "select"
+        options:
+          - "View Active Deals"
+          - "Join Buyer List"
+          - "Book a Call"
+
+      - label: "Related Deal Type"
+        name: "related_deal_type"
+        widget: "select"
+        required: false
+        options: ["Cash", "Subject To", "Seller Finance", "Morby Method", "Any"]
+
+      - label: "SEO Meta Description"
+        name: "description"
+        widget: "string"
+        hint: "155 characters max."
+        pattern: ['.{0,155}', "Must be 155 characters or less"]
