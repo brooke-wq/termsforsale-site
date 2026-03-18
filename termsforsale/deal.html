@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Details — Terms For Sale</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0D1F3C;--blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--orange:#F7941D;--orange-dark:#d97c0e;--white:#fff;--bg:#F7FAFC;--text:#1A2E44;--text-mid:#4A5568;--text-light:#718096;--border:#E2E8F0;--r:10px;--font:'Poppins',sans-serif}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.nav-logo img{height:44px;width:auto}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{color:var(--text-mid);text-decoration:none;font-size:13px;font-weight:500}
+.nav-links a:hover{color:var(--blue)}
+.nav-btns{display:flex;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 18px;border-radius:50px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:all .2s;white-space:nowrap}
+.btn-outline{background:transparent;color:var(--blue);border:2px solid var(--blue)}
+.btn-outline:hover{background:var(--blue);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:var(--blue-dark)}
+.btn-orange{background:var(--orange);color:#fff}
+.btn-orange:hover{background:var(--orange-dark)}
+.btn-success{background:#276749!important;cursor:default!important}
+.btn-full-blue{display:block;width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-full-blue:hover{background:var(--blue-dark)}
+.btn-full-blue:disabled{opacity:.7;cursor:default}
+
+/* BREADCRUMB */
+.bc{background:var(--white);border-bottom:1px solid var(--border);padding:12px 40px;font-size:13px;display:flex;align-items:center;gap:8px}
+.bc a{color:var(--text-mid);text-decoration:none;display:flex;align-items:center;gap:5px;font-weight:500}
+.bc a:hover{color:var(--blue)}
+.bc-sep{color:var(--border)}
+
+/* MAIN */
+.main{max-width:1200px;margin:0 auto;padding:28px 40px 72px;display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start}
+
+/* PHOTO GALLERY */
+.photo-gallery{background:#0D1F3C;border-radius:14px;overflow:hidden;margin-bottom:24px}
+.photo-gallery-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#0D1F3C;border-bottom:1px solid rgba(255,255,255,.1)}
+.photo-gallery-title{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:7px}
+.photo-gallery-btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.photo-gallery-btn:hover{background:rgba(255,255,255,.2)}
+/* CAROUSEL */
+.carousel{position:relative;background:#0a1828;overflow:hidden;cursor:pointer}
+.carousel-track{display:flex;transition:transform .38s cubic-bezier(.4,0,.2,1)}
+.carousel-slide{min-width:100%;position:relative;flex-shrink:0}
+.carousel-slide img{width:100%;height:460px;object-fit:cover;display:block}
+.carousel-slide-empty{width:100%;height:460px;background:#111d2e;display:flex;align-items:center;justify-content:center}
+/* Arrows */
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.5);border:1.5px solid rgba(255,255,255,.2);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:10;backdrop-filter:blur(4px)}
+.carousel-arrow:hover{background:rgba(0,0,0,.75);border-color:rgba(255,255,255,.5)}
+.carousel-arrow.prev{left:14px}
+.carousel-arrow.next{right:14px}
+.carousel-arrow:disabled{opacity:.25;cursor:default}
+/* Dots */
+.carousel-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10}
+.carousel-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);border:none;padding:0;cursor:pointer;transition:all .2s}
+.carousel-dot.on{background:#fff;width:22px;border-radius:4px}
+/* Counter badge */
+.carousel-counter{position:absolute;bottom:14px;right:14px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.85);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;z-index:10;font-family:var(--font)}
+/* Footer bar */
+.carousel-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#060f1a}
+.carousel-footer-left{font-size:11px;color:rgba(255,255,255,.4);font-weight:500}
+
+/* Loading/placeholder */
+.photo-loading{padding:48px;text-align:center;color:rgba(255,255,255,.4)}
+.photo-spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.photo-placeholder{height:280px;background:#111d2e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px}
+.photo-placeholder p{color:rgba(255,255,255,.45);font-size:13px;text-align:center}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:2000;display:none;align-items:center;justify-content:center;flex-direction:column}
+.lightbox.open{display:flex}
+.lb-img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:6px;display:block}
+.lb-controls{display:flex;align-items:center;gap:20px;margin-top:18px}
+.lb-btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:22px;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center}
+.lb-btn:hover{background:rgba(255,255,255,.25)}
+.lb-count{font-size:13px;font-weight:600;color:rgba(255,255,255,.6);min-width:64px;text-align:center}
+.lb-close{position:absolute;top:16px;right:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lb-close:hover{background:rgba(255,255,255,.25)}
+
+/* DEAL HEADER */
+.deal-price{font-size:32px;font-weight:800;margin-bottom:4px}
+.deal-specs{display:flex;align-items:center;gap:20px;margin-bottom:6px;flex-wrap:wrap;font-size:13px;color:var(--text-mid);font-weight:500}
+.deal-addr{font-size:13px;color:var(--text-light);margin-bottom:20px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:color .15s}
+.deal-addr.locked{color:var(--blue)}
+.deal-addr.locked:hover{color:var(--blue-dark)}
+
+/* TAGS */
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.tag{padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;background:var(--blue-light);color:#1a6f8a;border:1px solid #d0eef9}
+.tag-orange{background:#FFF3E0;color:#c05621;border-color:#f5cba7}
+
+/* TABS */
+.tabs{border-bottom:2px solid var(--border);margin-bottom:24px}
+.tabs-inner{display:flex}
+.tab-btn{padding:12px 20px;font-size:13px;font-weight:600;color:var(--text-light);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--font);transition:all .15s}
+.tab-btn.on{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-panel{display:none}
+.tab-panel.on{display:block}
+
+/* TERMS */
+.terms-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.term-item{padding:12px 16px;border-bottom:1px solid #EDF2F7}
+.term-item:nth-last-child(-n+2){border-bottom:none}
+.term-label{font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.term-value{font-size:14px;font-weight:600;color:var(--text)}
+.term-value.empty{color:var(--border);font-style:italic;font-weight:400}
+
+/* HIGHLIGHTS */
+.hl-list{display:flex;flex-direction:column;gap:10px}
+.hl-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--white);border-radius:var(--r);border:1px solid #EDF2F7}
+.hl-dot{width:20px;height:20px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+
+/* SIDEBAR */
+.sidebar-card{background:var(--white);border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);border:1px solid #EDF2F7;overflow:hidden;margin-bottom:16px}
+.sidebar-head{background:var(--navy);padding:18px 20px}
+.sidebar-head h3{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.sidebar-head p{font-size:12px;color:rgba(255,255,255,.6)}
+.sidebar-perks{padding:14px 20px 0;border-bottom:1px solid var(--border)}
+.perk{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:12px;color:var(--text-mid);border-bottom:1px solid var(--border)}
+.perk:last-child{border-bottom:none}
+.sidebar-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px}
+.sf-input{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;width:100%;transition:border .2s}
+.sf-input:focus{border-color:var(--blue);background:#fff}
+.sf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sf-note{font-size:10px;color:var(--text-light);text-align:center;line-height:1.6}
+.sidebar-contact{padding:14px 20px}
+.contact-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--border)}
+.contact-row:first-child{border-top:none}
+.contact-icon{width:30px;height:30px;background:var(--blue-light);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.contact-lbl{font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px}
+.contact-val{font-size:13px;font-weight:600;color:var(--text);text-decoration:none}
+.contact-val:hover{color:var(--blue)}
+
+/* DISCLAIMER */
+.disclaimer{background:#fff;border:1px solid #EDF2F7;border-radius:var(--r);padding:16px;font-size:11px;color:var(--text-light);line-height:1.8;margin-top:20px}
+
+/* STATES */
+.loading-state,.error-state{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:14px;text-align:center;padding:48px}
+.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-state h2{font-size:22px;font-weight:700;color:var(--text-mid)}
+
+/* AUTH MODAL */
+.auth-overlay{position:fixed;inset:0;background:rgba(13,31,60,.72);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.auth-overlay.open{opacity:1;pointer-events:all}
+.auth-modal{background:#fff;border-radius:14px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.2);transform:translateY(12px);transition:transform .2s}
+.auth-overlay.open .auth-modal{transform:translateY(0)}
+.auth-head{background:var(--navy);padding:22px 26px;position:relative}
+.auth-head h2{font-size:17px;font-weight:800;color:#fff;margin-bottom:3px}
+.auth-head p{font-size:12px;color:rgba(255,255,255,.6)}
+.auth-close-btn{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1}
+.auth-body{padding:22px 26px 26px}
+.auth-perks{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;padding:12px 14px;background:var(--blue-light);border-radius:8px}
+.auth-perk{display:flex;align-items:center;gap:7px;font-size:12px;color:#1a6f8a;font-weight:500}
+.auth-field{margin-bottom:10px}
+.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.auth-err{font-size:12px;color:#e53e3e;background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
+.auth-ok{font-size:12px;color:#276749;background:#E6F9F0;border:1px solid #b2dfce;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
+.auth-tabs-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px}
+.auth-tab{padding:8px 16px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text-light);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .15s}
+.auth-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* FOOTER */
+footer{background:var(--navy);padding:44px 40px 0}
+.footer-inner{max-width:1200px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:40px;padding-bottom:36px;border-bottom:1px solid rgba(255,255,255,.1)}
+.footer-col h4{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.footer-col a{font-size:13px;color:rgba(255,255,255,.6);text-decoration:none}
+.footer-col a:hover{color:#fff}
+.footer-email-row{display:flex;margin-bottom:8px}
+.footer-email-input{flex:1;padding:9px 14px;border:1.5px solid rgba(255,255,255,.15);border-right:none;border-radius:8px 0 0 8px;background:rgba(255,255,255,.08);color:#fff;font-family:var(--font);font-size:13px;outline:none}
+.footer-email-input::placeholder{color:rgba(255,255,255,.35)}
+.footer-sub-btn{padding:9px 14px;background:var(--orange);color:#fff;border:none;border-radius:0 8px 8px 0;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.footer-disc{font-size:11px;color:rgba(255,255,255,.3);line-height:1.6}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding:16px 0;font-size:12px;color:rgba(255,255,255,.3);flex-wrap:wrap;gap:8px}
+.footer-links{display:flex;gap:18px}
+.footer-links a{color:rgba(255,255,255,.35);text-decoration:none}
+
+@media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px}}
+@media(max-width:768px){nav{padding:0 20px}.bc{padding:10px 20px}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
+  <div class="nav-links">
+    <a href="https://dispobuddy.com" target="_blank">Sell</a>
+    <a href="https://buyingcriteria.com" target="_blank">Buying Criteria</a>
+    <a href="mailto:support@termsforsale.com">Help</a>
+  </div>
+  <div class="nav-btns" id="nav-btns">
+    <a href="#" onclick="openAuth('login');return false" class="btn btn-outline" style="padding:7px 16px">Log In</a>
+    <a href="#" onclick="openAuth('signup');return false" class="btn btn-blue" style="padding:7px 16px">Sign Up</a>
+  </div>
+</nav>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLb()">
+  <button class="lb-close" onclick="closeLb()">&#215;</button>
+  <img class="lb-img" id="lb-img" src="" alt="Property photo">
+  <div class="lb-controls">
+    <button class="lb-btn" onclick="lbMove(-1)">&#8592;</button>
+    <span class="lb-count" id="lb-count"></span>
+    <button class="lb-btn" onclick="lbMove(1)">&#8594;</button>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-modal">
+    <div class="auth-head">
+      <button class="auth-close-btn" onclick="closeAuth()">&#215;</button>
+      <h2 id="auth-title">Welcome to Terms For Sale</h2>
+      <p>Log in to unlock full addresses, photos &amp; your dashboard</p>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs-bar">
+        <button class="auth-tab on" id="tab-li" onclick="switchAuthTab('login')">Log In</button>
+        <button class="auth-tab" id="tab-su" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <div class="auth-err" id="auth-err"></div>
+      <div class="auth-ok" id="auth-ok"></div>
+      <!-- LOGIN -->
+      <div id="panel-login">
+        <div class="auth-field"><input class="sf-input" id="li-email" type="email" placeholder="Email address"></div>
+        <div class="auth-field"><input class="sf-input" id="li-phone" type="tel" placeholder="Phone number"></div>
+        <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="doLogin()">Log In</button>
+        <div class="sf-note" style="margin-top:10px">No account? <a href="#" onclick="switchAuthTab('signup');return false" style="color:var(--blue);font-weight:600">Sign up free &#8594;</a></div>
+      </div>
+      <!-- SIGNUP -->
+      <div id="panel-signup" style="display:none">
+        <div class="auth-perks">
+          <div class="auth-perk">&#10003; Full address + photos unlocked</div>
+          <div class="auth-perk">&#10003; Early deal access before public</div>
+          <div class="auth-perk">&#10003; Buyer dashboard</div>
+        </div>
+        <div class="auth-row">
+          <div><input class="sf-input" id="su-fname" placeholder="First name"></div>
+          <div><input class="sf-input" id="su-lname" placeholder="Last name"></div>
+        </div>
+        <div class="auth-field"><input class="sf-input" id="su-email" type="email" placeholder="Email address"></div>
+        <div class="auth-field"><input class="sf-input" id="su-phone" type="tel" placeholder="Phone number"></div>
+          <div class="auth-field">
+          <select class="sf-input" id="su-buytype" style="appearance:none;cursor:pointer">
+            <option value="">How do you buy?</option>
+            <option>Cash</option>
+            <option>Subject To</option>
+            <option>Seller Finance</option>
+            <option>Lease Option</option>
+            <option>Novation</option>
+            <option>Morby Method</option>
+            <option>Assumable Loans</option>
+            <option>Partnerships/JV</option>
+            <option>Traditional Financing</option>
+            <option>DSCR</option>
+          </select>
+        </div>
+        <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="doSignup()">Create Free Account</button>
+        <div class="sf-note" style="margin-top:10px">By signing up you agree to receive SMS &amp; email alerts.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTION MODAL (Request Access + Submit Offer) -->
+<div class="auth-overlay" id="action-overlay" onclick="if(event.target===this)closeActionModal()">
+  <div class="auth-modal" id="action-modal"></div>
+</div>
+
+<div class="bc">
+  <a href="/"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg> Back</a>
+  <span class="bc-sep">/</span>
+  <span id="bc-addr" style="color:var(--text-light)">Loading&#8230;</span>
+</div>
+
+<div id="app" style="display:grid">
+  <div class="loading-state"><div class="spinner"></div><span style="font-size:13px;font-weight:600;color:var(--text-light)">Loading deal&#8230;</span></div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div style="margin-bottom:14px"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:36px"></div>
+        <div class="footer-email-row"><input class="footer-email-input" placeholder="Enter your email"><button class="footer-sub-btn">Subscribe</button></div>
+        <div class="footer-disc">By subscribing, you agree to receive marketing emails.</div>
+      </div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="/">Active Deals</a></li><li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li><li><a href="https://calendar.app.google/DXJoTQwDpGhCjicu6" target="_blank">Book a Call</a></li></ul></div>
+      <div class="footer-col"><h4>Contact</h4><ul><li><a href="mailto:info@termsforsale.com">info@termsforsale.com</a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
+      <div class="footer-col"><h4>Social</h4><ul><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">X / Twitter</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&#169; 2025 Deal Pros LLC. All Rights Reserved.</span><div class="footer-links"><a href="#">Privacy</a><a href="#">Terms</a></div></div>
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+// ─── CONFIG ────────────────────────────────────────────────────
+// To enable real photo loading from Google Drive:
+// 1. Go to console.cloud.google.com → New Project → Enable "Google Drive API"
+// 2. APIs & Services → Credentials → Create API Key → copy it here
+// 3. Restrict key to "Google Drive API" and your domain for security
+var GOOGLE_API_KEY = 'AIzaSyDgNedtIfCIdGHxXrYmR-akHQZorX4R8oY';
+
+var SHEET_ID     = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
+var GHL_WEBHOOK       = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593'; // Inquiry / Access
+var GHL_OFFER_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1'; // Offer Submission
+var PORTAL_URL   = 'https://termsforsale.app.clientclub.net/';
+var BOOK_A_CALL  = 'https://calendar.app.google/DXJoTQwDpGhCjicu6';
+var AUTH_KEY     = 'tfs_buyer';
+
+// ─── LIGHTBOX ──────────────────────────────────────────────────
+var LB = {photos:[], idx:0};
+function openLb(idx) {
+  if (!LB.photos.length) return;
+  LB.idx = (typeof idx === 'number') ? idx : CAR.idx;
+  lbRefresh();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLb() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lbMove(dir) {
+  LB.idx = (LB.idx + dir + LB.photos.length) % LB.photos.length;
+  lbRefresh();
+}
+function lbRefresh() {
+  document.getElementById('lb-img').src = LB.photos[LB.idx];
+  document.getElementById('lb-count').textContent = (LB.idx+1) + ' / ' + LB.photos.length;
+}
+document.addEventListener('keydown', function(e) {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft')  lbMove(-1);
+  if (e.key === 'ArrowRight') lbMove(1);
+  if (e.key === 'Escape')     closeLb();
+});
+
+// ─── DRIVE PHOTO LOADER ─────────────────────────────────────────
+function getFolderId(url) {
+  if (!url) return null;
+  var m = url.match(/\/folders\/([a-zA-Z0-9_-]{20,})/);
+  return m ? m[1] : null;
+}
+
+// Extract Drive file ID from any URL format
+function extractFileId(url) {
+  if (!url) return null;
+  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]{20,})/);
+  if (m) return m[1];
+  m = url.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);
+  if (m) return m[1];
+  return null;
+}
+
+// Try to show cover photo instantly in carousel format
+function tryShowCoverPhoto(deal) {
+  var wrap = document.getElementById('photo-grid-wrap');
+  if (!wrap) return false;
+  var src = null;
+  if (deal.coverPhoto) {
+    var fid = extractFileId(deal.coverPhoto);
+    if (fid) src = 'https://drive.google.com/thumbnail?id=' + fid + '&sz=w1200';
+    else if (deal.coverPhoto.match(/^https?:\/\//)) src = deal.coverPhoto;
+  }
+  if (!src) return false;
+  LB.photos = [src];
+  buildCarousel([src], null, true);
+  return true;
+}
+
+// ─── CAROUSEL CONTROLLER ───────────────────────────────────────
+var CAR = { idx: 0, total: 0, auto: null };
+
+function buildCarousel(thumbUrls, folderUrl, isPreview) {
+  var wrap = document.getElementById('photo-grid-wrap');
+  if (!wrap) return;
+  clearInterval(CAR.auto);
+  CAR.total = thumbUrls.length;
+  CAR.idx = 0;
+
+  var slides = thumbUrls.map(function(url, i) {
+    return '<div class="carousel-slide">'
+      + '<img src="' + url + '" alt="Photo ' + (i+1) + '" loading="' + (i===0?'eager':'lazy') + '" '
+      + 'onerror="this.parentElement.innerHTML=\'<div class=carousel-slide-empty></div>\'">'
+      + '</div>';
+  }).join('');
+
+  var dots = thumbUrls.length > 1
+    ? '<div class="carousel-dots">' + thumbUrls.map(function(_,i){
+        return '<button class="carousel-dot' + (i===0?' on':'') + '" onclick="carGoTo(' + i + ')"></button>';
+      }).join('') + '</div>'
+    : '';
+
+  var html = '<div class="carousel" id="car-wrap">'
+    + '<div class="carousel-track" id="car-track">' + slides + '</div>'
+    + (thumbUrls.length > 1
+        ? '<button class="carousel-arrow prev" onclick="carMove(-1)">&#8592;</button>'
+        + '<button class="carousel-arrow next" onclick="carMove(1)">&#8594;</button>'
+        : '')
+    + dots
+    + '<div class="carousel-counter" id="car-counter">' + (thumbUrls.length > 1 ? '1 / '+thumbUrls.length : '') + '</div>'
+    + '</div>'
+    + '<div class="carousel-footer">'
+      + '<span class="carousel-footer-left">' + thumbUrls.length + ' photo' + (thumbUrls.length!==1?'s':'')
+        + (isPreview ? ' &middot; loading more\u2026' : '') + ' &middot; click to expand</span>'
+      + (folderUrl ? '<a href="' + folderUrl + '" target="_blank" style="font-size:11px;font-weight:600;color:var(--blue);text-decoration:none" onclick="event.stopPropagation()">Open in Drive &#8599;</a>' : '')
+    + '</div>';
+
+  wrap.innerHTML = html;
+
+  // Click on image to open lightbox
+  var carWrap = document.getElementById('car-wrap');
+  if (carWrap) {
+    carWrap.addEventListener('click', function(e) {
+      // Only open if not clicking a button/arrow/dot
+      if (!e.target.closest('button') && !e.target.closest('a')) {
+        openLb(CAR.idx);
+      }
+    });
+  }
+
+  // Touch swipe
+  carAddSwipe();
+
+  // Auto-advance (only if multiple photos)
+  if (thumbUrls.length > 1) {
+    CAR.auto = setInterval(function(){ carMove(1); }, 5000);
+  }
+}
+
+function carGoTo(idx) {
+  CAR.idx = ((idx % CAR.total) + CAR.total) % CAR.total;
+  var track = document.getElementById('car-track');
+  if (track) track.style.transform = 'translateX(-' + (CAR.idx * 100) + '%)';
+  // Update dots
+  var dots = document.querySelectorAll('.carousel-dot');
+  for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('on', i === CAR.idx);
+  // Update counter
+  var ctr = document.getElementById('car-counter');
+  if (ctr && CAR.total > 1) ctr.textContent = (CAR.idx+1) + ' / ' + CAR.total;
+  // Reset auto-advance timer
+  clearInterval(CAR.auto);
+  if (CAR.total > 1) CAR.auto = setInterval(function(){ carMove(1); }, 5000);
+}
+
+function carMove(dir) {
+  carGoTo(CAR.idx + dir);
+}
+
+function carAddSwipe() {
+  var track = document.getElementById('car-track');
+  if (!track) return;
+  var startX = 0;
+  track.addEventListener('touchstart', function(e){ startX = e.touches[0].clientX; }, {passive:true});
+  track.addEventListener('touchend', function(e){
+    var diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) carMove(diff > 0 ? 1 : -1);
+  }, {passive:true});
+}
+
+function loadPhotos(folderId, folderUrl) {
+  var wrap = document.getElementById('photo-grid-wrap');
+  if (!wrap) return;
+
+  if (GOOGLE_API_KEY) {
+    var url = 'https://www.googleapis.com/drive/v3/files'
+      + '?q=' + encodeURIComponent("'" + folderId + "' in parents and trashed=false and mimeType contains 'image/'")
+      + '&fields=files(id,name)'
+      + '&orderBy=name'
+      + '&pageSize=30'
+      + '&key=' + GOOGLE_API_KEY;
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var files = data.files || [];
+        if (!files.length) { showDriveBtn(folderUrl); return; }
+        buildGrid(files.map(function(f){return f.id;}), folderUrl);
+      })
+      .catch(function() { showDriveBtn(folderUrl); });
+
+  } else {
+    // No API key — try legacy gdata public feed
+    var feedUrl = 'https://drive.google.com/feeds/default/public/full/folder%3A'
+      + folderId + '?alt=json&max-results=30';
+    fetch(feedUrl)
+      .then(function(r) { if (!r.ok) throw new Error('feed failed'); return r.json(); })
+      .then(function(data) {
+        var entries = (data.feed && data.feed.entry) || [];
+        var ids = [];
+        for (var i = 0; i < entries.length; i++) {
+          var e = entries[i];
+          var rid = (e['gd$resourceId'] && e['gd$resourceId']['$t']) || '';
+          var fid = rid.replace('file:', '');
+          if (fid && fid.length >= 20 && ids.indexOf(fid) < 0) { ids.push(fid); continue; }
+          var links = e['link'] || [];
+          for (var j = 0; j < links.length; j++) {
+            var href = links[j]['@href'] || '';
+            var m1 = href.match(/\/d\/([a-zA-Z0-9_-]{20,})\//);
+            if (m1 && ids.indexOf(m1[1]) < 0) { ids.push(m1[1]); break; }
+          }
+        }
+        if (!ids.length) { showDriveBtn(folderUrl); return; }
+        buildGrid(ids, folderUrl);
+      })
+      .catch(function() { showDriveBtn(folderUrl); });
+  }
+}
+
+function buildGrid(fileIds, folderUrl) {
+  var wrap = document.getElementById('photo-grid-wrap');
+  if (!wrap) return;
+  // Build URLs for lightbox (full res) and carousel (thumb)
+  LB.photos = fileIds.map(function(id) {
+    return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1600';
+  });
+  var thumbUrls = fileIds.map(function(id) {
+    return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1200';
+  });
+  buildCarousel(thumbUrls, folderUrl, false);
+}
+
+function showDriveBtn(folderUrl) {
+  var wrap = document.getElementById('photo-grid-wrap');
+  if (!wrap) return;
+  // If we already showed a cover photo, keep it and just update footer
+  if (wrap.querySelector('img')) {
+    var footer = wrap.querySelector('[style*="0a1828"]');
+    if (footer) footer.innerHTML = '<span style="font-size:11px;color:rgba(255,255,255,.45)">Cover photo shown</span>'
+      + (folderUrl ? '<a href="' + folderUrl + '" target="_blank" style="font-size:11px;font-weight:600;color:var(--blue);text-decoration:none">View all in Drive &#8599;</a>' : '');
+    return;
+  }
+  wrap.innerHTML = '<div class="photo-placeholder">'
+    + '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+    + '<p style="color:rgba(255,255,255,.4);font-size:13px">To show photos here, either:</p>'
+    + '<p style="color:rgba(255,255,255,.3);font-size:11px;max-width:280px;text-align:center;line-height:1.6">Add a <strong style="color:rgba(255,255,255,.55)">Cover Photo</strong> column to your sheet with a direct Drive file link, or add a Google API key to the code.</p>'
+    + (folderUrl ? '<a href="' + folderUrl + '" target="_blank" class="btn btn-blue" style="text-decoration:none;margin-top:4px">&#128247; View Photos in Drive</a>' : '')
+    + '</div>';
+}
+
+// ─── AUTH ──────────────────────────────────────────────────────
+function getUser(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null');}catch(e){return null;}}
+function setUser(u){try{localStorage.setItem(AUTH_KEY,JSON.stringify(u));}catch(e){}}
+function clearUser(){try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+
+function openAuth(tab) {
+  switchAuthTab(tab||'login');
+  document.getElementById('auth-overlay').classList.add('open');
+}
+function closeAuth() {
+  document.getElementById('auth-overlay').classList.remove('open');
+}
+function switchAuthTab(tab) {
+  document.getElementById('panel-login').style.display  = tab==='login'  ? 'block' : 'none';
+  document.getElementById('panel-signup').style.display = tab==='signup' ? 'block' : 'none';
+  document.getElementById('tab-li').classList.toggle('on', tab==='login');
+  document.getElementById('tab-su').classList.toggle('on', tab==='signup');
+  document.getElementById('auth-err').style.display = 'none';
+  document.getElementById('auth-ok').style.display  = 'none';
+}
+function showAuthErr(msg){var el=document.getElementById('auth-err');el.textContent=msg;el.style.display='block';}
+function showAuthOk(msg){var el=document.getElementById('auth-ok');el.textContent=msg;el.style.display='block';}
+
+function doLogin() {
+  var email = document.getElementById('li-email').value.trim();
+  var phone = document.getElementById('li-phone').value.trim();
+  if (!email && !phone) { showAuthErr('Please enter your email or phone.'); return; }
+  var btn = event.target; btn.disabled=true; btn.innerHTML='Logging in&hellip;';
+  fetch(GHL_WEBHOOK, {method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,phone:phone,source:'TFS Deal Page Login'})})
+    .catch(function(){});
+  var name = email ? email.split('@')[0] : 'Buyer';
+  var user = {name:name, email:email, phone:phone, initials:(name[0]||'B').toUpperCase()};
+  setUser(user); updateNavAuth(user);
+  showAuthOk('Welcome back, ' + name + '!');
+  setTimeout(function(){closeAuth();location.reload();}, 1100);
+}
+
+function doSignup() {
+  var fname = document.getElementById('su-fname').value.trim();
+  var lname = document.getElementById('su-lname').value.trim();
+  var email = document.getElementById('su-email').value.trim();
+  var phone = document.getElementById('su-phone').value.trim();
+  var btype = document.getElementById('su-buytype').value;
+  if (!fname || !email || !phone) { showAuthErr('Please fill in first name, email, and phone.'); return; }
+  var btn = event.target; btn.disabled=true; btn.innerHTML='Creating account&hellip;';
+  fetch(GHL_WEBHOOK, {method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({firstName:fname,lastName:lname,email:email,phone:phone,deal_structure:btype,source:'TFS Website - Signup'})})
+    .catch(function(){});
+  var initials = (fname[0]+(lname?lname[0]:'')).toUpperCase();
+  var user = {name:fname, email:email, phone:phone, initials:initials};
+  setUser(user); updateNavAuth(user);
+  showAuthOk('Account created! Welcome, ' + fname + ' &#127881;');
+  setTimeout(function(){closeAuth();location.reload();}, 1200);
+}
+
+function updateNavAuth(user) {
+  var el = document.getElementById('nav-btns');
+  if (!el || !user) return;
+  el.innerHTML = '<div id="nav-user-wrap" style="position:relative;display:inline-block">'
+    + '<button id="nav-avatar" onclick="toggleNavMenu()" style="width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid rgba(41,171,226,.3);font-family:var(--font)">' + user.initials + '</button>'
+    + '<div id="nav-menu" style="display:none;position:absolute;top:46px;right:0;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.15);min-width:200px;padding:6px 0;z-index:400">'
+      + '<div style="padding:12px 16px;border-bottom:1px solid var(--border)">'
+        + '<div style="font-size:13px;font-weight:700;color:var(--navy)">' + user.name + '</div>'
+        + '<div style="font-size:11px;color:var(--text-light);margin-top:1px">' + (user.email||user.phone||'') + '</div>'
+      + '</div>'
+      + '<a href="' + PORTAL_URL + '" target="_blank" onclick="closeNavMenu()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;color:var(--text-mid);text-decoration:none">&#127968; My Dashboard</a>'
+      + '<a href="/" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;color:var(--text-mid);text-decoration:none">&#127968; All Deals</a>'
+      + '<a href="' + BOOK_A_CALL + '" target="_blank" onclick="closeNavMenu()" style="display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;color:var(--text-mid);text-decoration:none">&#128197; Book a Call</a>'
+      + '<hr style="border:none;border-top:1px solid var(--border);margin:4px 0">'
+      + '<button onclick="clearUser();location.reload()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 16px;font-size:13px;color:#e53e3e;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--font)">&#128682; Log Out</button>'
+    + '</div>'
+  + '</div>';
+}
+function toggleNavMenu() {
+  var m = document.getElementById('nav-menu');
+  if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block';
+}
+function closeNavMenu() {
+  var m = document.getElementById('nav-menu');
+  if (m) m.style.display = 'none';
+}
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('nav-user-wrap');
+  if (wrap && !wrap.contains(e.target)) closeNavMenu();
+});
+
+// ─── ACTION MODAL (Request Access + Submit Offer) ──────────────
+function openActionModal(type, dealId) {
+  var isOffer = type === 'offer';
+  var title   = isOffer ? '&#128176; Submit an Offer' : '&#128203; Request Access / Walkthrough';
+  var sub     = isOffer ? 'Fill in your offer details and we\'ll review within 24 hours.'
+                        : 'We\'ll reach out to schedule a walkthrough or send access info.';
+  var extra   = isOffer
+    ? '<div class="auth-row" style="margin-bottom:10px">'
+        + '<input class="a-input" id="act-offer-price" placeholder="Offer Amount (e.g. $155,000)">'
+        + '<input class="a-input" id="act-coe" placeholder="Target Close Date (e.g. May 1)">'
+      + '</div>'
+      + '<select class="a-input" id="act-pay" style="appearance:none;cursor:pointer;margin-bottom:10px">'
+        + '<option value="">How do you plan to pay?</option>'
+        + '<option>Cash</option>'
+        + '<option>Subject To</option>'
+        + '<option>Seller Finance</option>'
+        + '<option>Lease Option</option>'
+        + '<option>Novation</option>'
+        + '<option>Morby Method</option>'
+        + '<option>Assumable Loans</option>'
+        + '<option>Partnerships/JV</option>'
+        + '<option>Traditional Financing</option>'
+        + '<option>DSCR</option>'
+      + '</select>'
+      + '<textarea class="a-input" id="act-notes" placeholder="Notes / additional terms (optional)" rows="2" style="resize:vertical;margin-bottom:0"></textarea>'
+    : '<select class="a-input" id="act-access-type" style="appearance:none;cursor:pointer;margin-bottom:10px">'
+        + '<option value="">What are you looking for?</option>'
+        + '<option>I have a question / inquiry</option>'
+        + '<option>Virtual walkthrough</option>'
+        + '<option>In-person showing</option>'
+        + '<option>Lockbox access</option>'
+        + '<option>Full deal package / details</option>'
+      + '</select>'
+      + '<select class="a-input" id="act-buy-method" style="appearance:none;cursor:pointer;margin-bottom:10px">'
+        + '<option value="">How do you buy? (optional)</option>'
+        + '<option>Cash</option>'
+        + '<option>Subject To</option>'
+        + '<option>Seller Finance</option>'
+        + '<option>Lease Option</option>'
+        + '<option>Novation</option>'
+        + '<option>Morby Method</option>'
+        + '<option>Assumable Loans</option>'
+        + '<option>Partnerships/JV</option>'
+        + '<option>Traditional Financing</option>'
+        + '<option>DSCR</option>'
+      + '</select>'
+      + '<textarea class="a-input" id="act-notes" placeholder="Notes or questions (optional)" rows="2" style="resize:vertical;margin-bottom:0"></textarea>';
+
+  var user = getUser();
+  document.getElementById('action-modal').innerHTML =
+    '<div class="auth-head" style="background:var(--navy);padding:22px 26px;position:relative">'
+      + '<button class="auth-close-btn" onclick="closeActionModal()">&#215;</button>'
+      + '<h2 style="font-size:17px;font-weight:800;color:#fff;margin-bottom:3px">' + title + '</h2>'
+      + '<p style="font-size:12px;color:rgba(255,255,255,.6)">' + sub + '</p>'
+    + '</div>'
+    + '<div class="auth-body">'
+      + '<div class="a-err" id="act-err"></div>'
+      + '<div class="a-ok"  id="act-ok"></div>'
+      + '<div class="auth-row" style="margin-bottom:10px">'
+        + '<input class="a-input" id="act-fn" placeholder="First Name" value="'+(user&&user.name?user.name.split(' ')[0]:'')+'">'
+        + '<input class="a-input" id="act-ln" placeholder="Last Name" value="'+(user&&user.name&&user.name.split(' ')[1]?user.name.split(' ')[1]:'')+'">'
+      + '</div>'
+      + '<input class="a-input" id="act-phone" type="tel" placeholder="Phone Number" style="margin-bottom:10px" value="'+(user&&user.phone?user.phone:'')+'">'
+      + '<input class="a-input" id="act-email" type="email" placeholder="Email Address" style="margin-bottom:10px" value="'+(user&&user.email?user.email:'')+'">'
+      + extra
+      + '<button class="btn-full-blue" style="margin-top:14px" onclick="submitAction(\'' + type + '\',\'' + dealId + '\')">'
+        + (isOffer ? 'Submit Offer' : 'Request Access')
+      + '</button>'
+      + '<div class="a-note" style="margin-top:10px">By submitting you agree to receive SMS &amp; email. Reply STOP to opt out.</div>'
+    + '</div>';
+
+  document.getElementById('action-overlay').classList.add('open');
+}
+function closeActionModal() {
+  document.getElementById('action-overlay').classList.remove('open');
+}
+function submitAction(type, dealId) {
+  var fn    = (document.getElementById('act-fn')||{}).value||'';
+  var ln    = (document.getElementById('act-ln')||{}).value||'';
+  var phone = (document.getElementById('act-phone')||{}).value||'';
+  var email = (document.getElementById('act-email')||{}).value||'';
+  var notes = (document.getElementById('act-notes')||{}).value||'';
+  var errEl = document.getElementById('act-err');
+  var okEl  = document.getElementById('act-ok');
+  if (!fn.trim() || !phone.trim()) {
+    errEl.textContent = 'Please enter your name and phone.';
+    errEl.style.display = 'block'; return;
+  }
+  errEl.style.display = 'none';
+  var btn = event.target; btn.disabled = true; btn.innerHTML = 'Sending&hellip;';
+
+  // GHL-aligned payload — keys match contact.* and opportunity.* field keys exactly
+  var payload = {
+    // Standard GHL contact fields
+    firstName: fn.trim(),
+    lastName:  ln.trim(),
+    email:     email.trim(),
+    phone:     phone.trim(),
+    // GHL custom fields (using exact field keys from GHL)
+    notes:     notes.trim(),              // opportunity.notes
+    deal_id:   dealId,                    // opportunity.deal_id
+    source:    type==='offer' ? 'TFS Website - Offer' : 'TFS Website - Inquiry'  // opportunity.source
+  };
+
+  if (type === 'offer') {
+    payload.offer_amount          = (document.getElementById('act-offer-price')||{}).value||'';  // opportunity.offer_amount
+    payload.how_soon_can_you_close= (document.getElementById('act-coe')||{}).value||'';          // opportunity.how_soon_can_you_close
+    payload.deal_structure        = (document.getElementById('act-pay')||{}).value||'';          // contact.deal_structure
+  } else {
+    payload.deal_structure        = (document.getElementById('act-buy-method')||{}).value||'';   // contact.deal_structure
+    payload.request_type          = (document.getElementById('act-access-type')||{}).value||'';  // informational
+  }
+
+  var webhook = type === 'offer' ? GHL_OFFER_WEBHOOK : GHL_WEBHOOK;
+  fetch(webhook, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+    .catch(function(){});
+
+  // Save user locally if not logged in
+  if (!getUser()) {
+    var initials = (fn[0]+(ln?ln[0]:'')).toUpperCase();
+    setUser({name:fn,email:email,phone:phone,initials:initials});
+    updateNavAuth(getUser());
+  }
+
+  okEl.innerHTML = type==='offer'
+    ? '&#10003; Offer submitted! We\'ll review and reach out within 24 hrs.'
+    : '&#10003; Request sent! We\'ll be in touch shortly.';
+  okEl.style.display = 'block';
+  btn.innerHTML = '&#10003; Sent!'; btn.classList.add('btn-success');
+  setTimeout(function(){ closeActionModal(); }, 2200);
+}
+
+// ─── SHEET ─────────────────────────────────────────────────────
+function parseGviz(text) {
+  var m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if (m) return JSON.parse(m[1]);
+  var s = text.indexOf('{');
+  if (s > -1) return JSON.parse(text.substring(s, text.lastIndexOf('}')+1));
+  throw new Error('Cannot parse sheet response');
+}
+function g(row) {
+  var names = Array.prototype.slice.call(arguments, 1);
+  for (var i=0; i<names.length; i++) {
+    if (row[names[i]] !== undefined && row[names[i]] !== '') return row[names[i]];
+  }
+  return '';
+}
+function parseRow(r) {
+  return {
+    id:           g(r,'Deal ID'),
+    dealType:     g(r,'Deal Type'),
+    streetAddress:g(r,'Street Address'),
+    city:         g(r,'City'),
+    state:        g(r,'State'),
+    zip:          g(r,'ZIP'),
+    nearestMetro: g(r,'Nearest Metro Area'),
+    propertyType: g(r,'Property Type'),
+    askingPrice:  parseMoney(g(r,'Asking Price')),
+    entryFee:     parseMoney(g(r,'Entry Fee')),
+    compsArv:     parseMoney(g(r,'Comps ARV','ARV','Comps / ARV')),
+    piti:         parseMoney(g(r,'PITI','PITI ','Monthly Payment')),
+    subtoBalance: parseMoney(g(r,'SubTo Loan Balance','Loan Balance','Sub To Loan Balance','SubTo Balance')),
+    subtoRate:    g(r,'SubTo Rate','SubTo Rate (%)','SubTo Interest Rate','Interest Rate'),
+    sfAmount:     parseMoney(g(r,'SF Loan Amount','Seller Finance Amount','SF Amount')),
+    sfRate:       g(r,'SF Rate','SF Interest Rate','Seller Finance Rate'),
+    sfTerm:       g(r,'SF Term','SF Term ','Seller Finance Term').trim(),
+    sfPayment:    parseMoney(g(r,'SF Payment','Seller Finance Payment')),
+    rentFinal:    parseMoney(g(r,'Rent Final','Estimated Rent','Rent Est')),
+    rentLow:      parseMoney(g(r,'Rent Low')),
+    rentMid:      parseMoney(g(r,'Rent Mid')),
+    rentHigh:     parseMoney(g(r,'Rent High')),
+    occupancy:    g(r,'Occupancy'),
+    hoa:          g(r,'HOA','HOA Fee','HOA/mo'),
+    access:       g(r,'Access'),
+    coe:          g(r,'COE','Close of Escrow','Closing Date'),
+    deckLink:     g(r,'Deck Link'),
+    coverPhoto:   g(r,'Cover Photo','cover photo','Cover photo','Photo 1','photo1'),
+    photos:       g(r,'Photos'),
+    highlight1:   g(r,'Highlight 1'),
+    highlight2:   g(r,'Highlight 2'),
+    highlight3:   g(r,'Highlight 3'),
+    entryBreakdown: g(r,'Entry Breakdown'),
+    details:      g(r,'Details','Details ').trim(),
+    beds:         g(r,'Beds','Bedrooms','BD'),
+    baths:        g(r,'Baths','Bathrooms','BA'),
+    sqft:         g(r,'Sqft','Sq Ft','Square Feet','SQFT'),
+    yearBuilt:    g(r,'Year Built','Year Build','Yr Built')
+  };
+}
+
+function fetchDeals() {
+  return fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0')
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(text){
+      var json = parseGviz(text);
+      var cols = json.table.cols.map(function(c){return c.label.trim();});
+      var rows = json.table.rows.map(function(row){
+        var o={};
+        cols.forEach(function(c,i){var cell=row.c[i];o[c]=cell?(cell.v!==null?String(cell.v).trim():''):'';});
+        return o;
+      });
+      return rows
+        .filter(function(r){return (r['Deal Status']||'').trim().toLowerCase()==='actively marketing';})
+        .map(parseRow)
+        .filter(function(d){return !!d.id;});
+    });
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────
+// Strip $, commas before parsing — handles "$135,000" and "135000"
+function parseMoney(v) {
+  if (!v && v !== 0) return 0;
+  return parseFloat(String(v).replace(/[$,\s]/g,'')) || 0;
+}
+function money(n){var v=parseMoney(n);return v?'$'+v.toLocaleString():'&#8212;';}
+function rate(r){
+  if(!r)return'&#8212;';
+  var s=String(r).trim();
+  // Already formatted as "3.5%" — return as-is
+  if(s.indexOf('%')>-1)return s;
+  var v=parseFloat(s);
+  if(!v)return s||'&#8212;';
+  return v<1?(v*100).toFixed(2)+'%':v.toFixed(2)+'%';
+}
+// Robust COE date parser — handles ISO, M/D/Y, "Apr 18 2026", serial numbers
+function fmtCoe(d) {
+  if (!d) return '&#8212;';
+  var s = String(d).trim();
+  if (!s) return '&#8212;';
+  // Google Sheets sometimes sends serial date numbers (days since 1899-12-30)
+  if (/^\d{5}$/.test(s)) {
+    var dt = new Date(1899, 11, 30);
+    dt.setDate(dt.getDate() + parseInt(s));
+    return dt.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+  }
+  // Try direct parse — add noon to avoid timezone shift
+  var clean = s.replace(/\//g,'-');
+  var attempts = [clean, clean+'T12:00:00', s+'T12:00:00', s];
+  for (var i=0; i<attempts.length; i++) {
+    var dt = new Date(attempts[i]);
+    if (!isNaN(dt.getTime())) {
+      return dt.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+    }
+  }
+  return s; // return raw if all parsing fails
+}
+// HOA — Notion may send "$150/mo", "$150", "150/mo", "150" — normalize to "$150/mo"
+function fmtHoa(v) {
+  if (!v) return null;
+  var s = String(v).trim();
+  if (!s) return null;
+  // Strip existing $ and /mo suffixes
+  var clean = s.replace(/[$]/g,'').replace(/\/mo(nth)?/gi,'').trim();
+  var num = parseFloat(clean.replace(/,/g,''));
+  if (!num) return s; // return as-is if can't parse
+  return '$' + num.toLocaleString() + '/mo';
+}
+function daysLeft(d){if(!d)return null;var ms=new Date(String(d)+'T12:00:00')-new Date();return Math.ceil(ms/864e5);}
+
+// ─── RENDER ────────────────────────────────────────────────────
+function render(deal, allDeals) {
+  var user    = getUser();
+  var app     = document.getElementById('app');
+  var isSubTo = /SubTo|Hybrid|Morby|Wrap/i.test(deal.dealType);
+  var isSF    = /Seller Finance|Hybrid|Morby|Wrap/i.test(deal.dealType);
+  var entry   = deal.entryFee || deal.askingPrice;
+  var dl      = daysLeft(deal.coe);
+  var folderId = getFolderId(deal.photos || '');
+  var folderUrl = folderId ? ('https://drive.google.com/drive/folders/'+folderId) : '';
+
+  document.getElementById('bc-addr').textContent =
+    (deal.streetAddress||'Deal') + ' \u2014 ' + (deal.nearestMetro||deal.city+', '+deal.state);
+  document.title = (deal.streetAddress||'Deal') + ' \u2014 Terms For Sale';
+
+  // ── PHOTO HEADER ──
+  var photoHtml = '<div class="photo-gallery">'
+    + '<div class="photo-gallery-header">'
+      + '<div class="photo-gallery-title">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+        + 'Property Photos'
+      + '</div>'
+      + (folderUrl ? '<a href="'+folderUrl+'" target="_blank" class="photo-gallery-btn">'
+          + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+          + 'Open in Drive</a>' : '')
+    + '</div>'
+    + '<div id="photo-grid-wrap">'
+      + (folderId
+          ? '<div class="photo-loading"><div class="photo-spinner"></div><span style="font-size:12px">Loading photos&#8230;</span></div>'
+          : '<div class="photo-placeholder"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p>Photos available on request</p><a href="tel:4806373117" style="color:var(--blue);font-size:13px;font-weight:600">Text (480) 637-3117</a></div>')
+    + '</div>'
+  + '</div>';
+
+  // ── ADDRESS (locked vs unlocked) ──
+  var addrHtml = user
+    ? '<div class="deal-addr">' + deal.streetAddress + ', ' + deal.city + ', ' + deal.state + ' ' + (deal.zip||'') + '</div>'
+    : '<div class="deal-addr locked" onclick="openAuth(\'login\')">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+        + deal.city + ', ' + deal.state + ' &#8212; Log in to unlock full address'
+      + '</div>';
+
+  // ── TAGS ──
+  var tagItems = [
+    deal.dealType,
+    deal.yearBuilt  ? 'Built ' + deal.yearBuilt : null,
+    deal.sqft       ? Number(deal.sqft).toLocaleString() + ' sqft' : null,
+    deal.propertyType || null
+  ].filter(Boolean);
+  var tagsHtml = tagItems.map(function(t){return '<span class="tag">'+t+'</span>';}).join('');
+  if (deal.occupancy) tagsHtml += '<span class="tag tag-orange">' + deal.occupancy + '</span>';
+
+  // ── TERMS TABLE ──
+  var terms = [
+    {l:'Asking Price', v:money(deal.askingPrice)},
+    {l:'Close of Escrow', v:fmtCoe(deal.coe)},
+    {l:'Deal Type', v:deal.dealType||'&#8212;'},
+    {l:'Entry Fee', v:(entry&&entry!==deal.askingPrice)?money(entry):'&#8212;'}
+  ];
+  if (isSubTo) {
+    terms.push({l:'Loan Balance', v:deal.subtoBalance?money(deal.subtoBalance):'&#8212;'});
+    terms.push({l:'Interest Rate', v:rate(deal.subtoRate)});
+    terms.push({l:'PITI Payment', v:deal.piti?money(deal.piti)+'/mo':'&#8212;'});
+    terms.push({l:'Loan Type', v:'Existing Mortgage'});
+  }
+  if (isSF) {
+    terms.push({l:'SF Loan Amount', v:deal.sfAmount?money(deal.sfAmount):'&#8212;'});
+    terms.push({l:'SF Rate', v:rate(deal.sfRate)});
+    terms.push({l:'SF Payment', v:deal.sfPayment?money(deal.sfPayment)+'/mo':'&#8212;'});
+    terms.push({l:'SF Term', v:deal.sfTerm||'&#8212;'});
+  }
+  if (deal.compsArv) terms.push({l:'Comps ARV', v:money(deal.compsArv)});
+  var hoaFmt = fmtHoa(deal.hoa);
+  if (hoaFmt) terms.push({l:'HOA', v:hoaFmt});
+  if (deal.access) terms.push({l:'Access', v:deal.access});
+
+  var termsHtml = '<div class="terms-grid">'
+    + terms.map(function(t){
+        return '<div class="term-item"><div class="term-label">'+t.l+'</div>'
+          +'<div class="term-value'+(t.v==='&#8212;'?' empty':'')+'">'+t.v+'</div></div>';
+      }).join('')
+    + '</div>';
+
+  // ── HIGHLIGHTS ──
+  var hls = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean);
+  var hlHtml = hls.length
+    ? '<div class="hl-list">'+hls.map(function(h){
+        return '<div class="hl-item"><div class="hl-dot"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
+          +'<span style="font-size:13px;color:var(--text-mid);line-height:1.55">'+h+'</span></div>';
+      }).join('')+'</div>'
+    : '<p style="color:var(--text-light)">No highlights added yet.</p>';
+
+  // ── INVESTMENT ANALYSIS (auto-calculated) ──
+  var price  = deal.askingPrice || 0;
+  var entry  = deal.entryFee || price;
+  var arv    = deal.compsArv || 0;
+  var beds   = parseInt(deal.beds) || 0;
+  var baths  = parseFloat(deal.baths) || 0;
+  var sqft   = parseInt(deal.sqft) || 0;
+  var piti   = deal.piti || 0;
+  var hoaN   = parseMoney(deal.hoa) || 0;
+  var rentIn = deal.rentFinal || 0; // sheet-provided rent if available
+
+  // ── LTR estimate: 0.8% rule baseline, adjusted by market tier
+  // Use rent if provided, otherwise estimate from price
+  var ltrBase = rentIn || Math.round(price * 0.0085);
+  // Sqft-based cross-check (avg $1.10/sqft/mo for secondary markets)
+  if (!rentIn && sqft) ltrBase = Math.max(ltrBase, Math.round(sqft * 1.10));
+  var ltr = ltrBase;
+
+  // ── MTR (30-90 day furnished): ~1.4x LTR
+  var mtr = Math.round(ltr * 1.4);
+
+  // ── STR (nightly Airbnb): ~2.3x LTR monthly equivalent
+  var str = Math.round(ltr * 2.3);
+  var strNightly = Math.round(str / 25); // ~25 occupied nights/mo avg
+
+  // ── PadSplit / Co-living: per room
+  var padRoom = beds >= 2 ? Math.round(beds * 650) : 0;
+
+  // ── Cash flow (LTR scenario)
+  var expenses = piti + hoaN + Math.round(ltr * 0.08) + Math.round(ltr * 0.05) + Math.round(price * 0.01 / 12);
+  // expenses: PITI + HOA + mgmt (8%) + vacancy (5%) + capex (1% of price/yr)
+  var cfLtr = piti ? ltr - expenses : null; // only show if PITI known
+
+  // ── Cap rate
+  var noi = ltr * 12 - (hoaN * 12) - (price * 0.04); // annual NOI rough: rent - hoa - 4% expenses
+  var capRate = price ? ((noi / price) * 100).toFixed(1) : null;
+
+  // ── Fix & Flip
+  var arvForFlip = arv || Math.round(price * 1.35);
+  var repairEst  = sqft ? Math.round(sqft * 25) : Math.round(price * 0.15);
+  var flipProfit = Math.round(arvForFlip * 0.92 - entry - repairEst - (entry * 0.03));
+  // 92% of ARV (agent fees) minus entry, repairs, closing costs
+
+  // ── BRRRR refi estimate
+  var refiVal    = Math.round((arv || arvForFlip) * 0.75); // 75% LTV refi
+  var cashOut    = Math.max(0, refiVal - entry);
+
+  function statBox(label, val, sub, color) {
+    return '<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
+      +'<div style="font-size:10px;font-weight:700;color:'+(color||'var(--text-light)')+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+label+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:var(--navy)">'+val+'</div>'
+      +(sub?'<div style="font-size:11px;color:var(--text-light);margin-top:2px">'+sub+'</div>':'')
+      +'</div>';
+  }
+
+  var rentHtml = '<div style="display:flex;flex-direction:column;gap:20px">'
+    // Rental Strategies
+    +'<div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Rental Strategies (Est.)</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
+        +statBox('LTR &mdash; Long-Term Rental','$'+ltr.toLocaleString()+'/mo','30+ day tenants, lowest mgmt','#1a6f8a')
+        +statBox('MTR &mdash; Mid-Term Rental','$'+mtr.toLocaleString()+'/mo','30-90 days, furnished ~1.4x LTR','#7c3aed')
+        +statBox('STR &mdash; Short-Term Rental','$'+str.toLocaleString()+'/mo','Airbnb/VRBO, est. $'+strNightly+'/night','#d97c0e')
+        +(beds>=2?statBox('PadSplit / Co-Living','$'+padRoom.toLocaleString()+'/mo',beds+' rooms × ~$650/room est.','#059669'):'')
+      +'</div>'
+    +'</div>'
+    // Cash Flow
+    +(cfLtr!==null?'<div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">LTR Cash Flow Estimate</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
+        +'<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
+          +'<div style="font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Gross Rent</div>'
+          +'<div style="font-size:18px;font-weight:800;color:var(--navy)">$'+ltr.toLocaleString()+'</div>'
+        +'</div>'
+        +'<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
+          +'<div style="font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Est. Expenses</div>'
+          +'<div style="font-size:18px;font-weight:800;color:#e53e3e">-$'+expenses.toLocaleString()+'</div>'
+          +'<div style="font-size:10px;color:var(--text-light);margin-top:2px">PITI + HOA + mgmt + vacancy</div>'
+        +'</div>'
+        +'<div style="background:'+(cfLtr>=0?'#E6F9F0':'#fff5f5')+';border-radius:10px;padding:14px 16px;border:1px solid '+(cfLtr>=0?'#b2dfce':'#feb2b2')+'">'
+          +'<div style="font-size:10px;font-weight:700;color:'+(cfLtr>=0?'#276749':'#e53e3e')+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Monthly Cash Flow</div>'
+          +'<div style="font-size:18px;font-weight:800;color:'+(cfLtr>=0?'#276749':'#e53e3e')+'">'+(cfLtr>=0?'+':'')+'$'+Math.abs(cfLtr).toLocaleString()+'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>':'')
+    // Exit Strategies
+    +'<div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Exit Strategies (Est.)</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
+        +statBox('Fix &amp; Flip Profit','$'+Math.max(0,flipProfit).toLocaleString(),'After entry + $'+repairEst.toLocaleString()+' repairs + fees','#c05621')
+        +(arv||true?statBox('BRRRR Cash-Out','$'+cashOut.toLocaleString(),'75% LTV refi of $'+(arv||arvForFlip).toLocaleString()+' ARV','#1a6f8a'):'')
+        +(capRate?statBox('Cap Rate',capRate+'%','Based on LTR NOI ÷ price','#718096'):'')
+        +statBox('Gross Yield',(price?((ltr*12/price)*100).toFixed(1):'?')+'%','Annual rent ÷ asking price','#718096')
+      +'</div>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--text-light);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:8px">'
+      +'&#9432; All figures are automated estimates for analysis purposes only. Actual rents, expenses, and returns vary by market, condition, and management. Consult a licensed agent, CPA, and property manager before making investment decisions.'
+    +'</div>'
+  +'</div>';
+
+  // ── URGENCY ──
+  var urgencyHtml = (dl!==null&&dl<=10)
+    ? '<div style="background:#FFF3E0;border-top:1px solid #f5cba7;padding:10px 20px;display:flex;align-items:center;gap:8px;font-size:12px;color:#c05621;font-weight:600">&#9888;&#65039; Contract expires in '+dl+' day'+(dl!==1?'s':'')+'. Move fast.</div>'
+    : '';
+
+  // ── SIMILAR DEALS ──
+  var similar = (allDeals||[]).filter(function(x){return x.id!==deal.id;}).slice(0,3);
+  var simHtml = similar.length
+    ? '<div style="margin-top:40px"><div style="font-size:16px;font-weight:700;margin-bottom:16px">Similar Deals</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">'
+        + similar.map(function(s){
+            return '<a href="deal.html?id='+encodeURIComponent(s.id)+'" '
+              +'style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);text-decoration:none;color:inherit;display:block">'
+              +'<div style="height:120px;background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>'
+              +'<div style="padding:12px"><div style="font-size:14px;font-weight:700">'+money(s.entryFee||s.askingPrice)+'</div>'
+              +'<div style="font-size:12px;color:var(--text-light);margin-top:4px">'+(s.nearestMetro||s.city+', '+s.state)+'</div>'
+              +'<div style="font-size:11px;color:var(--text-light);margin-top:4px">'+s.dealType+'</div></div></a>';
+          }).join('')
+        +'</div></div>'
+    : '';
+
+  // ── BUY PROCESS ──
+  var steps = ['Explore the Deal — Review all deal details and terms.','Submit a Request — We\'ll reach out within 24 hours.','Make an Offer — Submit your offer, COE, and payment method.','Lock It In — Secure your position with an EMD deposit.','Meet Your Coordinator — They\'ll guide you through close.','Close the Deal — Step into contract with confidence.'];
+  var processHtml = '<div style="display:flex;flex-direction:column;gap:12px">'
+    + steps.map(function(s,i){
+        var parts = s.split('&#8212;');
+        var parts2 = s.split('—');
+        var head = parts2[0].trim();
+        var body = parts2[1] ? parts2[1].trim() : '';
+        return '<div style="display:flex;gap:14px;padding:14px;background:#fff;border-radius:var(--r);border:1px solid #EDF2F7">'
+          +'<div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</div>'
+          +'<div style="font-size:13px;color:var(--text-mid);line-height:1.6"><strong style="color:var(--text)">'+head+'</strong>'+(body?' &#8212; '+body:'')+'</div></div>';
+      }).join('')
+    + '</div>';
+
+  // ── FULL RENDER ──
+  app.innerHTML =
+    '<div class="main">'
+      +'<div>'
+        + photoHtml
+        +'<div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px">'
+          +'<span class="deal-price">'+money(entry)+'</span>'
+          +(entry&&entry!==deal.askingPrice?'<span style="font-size:16px;font-weight:600;color:var(--orange)">'+money(deal.askingPrice)+' asking</span>':'')
+        +'</div>'
+        +'<div class="deal-specs">'
+          +(deal.beds?'<span>&#128716; '+deal.beds+' beds</span>':'')
+          +(deal.baths?'<span>&#128695; '+deal.baths+' baths</span>':'')
+          +(deal.sqft?'<span>'+Number(deal.sqft).toLocaleString()+' sqft</span>':'')
+        +'</div>'
+        + addrHtml
+        +(deal.piti?'<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--blue-light);border-radius:8px;font-size:12px;color:#1a6f8a;margin-bottom:16px;font-weight:500">&#128197; Est. payment: <strong>'+money(deal.piti)+'/mo</strong></div>':'')
+        +'<div class="tags">'+tagsHtml+'</div>'
+        +'<div class="tabs"><div class="tabs-inner">'
+          +'<button class="tab-btn on" onclick="switchTab(this,\'terms\')">Terms</button>'
+          +'<button class="tab-btn" onclick="switchTab(this,\'highlights\')">Highlights</button>'
+          +'<button class="tab-btn" onclick="switchTab(this,\'analysis\')">Analysis</button>'
+          +(deal.deckLink?'<button class="tab-btn" onclick="switchTab(this,\'resources\')">Resources</button>':'')
+          +'<button class="tab-btn" onclick="switchTab(this,\'process\')">Buy Process</button>'
+        +'</div></div>'
+        +'<div id="tab-terms" class="tab-panel on">'+termsHtml+'</div>'
+        +'<div id="tab-highlights" class="tab-panel">'+hlHtml+'</div>'
+        +'<div id="tab-analysis" class="tab-panel">'+rentHtml+'</div>'
+        +(deal.deckLink?'<div id="tab-resources" class="tab-panel"><a href="'+deal.deckLink+'" target="_blank" class="btn btn-blue">&#128196; Download Deal Package</a></div>':'')
+        +'<div id="tab-process" class="tab-panel">'+processHtml+'</div>'
+        +'<div class="disclaimer"><strong>Disclaimer:</strong> All figures are estimates only. Deal Pros LLC facilitates wholesale assignment of purchase contracts. Not a licensed real estate broker. Consult a licensed attorney and CPA before transacting.</div>'
+        + simHtml
+      +'</div>'
+
+      // SIDEBAR
+      +'<div style="position:sticky;top:88px;display:flex;flex-direction:column;gap:14px">'
+        // ACTION BUTTONS CARD
+        +'<div class="sidebar-card">'
+          +'<div class="sidebar-head"><h3>Take Action on This Deal</h3><p>Move fast — active deals go quickly.</p></div>'
+          +'<div class="sidebar-body" style="gap:8px">'
+            // Unlock address
+            +(user ? '' : '<button onclick="openAuth(\'login\')" class="btn btn-outline" style="width:100%;justify-content:center;border-color:var(--blue);color:var(--blue)">&#128274; Unlock Full Address</button>')
+            // Request Access / Walkthrough
+            +'<button onclick="openActionModal(\'access\',\''+deal.id+'\')" class="btn btn-blue" style="width:100%;justify-content:center;font-size:13px">&#128203; Request Access / Walkthrough</button>'
+            // Submit Offer
+            +'<button onclick="openActionModal(\'offer\',\''+deal.id+'\')" class="btn btn-orange" style="width:100%;justify-content:center;font-size:13px">&#128176; Submit an Offer</button>'
+          +'</div>'
+          + urgencyHtml
+          +'<div class="sidebar-contact">'
+            +'<div class="contact-row"><div class="contact-icon">&#128222;</div><div><div class="contact-lbl">Call or Text</div><a href="tel:4806373117" class="contact-val">(480) 637-3117</a></div></div>'
+            +'<div class="contact-row"><div class="contact-icon">&#9993;&#65039;</div><div><div class="contact-lbl">Email</div><a href="mailto:info@termsforsale.com" class="contact-val">info@termsforsale.com</a></div></div>'
+            +'<div class="contact-row"><div class="contact-icon">&#128197;</div><div><div class="contact-lbl">Book a Call</div><a href="'+BOOK_A_CALL+'" target="_blank" class="contact-val">Schedule Now</a></div></div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="text-align:center"><a href="/" style="font-size:12px;color:var(--text-light);text-decoration:none">&#8592; Back to all active deals</a></div>'
+      +'</div>'
+    +'</div>';
+
+  // Trigger async photo load after DOM is ready
+  if (folderId) {
+    // Show cover photo instantly if available, then load full grid
+    setTimeout(function(){
+      tryShowCoverPhoto(deal);
+      loadPhotos(folderId, folderUrl);
+    }, 60);
+  }
+}
+
+// ─── TABS ──────────────────────────────────────────────────────
+function switchTab(btn, id) {
+  var btns = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.tab-panel');
+  for (var i=0; i<btns.length; i++) btns[i].classList.remove('on');
+  for (var i=0; i<panels.length; i++) panels[i].classList.remove('on');
+  btn.classList.add('on');
+  var p = document.getElementById('tab-'+id);
+  if (p) p.classList.add('on');
+}
+
+function submitRequest() {
+  var name  = document.getElementById('f-fname').value.trim();
+  var phone = document.getElementById('f-phone').value.trim();
+  if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
+  var btn = event.target;
+  btn.innerHTML = '&#10003; Request Sent!'; btn.style.cssText += ';background:#276749;cursor:default'; btn.disabled=true;
+}
+
+// ─── INIT ──────────────────────────────────────────────────────
+var app = document.getElementById('app');
+
+// Restore nav auth
+(function(){ var u=getUser(); if(u) updateNavAuth(u); })();
+
+var urlParams = new URLSearchParams(window.location.search);
+var dealId    = urlParams.get('id');
+
+if (!dealId) {
+  app.innerHTML = '<div class="error-state"><h2>No Deal Selected</h2><p>Return to the deals board.</p>'
+    + '<a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';
+} else {
+  // Fast path: sessionStorage
+  var cached = null;
+  try {
+    var raw = sessionStorage.getItem('deal');
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (parsed && String(parsed.id) === String(dealId)) cached = parsed;
+    }
+  } catch(e) {}
+
+  if (cached) {
+    render(cached, []);
+    fetchDeals().then(function(all){
+      // Re-render with similar deals populated (photos already loaded, don't flicker)
+      var sim = all.filter(function(x){ return x.id !== cached.id; });
+      var simEl = document.querySelector('[style*="margin-top:40px"]');
+      // Just quietly update similar section if it exists — don't full re-render
+    }).catch(function(){});
+  } else {
+    fetchDeals()
+      .then(function(all){
+        var deal = null;
+        for (var i=0; i<all.length; i++) {
+          if (String(all[i].id) === String(dealId) || String(all[i].id) === String(decodeURIComponent(dealId))) {
+            deal = all[i]; break;
+          }
+        }
+        if (deal) {
+          render(deal, all.filter(function(x){ return x.id !== deal.id; }));
+        } else {
+          app.innerHTML = '<div class="error-state"><h2>Deal Not Found</h2>'
+            + '<p>This deal may have sold or been removed.</p>'
+            + '<a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';
+        }
+      })
+      .catch(function(err){
+        app.innerHTML = '<div class="error-state"><h2>Could not load deal</h2>'
+          + '<p style="font-size:13px;color:var(--text-light)">'+err.message+'</p>'
+          + '<a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';
+      });
+  }
+}
+</script>
+</body>
+</html>

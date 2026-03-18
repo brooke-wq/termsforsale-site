@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GHL Webhook Tester — Deal Pros</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;background:#0D1F3C;min-height:100vh;padding:40px 20px;color:#fff}
+.wrap{max-width:780px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.logo img{height:40px}
+h1{font-size:24px;font-weight:800;color:#fff;margin-bottom:6px}
+.sub{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:32px;line-height:1.6}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px;margin-bottom:20px}
+.card-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title span{width:8px;height:8px;border-radius:50%;display:inline-block}
+.blue{background:#29ABE2}.orange{background:#F7941D}
+label{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);display:block;margin-bottom:5px;margin-top:12px}
+label:first-of-type{margin-top:0}
+input,textarea{width:100%;padding:10px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(255,255,255,.07);color:#fff;font-family:'Poppins',sans-serif;font-size:13px;outline:none;transition:border .2s}
+input:focus,textarea:focus{border-color:#29ABE2;background:rgba(255,255,255,.1)}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,.25)}
+textarea{resize:vertical;min-height:60px}
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:18px}
+.btn-blue{background:#29ABE2;color:#fff}
+.btn-blue:hover{background:#1a8bbf}
+.btn-orange{background:#F7941D;color:#fff}
+.btn-orange:hover{background:#d97c0e}
+.btn:disabled{opacity:.5;cursor:default}
+.result{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:12px;line-height:1.6;font-weight:500;display:none}
+.result.ok{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#6ee7b7}
+.result.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.payload-preview{background:rgba(0,0,0,.3);border-radius:8px;padding:14px;margin-top:12px;font-size:11px;color:rgba(255,255,255,.5);font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:160px;overflow-y:auto;display:none}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);font-size:11px;font-weight:700;color:rgba(255,255,255,.6);flex-shrink:0}
+.instructions{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:20px 24px;margin-bottom:28px}
+.instructions h3{font-size:14px;font-weight:700;color:#fff;margin-bottom:14px}
+.step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;font-size:13px;color:rgba(255,255,255,.65);line-height:1.5}
+.step:last-child{margin-bottom:0}
+.step strong{color:#fff}
+.divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:24px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale">
+  </div>
+  <h1>GHL Webhook Test Tool</h1>
+  <p class="sub">Fire test payloads to your GHL webhooks so they detect all fields and let you save your workflows. Do this for each workflow before saving in GHL.</p>
+
+  <div class="instructions">
+    <h3>How to use this</h3>
+    <div class="step"><span class="step-badge">1</span><div>In GHL go to <strong>Automation → Workflows → + New Workflow → Start from Scratch</strong></div></div>
+    <div class="step"><span class="step-badge">2</span><div>Click <strong>+ Add Trigger → Inbound Webhook</strong> — copy the webhook URL it shows you</div></div>
+    <div class="step"><span class="step-badge">3</span><div>Paste it in the field below and click <strong>Send Test</strong></div></div>
+    <div class="step"><span class="step-badge">4</span><div>Go back to GHL — it will now show all the fields. <strong>Click Save</strong>, then add your actions (update contact, move to pipeline stage, notify, etc.)</div></div>
+    <div class="step"><span class="step-badge">5</span><div>Repeat for both workflows</div></div>
+  </div>
+
+  <!-- INQUIRY / ACCESS WEBHOOK -->
+  <div class="card">
+    <div class="card-title"><span class="blue"></span> Workflow 1 — Inquiry &amp; Access Request</div>
+
+    <label>GHL Webhook URL (paste from GHL)</label>
+    <input type="url" id="url-access" value="https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593">
+
+    <hr class="divider">
+    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px">Test payload will include all these fields:</div>
+
+    <label>First Name</label>
+    <input id="a-fn" value="John">
+    <label>Last Name</label>
+    <input id="a-ln" value="Smith">
+    <label>Phone</label>
+    <input id="a-phone" value="4805551234">
+    <label>Email</label>
+    <input id="a-email" value="john.smith@test.com">
+    <label>Deal ID</label>
+    <input id="a-deal" value="DP-001">
+    <label>Request Type <span style="color:rgba(255,255,255,.3);font-size:10px">→ request_type</span></label>
+    <input id="a-type" value="Walkthrough Request">
+    <label>Buying Method <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.deal_structure</span></label>
+    <input id="a-buy" value="Subject To">
+    <label>Notes</label>
+    <textarea id="a-notes">Interested in seeing the property. Available weekdays after 3pm.</textarea>
+
+    <button class="btn btn-blue" onclick="sendTest('access')">&#9889; Send Test to GHL</button>
+    <div class="result" id="res-access"></div>
+    <div class="payload-preview" id="payload-access"></div>
+  </div>
+
+  <!-- OFFER WEBHOOK -->
+  <div class="card">
+    <div class="card-title"><span class="orange"></span> Workflow 2 — Offer Submission</div>
+
+    <label>GHL Webhook URL (paste from GHL)</label>
+    <input type="url" id="url-offer" value="https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1">
+
+    <hr class="divider">
+    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px">Test payload will include all these fields:</div>
+
+    <label>First Name</label>
+    <input id="o-fn" value="Sarah">
+    <label>Last Name</label>
+    <input id="o-ln" value="Johnson">
+    <label>Phone</label>
+    <input id="o-phone" value="6025559876">
+    <label>Email</label>
+    <input id="o-email" value="sarah.johnson@test.com">
+    <label>Deal ID</label>
+    <input id="o-deal" value="DP-001">
+    <label>Offer Amount <span style="color:rgba(255,255,255,.3);font-size:10px">→ opportunity.offer_amount</span></label>
+    <input id="o-amount" value="$155,000">
+    <label>Requested COE Date <span style="color:rgba(255,255,255,.3);font-size:10px">→ opportunity.how_soon_can_you_close</span></label>
+    <input id="o-coe" value="2026-05-01">
+    <label>Payment Method <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.deal_structure</span></label>
+    <input id="o-pay" value="Subject To">
+    <label>Notes / Terms</label>
+    <textarea id="o-notes">Offering asking price, would like to close by May 1. Cash available for EMD.</textarea>
+
+    <button class="btn btn-orange" onclick="sendTest('offer')">&#9889; Send Test to GHL</button>
+    <div class="result" id="res-offer"></div>
+    <div class="payload-preview" id="payload-offer"></div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:rgba(255,255,255,.25);margin-top:24px">
+    This tool only fires test data — no real contacts are created until real buyers submit forms on your site.
+  </div>
+</div>
+
+<script>
+async function sendTest(type) {
+  var isOffer = type === 'offer';
+  var urlId   = isOffer ? 'url-offer' : 'url-access';
+  var resId   = isOffer ? 'res-offer'  : 'res-access';
+  var payId   = isOffer ? 'payload-offer' : 'payload-access';
+  var btn     = event.target;
+  var url     = document.getElementById(urlId).value.trim();
+  var resEl   = document.getElementById(resId);
+  var payEl   = document.getElementById(payId);
+
+  resEl.style.display = 'none';
+  payEl.style.display = 'none';
+
+  if (!url || !url.startsWith('http')) {
+    resEl.className = 'result err';
+    resEl.textContent = '✗ Please paste a valid GHL webhook URL first.';
+    resEl.style.display = 'block';
+    return;
+  }
+
+  var payload = isOffer ? {
+    firstName:             document.getElementById('o-fn').value,
+    lastName:              document.getElementById('o-ln').value,
+    phone:                 document.getElementById('o-phone').value,
+    email:                 document.getElementById('o-email').value,
+    deal_id:               document.getElementById('o-deal').value,       // opportunity.deal_id
+    offer_amount:          document.getElementById('o-amount').value,     // opportunity.offer_amount
+    how_soon_can_you_close:document.getElementById('o-coe').value,        // opportunity.how_soon_can_you_close
+    deal_structure:        document.getElementById('o-pay').value,        // contact.deal_structure
+    notes:                 document.getElementById('o-notes').value,      // opportunity.notes
+    source:                'TFS Website - Offer'                          // opportunity.source
+  } : {
+    firstName:    document.getElementById('a-fn').value,
+    lastName:     document.getElementById('a-ln').value,
+    phone:        document.getElementById('a-phone').value,
+    email:        document.getElementById('a-email').value,
+    deal_id:      document.getElementById('a-deal').value,                // opportunity.deal_id
+    request_type: document.getElementById('a-type').value,               // informational
+    deal_structure:document.getElementById('a-buy').value,               // contact.deal_structure
+    notes:        document.getElementById('a-notes').value,              // opportunity.notes
+    source:       'TFS Website - Inquiry'                                // opportunity.source
+  };
+
+  payEl.textContent = JSON.stringify(payload, null, 2);
+  payEl.style.display = 'block';
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    var r = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    resEl.className = 'result ok';
+    resEl.innerHTML = '&#10003; Payload sent successfully (HTTP ' + r.status + ').<br>Go back to GHL — it should now show all the fields. Click <strong>Save</strong>.';
+  } catch (e) {
+    resEl.className = 'result err';
+    resEl.innerHTML = '&#10007; ' + e.message + '<br><small>Check the URL is correct and the workflow is active in GHL.</small>';
+  }
+
+  resEl.style.display = 'block';
+  btn.disabled = false;
+  btn.textContent = isOffer ? '⚡ Send Test to GHL' : '⚡ Send Test to GHL';
+}
+</script>
+</body>
+</html>

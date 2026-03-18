@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Map — Terms For Sale</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;--navy2:#132848;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;
+  --orange:#F7941D;--orange-dark:#d97c0e;
+  --green:#10B981;--purple:#8B5CF6;
+  --white:#fff;--bg:#F4F6F9;
+  --text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;
+  --border:#E2E8F0;--font:'Poppins',sans-serif;
+  --shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--navy);color:var(--text);display:flex;flex-direction:column}
+
+/* NAV */
+nav{height:60px;background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.1);z-index:1000}
+.nav-logo img{height:36px;width:auto}
+.nav-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.nav-title svg{color:var(--blue)}
+.nav-back{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.6);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s}
+.nav-back:hover{color:var(--white)}
+
+/* LAYOUT */
+.app{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* SIDEBAR */
+.sidebar{width:340px;background:var(--white);display:flex;flex-direction:column;flex-shrink:0;border-right:1px solid var(--border);z-index:100;transition:transform .25s}
+.sidebar-head{padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-head h2{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.sidebar-head p{font-size:12px;color:var(--text-light)}
+.filter-bar{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;background:var(--bg)}
+.filter-select{padding:7px 24px 7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:var(--white);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;cursor:pointer;flex:1;min-width:0}
+.filter-select:focus{border-color:var(--blue)}
+.count-bar{padding:8px 18px;background:var(--bg);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-light);flex-shrink:0}
+.count-bar span{color:var(--navy);font-weight:800}
+.deal-list{flex:1;overflow-y:auto;scrollbar-width:thin}
+.deal-list::-webkit-scrollbar{width:4px}
+.deal-list::-webkit-scrollbar-track{background:var(--bg)}
+.deal-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* DEAL LIST ITEM */
+.deal-item{padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;gap:12px;align-items:flex-start}
+.deal-item:hover{background:var(--blue-light)}
+.deal-item.active{background:var(--blue-light);border-left:3px solid var(--blue)}
+.deal-thumb{width:60px;height:60px;border-radius:8px;background:linear-gradient(135deg,#c8e8f5,#a8d4ea);flex-shrink:0;overflow:hidden}
+.deal-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.deal-info{flex:1;min-width:0}
+.deal-price{font-size:15px;font-weight:800;color:var(--navy);line-height:1}
+.deal-entry{font-size:10px;color:var(--text-light);font-weight:600;margin-bottom:4px}
+.deal-location{font-size:11px;color:var(--text-mid);display:flex;align-items:center;gap:3px;margin-bottom:5px}
+.deal-location svg{color:var(--blue);flex-shrink:0}
+.deal-specs{font-size:10px;color:var(--text-light)}
+.deal-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.badge-Cash{background:rgba(16,185,129,.15);color:#059669}
+.badge-SubTo{background:rgba(41,171,226,.15);color:var(--blue-dark)}
+.badge-SF{background:rgba(247,148,29,.15);color:#c05621}
+.badge-Hybrid{background:rgba(139,92,246,.15);color:#7c3aed}
+
+/* LOADING / EMPTY */
+.list-state{padding:40px 18px;text-align:center;color:var(--text-light)}
+.list-state h3{font-size:15px;font-weight:700;color:var(--text-mid);margin-bottom:6px}
+.list-state p{font-size:12px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MAP */
+#map{flex:1;z-index:1}
+
+/* LEAFLET OVERRIDES */
+.leaflet-popup-content-wrapper{border-radius:12px;box-shadow:var(--shadow);border:none;padding:0;overflow:hidden;min-width:220px}
+.leaflet-popup-content{margin:0;font-family:var(--font)}
+.leaflet-popup-tip-container{display:none}
+.popup-inner{padding:16px}
+.popup-badge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.popup-price{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:2px}
+.popup-entry{font-size:11px;color:var(--text-light);font-weight:600;margin-bottom:8px}
+.popup-loc{font-size:11px;color:var(--text-mid);margin-bottom:4px}
+.popup-specs{font-size:11px;color:var(--text-light);margin-bottom:12px}
+.popup-hl{font-size:11px;color:var(--text-mid);line-height:1.5;margin-bottom:12px;padding-top:8px;border-top:1px solid var(--border)}
+.popup-btn{display:block;width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:background .15s}
+.popup-btn:hover{background:var(--blue-dark)}
+
+/* CUSTOM MARKERS */
+.marker-pin{width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.marker-inner{transform:rotate(45deg);font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.marker-Cash{background:var(--green)}
+.marker-SubTo{background:var(--blue)}
+.marker-SF{background:var(--orange)}
+.marker-Hybrid,.marker-other{background:var(--purple)}
+
+/* LEGEND */
+.legend{position:absolute;bottom:20px;right:20px;background:rgba(255,255,255,.96);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);z-index:500;font-size:11px}
+.legend h4{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-weight:600;color:var(--text-mid)}
+.legend-item:last-child{margin-bottom:0}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+
+/* MOBILE TOGGLE */
+.mob-toggle{display:none;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:600;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+
+/* GEOCODE STATUS */
+.geo-bar{padding:6px 18px;background:#fffbeb;border-bottom:1px solid #fcd34d;font-size:11px;color:#92400e;font-weight:500;display:none;align-items:center;gap:6px;flex-shrink:0}
+.geo-bar.show{display:flex}
+
+@media(max-width:768px){
+  .sidebar{position:absolute;bottom:0;left:0;right:0;width:100%;height:55%;transform:translateY(calc(100% - 52px));border-top-left-radius:16px;border-top-right-radius:16px;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
+  .sidebar.open{transform:translateY(0)}
+  .sidebar-head{border-top-left-radius:16px;border-top-right-radius:16px}
+  .mob-toggle{display:block}
+  .legend{bottom:auto;top:70px;right:10px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+    All Deals
+  </a>
+  <a href="/" class="nav-logo"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
+  <div class="nav-title">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    Deal Map
+  </div>
+</nav>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <h2>Active Deals</h2>
+      <p>Click any deal or marker to view details</p>
+    </div>
+    <div class="filter-bar">
+      <select class="filter-select" id="f-type" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option>Cash</option>
+        <option>SubTo</option>
+        <option>Seller Finance</option>
+        <option>Hybrid</option>
+      </select>
+      <select class="filter-select" id="f-state" onchange="applyFilters()">
+        <option value="">All States</option>
+      </select>
+    </div>
+    <div class="geo-bar" id="geo-bar">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span id="geo-status">Locating deals on map…</span>
+    </div>
+    <div class="count-bar"><span id="deal-count">0</span> active deals</div>
+    <div class="deal-list" id="deal-list">
+      <div class="list-state"><div class="spinner"></div><h3>Loading deals…</h3><p>Fetching from live sheet</p></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <h4>Deal Type</h4>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Cash</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Subject To</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Seller Finance</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Hybrid / Other</div>
+  </div>
+
+  <button class="mob-toggle" onclick="toggleSidebar()">📋 View Deals List</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+
+// ─── CONFIG ────────────────────────────────────────────────────
+var SHEET_ID = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
+// Base URL for deal pages — auto-detects current domain
+var DEAL_BASE = (function(){
+  var h=window.location.hostname;
+  if(h==='localhost'||h==='127.0.0.1')return '';
+  return window.location.origin;
+})();
+
+// ─── MAP INIT ──────────────────────────────────────────────────
+var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([37.5,-96],4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+  attribution:'&copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains:'abcd',maxZoom:19
+}).addTo(map);
+L.control.zoom({position:'topright'}).addTo(map);
+
+// ─── STATE ─────────────────────────────────────────────────────
+var ALL_DEALS=[];
+var MARKERS={};
+var LAYER=L.layerGroup().addTo(map);
+var activeId=null;
+
+// ─── SHEET PARSE ───────────────────────────────────────────────
+function parseGviz(text){
+  var m=text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if(m)return JSON.parse(m[1]);
+  var s=text.indexOf('{');
+  if(s>-1)return JSON.parse(text.substring(s,text.lastIndexOf('}')+1));
+  throw new Error('Cannot parse sheet');
+}
+function getCol(row){
+  var names=Array.prototype.slice.call(arguments,1);
+  for(var i=0;i<names.length;i++){if(row[names[i]]!==undefined&&row[names[i]]!=='')return row[names[i]];}
+  return '';
+}
+function money(n){var v=parseFloat(n);return v?'$'+v.toLocaleString():'—';}
+
+// ─── GEOCODE via Nominatim (free, no key) ──────────────────────
+var geoCache={};
+var geoQueue=[];
+var geoRunning=false;
+
+function geocode(city,state,zip,cb){
+  var key=(city+','+state).toLowerCase();
+  if(geoCache[key]){cb(geoCache[key]);return;}
+  geoQueue.push({city:city,state:state,zip:zip,key:key,cb:cb});
+  if(!geoRunning)runGeoQueue();
+}
+
+function runGeoQueue(){
+  if(!geoQueue.length){geoRunning=false;hideGeoBar();return;}
+  geoRunning=true;
+  var item=geoQueue.shift();
+  var query=encodeURIComponent(item.city+', '+item.state+', USA');
+  var url='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+query;
+  fetch(url,{headers:{'Accept-Language':'en'}})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data&&data[0]){
+        var ll=[parseFloat(data[0].lat),parseFloat(data[0].lon)];
+        geoCache[item.key]=ll;
+        item.cb(ll);
+      }else{item.cb(null);}
+    })
+    .catch(function(){item.cb(null);})
+    .finally(function(){
+      // Nominatim requires 1 req/sec
+      setTimeout(runGeoQueue,1100);
+    });
+}
+
+function showGeoBar(msg){
+  var bar=document.getElementById('geo-bar');
+  document.getElementById('geo-status').textContent=msg;
+  bar.classList.add('show');
+}
+function hideGeoBar(){
+  document.getElementById('geo-bar').classList.remove('show');
+}
+
+// ─── MARKER CREATION ───────────────────────────────────────────
+function markerColor(type){
+  if(!type)return'#8B5CF6';
+  if(type==='Cash')return'#10B981';
+  if(type==='SubTo')return'#29ABE2';
+  if(/Seller Finance/i.test(type))return'#F7941D';
+  return'#8B5CF6';
+}
+
+function makeMarkerIcon(deal){
+  var color=markerColor(deal.dealType);
+  var label=deal.dealType==='Seller Finance'?'SF':deal.dealType==='SubTo'?'ST':deal.dealType==='Cash'?'$':'HY';
+  var html='<div style="width:36px;height:36px;background:'+color+';border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer">'
+    +'<span style="transform:rotate(45deg);font-size:10px;font-weight:800;color:#fff;font-family:Poppins,sans-serif">'+label+'</span>'
+    +'</div>';
+  return L.divIcon({html:html,className:'',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-36]});
+}
+
+function makePopup(deal){
+  var color=markerColor(deal.dealType);
+  var entry=deal.entryFee||deal.askingPrice;
+  var dealUrl=DEAL_BASE+'/deal.html?id='+encodeURIComponent(deal.id);
+  var html='<div style="font-family:Poppins,sans-serif;min-width:220px;max-width:260px">'
+    +'<div style="background:'+color+';padding:12px 16px 10px">'
+      +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">'+deal.dealType+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:#fff;line-height:1">'+money(entry)+'</div>'
+      +(entry&&entry!==deal.askingPrice?'<div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px">'+money(deal.askingPrice)+' asking</div>':'')
+    +'</div>'
+    +'<div style="padding:14px 16px">'
+      +'<div style="font-size:12px;font-weight:600;color:#0D1F3C;margin-bottom:3px">'+deal.streetAddress+'</div>'
+      +'<div style="font-size:11px;color:#718096;display:flex;align-items:center;gap:3px;margin-bottom:8px">'
+        +'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+        +(deal.nearestMetro||deal.city+', '+deal.state)
+      +'</div>'
+      +(deal.beds||deal.baths||deal.sqft?'<div style="font-size:11px;color:#718096;margin-bottom:8px">'
+        +[deal.beds?deal.beds+' bed':null,deal.baths?deal.baths+' bath':null,deal.sqft?Number(deal.sqft).toLocaleString()+' ft²':null].filter(Boolean).join(' · ')
+      +'</div>':'')
+      +(deal.highlight1?'<div style="font-size:11px;color:#4A5568;line-height:1.5;padding-top:8px;border-top:1px solid #E2E8F0;margin-bottom:10px">'+deal.highlight1+'</div>':'')
+      +(deal.coe?'<div style="font-size:10px;color:#718096;margin-bottom:10px">COE: '+(function(){try{return new Date(deal.coe+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return deal.coe;}})()+'</div>':'')
+      +'<a href="'+dealUrl+'" style="display:block;width:100%;padding:10px;background:#29ABE2;color:#fff;border:none;border-radius:8px;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:background .15s">View Deal Details →</a>'
+    +'</div>'
+  +'</div>';
+  return html;
+}
+
+// ─── RENDER LIST ITEM ──────────────────────────────────────────
+function typeClass(t){
+  if(t==='Cash')return'Cash';
+  if(t==='SubTo')return'SubTo';
+  if(t==='Seller Finance')return'SF';
+  return'Hybrid';
+}
+
+function renderListItem(deal){
+  var entry=deal.entryFee||deal.askingPrice;
+  var tc=typeClass(deal.dealType);
+  var label=deal.dealType==='Seller Finance'?'Seller Finance':deal.dealType;
+  var html='<div class="deal-item" id="li-'+deal.id+'" onclick="selectDeal(\''+deal.id.replace(/'/g,"\\'")+'\')">'
+    +'<div class="deal-thumb">'
+      +(deal.folderUrl?'<div style="width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5,#a8d4ea);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>'
+      :'<div style="width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>')
+    +'</div>'
+    +'<div class="deal-info">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+        +'<div class="deal-price">'+money(entry)+'</div>'
+        +'<span class="deal-badge badge-'+tc+'">'+label+'</span>'
+      +'</div>'
+      +(entry&&entry!==deal.askingPrice?'<div class="deal-entry">'+money(deal.askingPrice)+' asking</div>':'')
+      +'<div class="deal-location"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'+(deal.nearestMetro||deal.city+', '+deal.state)+'</div>'
+      +'<div class="deal-specs">'
+        +[deal.beds?deal.beds+' bd':null,deal.baths?deal.baths+' ba':null,deal.sqft?Number(deal.sqft).toLocaleString()+' ft²':null,deal.yearBuilt?'Built '+deal.yearBuilt:null].filter(Boolean).join(' · ')
+      +'</div>'
+    +'</div>'
+  +'</div>';
+  return html;
+}
+
+// ─── SELECT DEAL ───────────────────────────────────────────────
+function selectDeal(id){
+  // Deactivate previous
+  if(activeId){
+    var prev=document.getElementById('li-'+activeId);
+    if(prev)prev.classList.remove('active');
+  }
+  activeId=id;
+  var li=document.getElementById('li-'+id);
+  if(li){li.classList.add('active');li.scrollIntoView({behavior:'smooth',block:'nearest'});}
+
+  // Open marker popup and fly to
+  if(MARKERS[id]){
+    var m=MARKERS[id];
+    map.flyTo(m.getLatLng(),13,{duration:0.8});
+    setTimeout(function(){m.openPopup();},900);
+  }
+
+  // Open sidebar on mobile
+  document.getElementById('sidebar').classList.add('open');
+}
+
+// ─── FILTERS ───────────────────────────────────────────────────
+function applyFilters(){
+  var type=document.getElementById('f-type').value;
+  var state=document.getElementById('f-state').value;
+  var filtered=ALL_DEALS.filter(function(d){
+    if(type&&d.dealType!==type)return false;
+    if(state&&d.state!==state)return false;
+    return true;
+  });
+
+  // Update list
+  var list=document.getElementById('deal-list');
+  if(!filtered.length){
+    list.innerHTML='<div class="list-state"><h3>No deals match</h3><p>Try different filters</p></div>';
+  }else{
+    list.innerHTML=filtered.map(renderListItem).join('');
+  }
+  document.getElementById('deal-count').textContent=filtered.length;
+
+  // Update markers visibility
+  Object.keys(MARKERS).forEach(function(id){
+    var marker=MARKERS[id];
+    var deal=ALL_DEALS.find(function(d){return d.id===id;});
+    var show=filtered.some(function(d){return d.id===id;});
+    if(show&&!map.hasLayer(marker)){marker.addTo(map);}
+    else if(!show&&map.hasLayer(marker)){map.removeLayer(marker);}
+  });
+}
+
+function populateStateFilter(){
+  var states=[...new Set(ALL_DEALS.map(function(d){return d.state;}).filter(Boolean))].sort();
+  var sel=document.getElementById('f-state');
+  states.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+}
+
+// ─── PLACE MARKER ──────────────────────────────────────────────
+function placeMarker(deal,latlng){
+  if(!latlng)return;
+  // Add small random jitter so overlapping cities don't stack exactly
+  var jitter=0.008;
+  var ll=[latlng[0]+(Math.random()-.5)*jitter,latlng[1]+(Math.random()-.5)*jitter];
+  var marker=L.marker(ll,{icon:makeMarkerIcon(deal)});
+  marker.bindPopup(makePopup(deal),{maxWidth:280,className:'deal-popup'});
+  marker.on('click',function(){selectDeal(deal.id);});
+  marker.addTo(map);
+  MARKERS[deal.id]=marker;
+}
+
+// ─── MAIN LOAD ─────────────────────────────────────────────────
+function loadDeals(){
+  fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0')
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
+    .then(function(text){
+      var json=parseGviz(text);
+      var cols=json.table.cols.map(function(c){return c.label.trim();});
+      var rows=json.table.rows.map(function(row){
+        var o={};
+        cols.forEach(function(c,i){var cell=row.c[i];o[c]=cell?(cell.v!==null?String(cell.v).trim():''):'';});
+        return o;
+      });
+
+      ALL_DEALS=rows
+        .filter(function(r){return (r['Deal Status']||'').trim().toLowerCase()==='actively marketing';})
+        .map(function(r){
+          var photos=r['Photos']||'';
+          var folderUrl=photos.includes('/drive/folders/')?photos.split('?')[0]:'';
+          return {
+            id:r['Deal ID'],
+            dealType:r['Deal Type'],
+            streetAddress:r['Street Address'],
+            city:r['City'],state:r['State'],zip:r['ZIP'],
+            nearestMetro:r['Nearest Metro Area'],
+            askingPrice:parseFloat(r['Asking Price'])||0,
+            entryFee:parseFloat(r['Entry Fee'])||0,
+            beds:r['Beds'],baths:r['Baths'],sqft:r['Sqft'],yearBuilt:r['Year Built']||r['Year Build'],
+            coe:r['COE'],
+            highlight1:r['Highlight 1'],
+            photos:photos,
+            folderUrl:folderUrl
+          };
+        })
+        .filter(function(d){return !!d.id;});
+
+      populateStateFilter();
+      applyFilters();
+
+      // Geocode and place markers
+      if(ALL_DEALS.length){
+        showGeoBar('Locating deals on map… ('+ALL_DEALS.length+' deals)');
+        var placed=0;
+        var bounds=[];
+        ALL_DEALS.forEach(function(deal){
+          geocode(deal.city,deal.state,deal.zip,function(ll){
+            placed++;
+            if(ll){
+              placeMarker(deal,ll);
+              bounds.push(ll);
+            }
+            document.getElementById('geo-status').textContent='Placing deals… '+placed+' of '+ALL_DEALS.length;
+            if(placed===ALL_DEALS.length){
+              hideGeoBar();
+              if(bounds.length>1){
+                try{map.fitBounds(bounds,{padding:[40,40]});}catch(e){}
+              }else if(bounds.length===1){
+                map.setView(bounds[0],10);
+              }
+            }
+          });
+        });
+      }
+    })
+    .catch(function(err){
+      document.getElementById('deal-list').innerHTML='<div class="list-state"><h3>Could not load deals</h3><p>'+err.message+'</p></div>';
+    });
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+loadDeals();
+</script>
+</body>
+</html>
