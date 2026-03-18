@@ -1,6 +1,6 @@
 [build]
-  publish = "."
-  functions = "netlify/functions"
+  publish = "termsforsale"
+  functions = "termsforsale/netlify/functions"
 
 [[redirects]]
   from = "/api/drive-photos"
