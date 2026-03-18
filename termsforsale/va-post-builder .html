@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Post Builder — Terms For Sale</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0D1F3C;--blue:#29ABE2;--blue-dark:#1a8bbf;--orange:#F7941D;--green:#10B981;--red:#e53e3e;--white:#fff;--bg:#F4F6F9;--border:#E2E8F0;--font:'Poppins',sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--navy);-webkit-font-smoothing:antialiased}
+
+/* LOGIN SCREEN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--navy)}
+.login-box{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center}
+.login-box img{height:44px;margin-bottom:24px}
+.login-box h2{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.login-box p{font-size:13px;color:#718096;margin-bottom:24px}
+.login-input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:14px;outline:none;margin-bottom:12px;transition:border .2s}
+.login-input:focus{border-color:var(--blue)}
+.login-btn{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:background .2s}
+.login-btn:hover{background:#1a3560}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none}
+
+/* BUILDER */
+#builder-screen{display:none;min-height:100vh}
+
+/* HEADER */
+.builder-nav{background:var(--navy);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.builder-nav img{height:36px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-tag{font-size:12px;color:rgba(255,255,255,.5);font-weight:500}
+.logout-btn{padding:7px 14px;border:1px solid rgba(255,255,255,.2);border-radius:7px;background:transparent;color:rgba(255,255,255,.7);font-family:var(--font);font-size:12px;cursor:pointer}
+
+/* MAIN LAYOUT */
+.builder-wrap{max-width:960px;margin:0 auto;padding:36px 24px 80px}
+.builder-title{font-size:28px;font-weight:900;color:var(--navy);margin-bottom:4px}
+.builder-sub{font-size:14px;color:#718096;margin-bottom:32px}
+
+/* PROGRESS BAR */
+.progress-bar{display:flex;gap:0;margin-bottom:36px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.progress-step{flex:1;padding:10px 14px;background:#fff;font-size:11px;font-weight:700;color:#718096;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:all .15s}
+.progress-step:last-child{border-right:none}
+.progress-step.active{background:var(--navy);color:#fff}
+.progress-step.done{background:#E6F9F0;color:#276749}
+
+/* SECTIONS */
+.form-section{display:none;background:#fff;border-radius:16px;border:1px solid var(--border);padding:28px;margin-bottom:20px}
+.form-section.active{display:block}
+.section-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.section-sub{font-size:13px;color:#718096;margin-bottom:22px}
+
+/* FORM ELEMENTS */
+.field-group{margin-bottom:18px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px}
+label{display:block;font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+label span{color:var(--red)}
+input[type=text],input[type=tel],input[type=email],select,textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--navy);outline:none;transition:border .2s;background:#fff}
+input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+textarea{resize:vertical;min-height:80px;line-height:1.6}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+.field-hint{font-size:11px;color:#a0aec0;margin-top:4px;line-height:1.5}
+.char-count{font-size:10px;color:#a0aec0;text-align:right;margin-top:2px}
+.char-count.over{color:var(--red)}
+
+/* REQUIRED BADGE */
+.required-note{font-size:11px;color:#a0aec0;margin-bottom:20px}
+.required-note span{color:var(--red)}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:22px 0}
+
+/* SECTION LABELS */
+.sub-label{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;margin-top:18px;display:flex;align-items:center;gap:6px}
+.sub-label:first-of-type{margin-top:0}
+
+/* PREVIEW BOX */
+.preview-box{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:16px;font-size:12px;color:#4A5568;line-height:1.8}
+.preview-url{font-size:13px;font-weight:600;color:var(--blue);word-break:break-all}
+
+/* NAV BUTTONS */
+.btn-row{display:flex;gap:10px;justify-content:space-between;margin-top:28px}
+.btn-back{padding:11px 24px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:#718096;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.btn-next{padding:11px 28px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer}
+.btn-next:hover{background:#1a3560}
+.btn-publish{padding:13px 32px;border:none;border-radius:8px;background:var(--orange);color:#fff;font-family:var(--font);font-size:14px;font-weight:800;cursor:pointer;transition:background .2s}
+.btn-publish:hover{background:#d97c0e}
+.btn-publish:disabled{opacity:.6;cursor:default}
+
+/* RESULT */
+.result-card{background:#fff;border-radius:16px;border:1px solid var(--border);padding:36px;text-align:center;display:none}
+.result-icon{width:56px;height:56px;border-radius:50%;background:#E6F9F0;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px}
+.result-card h3{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.result-card p{font-size:14px;color:#718096;margin-bottom:20px}
+.result-url{display:inline-block;padding:10px 18px;background:var(--blue-light,#EBF8FF);border:1px solid #d0eef9;border-radius:8px;font-size:13px;font-weight:600;color:var(--blue-dark,#1a8bbf);word-break:break-all;text-decoration:none;margin-bottom:20px}
+.btn-new{padding:11px 24px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer}
+
+/* ERROR */
+.form-err{background:#fff5f5;border:1px solid #feb2b2;border-radius:8px;padding:12px 16px;font-size:13px;color:var(--red);margin-top:16px;display:none}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+
+@media(max-width:640px){.field-row,.field-row-3{grid-template-columns:1fr}.builder-wrap{padding:24px 16px 60px}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale">
+    <h2>Deal Post Builder</h2>
+    <p>Enter your password to access the post builder.</p>
+    <input type="password" class="login-input" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="login-btn" onclick="checkPw()">Log In</button>
+    <div class="login-err" id="pw-err">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     BUILDER SCREEN
+══════════════════════════════════════ -->
+<div id="builder-screen">
+
+  <div class="builder-nav">
+    <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale">
+    <div class="nav-right">
+      <span class="nav-tag">Deal Post Builder</span>
+      <button class="logout-btn" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="builder-wrap">
+    <div class="builder-title">📝 New Deal Post</div>
+    <div class="builder-sub">Fill in the deal details below. Takes about 10 minutes. Post goes live in ~90 seconds after you click Publish.</div>
+
+    <!-- PROGRESS -->
+    <div class="progress-bar">
+      <div class="progress-step active" id="step-1-tab" onclick="goToStep(1)">1. Deal Info</div>
+      <div class="progress-step" id="step-2-tab" onclick="goToStep(2)">2. Numbers</div>
+      <div class="progress-step" id="step-3-tab" onclick="goToStep(3)">3. Write-Up</div>
+      <div class="progress-step" id="step-4-tab" onclick="goToStep(4)">4. Review</div>
+    </div>
+
+    <!-- ── STEP 1: DEAL INFO ── -->
+    <div class="form-section active" id="step-1">
+      <div class="section-title">🏠 Deal Information</div>
+      <div class="section-sub">Basic info about the deal. All fields marked <span style="color:var(--red)">*</span> are required.</div>
+
+      <div class="field-row">
+        <div>
+          <label>Deal ID <span>*</span></label>
+          <input type="text" id="dealId" placeholder="e.g. DP-002">
+          <div class="field-hint">From your Google Sheet</div>
+        </div>
+        <div>
+          <label>Deal Status <span>*</span></label>
+          <select id="status">
+            <option value="Active">Active</option>
+            <option value="Under Contract">Under Contract</option>
+            <option value="Sold">Sold</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div>
+          <label>Deal Type <span>*</span></label>
+          <select id="dealType">
+            <option value="">Select deal type…</option>
+            <option>Cash</option>
+            <option>Subject To</option>
+            <option>Seller Finance</option>
+            <option>Morby Method</option>
+            <option>Lease Option</option>
+            <option>Novation</option>
+            <option>DSCR</option>
+            <option>Hybrid</option>
+          </select>
+        </div>
+        <div>
+          <label>Property Type</label>
+          <select id="propertyType">
+            <option value="">Select…</option>
+            <option>Single Family</option>
+            <option>Condo / Townhouse</option>
+            <option>Multi-Family</option>
+            <option>Mobile Home</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row-3">
+        <div>
+          <label>City <span>*</span></label>
+          <input type="text" id="city" placeholder="e.g. Phoenix">
+        </div>
+        <div>
+          <label>State <span>*</span></label>
+          <input type="text" id="state" placeholder="e.g. AZ" maxlength="2">
+        </div>
+        <div>
+          <label>ZIP Code</label>
+          <input type="text" id="zip" placeholder="e.g. 85023">
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="field-group">
+        <label>Post Headline <span>*</span></label>
+        <input type="text" id="headline" placeholder="e.g. Seller Finance Deal — San Antonio TX | $22.5K Entry, 4.5%/30yr Terms">
+        <div class="field-hint">Deal Type + City State + Key hook. This is the H1 title of the post.</div>
+      </div>
+
+      <div class="field-group">
+        <label>Opening Hook <span>*</span></label>
+        <textarea id="hook" rows="2" placeholder="1-2 punchy sentences. Why should an investor care about this deal RIGHT NOW?&#10;e.g. Free and clear property. Owner financing at 4.5% for 30 years — walk in with $22.5K and own a cash-flowing 4-bedroom in San Antonio."></textarea>
+      </div>
+
+      <div class="field-group">
+        <label>SEO Meta Description <span>*</span></label>
+        <input type="text" id="metaDesc" placeholder="155 characters max — used by Google" oninput="updateCharCount(this,'meta-count',155)">
+        <div class="char-count" id="meta-count">0 / 155</div>
+        <div class="field-hint">Include: city, deal type, entry fee, key benefit. Check count above.</div>
+      </div>
+
+      <div class="field-row">
+        <div>
+          <label>Access Type</label>
+          <select id="access">
+            <option value="">Select…</option>
+            <option>Lockbox</option>
+            <option>Agent Accompanied</option>
+            <option>Contact for Access</option>
+            <option>Virtual Only</option>
+          </select>
+        </div>
+        <div>
+          <label>Occupancy</label>
+          <select id="occupancy">
+            <option value="">Select…</option>
+            <option>Vacant</option>
+            <option>Tenant Occupied</option>
+            <option>Owner Occupied</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <div></div>
+        <button class="btn-next" onclick="goToStep(2)">Next: Numbers →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: NUMBERS ── -->
+    <div class="form-section" id="step-2">
+      <div class="section-title">💰 Deal Numbers</div>
+      <div class="section-sub">Fill in what you have. Leave blank what doesn't apply to this deal type.</div>
+
+      <div class="sub-label">📊 Core Numbers</div>
+      <div class="field-row">
+        <div>
+          <label>Asking Price <span>*</span></label>
+          <input type="text" id="askingPrice" placeholder="e.g. $155,000">
+        </div>
+        <div>
+          <label>Entry Fee <span>*</span></label>
+          <input type="text" id="entryFee" placeholder="e.g. $20,000">
+          <div class="field-hint">Out-of-pocket amount to get into the deal</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label>ARV (After Repair Value)</label>
+          <input type="text" id="arv" placeholder="e.g. $210,000">
+        </div>
+        <div>
+          <label>Est. Monthly Rent</label>
+          <input type="text" id="estRent" placeholder="e.g. $1,550/mo">
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label>COE Date</label>
+          <input type="text" id="coe" placeholder="e.g. May 1, 2026">
+        </div>
+        <div>
+          <label>Year Built</label>
+          <input type="text" id="yearBuilt" placeholder="e.g. 2004">
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="sub-label">🏠 Property Details</div>
+      <div class="field-row-3">
+        <div>
+          <label>Beds / Baths</label>
+          <input type="text" id="bedsBaths" placeholder="e.g. 3 bd / 2 ba">
+        </div>
+        <div>
+          <label>Square Feet</label>
+          <input type="text" id="sqft" placeholder="e.g. 1,450">
+        </div>
+        <div>
+          <label>HOA</label>
+          <input type="text" id="hoa" placeholder="e.g. $150/mo or None">
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="sub-label">🔑 Subject-To Fields (leave blank if not SubTo)</div>
+      <div class="field-row-3">
+        <div>
+          <label>Loan Balance</label>
+          <input type="text" id="loanBalance" placeholder="e.g. $135,000">
+        </div>
+        <div>
+          <label>Interest Rate</label>
+          <input type="text" id="interestRate" placeholder="e.g. 2.75%">
+        </div>
+        <div>
+          <label>PITI Payment</label>
+          <input type="text" id="piti" placeholder="e.g. $1,210/mo">
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="sub-label">📋 Seller Finance Fields (leave blank if not SF)</div>
+      <div class="field-group">
+        <label>SF Terms</label>
+        <input type="text" id="sfTerms" placeholder="e.g. $22,500 down / 4.5% / 30yr">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goToStep(1)">← Back</button>
+        <button class="btn-next" onclick="goToStep(3)">Next: Write-Up →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: WRITE-UP ── -->
+    <div class="form-section" id="step-3">
+      <div class="section-title">✍️ Deal Write-Up</div>
+      <div class="section-sub">This becomes the article body. Use notes from your dispo team. Write in plain English — short paragraphs work best.</div>
+
+      <div class="field-group">
+        <label>Why Does This Deal Exist? <span>*</span></label>
+        <textarea id="whyExists" rows="4" placeholder="Seller motivation + context. e.g. Seller relocated for work and needs a fast close. Property has been vacant 3 months. Rather than list on MLS and wait, they agreed to sign over the deed and let a buyer take over the existing loan.&#10;&#10;Write 2-3 paragraphs. Each paragraph on its own line."></textarea>
+        <div class="field-hint">Write each paragraph on a new line. 2-4 paragraphs ideal.</div>
+      </div>
+
+      <div class="field-group">
+        <label>Investment Strategies That Work Here <span>*</span></label>
+        <textarea id="strategies" rows="5" placeholder="Describe 2-3 strategies an investor could use.&#10;&#10;e.g. Buy and Hold: At $1,210/mo PITI vs $1,550 market rent, cash flow is approximately $240/mo after basic expenses...&#10;&#10;BRRRR: After 12 months seasoning, a 75% LTV refinance at $210K ARV pulls out $157,500 — nearly recovering acquisition cost..."></textarea>
+        <div class="field-hint">Write each strategy as its own paragraph, on a new line.</div>
+      </div>
+
+      <div class="field-group">
+        <label>Risks <span>*</span></label>
+        <textarea id="risks" rows="4" placeholder="List each risk on its own line. Be honest — it builds trust.&#10;&#10;e.g. Due-on-sale clause risk — consult a creative finance attorney before closing&#10;Roof is original (2004) — budget for potential replacement within 5-7 years&#10;HOA rental restrictions — confirm rules before assuming any rental strategy"></textarea>
+        <div class="field-hint">One risk per line. Minimum 3 risks.</div>
+      </div>
+
+      <div class="field-row">
+        <div>
+          <label>Best Fit For (one per line) <span>*</span></label>
+          <textarea id="buyerFitYes" rows="4" placeholder="Want stable monthly cash flow&#10;Comfortable with creative finance&#10;Have reserves and plan to hold 5+ years"></textarea>
+          <div class="field-hint">These show as green ✓ boxes</div>
+        </div>
+        <div>
+          <label>Not a Fit For (one per line) <span>*</span></label>
+          <textarea id="buyerFitNo" rows="4" placeholder="Need to flip fast&#10;Require conventional financing&#10;Don't have a creative finance attorney"></textarea>
+          <div class="field-hint">These show as red ✗ boxes</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goToStep(2)">← Back</button>
+        <button class="btn-next" onclick="goToStep(4)">Next: Review →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: REVIEW + PUBLISH ── -->
+    <div class="form-section" id="step-4">
+      <div class="section-title">✅ Review &amp; Publish</div>
+      <div class="section-sub">Check everything looks right, then hit Publish. Your post will be live in about 90 seconds.</div>
+
+      <div class="preview-box" id="preview-box"></div>
+
+      <div class="form-err" id="pub-err"></div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goToStep(3)">← Back</button>
+        <button class="btn-publish" id="pub-btn" onclick="publishPost()">🚀 Publish Post</button>
+      </div>
+    </div>
+
+    <!-- ── SUCCESS ── -->
+    <div class="result-card" id="result-card">
+      <div class="result-icon">✅</div>
+      <h3>Post Published!</h3>
+      <p>Your deal post is live. It may take up to 90 seconds for Netlify to deploy. Share this link:</p>
+      <a id="result-url" class="result-url" href="#" target="_blank"></a>
+      <br>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:8px">
+        <button class="btn-new" onclick="startNew()">📝 Create Another Post</button>
+        <a id="result-view" href="#" target="_blank" style="padding:11px 20px;background:var(--blue);color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">View Post →</a>
+      </div>
+    </div>
+
+  </div><!-- end builder-wrap -->
+</div><!-- end builder-screen -->
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────
+var SESSION_KEY = 'tfs_builder_auth';
+
+// ── LOGIN ──────────────────────────────────────────────────────
+function checkPw() {
+  var pw = document.getElementById('pw-input').value;
+  if (!pw) return;
+
+  // Verify against server — POST to create-post with just the password
+  fetch('/api/create-post', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pw, authCheck: true })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error && data.error === 'Incorrect password') {
+      var err = document.getElementById('pw-err');
+      err.style.display = 'block';
+      document.getElementById('pw-input').value = '';
+      return;
+    }
+    // Any response other than wrong password = auth passed
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('builder-screen').style.display = 'block';
+  })
+  .catch(function() {
+    // If server isn't configured yet, allow basic access for testing
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('builder-screen').style.display = 'block';
+  });
+}
+
+function logout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+// Check if already logged in
+if (sessionStorage.getItem(SESSION_KEY)) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('builder-screen').style.display = 'block';
+}
+
+// ── STEP NAVIGATION ────────────────────────────────────────────
+var currentStep = 1;
+
+function goToStep(n) {
+  // Validate before advancing
+  if (n > currentStep) {
+    if (!validateStep(currentStep)) return;
+  }
+
+  // Hide all sections
+  for (var i = 1; i <= 4; i++) {
+    document.getElementById('step-' + i).classList.remove('active');
+    document.getElementById('step-' + i + '-tab').classList.remove('active');
+    if (i < n) document.getElementById('step-' + i + '-tab').classList.add('done');
+    else document.getElementById('step-' + i + '-tab').classList.remove('done');
+  }
+
+  // Show target
+  document.getElementById('step-' + n).classList.add('active');
+  document.getElementById('step-' + n + '-tab').classList.add('active');
+  currentStep = n;
+
+  // Build preview on step 4
+  if (n === 4) buildPreview();
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── VALIDATION ─────────────────────────────────────────────────
+function validateStep(step) {
+  var required = {
+    1: [
+      { id: 'dealId', label: 'Deal ID' },
+      { id: 'dealType', label: 'Deal Type' },
+      { id: 'city', label: 'City' },
+      { id: 'state', label: 'State' },
+      { id: 'headline', label: 'Post Headline' },
+      { id: 'hook', label: 'Opening Hook' },
+      { id: 'metaDesc', label: 'SEO Meta Description' }
+    ],
+    2: [
+      { id: 'askingPrice', label: 'Asking Price' },
+      { id: 'entryFee', label: 'Entry Fee' }
+    ],
+    3: [
+      { id: 'whyExists', label: 'Why Does This Deal Exist' },
+      { id: 'strategies', label: 'Investment Strategies' },
+      { id: 'risks', label: 'Risks' },
+      { id: 'buyerFitYes', label: 'Best Fit For' },
+      { id: 'buyerFitNo', label: 'Not a Fit For' }
+    ]
+  };
+
+  var fields = required[step] || [];
+  for (var i = 0; i < fields.length; i++) {
+    var val = document.getElementById(fields[i].id).value.trim();
+    if (!val) {
+      alert('Please fill in: ' + fields[i].label);
+      document.getElementById(fields[i].id).focus();
+      return false;
+    }
+  }
+
+  // Meta description length check
+  if (step === 1) {
+    var meta = document.getElementById('metaDesc').value;
+    if (meta.length > 155) {
+      alert('SEO Meta Description is too long (' + meta.length + ' chars). Must be 155 or less.');
+      document.getElementById('metaDesc').focus();
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// ── CHAR COUNT ─────────────────────────────────────────────────
+function updateCharCount(input, countId, max) {
+  var len = input.value.length;
+  var el = document.getElementById(countId);
+  el.textContent = len + ' / ' + max;
+  el.classList.toggle('over', len > max);
+}
+
+// ── PREVIEW ────────────────────────────────────────────────────
+function buildPreview() {
+  var slug = slugify(
+    (document.getElementById('dealType').value || 'deal') + '-deal-' +
+    (document.getElementById('city').value || '') + '-' +
+    (document.getElementById('state').value || '')
+  );
+  var url = 'https://deals.termsforsale.com/blog/posts/' + slug + '.html';
+
+  var box = document.getElementById('preview-box');
+  box.innerHTML = [
+    row('Post URL', '<a href="' + url + '" target="_blank" class="preview-url">' + url + '</a>'),
+    row('Headline', esc(document.getElementById('headline').value)),
+    row('Deal Type', esc(document.getElementById('dealType').value)),
+    row('Location', esc(document.getElementById('city').value) + ', ' + esc(document.getElementById('state').value)),
+    row('Deal ID', esc(document.getElementById('dealId').value)),
+    row('Status', esc(document.getElementById('status').value)),
+    row('Asking Price', esc(document.getElementById('askingPrice').value)),
+    row('Entry Fee', esc(document.getElementById('entryFee').value)),
+    row('COE', esc(document.getElementById('coe').value) || '—'),
+    row('Meta Description', esc(document.getElementById('metaDesc').value) + ' <span style="color:#a0aec0">(' + document.getElementById('metaDesc').value.length + ' chars)</span>'),
+  ].join('');
+}
+
+function row(label, val) {
+  return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #EDF2F7;font-size:13px">'
+    + '<span style="min-width:140px;font-weight:600;color:#4A5568">' + label + '</span>'
+    + '<span style="color:#0D1F3C">' + val + '</span></div>';
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function slugify(str) {
+  return str.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+// ── PUBLISH ────────────────────────────────────────────────────
+function publishPost() {
+  var btn = document.getElementById('pub-btn');
+  var err = document.getElementById('pub-err');
+  err.style.display = 'none';
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Publishing…';
+
+  var payload = {
+    password:     sessionStorage.getItem('tfs_builder_pw') || '',
+    dealId:       document.getElementById('dealId').value.trim(),
+    status:       document.getElementById('status').value,
+    dealType:     document.getElementById('dealType').value,
+    propertyType: document.getElementById('propertyType').value,
+    city:         document.getElementById('city').value.trim(),
+    state:        document.getElementById('state').value.trim().toUpperCase(),
+    zip:          document.getElementById('zip').value.trim(),
+    headline:     document.getElementById('headline').value.trim(),
+    hook:         document.getElementById('hook').value.trim(),
+    metaDesc:     document.getElementById('metaDesc').value.trim(),
+    access:       document.getElementById('access').value,
+    occupancy:    document.getElementById('occupancy').value,
+    askingPrice:  document.getElementById('askingPrice').value.trim(),
+    entryFee:     document.getElementById('entryFee').value.trim(),
+    arv:          document.getElementById('arv').value.trim(),
+    estRent:      document.getElementById('estRent').value.trim(),
+    coe:          document.getElementById('coe').value.trim(),
+    yearBuilt:    document.getElementById('yearBuilt').value.trim(),
+    bedsBaths:    document.getElementById('bedsBaths').value.trim(),
+    sqft:         document.getElementById('sqft').value.trim(),
+    hoa:          document.getElementById('hoa').value.trim(),
+    loanBalance:  document.getElementById('loanBalance').value.trim(),
+    interestRate: document.getElementById('interestRate').value.trim(),
+    piti:         document.getElementById('piti').value.trim(),
+    sfTerms:      document.getElementById('sfTerms').value.trim(),
+    whyExists:    document.getElementById('whyExists').value.trim(),
+    strategies:   document.getElementById('strategies').value.trim(),
+    risks:        document.getElementById('risks').value.trim(),
+    buyerFitYes:  document.getElementById('buyerFitYes').value.trim(),
+    buyerFitNo:   document.getElementById('buyerFitNo').value.trim(),
+    password:     sessionStorage.getItem('tfs_builder_pw') || ''
+  };
+
+  fetch('/api/create-post', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) {
+      err.textContent = '❌ ' + data.error;
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '🚀 Publish Post';
+      return;
+    }
+    // Success
+    document.getElementById('step-4').style.display = 'none';
+    var rc = document.getElementById('result-card');
+    rc.style.display = 'block';
+    document.getElementById('result-url').textContent = data.url;
+    document.getElementById('result-url').href = data.url;
+    document.getElementById('result-view').href = data.url;
+  })
+  .catch(function(e) {
+    err.textContent = '❌ Network error. Please try again.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '🚀 Publish Post';
+  });
+}
+
+// Store password when login succeeds
+var origCheckPw = checkPw;
+checkPw = function() {
+  var pw = document.getElementById('pw-input').value;
+  sessionStorage.setItem('tfs_builder_pw', pw);
+  origCheckPw();
+};
+
+// ── RESET ──────────────────────────────────────────────────────
+function startNew() {
+  // Clear all fields
+  document.querySelectorAll('input[type=text], textarea').forEach(function(el) { el.value = ''; });
+  document.querySelectorAll('select').forEach(function(el) { el.selectedIndex = 0; });
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('step-4').style.display = 'block';
+  goToStep(1);
+}
+</script>
+
+</body>
+</html>
