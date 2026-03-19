@@ -325,6 +325,14 @@ footer{background:var(--navy);padding:52px 55px 0}
 }
 </style>
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DRV6NWNY06"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DRV6NWNY06');
+</script>
 </head>
 <body>
 
@@ -856,9 +864,23 @@ function makeCard(d){
     photoHtml=`<div class="deal-card-photo-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
   }
 
+  const dl = (function(d){
+    if(!d)return null;
+    var s=String(d).trim();
+    var gm=s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+    var dt=gm?new Date(parseInt(gm[1]),parseInt(gm[2]),parseInt(gm[3]),12,0,0):new Date(s+'T12:00:00');
+    if(isNaN(dt.getTime()))return null;
+    return Math.ceil((dt-new Date())/864e5);
+  })(d.coe);
+
+  const statusBadge = dl!==null&&dl<=7
+    ? `<div style="position:absolute;top:8px;right:8px;background:rgba(247,148,29,.95);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px">⏰ ${dl}d left</div>`
+    : '';
+
   return`<div class="deal-card" onclick="clickDeal('${safeId}')">
     <div class="deal-card-photo">
       ${photoHtml}
+      ${statusBadge}
       <div class="deal-card-save"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
       <div class="deal-card-type ${typeClass(d.dealType)}">${typeLabel(d.dealType)}</div>
     </div>
