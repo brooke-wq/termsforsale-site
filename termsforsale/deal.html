@@ -834,8 +834,9 @@ function parseRow(r) {
     piti:         parseMoney(g(r,'PITI','PITI ','Monthly Payment')),
     subtoBalance: parseMoney(g(r,'SubTo Loan Balance','Loan Balance','Sub To Loan Balance','SubTo Balance')),
     subtoRate:    g(r,'SubTo Rate','SubTo Rate (%)','SubTo Interest Rate','Interest Rate'),
+    loanType:     g(r,'Loan Type','SubTo Loan Type','Mortgage Type','Loan Type (SubTo)'),
     sfAmount:     parseMoney(g(r,'SF Loan Amount','Seller Finance Amount','SF Amount')),
-    sfRate:       g(r,'SF Rate','SF Interest Rate','Seller Finance Rate'),
+    sfRate:       g(r,'SF Rate','SF Interest Rate','Seller Finance Rate','SF Rate (%)'),
     sfTerm:       g(r,'SF Term','SF Term ','Seller Finance Term').trim(),
     sfPayment:    parseMoney(g(r,'SF Payment','Seller Finance Payment')),
     rentFinal:    parseMoney(g(r,'Rent Final','Estimated Rent','Rent Est')),
@@ -985,9 +986,12 @@ function render(deal, allDeals) {
   var dl      = daysLeft(deal.coe);
 
   // Field name aliases — index.html sessionStorage uses different names than deal.html parseRow
-  // Normalize both so whichever source the deal came from, fields work correctly
   if (!deal.subtoBalance && deal.subtoLoanBalance) deal.subtoBalance = parseMoney(deal.subtoLoanBalance);
   if (!deal.sfAmount     && deal.sfLoanAmount)     deal.sfAmount     = parseMoney(deal.sfLoanAmount);
+  if (!deal.sfRate       && deal.sfRate !== 0)     deal.sfRate       = deal.sfRate || '';
+  // sfRate from index.html sessionStorage may come as a raw number e.g. 0.045
+  // convert to string so rate() function handles it correctly
+  if (deal.sfRate !== undefined && deal.sfRate !== '') deal.sfRate = String(deal.sfRate);
   if (!deal.subtoRate    && deal.subtoRate === undefined) deal.subtoRate = '';
   if (!deal.piti         && deal.piti === undefined)      deal.piti = 0;
   var folderId = getFolderId(deal.photos || '');
@@ -1065,7 +1069,7 @@ function render(deal, allDeals) {
     terms.push({l:'Loan Balance', v:deal.subtoBalance?money(deal.subtoBalance):'&#8212;'});
     terms.push({l:'Interest Rate', v:rate(deal.subtoRate)});
     terms.push({l:'PITI Payment', v:deal.piti?money(deal.piti)+'/mo':'&#8212;'});
-    terms.push({l:'Loan Type', v:'Existing Mortgage'});
+    terms.push({l:'Loan Type', v:deal.loanType||'Existing Mortgage'});
   }
   if (isSF) {
     terms.push({l:'SF Loan Amount', v:deal.sfAmount?money(deal.sfAmount):'&#8212;'});
@@ -1261,7 +1265,7 @@ function render(deal, allDeals) {
         +'</div>'
         +'<div class="deal-specs">'
           +(deal.beds?'<span>&#128716; '+deal.beds+' beds</span>':'')
-          +(deal.baths?'<span>&#128695; '+deal.baths+' baths</span>':'')
+          +(deal.baths?'<span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M9 6 Q9 3 12 3 Q15 3 15 6"/><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M4 16v3"/><path d="M20 16v3"/></svg> '+deal.baths+' baths</span>':'')
           +(deal.sqft?'<span>'+Number(deal.sqft).toLocaleString()+' sqft</span>':'')
         +'</div>'
         + addrHtml
