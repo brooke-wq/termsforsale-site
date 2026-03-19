@@ -3,218 +3,264 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investor Blog — Terms For Sale | Off-Market Deal Insights</title>
-<meta name="description" content="Real estate investor guides, creative finance breakdowns, and active deal spotlights from Terms For Sale.">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>Investor Blog — Deal Spotlights & Guides | Terms For Sale</title>
+<meta name="description" content="Active deal breakdowns, creative finance strategies, and market insights for real estate investors. Off-market deals updated weekly.">
 <link rel="canonical" href="https://deals.termsforsale.com/blog/">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--navy:#0D1F3C;--blue:#29ABE2;--blue-dark:#1a8bbf;--orange:#F7941D;--white:#fff;--bg:#F4F6F9;--text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;--border:#E2E8F0;--font:'Poppins',sans-serif}
+:root{--navy:#0D1F3C;--blue:#29ABE2;--blue-dark:#1a8bbf;--orange:#F7941D;--orange-dark:#d97c0e;--green:#10B981;--white:#fff;--bg:#F4F6F9;--text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;--border:#E2E8F0;--font:'Poppins',sans-serif;--r:12px}
 body{font-family:var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
-
-/* NAV */
-nav{background:var(--navy);height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100}
-.nav-logo img{height:42px}
-.nav-links{display:flex;align-items:center;gap:28px}
-.nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:14px;font-weight:500}
-.nav-links a:hover{color:#fff}
-.btn-nav{padding:8px 20px;border-radius:8px;background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;text-decoration:none;border:none;cursor:pointer}
-
-/* HERO */
+@keyframes spin{to{transform:rotate(360deg)}}
+nav{background:#fff;border-bottom:1px solid var(--border);height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.nav-logo img{height:40px}
+.nav-links{display:flex;gap:28px}
+.nav-links a{color:var(--text-mid);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+.nav-links a:hover,.nav-links a.active{color:var(--blue)}
+.btn-nav{padding:8px 20px;border-radius:8px;background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;text-decoration:none}
 .blog-hero{background:var(--navy);padding:64px 48px 56px;text-align:center}
-.blog-hero .eyebrow{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
-.blog-hero h1{font-size:48px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1;margin-bottom:16px}
+.eyebrow{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px}
+.blog-hero h1{font-size:48px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.08;margin-bottom:16px}
 .blog-hero p{font-size:16px;color:rgba(255,255,255,.6);max-width:520px;margin:0 auto;line-height:1.7}
-
-/* FILTERS */
-.filters{background:#fff;border-bottom:1px solid var(--border);padding:16px 48px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:70px;z-index:50}
-.filter-btn{padding:7px 16px;border-radius:50px;border:1.5px solid var(--border);background:#fff;color:var(--text-mid);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.hero-stats{display:flex;align-items:center;justify-content:center;gap:40px;margin-top:28px;flex-wrap:wrap}
+.hero-stat-num{font-size:32px;font-weight:900;color:#fff;display:block}
+.hero-stat-label{font-size:12px;color:rgba(255,255,255,.5);font-weight:500}
+.filters-bar{background:#fff;border-bottom:1px solid var(--border);padding:14px 48px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:70px;z-index:50}
+.filter-btn{padding:7px 16px;border-radius:50px;border:1.5px solid var(--border);background:#fff;color:var(--text-mid);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
 .filter-btn.on,.filter-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
-.post-count{margin-left:auto;font-size:12px;color:var(--text-light);font-weight:600}
-
+.filter-count{margin-left:auto;font-size:12px;color:var(--text-light);font-weight:600}
+.blog-wrap{max-width:1240px;margin:0 auto;padding:48px}
+/* FEATURED */
+.featured-post{display:grid;grid-template-columns:1.2fr 1fr;background:#fff;border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,.08);margin-bottom:40px;text-decoration:none;color:inherit;transition:all .2s}
+.featured-post:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.12)}
+.feat-img{background:linear-gradient(135deg,#c8e8f5,#a8d4ea);min-height:300px;position:relative;overflow:hidden}
+.feat-img img{width:100%;height:100%;object-fit:cover;display:block}
+.feat-badge{position:absolute;top:16px;left:16px;padding:5px 12px;border-radius:6px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase}
+.feat-status{position:absolute;top:16px;right:16px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;text-transform:uppercase}
+.s-active{background:rgba(16,185,129,.9);color:#fff}
+.s-contract{background:rgba(247,148,29,.9);color:#fff}
+.s-sold{background:rgba(107,114,128,.8);color:#fff}
+.feat-body{padding:36px;display:flex;flex-direction:column;justify-content:center}
+.feat-label{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.feat-title{font-size:26px;font-weight:800;color:var(--navy);line-height:1.2;margin-bottom:12px}
+.feat-hook{font-size:15px;color:var(--text-mid);line-height:1.65;margin-bottom:20px}
+.feat-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.feat-num{background:var(--bg);padding:10px 12px;text-align:center}
+.feat-num span:first-child{font-size:9px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:2px}
+.feat-num span:last-child{font-size:15px;font-weight:800;color:var(--navy);display:block}
+.feat-cta{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;background:var(--navy);color:#fff;border-radius:8px;font-size:13px;font-weight:700;width:fit-content;transition:background .15s}
+.featured-post:hover .feat-cta{background:var(--blue)}
 /* GRID */
-.blog-grid-wrap{max-width:1240px;margin:0 auto;padding:48px 48px 80px}
-.blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-
-/* CARDS */
-.blog-card{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.blog-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.12)}
-.card-img{height:200px;overflow:hidden;background:linear-gradient(135deg,#c8e8f5,#a8d4ea);position:relative;flex-shrink:0}
-.card-img img{width:100%;height:100%;object-fit:cover;display:block}
-.card-badge{position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.post-card{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.post-card:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.12)}
+.card-img{height:190px;overflow:hidden;background:linear-gradient(135deg,#c8e8f5,#a8d4ea);position:relative;flex-shrink:0}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.post-card:hover .card-img img{transform:scale(1.04)}
+.card-badge{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
 .badge-deal{background:rgba(247,148,29,.9);color:#fff}
-.badge-education{background:rgba(41,171,226,.9);color:#fff}
-.badge-sold{background:rgba(107,114,128,.8);color:#fff}
-.card-body{padding:20px;flex:1;display:flex;flex-direction:column}
-.card-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:11px;color:var(--text-light);font-weight:500}
-.card-meta-dot{width:3px;height:3px;border-radius:50%;background:var(--border)}
-.card-title{font-size:17px;font-weight:700;color:var(--navy);line-height:1.3;margin-bottom:8px}
-.card-excerpt{font-size:13px;color:var(--text-mid);line-height:1.6;flex:1}
-.card-numbers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-top:14px}
-.card-num{background:#f8fafc;padding:8px 10px;text-align:center}
-.card-num-label{font-size:9px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:2px}
-.card-num-val{font-size:13px;font-weight:800;color:var(--navy)}
-.card-cta{display:block;text-align:center;padding:10px;background:var(--navy);color:#fff;border-radius:8px;font-size:12px;font-weight:700;margin-top:14px;transition:background .15s}
-.card-cta:hover{background:var(--blue)}
-
-/* EMPTY STATE */
-.empty{text-align:center;padding:80px 20px;color:var(--text-light)}
-.empty h3{font-size:20px;font-weight:700;color:var(--text-mid);margin-bottom:8px}
-
+.badge-edu{background:rgba(41,171,226,.9);color:#fff}
+.card-status{position:absolute;top:10px;right:10px;padding:3px 8px;border-radius:50px;font-size:9px;font-weight:700;text-transform:uppercase}
+.card-body{padding:18px;flex:1;display:flex;flex-direction:column}
+.card-meta{font-size:11px;color:var(--text-light);font-weight:500;margin-bottom:8px}
+.card-title{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3;margin-bottom:8px}
+.card-excerpt{font-size:13px;color:var(--text-mid);line-height:1.6;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-top:12px}
+.card-num{background:var(--bg);padding:7px 8px;text-align:center}
+.card-num span:first-child{font-size:9px;font-weight:600;color:var(--text-light);text-transform:uppercase;display:block;margin-bottom:1px}
+.card-num span:last-child{font-size:12px;font-weight:800;color:var(--navy);display:block}
+.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:11px;border-top:1px solid var(--border)}
+.card-date{font-size:11px;color:var(--text-light)}
+.card-read{font-size:11px;font-weight:700;color:var(--blue)}
+/* STATES */
+.loading-wrap,.empty-wrap{text-align:center;padding:80px 20px;grid-column:1/-1}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.empty-wrap h3{font-size:20px;font-weight:700;color:var(--text-mid);margin-bottom:8px}
+.empty-wrap p{font-size:14px;color:var(--text-light);margin-bottom:20px}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:11px 24px;background:var(--blue);color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none}
 /* NEWSLETTER */
-.newsletter{background:var(--navy);padding:64px 48px;text-align:center}
-.newsletter h2{font-size:36px;font-weight:900;color:#fff;margin-bottom:10px}
+.newsletter{background:var(--navy);padding:60px 48px;text-align:center;margin-top:60px}
+.newsletter h2{font-size:34px;font-weight:900;color:#fff;margin-bottom:10px}
 .newsletter p{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px}
-.nl-form{display:flex;gap:0;max-width:440px;margin:0 auto;border-radius:10px;overflow:hidden}
+.nl-form{display:flex;max-width:440px;margin:0 auto;border-radius:10px;overflow:hidden}
 .nl-input{flex:1;padding:14px 18px;border:none;font-family:var(--font);font-size:14px;outline:none}
 .nl-btn{padding:14px 22px;background:var(--orange);color:#fff;border:none;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer}
+.nl-btn:hover{background:var(--orange-dark)}
 .nl-note{font-size:11px;color:rgba(255,255,255,.35);margin-top:10px}
-
-/* FOOTER */
 footer{background:#060f1a;padding:24px 48px;text-align:center;font-size:12px;color:rgba(255,255,255,.3)}
-footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 8px}
-
-@media(max-width:1024px){.blog-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:768px){nav{padding:0 20px}.blog-hero{padding:48px 20px}.blog-grid-wrap{padding:32px 20px 60px}.blog-grid{grid-template-columns:1fr}.filters{padding:12px 20px}.newsletter{padding:48px 20px}}
+footer a{color:rgba(255,255,255,.4);text-decoration:none;margin:0 10px}
+footer a:hover{color:rgba(255,255,255,.7)}
+@media(max-width:1024px){.posts-grid{grid-template-columns:1fr 1fr}.featured-post{grid-template-columns:1fr}.feat-img{min-height:220px}.blog-wrap{padding:32px 24px}}
+@media(max-width:768px){nav{padding:0 20px}.nav-links{display:none}.blog-hero{padding:44px 20px 36px}.blog-hero h1{font-size:30px}.filters-bar{padding:10px 16px;top:70px}.posts-grid{grid-template-columns:1fr}.newsletter{padding:44px 20px}footer{padding:20px}}
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" class="nav-logo"></a>
+  <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
   <div class="nav-links">
     <a href="/">Active Deals</a>
     <a href="/map.html">Deal Map</a>
-    <a href="/blog/">Blog</a>
+    <a href="/blog/" class="active">Blog</a>
   </div>
-  <a href="/" class="btn-nav">View Deals</a>
+  <a href="/" class="btn-nav">View Deals →</a>
 </nav>
 
 <div class="blog-hero">
   <div class="eyebrow">Investor Resources</div>
-  <h1>Deal Spotlights &amp; Investor Guides</h1>
+  <h1>Deal Spotlights &amp;<br>Investor Guides</h1>
   <p>Active deal breakdowns, creative finance strategies, and market insights — built for serious buyers.</p>
+  <div class="hero-stats">
+    <div><span class="hero-stat-num" id="stat-posts">—</span><span class="hero-stat-label">Published Posts</span></div>
+    <div><span class="hero-stat-num" id="stat-deals">—</span><span class="hero-stat-label">Deal Spotlights</span></div>
+    <div><span class="hero-stat-num" id="stat-markets">—</span><span class="hero-stat-label">Markets Covered</span></div>
+  </div>
 </div>
 
-<div class="filters">
-  <button class="filter-btn on" onclick="filterPosts('all',this)">All Posts</button>
-  <button class="filter-btn" onclick="filterPosts('deal',this)">Deal Spotlights</button>
-  <button class="filter-btn" onclick="filterPosts('education',this)">Investor Guides</button>
-  <button class="filter-btn" onclick="filterPosts('subto',this)">Subject To</button>
-  <button class="filter-btn" onclick="filterPosts('seller-finance',this)">Seller Finance</button>
-  <button class="filter-btn" onclick="filterPosts('cash',this)">Cash Deals</button>
-  <span class="post-count" id="post-count"></span>
+<div class="filters-bar">
+  <button class="filter-btn on" onclick="setFilter('all',this)">All Posts</button>
+  <button class="filter-btn" onclick="setFilter('deal',this)">Deal Spotlights</button>
+  <button class="filter-btn" onclick="setFilter('education',this)">Investor Guides</button>
+  <button class="filter-btn" onclick="setFilter('subto',this)">Subject To</button>
+  <button class="filter-btn" onclick="setFilter('sf',this)">Seller Finance</button>
+  <button class="filter-btn" onclick="setFilter('cash',this)">Cash Deals</button>
+  <button class="filter-btn" onclick="setFilter('active',this)">Active Only</button>
+  <span class="filter-count" id="filter-count"></span>
 </div>
 
-<div class="blog-grid-wrap">
-  <div class="blog-grid" id="blog-grid">
-    <div class="empty"><div style="width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px"></div><h3>Loading posts…</h3></div>
+<div class="blog-wrap">
+  <div id="featured-wrap"></div>
+  <div class="posts-grid" id="posts-grid">
+    <div class="loading-wrap"><div class="spinner"></div><p style="font-size:13px;color:var(--text-light);font-weight:600">Loading posts…</p></div>
   </div>
 </div>
 
 <section class="newsletter">
-  <h2>Get Deal Alerts Before Anyone Else</h2>
-  <p>Join 100+ investors getting early access to off-market deals every week.</p>
+  <h2>Get Deal Alerts First</h2>
+  <p>Join investors getting early access to off-market deals every week.</p>
   <div class="nl-form">
-    <input class="nl-input" id="nl-email" type="email" placeholder="Enter your email address">
-    <button class="nl-btn" onclick="subscribeNL()">Join Free</button>
+    <input class="nl-input" id="nl-email" type="email" placeholder="Your email address">
+    <button class="nl-btn" onclick="nlSubmit()">Join Free</button>
   </div>
   <div class="nl-note">No spam. Unsubscribe anytime.</div>
 </section>
 
 <footer>
-  <a href="/">Home</a>
-  <a href="/blog/">Blog</a>
-  <a href="/map.html">Deal Map</a>
-  <a href="mailto:info@termsforsale.com">Contact</a>
+  <a href="/">Home</a><a href="/blog/">Blog</a><a href="/map.html">Deal Map</a><a href="mailto:info@termsforsale.com">Contact</a>
   <br><br>&copy; 2025 Deal Pros LLC. All Rights Reserved.
 </footer>
 
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────
-var GHL_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
+var GHL_WEBHOOK='https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
+var ALL_POSTS=[];
 
-// ── POSTS ───────────────────────────────────────────────────────
-// Posts are loaded from a generated posts-data.json
-// This file is created automatically by Netlify build
-// For now, we show a placeholder — real posts appear once CMS is live
-var POSTS = window.BLOG_POSTS || [];
-
-var _filter = 'all';
-
-function renderPosts(posts) {
-  var grid = document.getElementById('blog-grid');
-  var count = document.getElementById('post-count');
-  if (!posts.length) {
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><h3>No posts yet</h3><p>Check back soon — deal spotlights and guides coming shortly.</p></div>';
-    if (count) count.textContent = '';
-    return;
-  }
-  if (count) count.textContent = posts.length + ' post' + (posts.length !== 1 ? 's' : '');
-  grid.innerHTML = posts.map(function(p) {
-    var isDeal = p.type === 'deal';
-    var badgeCls = isDeal ? 'badge-deal' : 'badge-education';
-    var badgeTxt = isDeal ? (p.deal_type || 'Deal') : (p.category || 'Guide');
-    var sold = p.status === 'Sold' || p.status === 'Under Contract';
-    return '<a class="blog-card" href="/blog/' + p.slug + '/">'
-      + '<div class="card-img">'
-        + (p.cover_image ? '<img src="' + p.cover_image + '" alt="' + p.title + '" loading="lazy">' : '')
-        + '<span class="card-badge ' + (sold ? 'badge-sold' : badgeCls) + '">' + (sold ? p.status : badgeTxt) + '</span>'
-      + '</div>'
-      + '<div class="card-body">'
-        + '<div class="card-meta">'
-          + '<span>' + (p.city || '') + '</span>'
-          + (p.date ? '<span class="card-meta-dot"></span><span>' + new Date(p.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) + '</span>' : '')
-        + '</div>'
-        + '<div class="card-title">' + p.title + '</div>'
-        + '<div class="card-excerpt">' + (p.hook || p.description || '') + '</div>'
-        + (isDeal && p.asking_price ? '<div class="card-numbers">'
-          + '<div class="card-num"><span class="card-num-label">Price</span><span class="card-num-val">' + p.asking_price + '</span></div>'
-          + '<div class="card-num"><span class="card-num-label">Entry</span><span class="card-num-val">' + (p.entry_fee || '—') + '</span></div>'
-          + '<div class="card-num"><span class="card-num-label">Est. Rent</span><span class="card-num-val">' + (p.est_rent || '—') + '</span></div>'
-          + '</div>' : '')
-        + '<span class="card-cta">' + (isDeal ? 'View Deal Breakdown →' : 'Read the Guide →') + '</span>'
-      + '</div>'
-    + '</a>';
-  }).join('');
+function loadPosts(){
+  fetch('/blog/posts-index.json?t='+Date.now())
+    .then(function(r){if(!r.ok)throw new Error('no index');return r.json();})
+    .then(function(posts){ALL_POSTS=posts;updateStats(posts);render(posts);})
+    .catch(function(){render([]);});
 }
 
-function filterPosts(f, btn) {
-  _filter = f;
-  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('on'); });
+function updateStats(posts){
+  var deals=posts.filter(function(p){return p.type==='deal';});
+  var markets=[...new Set(posts.map(function(p){return p.state;}).filter(Boolean))];
+  document.getElementById('stat-posts').textContent=posts.length;
+  document.getElementById('stat-deals').textContent=deals.length;
+  document.getElementById('stat-markets').textContent=markets.length;
+}
+
+function setFilter(f,btn){
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('on');});
   btn.classList.add('on');
-  var filtered = POSTS.filter(function(p) {
-    if (f === 'all') return true;
-    if (f === 'deal') return p.type === 'deal';
-    if (f === 'education') return p.type === 'education';
-    if (f === 'subto') return (p.deal_type || '').toLowerCase().includes('subject');
-    if (f === 'seller-finance') return (p.deal_type || '').toLowerCase().includes('seller');
-    if (f === 'cash') return (p.deal_type || '').toLowerCase() === 'cash';
+  var filtered=ALL_POSTS.filter(function(p){
+    if(f==='all')return true;
+    if(f==='deal')return p.type==='deal';
+    if(f==='education')return p.type==='education';
+    if(f==='subto')return (p.dealType||'').toLowerCase().includes('subject');
+    if(f==='sf')return (p.dealType||'').toLowerCase().includes('seller');
+    if(f==='cash')return (p.dealType||'').toLowerCase()==='cash';
+    if(f==='active')return (p.status||'').toLowerCase()==='active';
     return true;
   });
-  renderPosts(filtered);
+  document.getElementById('filter-count').textContent=filtered.length+' post'+(filtered.length!==1?'s':'');
+  render(filtered);
 }
 
-// Newsletter subscribe
-function subscribeNL() {
-  var email = document.getElementById('nl-email').value.trim();
-  if (!email) return;
-  fetch(GHL_WEBHOOK, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({email: email, source: 'TFS Blog - Newsletter Signup', tags: ['Blog Subscriber']})
-  }).catch(function(){});
-  var btn = event.target;
-  btn.textContent = '✓ You\'re in!';
-  btn.style.background = '#10B981';
+function render(posts){
+  var featWrap=document.getElementById('featured-wrap');
+  var grid=document.getElementById('posts-grid');
+  document.getElementById('filter-count').textContent=posts.length+' post'+(posts.length!==1?'s':'');
+  if(!posts.length){
+    featWrap.innerHTML='';
+    grid.innerHTML='<div class="empty-wrap"><h3>No posts yet</h3><p>Deal spotlights and guides coming soon.</p><a href="/" class="btn-primary">View Active Deals →</a></div>';
+    return;
+  }
+  var featured=posts.find(function(p){return p.type==='deal'&&(p.status||'').toLowerCase()==='active';})||posts[0];
+  var rest=posts.filter(function(p){return p!==featured;});
+  featWrap.innerHTML=featured?makeFeatured(featured):'';
+  grid.innerHTML=rest.length?rest.map(makeCard).join(''):'';
 }
 
-// Initial render
-renderPosts(POSTS);
+function sc(s){if(!s)return'';var l=s.toLowerCase();return l==='active'?'s-active':l==='under contract'?'s-contract':'s-sold';}
+function fd(d){if(!d)return'';try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return '';}}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function ea(s){return String(s||'').replace(/"/g,'&quot;');}
+
+function makeFeatured(p){
+  var url=p.url||('/blog/posts/'+p.slug+'.html');
+  var isDeal=p.type==='deal';
+  return '<a class="featured-post" href="'+url+'">'
+    +'<div class="feat-img">'
+      +(p.coverImage?'<img src="'+ea(p.coverImage)+'" alt="'+ea(p.title)+'" loading="eager">':'')
+      +'<span class="feat-badge">'+esc(isDeal?'🏠 Featured Deal':'📚 Featured Guide')+'</span>'
+      +(p.status?'<span class="feat-status '+sc(p.status)+'">● '+esc(p.status)+'</span>':'')
+    +'</div>'
+    +'<div class="feat-body">'
+      +'<div class="feat-label">'+esc((isDeal?p.dealType:p.category)||'')+' · '+esc(p.city||'')+', '+esc(p.state||'')+'</div>'
+      +'<div class="feat-title">'+esc(p.title)+'</div>'
+      +'<div class="feat-hook">'+esc(p.hook||p.description||'')+'</div>'
+      +(isDeal&&p.askingPrice?'<div class="feat-nums">'
+        +'<div class="feat-num"><span>Price</span><span>'+esc(p.askingPrice)+'</span></div>'
+        +'<div class="feat-num"><span>Entry</span><span>'+esc(p.entryFee||'—')+'</span></div>'
+        +'<div class="feat-num"><span>Est. Rent</span><span>'+esc(p.estRent||'—')+'</span></div>'
+        +'</div>':'')
+      +'<span class="feat-cta">'+(isDeal?'View Deal Breakdown →':'Read the Guide →')+'</span>'
+    +'</div>'
+  +'</a>';
+}
+
+function makeCard(p){
+  var url=p.url||('/blog/posts/'+p.slug+'.html');
+  var isDeal=p.type==='deal';
+  return '<a class="post-card" href="'+url+'">'
+    +'<div class="card-img">'
+      +(p.coverImage?'<img src="'+ea(p.coverImage)+'" alt="'+ea(p.title)+'" loading="lazy">':'')
+      +'<span class="card-badge '+(isDeal?'badge-deal':'badge-edu')+'">'+esc((isDeal?p.dealType:p.category)||'')+'</span>'
+      +(p.status?'<span class="card-status '+sc(p.status)+'">● '+esc(p.status)+'</span>':'')
+    +'</div>'
+    +'<div class="card-body">'
+      +'<div class="card-meta">'+esc((p.city?p.city+', '+p.state:''))+(p.date?' · '+fd(p.date):'')+'</div>'
+      +'<div class="card-title">'+esc(p.title)+'</div>'
+      +'<div class="card-excerpt">'+esc(p.hook||p.description||'')+'</div>'
+      +(isDeal&&p.askingPrice?'<div class="card-nums">'
+        +'<div class="card-num"><span>Price</span><span>'+esc(p.askingPrice)+'</span></div>'
+        +'<div class="card-num"><span>Entry</span><span>'+esc(p.entryFee||'—')+'</span></div>'
+        +'<div class="card-num"><span>Rent</span><span>'+esc(p.estRent||'—')+'</span></div>'
+        +'</div>':'')
+      +'<div class="card-footer"><span class="card-date">'+fd(p.date)+'</span><span class="card-read">'+(isDeal?'View Deal →':'Read Guide →')+'</span></div>'
+    +'</div>'
+  +'</a>';
+}
+
+function nlSubmit(){
+  var email=document.getElementById('nl-email').value.trim();
+  if(!email)return;
+  fetch(GHL_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,source:'TFS Blog - Newsletter',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['Blog Subscriber','TFS Buyer']})}).catch(function(){});
+  var btn=event.target;btn.textContent='✓ You\'re in!';btn.style.background='#10B981';
+}
+
+loadPosts();
 </script>
-
 </body>
 </html>
