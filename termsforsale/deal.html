@@ -518,31 +518,9 @@ function loadPhotos(folderId, folderUrl) {
     });
 }
 
-// Fallback: legacy Drive gdata public feed (no key needed, works for fully public folders)
+// No gdata fallback — CORS blocked in browser. Show Drive button instead.
 function loadPhotosFallback(folderId, folderUrl) {
-  var feedUrl = 'https://drive.google.com/feeds/default/public/full/folder%3A'
-    + folderId + '?alt=json&max-results=30';
-  fetch(feedUrl)
-    .then(function(r) { if (!r.ok) throw new Error('feed failed'); return r.json(); })
-    .then(function(data) {
-      var entries = (data.feed && data.feed.entry) || [];
-      var ids = [];
-      for (var i = 0; i < entries.length; i++) {
-        var e = entries[i];
-        var rid = (e['gd$resourceId'] && e['gd$resourceId']['$t']) || '';
-        var fid = rid.replace('file:', '');
-        if (fid && fid.length >= 20 && ids.indexOf(fid) < 0) { ids.push(fid); continue; }
-        var links = e['link'] || [];
-        for (var j = 0; j < links.length; j++) {
-          var href = links[j]['@href'] || '';
-          var m1 = href.match(/\/d\/([a-zA-Z0-9_-]{20,})\//);
-          if (m1 && ids.indexOf(m1[1]) < 0) { ids.push(m1[1]); break; }
-        }
-      }
-      if (!ids.length) { showDriveBtn(folderUrl); return; }
-      buildGrid(ids, folderUrl);
-    })
-    .catch(function() { showDriveBtn(folderUrl); });
+  showDriveBtn(folderUrl);
 }
 
 function buildGrid(fileIds, folderUrl) {
@@ -1311,9 +1289,6 @@ function render(deal, allDeals) {
 
   // Trigger async photo load after DOM is ready
   // Trigger photo loading — works with coverPhoto alone OR folder
-  console.log('[Photos] deal.photos:', deal.photos);
-  console.log('[Photos] deal.coverPhoto:', deal.coverPhoto);
-  console.log('[Photos] folderId:', folderId);
   if (folderId || deal.coverPhoto) {
     setTimeout(function(){
       tryShowCoverPhoto(deal);
