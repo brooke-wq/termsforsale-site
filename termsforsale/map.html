@@ -220,14 +220,73 @@ function getCol(row){
 }
 function money(n){var v=parseFloat(n);return v?'$'+v.toLocaleString():'—';}
 
-// ─── GEOCODE via Nominatim (free, no key) ──────────────────────
+// ─── GEOCODE — instant US city cache, Nominatim only for unknowns ──
+// Pre-built coordinates for 150+ common US cities (instant, no API call)
+var CITY_COORDS={
+  'phoenix,az':[33.4484,-112.0740],'tucson,az':[32.2226,-110.9747],'scottsdale,az':[33.4942,-111.9261],'mesa,az':[33.4152,-111.8315],'chandler,az':[33.3062,-111.8413],'tempe,az':[33.4255,-111.9400],'gilbert,az':[33.3528,-111.7890],'glendale,az':[33.5387,-112.1860],'peoria,az':[33.5806,-112.2374],'surprise,az':[33.6292,-112.3679],
+  'los angeles,ca':[34.0522,-118.2437],'san diego,ca':[32.7157,-117.1611],'san jose,ca':[37.3382,-121.8863],'san francisco,ca':[37.7749,-122.4194],'fresno,ca':[36.7378,-119.7871],'sacramento,ca':[38.5816,-121.4944],'long beach,ca':[33.7701,-118.1937],'oakland,ca':[37.8044,-122.2712],'bakersfield,ca':[35.3733,-119.0187],'anaheim,ca':[33.8366,-117.9143],
+  'houston,tx':[29.7604,-95.3698],'san antonio,tx':[29.4241,-98.4936],'dallas,tx':[32.7767,-96.7970],'austin,tx':[30.2672,-97.7431],'fort worth,tx':[32.7555,-97.3308],'el paso,tx':[31.7619,-106.4850],'arlington,tx':[32.7357,-97.1081],'corpus christi,tx':[27.8006,-97.3964],'plano,tx':[33.0198,-96.6989],'lubbock,tx':[33.5779,-101.8552],
+  'jacksonville,fl':[30.3322,-81.6557],'miami,fl':[25.7617,-80.1918],'tampa,fl':[27.9506,-82.4572],'orlando,fl':[28.5383,-81.3792],'st. petersburg,fl':[27.7676,-82.6403],'hialeah,fl':[25.8576,-80.2781],'tallahassee,fl':[30.4383,-84.2807],'cape coral,fl':[26.5629,-81.9495],'fort lauderdale,fl':[26.1224,-80.1373],'pembroke pines,fl':[26.0073,-86.1466],
+  'new york,ny':[40.7128,-74.0060],'buffalo,ny':[42.8864,-78.8784],'yonkers,ny':[40.9312,-73.8988],'rochester,ny':[43.1566,-77.6088],'syracuse,ny':[43.0481,-76.1474],
+  'chicago,il':[41.8781,-87.6298],'aurora,il':[41.7606,-88.3201],'rockford,il':[42.2711,-89.0940],'joliet,il':[41.5250,-88.0817],'naperville,il':[41.7508,-88.1535],
+  'columbus,oh':[39.9612,-82.9988],'cleveland,oh':[41.4993,-81.6944],'cincinnati,oh':[39.1031,-84.5120],'toledo,oh':[41.6528,-83.5379],'akron,oh':[41.0814,-81.5190],
+  'charlotte,nc':[35.2271,-80.8431],'raleigh,nc':[35.7796,-78.6382],'greensboro,nc':[36.0726,-79.7920],'durham,nc':[35.9940,-78.8986],'winston-salem,nc':[36.0999,-80.2442],
+  'nashville,tn':[36.1627,-86.7816],'memphis,tn':[35.1495,-90.0490],'knoxville,tn':[35.9606,-83.9207],'chattanooga,tn':[35.0456,-85.3097],
+  'indianapolis,in':[39.7684,-86.1581],'fort wayne,in':[41.1306,-85.1289],'evansville,in':[37.9716,-87.5711],'south bend,in':[41.6764,-86.2520],
+  'detroit,mi':[42.3314,-83.0458],'grand rapids,mi':[42.9634,-85.6681],'warren,mi':[42.4775,-83.0277],'sterling heights,mi':[42.5803,-83.0302],
+  'milwaukee,wi':[43.0389,-87.9065],'madison,wi':[43.0731,-89.4012],'green bay,wi':[44.5133,-88.0133],
+  'denver,co':[39.7392,-104.9903],'colorado springs,co':[38.8339,-104.8214],'aurora,co':[39.7294,-104.8319],'fort collins,co':[40.5853,-105.0844],'lakewood,co':[39.7047,-105.0814],
+  'seattle,wa':[47.6062,-122.3321],'spokane,wa':[47.6588,-117.4260],'tacoma,wa':[47.2529,-122.4443],'bellevue,wa':[47.6101,-122.2015],
+  'portland,or':[45.5051,-122.6750],'eugene,or':[44.0521,-123.0868],'salem,or':[44.9429,-123.0351],
+  'las vegas,nv':[36.1699,-115.1398],'henderson,nv':[36.0395,-114.9817],'reno,nv':[39.5296,-119.8138],'north las vegas,nv':[36.1989,-115.1175],
+  'albuquerque,nm':[35.0853,-106.6056],'las cruces,nm':[32.3199,-106.7637],'santa fe,nm':[35.6870,-105.9378],
+  'atlanta,ga':[33.7490,-84.3880],'columbus,ga':[32.4610,-84.9877],'savannah,ga':[32.0835,-81.0998],'augusta,ga':[33.4735,-82.0105],
+  'virginia beach,va':[36.8529,-75.9780],'norfolk,va':[36.8508,-76.2859],'richmond,va':[37.5407,-77.4360],'chesapeake,va':[36.7682,-76.2875],
+  'baltimore,md':[39.2904,-76.6122],'columbia,md':[39.2037,-76.8610],'silver spring,md':[38.9907,-77.0261],
+  'louisville,ky':[38.2527,-85.7585],'lexington,ky':[38.0406,-84.5037],'bowling green,ky':[36.9685,-86.4808],'hopkinsville,ky':[36.8656,-87.4886],
+  'columbia,sc':[34.0007,-81.0348],'charleston,sc':[32.7765,-79.9311],'north charleston,sc':[32.8546,-79.9748],
+  'jackson,ms':[32.2988,-90.1848],'gulfport,ms':[30.3674,-89.0928],'hattiesburg,ms':[31.3271,-89.2903],
+  'little rock,ar':[34.7465,-92.2896],'fayetteville,ar':[36.0626,-94.1574],'fort smith,ar':[35.3859,-94.3985],
+  'new orleans,la':[29.9511,-90.0715],'baton rouge,la':[30.4515,-91.1871],'shreveport,la':[32.5252,-93.7502],
+  'oklahoma city,ok':[35.4676,-97.5164],'tulsa,ok':[36.1540,-95.9928],'norman,ok':[35.2226,-97.4395],
+  'kansas city,mo':[39.0997,-94.5786],'st. louis,mo':[38.6270,-90.1994],'springfield,mo':[37.2090,-93.2923],'columbia,mo':[38.9517,-92.3341],
+  'wichita,ks':[37.6872,-97.3301],'overland park,ks':[38.9822,-94.6708],'kansas city,ks':[39.1142,-94.6275],
+  'omaha,ne':[41.2565,-95.9345],'lincoln,ne':[40.8136,-96.7026],
+  'sioux falls,sd':[43.5446,-96.7311],'rapid city,sd':[44.0805,-103.2310],
+  'fargo,nd':[46.8772,-96.7898],'bismarck,nd':[46.8083,-100.7837],
+  'minneapolis,mn':[44.9778,-93.2650],'st. paul,mn':[44.9537,-93.0900],'rochester,mn':[44.0234,-92.4699],
+  'des moines,ia':[41.5868,-93.6250],'cedar rapids,ia':[41.9779,-91.6656],
+  'salt lake city,ut':[40.7608,-111.8910],'west valley city,ut':[40.6916,-112.0011],'provo,ut':[40.2338,-111.6585],
+  'boise,id':[43.6150,-116.2023],'nampa,id':[43.5407,-116.5635],'meridian,id':[43.6121,-116.3915],
+  'billings,mt':[45.7833,-108.5007],'missoula,mt':[46.8721,-113.9940],
+  'cheyenne,wy':[41.1400,-104.8202],'casper,wy':[42.8501,-106.3252],
+  'anchorage,ak':[61.2181,-149.9003],'fairbanks,ak':[64.8378,-147.7164],
+  'honolulu,hi':[21.3069,-157.8583],'pearl city,hi':[21.3972,-157.9750],
+  'boston,ma':[42.3601,-71.0589],'worcester,ma':[42.2626,-71.8023],'springfield,ma':[42.1015,-72.5898],
+  'providence,ri':[41.8240,-71.4128],'cranston,ri':[41.7798,-71.4373],
+  'bridgeport,ct':[41.1865,-73.1952],'new haven,ct':[41.3083,-72.9279],'hartford,ct':[41.7658,-72.6851],
+  'manchester,nh':[42.9956,-71.4548],'nashua,nh':[42.7654,-71.4676],
+  'portland,me':[43.6591,-70.2568],'lewiston,me':[44.1004,-70.2148],
+  'burlington,vt':[44.4759,-73.2121],'montpelier,vt':[44.2601,-72.5754],
+  'philadelphia,pa':[39.9526,-75.1652],'pittsburgh,pa':[40.4406,-79.9959],'allentown,pa':[40.6023,-75.4714],
+  'newark,nj':[40.7357,-74.1724],'jersey city,nj':[40.7178,-74.0431],'trenton,nj':[40.2171,-74.7429],
+  'wilmington,de':[39.7447,-75.5484],'dover,de':[39.1582,-75.5244]
+};
+
 var geoCache={};
 var geoQueue=[];
 var geoRunning=false;
 
 function geocode(city,state,zip,cb){
-  var key=(city+','+state).toLowerCase();
+  var key=(city+','+state).toLowerCase().trim();
+  // 1. Check runtime cache
   if(geoCache[key]){cb(geoCache[key]);return;}
+  // 2. Check built-in city list (instant)
+  if(CITY_COORDS[key]){geoCache[key]=CITY_COORDS[key];cb(CITY_COORDS[key]);return;}
+  // 3. Try state capital fallback
+  var stateKey=','+state.toLowerCase().trim();
+  for(var k in CITY_COORDS){if(k.endsWith(stateKey)){geoCache[key]=CITY_COORDS[k];cb(CITY_COORDS[k]);return;}}
+  // 4. Fall back to Nominatim for genuinely unknown cities
   geoQueue.push({city:city,state:state,zip:zip,key:key,cb:cb});
   if(!geoRunning)runGeoQueue();
 }
@@ -236,31 +295,26 @@ function runGeoQueue(){
   if(!geoQueue.length){geoRunning=false;hideGeoBar();return;}
   geoRunning=true;
   var item=geoQueue.shift();
+  showGeoBar('Locating: '+item.city+', '+item.state+'…');
   var query=encodeURIComponent(item.city+', '+item.state+', USA');
   var url='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+query;
-  fetch(url,{headers:{'Accept-Language':'en'}})
+  fetch(url,{headers:{'Accept-Language':'en','User-Agent':'TermsForSale/1.0'}})
     .then(function(r){return r.json();})
     .then(function(data){
-      if(data&&data[0]){
-        var ll=[parseFloat(data[0].lat),parseFloat(data[0].lon)];
-        geoCache[item.key]=ll;
-        item.cb(ll);
-      }else{item.cb(null);}
+      var ll=data&&data[0]?[parseFloat(data[0].lat),parseFloat(data[0].lon)]:null;
+      if(ll)geoCache[item.key]=ll;
+      item.cb(ll);
     })
     .catch(function(){item.cb(null);})
-    .finally(function(){
-      // Nominatim requires 1 req/sec
-      setTimeout(runGeoQueue,1100);
-    });
+    .finally(function(){setTimeout(runGeoQueue,1100);});
 }
 
 function showGeoBar(msg){
   var bar=document.getElementById('geo-bar');
-  document.getElementById('geo-status').textContent=msg;
-  bar.classList.add('show');
+  if(bar){document.getElementById('geo-status').textContent=msg;bar.classList.add('show');}
 }
 function hideGeoBar(){
-  document.getElementById('geo-bar').classList.remove('show');
+  var bar=document.getElementById('geo-bar');if(bar)bar.classList.remove('show');
 }
 
 // ─── MARKER CREATION ───────────────────────────────────────────
@@ -412,24 +466,31 @@ function placeMarker(deal,latlng){
 
 // ─── MAIN LOAD ─────────────────────────────────────────────────
 function loadDeals(){
-  fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0')
+  fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0&headers=1')
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
     .then(function(text){
       var json=parseGviz(text);
       var cols=json.table.cols.map(function(c){return c.label.trim();});
       var rows=json.table.rows.map(function(row){
         var o={};
-        cols.forEach(function(c,i){var cell=row.c[i];o[c]=cell?(cell.v!==null?String(cell.v).trim():''):'';});
+        var seen={};
+        cols.forEach(function(c,i){
+          var cell=row.c[i];
+          var val=cell?(cell.v!==null?String(cell.v).trim():''):'';
+          if(seen[c]===undefined){seen[c]=0;o[c]=val;o[c+'__0']=val;}
+          else{seen[c]++;o[c+'__'+seen[c]]=val;o[c]=val;}
+        });
         return o;
       });
 
+      var ACTIVE_STATUSES=['actively marketing','active marketing','active','actively listed','marketing'];
       ALL_DEALS=rows
-        .filter(function(r){return (r['Deal Status']||'').trim().toLowerCase()==='actively marketing';})
+        .filter(function(r){return ACTIVE_STATUSES.indexOf((r['Deal Status']||'').trim().toLowerCase())>-1;})
         .map(function(r){
           var photos=r['Photos']||'';
-          var folderUrl=photos.includes('/drive/folders/')?photos.split('?')[0]:'';
+          var folderUrl=photos.indexOf('/drive/folders/')>-1?photos.split('?')[0]:'';
           return {
-            id:r['Deal ID'],
+            id:r['Deal ID']||r['Deal Status__0'],
             dealType:r['Deal Type'],
             streetAddress:r['Street Address'],
             city:r['City'],state:r['State'],zip:r['ZIP'],
