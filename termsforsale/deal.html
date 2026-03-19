@@ -898,35 +898,55 @@ function parseMoney(v) {
 }
 function money(n){var v=parseMoney(n);return v?'$'+v.toLocaleString():'&#8212;';}
 function rate(r){
-  if(!r)return'&#8212;';
+  if(!r && r!==0)return'&#8212;';
   var s=String(r).trim();
-  // Already formatted as "3.5%" — return as-is
+  if(!s||s==='0')return'&#8212;';
+  // Already has % sign — return as-is
   if(s.indexOf('%')>-1)return s;
   var v=parseFloat(s);
-  if(!v)return s||'&#8212;';
-  return v<1?(v*100).toFixed(2)+'%':v.toFixed(2)+'%';
+  if(isNaN(v)||v===0)return s||'&#8212;';
+  // Gviz returns SF Rate as decimal e.g. 0.045 = 4.5%
+  // SubTo Rate comes as whole number e.g. 2.875 = 2.875%
+  // Rule: if < 1, multiply by 100; if >= 1, use as-is
+  var pct = v < 1 ? (v * 100) : v;
+  // Format cleanly — remove trailing zeros
+  var formatted = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(3).replace(/\.?0+$/, '');
+  return formatted + '%';
 }
-// Robust COE date parser — handles ISO, M/D/Y, "Apr 18 2026", serial numbers
+
+// Robust COE date parser — handles ISO, M/D/Y, gviz Date(y,m,d), serial numbers
 function fmtCoe(d) {
   if (!d) return '&#8212;';
   var s = String(d).trim();
   if (!s) return '&#8212;';
-  // Google Sheets sometimes sends serial date numbers (days since 1899-12-30)
+
+  // Gviz Date format: "Date(2026,4,4)" — month is 0-indexed
+  var gvizMatch = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if (gvizMatch) {
+    var yr = parseInt(gvizMatch[1]);
+    var mo = parseInt(gvizMatch[2]); // already 0-indexed from gviz
+    var dy = parseInt(gvizMatch[3]);
+    var dt = new Date(yr, mo, dy, 12, 0, 0);
+    return dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  }
+
+  // Google Sheets serial date numbers (days since 1899-12-30)
   if (/^\d{5}$/.test(s)) {
     var dt = new Date(1899, 11, 30);
     dt.setDate(dt.getDate() + parseInt(s));
-    return dt.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+    return dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
   }
-  // Try direct parse — add noon to avoid timezone shift
-  var clean = s.replace(/\//g,'-');
-  var attempts = [clean, clean+'T12:00:00', s+'T12:00:00', s];
-  for (var i=0; i<attempts.length; i++) {
+
+  // Try direct parse with various formats
+  var clean = s.replace(/\//g, '-');
+  var attempts = [clean, clean + 'T12:00:00', s + 'T12:00:00', s];
+  for (var i = 0; i < attempts.length; i++) {
     var dt = new Date(attempts[i]);
     if (!isNaN(dt.getTime())) {
-      return dt.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+      return dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
     }
   }
-  return s; // return raw if all parsing fails
+  return s;
 }
 // HOA — Notion may send "$150/mo", "$150", "150/mo", "150" — normalize to "$150/mo"
 function fmtHoa(v) {
@@ -939,7 +959,17 @@ function fmtHoa(v) {
   if (!num) return s; // return as-is if can't parse
   return '$' + num.toLocaleString() + '/mo';
 }
-function daysLeft(d){if(!d)return null;var ms=new Date(String(d)+'T12:00:00')-new Date();return Math.ceil(ms/864e5);}
+function daysLeft(d){
+  if(!d)return null;
+  var s=String(d).trim();
+  var dt;
+  // Handle gviz Date(y,m,d) format
+  var gm=s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if(gm){dt=new Date(parseInt(gm[1]),parseInt(gm[2]),parseInt(gm[3]),12,0,0);}
+  else{dt=new Date(s+'T12:00:00');}
+  if(isNaN(dt.getTime()))return null;
+  return Math.ceil((dt-new Date())/864e5);
+}
 
 // ─── RENDER ────────────────────────────────────────────────────
 function render(deal, allDeals) {
@@ -1281,6 +1311,9 @@ function render(deal, allDeals) {
 
   // Trigger async photo load after DOM is ready
   // Trigger photo loading — works with coverPhoto alone OR folder
+  console.log('[Photos] deal.photos:', deal.photos);
+  console.log('[Photos] deal.coverPhoto:', deal.coverPhoto);
+  console.log('[Photos] folderId:', folderId);
   if (folderId || deal.coverPhoto) {
     setTimeout(function(){
       tryShowCoverPhoto(deal);
