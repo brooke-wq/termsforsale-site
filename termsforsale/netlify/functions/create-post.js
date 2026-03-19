@@ -380,6 +380,73 @@ function blogSubmit(){
     };
   }
 
+  // ── UPDATE POSTS INDEX ────────────────────────────────────────
+  // Read existing posts-index.json, add new post, write back
+  var indexPath = 'termsforsale/blog/posts-index.json';
+  var existingIndex = null;
+  var posts = [];
+
+  try {
+    var indexRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${indexPath}?ref=${branch}`,
+      { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+    );
+    if (indexRes.ok) {
+      existingIndex = await indexRes.json();
+      posts = JSON.parse(Buffer.from(existingIndex.content, 'base64').toString('utf8'));
+    }
+  } catch(e) { posts = []; }
+
+  // Remove existing entry for this slug if updating
+  posts = posts.filter(function(p) { return p.slug !== slug; });
+
+  // Add new post entry at the front
+  posts.unshift({
+    slug:        slug,
+    type:        'deal',
+    title:       data.headline,
+    hook:        data.hook,
+    description: data.metaDesc,
+    dealType:    data.dealType,
+    city:        data.city,
+    state:       data.state,
+    askingPrice: data.askingPrice,
+    entryFee:    data.entryFee,
+    estRent:     data.estRent,
+    coe:         data.coe,
+    status:      data.status,
+    dealId:      data.dealId,
+    coverImage:  '',
+    date:        new Date().toISOString(),
+    url:         'https://deals.termsforsale.com/blog/posts/' + slug + '.html'
+  });
+
+  // Write updated index back to GitHub
+  var indexBody = {
+    message: 'Update posts index: ' + data.headline,
+    content: Buffer.from(JSON.stringify(posts, null, 2), 'utf8').toString('base64'),
+    branch: branch
+  };
+  if (existingIndex && existingIndex.sha) indexBody.sha = existingIndex.sha;
+
+  try {
+    await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${indexPath}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(indexBody)
+      }
+    );
+  } catch(e) {
+    // Index update failed — post still published, not fatal
+    console.error('Failed to update posts index:', e.message);
+  }
+
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json' },
