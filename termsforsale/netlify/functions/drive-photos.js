@@ -54,6 +54,8 @@ exports.handler = async function(event) {
     + '&fields=files(id,name)'
     + '&orderBy=name'
     + '&pageSize=30'
+    + '&supportsAllDrives=true'
+    + '&includeItemsFromAllDrives=true'
     + '&key=' + apiKey;
 
   try {
