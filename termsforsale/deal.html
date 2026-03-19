@@ -149,22 +149,36 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 /* AUTH MODAL */
 .auth-overlay{position:fixed;inset:0;background:rgba(13,31,60,.72);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 .auth-overlay.open{opacity:1;pointer-events:all}
-.auth-modal{background:#fff;border-radius:14px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.2);transform:translateY(12px);transition:transform .2s}
+.auth-modal{background:#fff;border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.25);transform:translateY(16px);transition:transform .25s}
 .auth-overlay.open .auth-modal{transform:translateY(0)}
-.auth-head{background:var(--navy);padding:22px 26px;position:relative}
-.auth-head h2{font-size:17px;font-weight:800;color:#fff;margin-bottom:3px}
-.auth-head p{font-size:12px;color:rgba(255,255,255,.6)}
-.auth-close-btn{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1}
-.auth-body{padding:22px 26px 26px}
-.auth-perks{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;padding:12px 14px;background:var(--blue-light);border-radius:8px}
+.auth-head{background:var(--navy);padding:26px 28px 22px;position:relative}
+.auth-head h2{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.auth-head p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.5}
+.auth-close-btn{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.12);border:none;color:rgba(255,255,255,.8);font-size:18px;cursor:pointer;line-height:1;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.auth-close-btn:hover{background:rgba(255,255,255,.22)}
+.auth-body{padding:24px 28px 28px}
+.auth-perks{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;padding:12px 14px;background:var(--blue-light);border-radius:10px}
 .auth-perk{display:flex;align-items:center;gap:7px;font-size:12px;color:#1a6f8a;font-weight:500}
-.auth-field{margin-bottom:10px}
-.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.auth-err{font-size:12px;color:#e53e3e;background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
-.auth-ok{font-size:12px;color:#276749;background:#E6F9F0;border:1px solid #b2dfce;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
+.auth-field{margin-bottom:12px}
+.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.auth-err{font-size:12px;color:#c53030;background:#fff5f5;border:1px solid #feb2b2;border-radius:8px;padding:9px 12px;margin-bottom:12px;display:none}
+.auth-ok{font-size:12px;color:#276749;background:#E6F9F0;border:1px solid #b2dfce;border-radius:8px;padding:9px 12px;margin-bottom:12px;display:none}
 .auth-tabs-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px}
 .auth-tab{padding:8px 16px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text-light);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .15s}
 .auth-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* SHARED INPUT STYLES — used by auth modal and action modal */
+.a-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:13px;color:var(--text);background:#fff;outline:none;transition:border-color .2s,box-shadow .2s;display:block;box-sizing:border-box}
+.a-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.12)}
+.a-input::placeholder{color:#A0AEC0}
+select.a-input{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;padding-right:34px}
+textarea.a-input{resize:none;min-height:80px;line-height:1.6}
+.a-err{font-size:12px;color:#c53030;background:#fff5f5;border:1px solid #fed7d7;border-radius:8px;padding:9px 12px;margin-bottom:12px}
+.a-ok{font-size:12px;color:#276749;background:#E6F9F0;border:1px solid #b2dfce;border-radius:8px;padding:9px 12px;margin-bottom:12px}
+.a-label{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+.a-note{font-size:11px;color:var(--text-light);text-align:center;line-height:1.6;margin-top:10px}
+.a-divider{height:1px;background:var(--border);margin:16px 0}
+.a-section{margin-bottom:14px}
 
 /* FOOTER */
 footer{background:var(--navy);padding:44px 40px 0}
@@ -443,7 +457,7 @@ function buildCarousel(thumbUrls, folderUrl, isPreview) {
     + '<div class="carousel-footer">'
       + '<span class="carousel-footer-left">' + thumbUrls.length + ' photo' + (thumbUrls.length!==1?'s':'')
         + (isPreview ? ' &middot; loading more\u2026' : '') + ' &middot; click to expand</span>'
-      + (folderUrl ? '<a href="' + folderUrl + '" target="_blank" style="font-size:11px;font-weight:600;color:var(--blue);text-decoration:none" onclick="event.stopPropagation()">Open in Drive &#8599;</a>' : '')
+      + (folderUrl ? '<a href="' + folderUrl + '" target="_blank" style="font-size:11px;font-weight:600;color:var(--blue);text-decoration:none" onclick="event.stopPropagation()">📷 View All Photos</a>' : '')
     + '</div>';
 
   wrap.innerHTML = html;
@@ -543,7 +557,7 @@ function showDriveBtn(folderUrl) {
   if (wrap.querySelector('img')) {
     var footer = wrap.querySelector('[style*="0a1828"]');
     if (footer) footer.innerHTML = '<span style="font-size:11px;color:rgba(255,255,255,.45)">Cover photo shown</span>'
-      + (folderUrl ? '<a href="' + folderUrl + '" target="_blank" style="font-size:11px;font-weight:600;color:var(--blue);text-decoration:none">View all in Drive &#8599;</a>' : '');
+      + (folderUrl ? '<a href="' + folderUrl + '" target="_blank" style="font-size:11px;font-weight:600;color:var(--blue);text-decoration:none">📷 View All Photos</a>' : '');
     return;
   }
   wrap.innerHTML = '<div class="photo-placeholder">'
@@ -648,69 +662,81 @@ function openActionModal(type, dealId) {
   var title   = isOffer ? '&#128176; Submit an Offer' : '&#128203; Request Access / Walkthrough';
   var sub     = isOffer ? 'Fill in your offer details and we\'ll review within 24 hours.'
                         : 'We\'ll reach out to schedule a walkthrough or send access info.';
-  var extra   = isOffer
-    ? '<div class="auth-row" style="margin-bottom:10px">'
-        + '<input class="a-input" id="act-offer-price" placeholder="Offer Amount (e.g. $155,000)">'
-        + '<input class="a-input" id="act-coe" placeholder="Target Close Date (e.g. May 1)">'
+  var extra = isOffer
+    ? '<div class="a-divider"></div>'
+      + '<div class="a-section">'
+        + '<label class="a-label">Offer Details</label>'
+        + '<div class="auth-row">'
+          + '<input class="a-input" id="act-offer-price" placeholder="Offer Amount">'
+          + '<input class="a-input" id="act-coe" placeholder="Target Close Date">'
+        + '</div>'
+        + '<select class="a-input" id="act-pay" style="margin-bottom:10px">'
+          + '<option value="">How do you plan to pay?</option>'
+          + '<option>Cash</option>'
+          + '<option>Subject To</option>'
+          + '<option>Seller Finance</option>'
+          + '<option>Lease Option</option>'
+          + '<option>Novation</option>'
+          + '<option>Morby Method</option>'
+          + '<option>Assumable Loans</option>'
+          + '<option>Partnerships / JV</option>'
+          + '<option>Traditional Financing</option>'
+          + '<option>DSCR</option>'
+        + '</select>'
+        + '<textarea class="a-input" id="act-notes" placeholder="Additional terms or notes (optional)"></textarea>'
       + '</div>'
-      + '<select class="a-input" id="act-pay" style="appearance:none;cursor:pointer;margin-bottom:10px">'
-        + '<option value="">How do you plan to pay?</option>'
-        + '<option>Cash</option>'
-        + '<option>Subject To</option>'
-        + '<option>Seller Finance</option>'
-        + '<option>Lease Option</option>'
-        + '<option>Novation</option>'
-        + '<option>Morby Method</option>'
-        + '<option>Assumable Loans</option>'
-        + '<option>Partnerships/JV</option>'
-        + '<option>Traditional Financing</option>'
-        + '<option>DSCR</option>'
-      + '</select>'
-      + '<textarea class="a-input" id="act-notes" placeholder="Notes / additional terms (optional)" rows="2" style="resize:vertical;margin-bottom:0"></textarea>'
-    : '<select class="a-input" id="act-access-type" style="appearance:none;cursor:pointer;margin-bottom:10px">'
-        + '<option value="">What are you looking for?</option>'
-        + '<option>I have a question / inquiry</option>'
-        + '<option>Virtual walkthrough</option>'
-        + '<option>In-person showing</option>'
-        + '<option>Lockbox access</option>'
-        + '<option>Full deal package / details</option>'
-      + '</select>'
-      + '<select class="a-input" id="act-buy-method" style="appearance:none;cursor:pointer;margin-bottom:10px">'
-        + '<option value="">How do you buy? (optional)</option>'
-        + '<option>Cash</option>'
-        + '<option>Subject To</option>'
-        + '<option>Seller Finance</option>'
-        + '<option>Lease Option</option>'
-        + '<option>Novation</option>'
-        + '<option>Morby Method</option>'
-        + '<option>Assumable Loans</option>'
-        + '<option>Partnerships/JV</option>'
-        + '<option>Traditional Financing</option>'
-        + '<option>DSCR</option>'
-      + '</select>'
-      + '<textarea class="a-input" id="act-notes" placeholder="Notes or questions (optional)" rows="2" style="resize:vertical;margin-bottom:0"></textarea>';
+    : '<div class="a-divider"></div>'
+      + '<div class="a-section">'
+        + '<label class="a-label">What are you looking for?</label>'
+        + '<select class="a-input" id="act-access-type" style="margin-bottom:10px">'
+          + '<option value="">Select request type</option>'
+          + '<option>I have a question / inquiry</option>'
+          + '<option>Virtual walkthrough</option>'
+          + '<option>In-person showing</option>'
+          + '<option>Lockbox access</option>'
+          + '<option>Full deal package / details</option>'
+        + '</select>'
+        + '<label class="a-label">How do you buy? (optional)</label>'
+        + '<select class="a-input" id="act-buy-method" style="margin-bottom:10px">'
+          + '<option value="">Select buying method</option>'
+          + '<option>Cash</option>'
+          + '<option>Subject To</option>'
+          + '<option>Seller Finance</option>'
+          + '<option>Lease Option</option>'
+          + '<option>Novation</option>'
+          + '<option>Morby Method</option>'
+          + '<option>Assumable Loans</option>'
+          + '<option>Partnerships / JV</option>'
+          + '<option>Traditional Financing</option>'
+          + '<option>DSCR</option>'
+        + '</select>'
+        + '<textarea class="a-input" id="act-notes" placeholder="Notes or questions (optional)"></textarea>'
+      + '</div>';
 
   var user = getUser();
   document.getElementById('action-modal').innerHTML =
-    '<div class="auth-head" style="background:var(--navy);padding:22px 26px;position:relative">'
+    '<div class="auth-head">'
       + '<button class="auth-close-btn" onclick="closeActionModal()">&#215;</button>'
-      + '<h2 style="font-size:17px;font-weight:800;color:#fff;margin-bottom:3px">' + title + '</h2>'
-      + '<p style="font-size:12px;color:rgba(255,255,255,.6)">' + sub + '</p>'
+      + '<h2>' + title + '</h2>'
+      + '<p>' + sub + '</p>'
     + '</div>'
     + '<div class="auth-body">'
-      + '<div class="a-err" id="act-err"></div>'
-      + '<div class="a-ok"  id="act-ok"></div>'
-      + '<div class="auth-row" style="margin-bottom:10px">'
+      + '<div class="a-err" id="act-err" style="display:none"></div>'
+      + '<div class="a-ok"  id="act-ok"  style="display:none"></div>'
+      + '<label class="a-label">Your Info</label>'
+      + '<div class="auth-row">'
         + '<input class="a-input" id="act-fn" placeholder="First Name" value="'+(user&&user.name?user.name.split(' ')[0]:'')+'">'
         + '<input class="a-input" id="act-ln" placeholder="Last Name" value="'+(user&&user.name&&user.name.split(' ')[1]?user.name.split(' ')[1]:'')+'">'
       + '</div>'
-      + '<input class="a-input" id="act-phone" type="tel" placeholder="Phone Number" style="margin-bottom:10px" value="'+(user&&user.phone?user.phone:'')+'">'
-      + '<input class="a-input" id="act-email" type="email" placeholder="Email Address" style="margin-bottom:10px" value="'+(user&&user.email?user.email:'')+'">'
+      + '<div class="auth-row" style="margin-bottom:0">'
+        + '<input class="a-input" id="act-phone" type="tel" placeholder="Phone Number" value="'+(user&&user.phone?user.phone:'')+'">'
+        + '<input class="a-input" id="act-email" type="email" placeholder="Email Address" value="'+(user&&user.email?user.email:'')+'">'
+      + '</div>'
       + extra
-      + '<button class="btn-full-blue" style="margin-top:14px" onclick="submitAction(\'' + type + '\',\'' + dealId + '\')">'
-        + (isOffer ? 'Submit Offer' : 'Request Access')
+      + '<button class="btn-full-blue" style="margin-top:16px;padding:13px;border-radius:10px;font-size:14px" onclick="submitAction(\'' + type + '\',\'' + dealId + '\')">'
+        + (isOffer ? '💰 Submit Offer' : '📋 Request Access')
       + '</button>'
-      + '<div class="a-note" style="margin-top:10px">By submitting you agree to receive SMS &amp; email. Reply STOP to opt out.</div>'
+      + '<div class="a-note">By submitting you agree to receive SMS &amp; email from Deal Pros LLC. Reply STOP to opt out.</div>'
     + '</div>';
 
   document.getElementById('action-overlay').classList.add('open');
@@ -1001,7 +1027,7 @@ function render(deal, allDeals) {
       + '</div>'
       + (folderUrl ? '<a href="'+folderUrl+'" target="_blank" class="photo-gallery-btn">'
           + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
-          + 'Open in Drive</a>' : '')
+          + '📷 View All Photos</a>' : '')
     + '</div>'
     + '<div id="photo-grid-wrap">'
       + (folderId
