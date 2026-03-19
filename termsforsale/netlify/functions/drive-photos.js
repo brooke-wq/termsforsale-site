@@ -32,14 +32,21 @@ exports.handler = async function(event) {
     + '&key=' + apiKey;
 
   try {
-    var response = await fetch(url);
+    var response = await fetch(url, {
+      headers: {
+        'Referer': 'https://deals.termsforsale.com',
+        'Origin': 'https://deals.termsforsale.com'
+      }
+    });
     var data = await response.json();
 
     if (!response.ok) {
+      var errBody = await response.json().catch(function(){ return {}; });
+      console.error('Drive API error:', response.status, JSON.stringify(errBody));
       return {
         statusCode: response.status,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: data.error || 'Drive API error' })
+        body: JSON.stringify({ error: (errBody.error && errBody.error.message) || 'Drive API error ' + response.status })
       };
     }
 
