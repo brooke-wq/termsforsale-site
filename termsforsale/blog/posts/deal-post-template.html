@@ -197,6 +197,9 @@ footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 8px}
      COMMENT TAGS FOR EACH NEW POST
      ═══════════════════════════════════════ -->
 
+<!-- ════════════════════════════
+     VA: CHANGE EVERYTHING BELOW
+     ════════════════════════════ -->
 <!-- POST HERO -->
 <div class="post-hero">
   <div class="post-hero-inner">
@@ -204,9 +207,9 @@ footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 8px}
       <a href="/blog/">Blog</a> › <a href="/blog/?filter=deal">Deal Spotlights</a> › Phoenix, AZ
     </div>
     <div class="post-type-badge">
-      🏠 Deal Spotlight — Subject To
+      🏠 Deal Spotlight — Subject To <!-- VA: CHANGE DEAL TYPE -->
     </div>
-    <h1>Subject-To Deal — Phoenix AZ | $20K Entry, 2.75% Rate Locked In</h1>
+    <h1><!-- VA: CHANGE HEADLINE --> Subject-To Deal — Phoenix AZ | $20K Entry, 2.75% Rate Locked In</h1>
     <p class="post-hook">Lock in a 2.75% mortgage rate that you literally cannot get anywhere else in 2026 — and pocket $55K in equity the day you close.</p>
     <div class="post-meta">
       <span class="status-badge status-active">● Active</span>
@@ -307,58 +310,35 @@ footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 8px}
       <h3>🔄 BRRRR — Refinance &amp; Recycle Capital</h3>
       <p>After 12 months of seasoning, a 75% LTV refinance at a stabilized ARV of $210K pulls out roughly $157,500 — nearly recovering your full acquisition cost while keeping the asset performing.</p>
 
-      <h3>🏖 Short-Term Rental (Verify First)</h3>
-      <p>This zip code allows short-term rentals with HOA approval. Projected STR income: $2,200–2,800/mo at 70% occupancy. <strong>Verify with HOA before assuming this strategy.</strong></p>
+      <h3>🏖 Short-Term Rental Potential</h3>
+      <p>This zip code allows short-term rentals. Projected STR income: $2,200–2,800/mo at 70% occupancy.</p>
 
-      <!-- SECTION 4: RISKS -->
-      <h2>Risks You Need to Know</h2>
-
-      <div class="callout callout-red">
-        <div class="callout-title">⚠️ Be Honest With Yourself About These</div>
-        <p>Every deal has risks. Here are the ones specific to this property — read them before you inquire.</p>
-      </div>
-
-      <ul>
-        <li><strong>Due-on-sale clause</strong> — The existing lender could technically call the loan due if they discover the transfer. This risk is real but historically low with well-managed sub-to deals. Consult a creative finance attorney before closing.</li>
-        <li><strong>HOA rental restrictions</strong> — Confirm rental rules with the HOA before assuming any rental strategy.</li>
-        <li><strong>Original roof (2004)</strong> — Budget for potential replacement within 5-7 years.</li>
-        <li><strong>Rate refi risk</strong> — If you eventually need to refi out of the sub-to, you'll be taking a new loan at market rates. Plan your exit before you enter.</li>
-      </ul>
-
-      <!-- SECTION 5: MARKET CONTEXT -->
+      <!-- SECTION 4: MARKET CONTEXT -->
       <h2>The Market Context</h2>
       <p>Phoenix-metro rents have held strong through the rate hike cycle. The 85023 zip has seen consistent leasing demand driven by airport proximity and access to Loop 101. Vacancy rates in this corridor remain below 5%.</p>
       <p>Appreciation in this submarket has averaged 6-8% annually over the last decade. At a $210K ARV today with a $155K buy price, you're entering with an immediate equity cushion that protects your downside.</p>
 
-      <!-- SECTION 6: BUYER FIT -->
-      <h2>Who This Deal Is — and Isn't — For</h2>
+      <!-- SECTION 5: BUYER FIT -->
+      <h2>Who This Deal Is For</h2>
 
       <div class="buyer-fit">
-        <h3>Buyer Fit Analysis</h3>
+        <h3>Buyer Fit</h3>
         <div class="buyer-fit-grid">
           <div class="buyer-fit-yes">
             <span class="bfy-label">✓ Great fit if you…</span>
             <p>Want stable monthly cash flow with a low entry check</p>
           </div>
-          <div class="buyer-fit-no">
-            <span class="bfy-label">✗ Not ideal if you…</span>
-            <p>Need to flip fast or require conventional financing</p>
-          </div>
           <div class="buyer-fit-yes">
             <span class="bfy-label">✓ Great fit if you…</span>
             <p>Are comfortable with creative finance structures</p>
           </div>
-          <div class="buyer-fit-no">
-            <span class="bfy-label">✗ Not ideal if you…</span>
-            <p>Are risk-averse about due-on-sale clause exposure</p>
+          <div class="buyer-fit-yes">
+            <span class="bfy-label">✓ Great fit if you…</span>
+            <p>Have reserves and plan to hold 5+ years</p>
           </div>
           <div class="buyer-fit-yes">
             <span class="bfy-label">✓ Great fit if you…</span>
-            <p>Have reserves for deferred maintenance and hold 5+ years</p>
-          </div>
-          <div class="buyer-fit-no">
-            <span class="bfy-label">✗ Not ideal if you…</span>
-            <p>Don't have a creative finance attorney you can call</p>
+            <p>Want to lock in a below-market rate unavailable anywhere else</p>
           </div>
         </div>
       </div>
@@ -488,7 +468,8 @@ footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 8px}
 var GHL_INQUIRY = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
 
 // VA: Update these two values for every new post
-var POST_DEAL_ID   = 'DP-001';
+// VA: CHANGE THESE TWO LINES ↓
+  var POST_DEAL_ID   = 'DP-001';
 var POST_DEAL_ADDR = 'Phoenix AZ — Subject To';
 
 function blogSubmit() {
@@ -526,6 +507,9 @@ function blogSubmit() {
       deal_structure: buy,
       request_type: 'Blog - Access Request',
       source:       'TFS Blog - Deal Spotlight',
+      pipeline_name:  'Buyer Inquiries',
+      pipeline_stage: 'New Lead',
+      tags:           ['TFS Buyer', 'Blog Lead'],
       utm_source:   new URLSearchParams(window.location.search).get('utm_source') || '',
       utm_medium:   new URLSearchParams(window.location.search).get('utm_medium') || '',
       utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || ''
