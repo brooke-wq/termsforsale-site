@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — Terms For Sale</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DRV6NWNY06"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-DRV6NWNY06');</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;--blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;
+  --orange:#F7941D;--orange-dark:#d97c0e;--green:#10B981;--green-light:#E6F9F0;
+  --white:#fff;--bg:#F4F6F9;--text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;
+  --border:#E2E8F0;--border-light:#EDF2F7;--font:'Poppins',sans-serif;--r:12px
+}
+body{font-family:var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fade-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* NAV */
+nav{background:#fff;border-bottom:1px solid var(--border);height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.nav-logo img{height:38px}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-link{color:var(--text-mid);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s}
+.nav-link:hover{color:var(--blue)}
+.nav-avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-name{font-size:13px;font-weight:600;color:var(--text-mid)}
+
+/* NOT LOGGED IN */
+.auth-wall{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:40px 20px}
+.auth-wall h2{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:10px}
+.auth-wall p{font-size:15px;color:var(--text-mid);margin-bottom:28px;max-width:400px}
+.btn-blue{display:inline-flex;align-items:center;gap:6px;padding:12px 28px;background:var(--blue);color:#fff;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;border:none;transition:background .15s}
+.btn-blue:hover{background:var(--blue-dark)}
+.btn-outline{display:inline-flex;align-items:center;gap:6px;padding:11px 24px;background:transparent;color:var(--blue);border:1.5px solid var(--blue);border-radius:10px;font-family:var(--font);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s}
+.btn-outline:hover{background:var(--blue);color:#fff}
+
+/* DASHBOARD LAYOUT */
+.dash-wrap{max-width:1160px;margin:0 auto;padding:32px 40px 72px}
+.dash-header{margin-bottom:28px;animation:fade-up .3s ease}
+.dash-greeting{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.dash-sub{font-size:14px;color:var(--text-light)}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;animation:fade-up .35s ease}
+.stat-card{background:#fff;border-radius:var(--r);border:1px solid var(--border-light);padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.stat-num{font-size:28px;font-weight:800;color:var(--navy);margin-bottom:2px}
+.stat-label{font-size:12px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px}
+
+/* TABS */
+.dash-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px}
+.dash-tab{padding:11px 20px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text-light);background:transparent;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.dash-tab:hover{color:var(--blue)}
+.dash-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.dash-panel{display:none;animation:fade-up .25s ease}
+.dash-panel.on{display:block}
+
+/* SECTION HEADER */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:16px;font-weight:700;color:var(--navy)}
+.section-link{font-size:13px;font-weight:600;color:var(--blue);text-decoration:none}
+
+/* DEAL CARDS (dashboard variant) */
+.deal-list{display:flex;flex-direction:column;gap:12px}
+.deal-row{background:#fff;border-radius:var(--r);border:1px solid var(--border-light);padding:16px 20px;display:grid;grid-template-columns:56px 1fr auto;gap:16px;align-items:center;text-decoration:none;color:inherit;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.deal-row:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(41,171,226,.12);transform:translateY(-1px)}
+.deal-row-thumb{width:56px;height:56px;border-radius:9px;overflow:hidden;background:linear-gradient(135deg,#c8e8f5,#a8d4ea);flex-shrink:0}
+.deal-row-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.deal-row-info{}
+.deal-row-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.deal-row-meta{font-size:12px;color:var(--text-light)}
+.deal-row-right{text-align:right}
+.deal-row-price{font-size:15px;font-weight:800;color:var(--navy)}
+.deal-row-type{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;margin-top:4px}
+.type-subto{background:#EBF8FF;color:#1a8bbf}
+.type-sf{background:#FFF3E0;color:#c05621}
+.type-cash{background:#E6F9F0;color:#276749}
+.type-hybrid{background:#F3E8FF;color:#7C3AED}
+
+/* ACTIVITY LIST */
+.activity-list{display:flex;flex-direction:column;gap:10px}
+.activity-item{background:#fff;border-radius:10px;border:1px solid var(--border-light);padding:14px 18px;display:flex;align-items:flex-start;gap:12px}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.activity-text{font-size:13px;color:var(--text-mid);line-height:1.5;flex:1}
+.activity-text strong{color:var(--text);font-weight:600}
+.activity-time{font-size:11px;color:var(--text-light);flex-shrink:0}
+
+/* OFFER STATUS */
+.offer-card{background:#fff;border-radius:var(--r);border:1px solid var(--border-light);padding:20px;margin-bottom:12px}
+.offer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.offer-address{font-size:14px;font-weight:700;color:var(--navy)}
+.offer-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:50px}
+.badge-reviewing{background:#FFF3E0;color:#c05621}
+.badge-accepted{background:#E6F9F0;color:#276749}
+.badge-countered{background:#EBF8FF;color:#1a8bbf}
+.badge-declined{background:#FEE2E2;color:#C53030}
+.offer-details{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.offer-detail-item{}
+.offer-detail-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:3px}
+.offer-detail-val{font-size:14px;font-weight:700;color:var(--navy)}
+
+/* SAVED DEALS EMPTY */
+.empty-state{text-align:center;padding:60px 20px;background:#fff;border-radius:var(--r);border:1px solid var(--border-light)}
+.empty-state svg{color:var(--border);margin-bottom:12px}
+.empty-state h3{font-size:16px;font-weight:700;color:var(--text-mid);margin-bottom:6px}
+.empty-state p{font-size:13px;color:var(--text-light);margin-bottom:20px}
+
+/* ALERT PREFERENCES */
+.pref-card{background:#fff;border-radius:var(--r);border:1px solid var(--border-light);padding:20px;margin-bottom:12px}
+.pref-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pref-title{font-size:14px;font-weight:700;color:var(--navy)}
+.toggle-wrap{display:flex;align-items:center;gap:8px}
+.toggle{width:40px;height:22px;border-radius:50px;background:var(--border);cursor:pointer;position:relative;transition:background .2s}
+.toggle.on{background:var(--blue)}
+.toggle::after{content:'';width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(18px)}
+.pref-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border-light)}
+.pref-label{font-size:13px;color:var(--text-mid);font-weight:500}
+
+/* LOADING */
+.loading-spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:60px auto}
+
+/* RESPONSIVE */
+@media(max-width:1024px){.dash-wrap{padding:24px 20px 60px}.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){nav{padding:0 16px}.stat-grid{grid-template-columns:1fr 1fr}.deal-row{grid-template-columns:44px 1fr}.deal-row-right{display:none}.offer-details{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">Browse Deals</a>
+    <a href="/map.html" class="nav-link">Map</a>
+    <a href="/blog/" class="nav-link">Blog</a>
+    <span class="nav-name" id="nav-name"></span>
+    <div class="nav-avatar" id="nav-avatar" onclick="showMenu()">?</div>
+  </div>
+</nav>
+
+<div id="app">
+  <div class="loading-spinner"></div>
+</div>
+
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script>
+var SHEET_ID = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
+var GHL_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
+
+// ── AUTH ──────────────────────────────────────────────
+function getUser(){
+  try{return JSON.parse(localStorage.getItem('tfs_buyer')||'null');}catch(e){return null;}
+}
+function saveUser(u){localStorage.setItem('tfs_buyer',JSON.stringify(u));}
+
+// ── LOCAL STORAGE HELPERS ─────────────────────────────
+function getSaved(){try{return JSON.parse(localStorage.getItem('tfs_saved')||'[]');}catch(e){return[];}}
+function getActivity(){try{return JSON.parse(localStorage.getItem('tfs_activity')||'[]');}catch(e){return[];}}
+function addActivity(text,color){
+  var acts=getActivity();
+  acts.unshift({text,color:color||'#29ABE2',time:new Date().toISOString()});
+  if(acts.length>20)acts=acts.slice(0,20);
+  localStorage.setItem('tfs_activity',JSON.stringify(acts));
+}
+function getOffers(){try{return JSON.parse(localStorage.getItem('tfs_offers')||'[]');}catch(e){return[];}}
+
+// ── TIME FORMAT ────────────────────────────────────────
+function timeAgo(iso){
+  if(!iso)return '';
+  var diff=(new Date()-new Date(iso))/1000;
+  if(diff<60)return 'Just now';
+  if(diff<3600)return Math.round(diff/60)+'m ago';
+  if(diff<86400)return Math.round(diff/3600)+'h ago';
+  return Math.round(diff/86400)+'d ago';
+}
+
+function money(n){if(!n)return'—';return'$'+Number(n).toLocaleString();}
+
+function typeClass(t){
+  if(!t)return'type-cash';
+  if(/subto|subject/i.test(t))return'type-subto';
+  if(/seller|sf/i.test(t))return'type-sf';
+  if(/hybrid|morby|stack|wrap/i.test(t))return'type-hybrid';
+  return'type-cash';
+}
+
+// ── FETCH ACTIVE DEALS ─────────────────────────────────
+function fetchDeals(){
+  return fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0&headers=1')
+    .then(function(r){if(!r.ok)throw new Error('Sheet error');return r.text();})
+    .then(function(text){
+      var m=text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+      if(!m)return[];
+      var json=JSON.parse(m[1]);
+      var cols=json.table.cols.map(function(c){return c.label.trim();});
+      var rows=json.table.rows||[];
+      var ACTIVE=['actively marketing','active marketing','active'];
+      var seen={};
+      return rows.map(function(row){
+        var o={};var dupe={};
+        cols.forEach(function(c,i){
+          var cell=row.c[i];var val=cell?(cell.v!==null?String(cell.v).trim():''):'';
+          if(dupe[c]===undefined){dupe[c]=0;o[c]=val;o[c+'__0']=val;}
+          else{dupe[c]++;o[c+'__'+dupe[c]]=val;o[c]=val;}
+        });
+        return o;
+      }).filter(function(r){
+        return ACTIVE.indexOf((r['Deal Status']||'').toLowerCase().trim())>-1;
+      }).map(function(r){
+        return {
+          id:r['Deal ID']||r['Deal Status__0'],
+          dealType:r['Deal Type'],
+          streetAddress:r['Street Address'],
+          city:r['City'],state:r['State'],
+          nearestMetro:r['Nearest Metro Area'],
+          askingPrice:+r['Asking Price']||0,
+          entryFee:+r['Entry Fee']||0,
+          beds:r['Beds'],baths:r['Baths'],sqft:r['Sqft'],
+          coe:r['COE'],
+          coverPhoto:r['Cover Photo'],
+          highlight1:r['Highlight 1']
+        };
+      }).filter(function(d){return !!d.id;});
+    });
+}
+
+// ── RENDER DASHBOARD ──────────────────────────────────
+function renderDashboard(user,deals){
+  var saved=getSaved();
+  var activity=getActivity();
+  var offers=getOffers();
+  var savedDeals=deals.filter(function(d){return saved.indexOf(d.id)>-1;});
+
+  // Update nav
+  var initials=(user.name||'?').split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
+  document.getElementById('nav-avatar').textContent=initials;
+  document.getElementById('nav-name').textContent=user.name?user.name.split(' ')[0]:'';
+
+  var app=document.getElementById('app');
+  app.innerHTML=
+    '<div class="dash-wrap">'
+      // Header
+      +'<div class="dash-header">'
+        +'<div class="dash-greeting">Welcome back'+( user.name?' '+user.name.split(' ')[0]:'')+' 👋</div>'
+        +'<div class="dash-sub">Here\'s your deal activity and saved properties.</div>'
+      +'</div>'
+
+      // Stat cards
+      +'<div class="stat-grid">'
+        +statCard('🏠',deals.length,'Active Deals','#EBF8FF','#29ABE2')
+        +statCard('❤️',savedDeals.length,'Saved Deals','#FEE2E2','#C53030')
+        +statCard('📋',offers.length,'Offers Submitted','#FFF3E0','#F7941D')
+        +statCard('📊',activity.length,'Recent Actions','#E6F9F0','#10B981')
+      +'</div>'
+
+      // Tabs
+      +'<div class="dash-tabs">'
+        +'<button class="dash-tab on" onclick="switchDashTab(this,\'saved\')">❤️ Saved Deals ('+savedDeals.length+')</button>'
+        +'<button class="dash-tab" onclick="switchDashTab(this,\'offers\')">📋 My Offers ('+offers.length+')</button>'
+        +'<button class="dash-tab" onclick="switchDashTab(this,\'activity\')">📊 Activity</button>'
+        +'<button class="dash-tab" onclick="switchDashTab(this,\'browse\')">🏠 All Active Deals ('+deals.length+')</button>'
+        +'<button class="dash-tab" onclick="switchDashTab(this,\'prefs\')">⚙️ Preferences</button>'
+      +'</div>'
+
+      // Saved deals panel
+      +'<div id="dp-saved" class="dash-panel on">'
+        +'<div class="section-head"><div class="section-title">Saved Deals</div><a href="/" class="section-link">Browse all →</a></div>'
+        +(savedDeals.length?dealList(savedDeals,true)
+          :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><h3>No saved deals yet</h3><p>Click the ❤️ on any deal to save it here for easy access.</p><a href="/" class="btn-blue">Browse Active Deals →</a></div>')
+      +'</div>'
+
+      // Offers panel
+      +'<div id="dp-offers" class="dash-panel">'
+        +'<div class="section-head"><div class="section-title">My Offers</div></div>'
+        +(offers.length?offers.map(offerCard).join('')
+          :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><h3>No offers submitted yet</h3><p>When you submit an offer on a deal, it will appear here with its current status.</p><a href="/" class="btn-blue">Browse Active Deals →</a></div>')
+      +'</div>'
+
+      // Activity panel
+      +'<div id="dp-activity" class="dash-panel">'
+        +'<div class="section-head"><div class="section-title">Recent Activity</div></div>'
+        +(activity.length?'<div class="activity-list">'+activity.map(function(a){
+            return '<div class="activity-item">'
+              +'<div class="activity-dot" style="background:'+a.color+'"></div>'
+              +'<div class="activity-text">'+escHtml(a.text)+'</div>'
+              +'<div class="activity-time">'+timeAgo(a.time)+'</div>'
+            +'</div>';
+          }).join('')+'</div>'
+          :'<div class="empty-state"><h3>No activity yet</h3><p>Your views, saves, and form submissions will show up here.</p></div>')
+      +'</div>'
+
+      // Browse panel
+      +'<div id="dp-browse" class="dash-panel">'
+        +'<div class="section-head"><div class="section-title">All Active Deals</div><a href="/" class="section-link">Full listing page →</a></div>'
+        +dealList(deals,false)
+      +'</div>'
+
+      // Preferences panel
+      +'<div id="dp-prefs" class="dash-panel">'
+        +'<div class="section-head"><div class="section-title">Alert Preferences</div></div>'
+        +prefCard()
+      +'</div>'
+
+    +'</div>';
+}
+
+function statCard(icon,num,label,bg,color){
+  return '<div class="stat-card">'
+    +'<div class="stat-icon" style="background:'+bg+'"><span style="font-size:18px">'+icon+'</span></div>'
+    +'<div class="stat-num" style="color:'+color+'">'+num+'</div>'
+    +'<div class="stat-label">'+label+'</div>'
+  +'</div>';
+}
+
+function dealList(deals,showRemove){
+  if(!deals.length)return '<div class="empty-state"><h3>No deals to show</h3></div>';
+  return '<div class="deal-list">'+deals.map(function(d){
+    var thumb='';
+    if(d.coverPhoto){
+      var fid=(d.coverPhoto.match(/\/d\/([a-zA-Z0-9_-]{20,})\//)||[])[1]||(d.coverPhoto.match(/id=([a-zA-Z0-9_-]{20,})/)||[])[1];
+      if(fid)thumb='<img src="https://drive.google.com/thumbnail?id='+fid+'&sz=w200" alt="'+escAttr(d.city)+'" loading="lazy" onerror="this.style.display=\'none\'">';
+    }
+    var entry=d.entryFee||d.askingPrice;
+    return '<a class="deal-row" href="/deal.html?id='+encodeURIComponent(d.id)+'">'
+      +'<div class="deal-row-thumb">'+thumb+'</div>'
+      +'<div class="deal-row-info">'
+        +'<div class="deal-row-title">'+(d.nearestMetro||d.city+', '+d.state)+'</div>'
+        +'<div class="deal-row-meta">'+(d.beds?d.beds+'bd / ':'')+( d.baths?d.baths+'ba':'')+(d.sqft?' · '+Number(d.sqft).toLocaleString()+' sqft':'')+'</div>'
+      +'</div>'
+      +'<div class="deal-row-right">'
+        +'<div class="deal-row-price">'+money(entry)+'</div>'
+        +'<div class="deal-row-type '+typeClass(d.dealType)+'">'+( d.dealType||'Deal')+'</div>'
+      +'</div>'
+    +'</a>';
+  }).join('')+'</div>';
+}
+
+function offerCard(o){
+  var badgeClass={reviewing:'badge-reviewing',accepted:'badge-accepted',countered:'badge-countered',declined:'badge-declined'}[o.status]||'badge-reviewing';
+  var badgeText={reviewing:'Under Review',accepted:'✓ Accepted',countered:'Counter Received',declined:'Not Accepted'}[o.status]||'Under Review';
+  return '<div class="offer-card">'
+    +'<div class="offer-head">'
+      +'<div class="offer-address">Deal #'+escHtml(o.dealId)+(o.address?' — '+escHtml(o.address):'')+'</div>'
+      +'<div class="offer-badge '+badgeClass+'">'+badgeText+'</div>'
+    +'</div>'
+    +'<div class="offer-details">'
+      +'<div class="offer-detail-item"><span class="offer-detail-label">Offer Amount</span><span class="offer-detail-val">'+money(o.amount)+'</span></div>'
+      +'<div class="offer-detail-item"><span class="offer-detail-label">Target Close</span><span class="offer-detail-val">'+(o.coe||'—')+'</span></div>'
+      +'<div class="offer-detail-item"><span class="offer-detail-label">Submitted</span><span class="offer-detail-val">'+timeAgo(o.date)+'</span></div>'
+    +'</div>'
+  +'</div>';
+}
+
+function prefCard(){
+  var user=getUser()||{};
+  var prefs=user.prefs||{email:true,sms:true,newDeals:true,priceDrops:true};
+  return '<div class="pref-card">'
+    +'<div class="pref-head"><div class="pref-title">Deal Alert Settings</div></div>'
+    +prefRow('Weekly email digest','email',prefs.email)
+    +prefRow('SMS alerts for new deals','sms',prefs.sms)
+    +prefRow('Notify me when new deals drop','newDeals',prefs.newDeals)
+    +'</div>'
+    +'<div class="pref-card" style="margin-top:12px">'
+    +'<div class="pref-head"><div class="pref-title">Account</div></div>'
+    +'<div class="pref-row"><span class="pref-label">Name</span><span style="font-size:13px;font-weight:600;color:var(--navy)">'+(user.name||'—')+'</span></div>'
+    +'<div class="pref-row"><span class="pref-label">Email</span><span style="font-size:13px;color:var(--text-mid)">'+(user.email||'—')+'</span></div>'
+    +'<div class="pref-row"><span class="pref-label">Phone</span><span style="font-size:13px;color:var(--text-mid)">'+(user.phone||'—')+'</span></div>'
+    +'<div style="margin-top:16px"><button onclick="logout()" style="padding:9px 20px;background:transparent;border:1.5px solid #EDF2F7;border-radius:8px;color:var(--text-light);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Log Out</button></div>'
+    +'</div>';
+}
+
+function prefRow(label,key,val){
+  return '<div class="pref-row">'
+    +'<span class="pref-label">'+label+'</span>'
+    +'<div class="toggle '+(val?'on':'')+'" onclick="togglePref(this,\''+key+'\')" data-key="'+key+'"></div>'
+  +'</div>';
+}
+
+window.togglePref=function(el,key){
+  el.classList.toggle('on');
+  var user=getUser()||{};
+  user.prefs=user.prefs||{};
+  user.prefs[key]=el.classList.contains('on');
+  saveUser(user);
+};
+
+window.switchDashTab=function(btn,id){
+  document.querySelectorAll('.dash-tab').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('.dash-panel').forEach(function(p){p.classList.remove('on');});
+  btn.classList.add('on');
+  document.getElementById('dp-'+id).classList.add('on');
+};
+
+window.logout=function(){
+  localStorage.removeItem('tfs_buyer');
+  window.location.href='/';
+};
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return String(s||'').replace(/"/g,'&quot;');}
+
+// ── RENDER AUTH WALL ──────────────────────────────────
+function renderAuthWall(){
+  document.getElementById('app').innerHTML=
+    '<div class="auth-wall">'
+      +'<div style="font-size:48px;margin-bottom:16px">🔒</div>'
+      +'<h2>Log In to View Your Dashboard</h2>'
+      +'<p>Track your saved deals, submitted offers, and deal activity all in one place.</p>'
+      +'<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">'
+        +'<a href="/?login=1" class="btn-blue">Log In →</a>'
+        +'<a href="/?signup=1" class="btn-outline">Create Account</a>'
+      +'</div>'
+    +'</div>';
+}
+
+// ── INIT ──────────────────────────────────────────────
+function init(){
+  var user=getUser();
+  if(!user||!user.email){
+    renderAuthWall();
+    return;
+  }
+  fetchDeals()
+    .then(function(deals){renderDashboard(user,deals);})
+    .catch(function(){
+      renderDashboard(user,[]);
+    });
+}
+
+// Hook into deal page form submissions to record offers
+window.addEventListener('message',function(e){
+  if(e.data&&e.data.type==='tfs_offer'){
+    var offers=getOffers();
+    offers.unshift({dealId:e.data.dealId,address:e.data.address,amount:e.data.amount,coe:e.data.coe,status:'reviewing',date:new Date().toISOString()});
+    localStorage.setItem('tfs_offers',JSON.stringify(offers));
+    addActivity('Offer submitted on deal '+e.data.dealId+' for '+money(e.data.amount),'#F7941D');
+  }
+  if(e.data&&e.data.type==='tfs_save'){
+    addActivity('Saved deal: '+e.data.dealId,'#C53030');
+  }
+});
+
+init();
+</script>
+</body>
+</html>
