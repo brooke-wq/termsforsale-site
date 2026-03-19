@@ -138,7 +138,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .contact-val:hover{color:var(--blue)}
 
 /* DISCLAIMER */
-.disclaimer{background:#fff;border:1px solid #EDF2F7;border-radius:var(--r);padding:16px;font-size:11px;color:var(--text-light);line-height:1.8;margin-top:20px}
+.disclaimer{background:var(--bg);border-top:1px solid var(--border);padding:20px 0 0;font-size:11px;color:var(--text-light);line-height:1.9;margin-top:28px}
 
 /* STATES */
 .loading-state,.error-state{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:14px;text-align:center;padding:48px}
@@ -1095,9 +1095,6 @@ function render(deal, allDeals) {
         +statBox('Gross Yield',(price?((ltr*12/price)*100).toFixed(1):'?')+'%','Annual rent ÷ asking price','#718096')
       +'</div>'
     +'</div>'
-    +'<div style="font-size:10px;color:var(--text-light);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:8px">'
-      +'&#9432; All figures are automated estimates for analysis purposes only. Actual rents, expenses, and returns vary by market, condition, and management. Consult a licensed agent, CPA, and property manager before making investment decisions.'
-    +'</div>'
   +'</div>';
 
   // ── URGENCY ──
@@ -1164,7 +1161,13 @@ function render(deal, allDeals) {
         +'<div id="tab-analysis" class="tab-panel">'+rentHtml+'</div>'
         +(deal.deckLink?'<div id="tab-resources" class="tab-panel"><a href="'+deal.deckLink+'" target="_blank" class="btn btn-blue">&#128196; Download Deal Package</a></div>':'')
         +'<div id="tab-process" class="tab-panel">'+processHtml+'</div>'
-        +'<div class="disclaimer"><strong>Disclaimer:</strong> All figures are estimates only. Deal Pros LLC facilitates wholesale assignment of purchase contracts. Not a licensed real estate broker. Consult a licensed attorney and CPA before transacting.</div>'
+        +'<div class="disclaimer">'
+          +'<strong>Disclaimer:</strong> All figures including asking price, entry fee, ARV, rent estimates, cash flow projections, cap rates, and investment returns are estimates only and are provided for informational purposes. They do not constitute a guarantee of value, return, or outcome of any kind. '
+          +'Deal Pros LLC facilitates the wholesale assignment of purchase contracts. We are not a licensed real estate broker, financial advisor, or attorney. Nothing on this page constitutes legal, financial, or investment advice. '
+          +'Creative finance structures including Subject-To, Seller Finance, and hybrid transactions carry unique legal and financial risks. Buyers should conduct their own due diligence and consult a licensed real estate attorney, CPA, and qualified financial advisor before entering into any transaction. '
+          +'All rental estimates are based on publicly available market data and internal analysis. Actual rental income, expenses, and returns will vary based on property condition, local market conditions, management, and other factors outside our control. '
+          +'Deal Pros LLC makes no representation regarding the condition of any property and buyers are encouraged to conduct independent inspections prior to closing.'
+        +'</div>'
         + simHtml
       +'</div>'
 
