@@ -228,23 +228,12 @@ footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 8px}
       <h2>Investment Strategies That Work Here</h2>
       ${data.strategies.split('\n').filter(p=>p.trim()).map(p=>`<p>${escHtml(p)}</p>`).join('\n      ')}
 
-      <h2>Risks You Need to Know</h2>
-      <div class="callout callout-red">
-        <div class="callout-title">⚠️ Be Honest With Yourself About These</div>
-        <p>Every deal has risks. Here are the ones specific to this property.</p>
-      </div>
-      <ul>
-        ${data.risks.split('\n').filter(r=>r.trim()).map(r=>`<li>${escHtml(r)}</li>`).join('\n        ')}
-      </ul>
-
-      <h2>Who This Deal Is — and Isn't — For</h2>
+      <h2>Who This Deal Is For</h2>
       <div class="buyer-fit">
-        <h3>Buyer Fit Analysis</h3>
+        <h3>Buyer Fit</h3>
         <div class="buyer-fit-grid">
           ${data.buyerFitYes.split('\n').filter(r=>r.trim()).map(r=>`
           <div class="buyer-fit-yes"><span class="bfy-label">✓ Great fit if you…</span><p>${escHtml(r)}</p></div>`).join('')}
-          ${data.buyerFitNo.split('\n').filter(r=>r.trim()).map(r=>`
-          <div class="buyer-fit-no"><span class="bfy-label">✗ Not ideal if you…</span><p>${escHtml(r)}</p></div>`).join('')}
         </div>
       </div>
 
@@ -255,7 +244,7 @@ footer a{color:rgba(255,255,255,.5);text-decoration:none;margin:0 8px}
 
     </div>
 
-    <div class="disclaimer"><strong>Disclaimer:</strong> All figures are estimates only. Deal Pros LLC facilitates wholesale assignment of purchase contracts. Not a licensed real estate broker. Consult a licensed attorney and CPA before transacting.</div>
+    <div class="disclaimer"><strong>Disclaimer:</strong> All figures including asking price, entry fee, ARV, rent estimates, cash flow projections, and investment returns are estimates only and are provided for informational purposes. They do not constitute a guarantee of value, return, or outcome. Deal Pros LLC facilitates the wholesale assignment of purchase contracts. We are not a licensed real estate broker, financial advisor, or attorney. Nothing on this page constitutes legal, financial, or investment advice. Buyers should conduct their own due diligence and consult a licensed attorney and CPA before transacting.</div>
   </div>
 
   <div class="sidebar">
@@ -323,6 +312,7 @@ function blogSubmit(){
     phone:phone,email:document.getElementById('b-email').value.trim(),
     deal_id:POST_DEAL_ID,deal_structure:document.getElementById('b-buy').value,
     request_type:'Blog - Access Request',source:'TFS Blog - Deal Spotlight',
+    pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Blog Lead'],
     utm_source:new URLSearchParams(window.location.search).get('utm_source')||'',
     utm_medium:new URLSearchParams(window.location.search).get('utm_medium')||''
   })}).catch(function(){});
