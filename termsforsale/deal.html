@@ -594,7 +594,7 @@ function doSignup() {
   if (!fname || !email || !phone) { showAuthErr('Please fill in first name, email, and phone.'); return; }
   var btn = event.target; btn.disabled=true; btn.innerHTML='Creating account&hellip;';
   fetch(GHL_WEBHOOK, {method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({firstName:fname,lastName:lname,email:email,phone:phone,deal_structure:btype,source:'TFS Website - Signup'})})
+    body:JSON.stringify({firstName:fname,lastName:lname,email:email,phone:phone,deal_structure:btype,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']})})
     .catch(function(){});
   var initials = (fname[0]+(lname?lname[0]:'')).toUpperCase();
   var user = {name:fname, email:email, phone:phone, initials:initials};
@@ -728,15 +728,16 @@ function submitAction(type, dealId) {
 
   // GHL-aligned payload — keys match contact.* and opportunity.* field keys exactly
   var payload = {
-    // Standard GHL contact fields
     firstName: fn.trim(),
     lastName:  ln.trim(),
     email:     email.trim(),
     phone:     phone.trim(),
-    // GHL custom fields (using exact field keys from GHL)
-    notes:     notes.trim(),              // opportunity.notes
-    deal_id:   dealId,                    // opportunity.deal_id
-    source:    type==='offer' ? 'TFS Website - Offer' : 'TFS Website - Inquiry'  // opportunity.source
+    notes:     notes.trim(),
+    deal_id:   dealId,
+    source:    type==='offer' ? 'TFS Website - Offer' : 'TFS Website - Inquiry',
+    pipeline_name:  'Buyer Inquiries',
+    pipeline_stage: type==='offer' ? 'Offer Submitted' : (type==='access' ? 'Walkthrough Requested' : 'New Lead'),
+    tags:      type==='offer' ? ['TFS Buyer','Offer Submitted'] : ['TFS Buyer','Access Requested']
   };
 
   if (type === 'offer') {
