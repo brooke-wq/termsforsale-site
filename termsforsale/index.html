@@ -311,17 +311,31 @@ footer{background:var(--navy);padding:52px 55px 0}
   .how-step{grid-template-columns:1fr}.how-header{grid-template-columns:1fr}
   .testi-grid{grid-template-columns:1fr 1fr}
   .footer-top{grid-template-columns:1fr 1fr;gap:28px}
+  .deals-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:768px){
-  nav{padding:0 20px}.nav-links{display:none}
-  .hero-content{padding:0 20px 48px}.hero-headline h1{font-size:36px}
-  .hero-widget{width:100%}
-  .streamlined,.how,.explore,.testi,.vip,.map-section,footer{padding-left:20px;padding-right:20px}
-  .explore-title{font-size:40px}
-  .testi-title{font-size:36px}
-  .vip-title{font-size:36px}
+  nav{padding:0 16px;height:60px}.nav-links{display:none}
+  .hero-content{padding:0 16px 40px}.hero-headline h1{font-size:30px;line-height:1.15}
+  .hero-widget{width:100%;padding:16px}
+  .hero-widget .widget-title{font-size:15px}
+  .streamlined,.how,.explore,.testi,.vip,.map-section,footer{padding-left:16px;padding-right:16px}
+  .explore-title{font-size:30px}
+  .testi-title{font-size:28px}
+  .vip-title{font-size:28px}
   .testi-grid{grid-template-columns:1fr}
   .footer-top{grid-template-columns:1fr;gap:24px}
+  .deals-grid{grid-template-columns:1fr}
+  .deal-card{border-radius:12px}
+  .deal-card-photo{height:200px}
+  .filters-bar{padding:12px 16px;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .filters-bar::-webkit-scrollbar{display:none}
+  .filter-pill{flex-shrink:0;font-size:11px;padding:6px 12px}
+  .f-select{font-size:12px;padding:7px 10px}
+  .vip-form{grid-template-columns:1fr}
+  .vip-form-row{grid-template-columns:1fr}
+  .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
+  .auth-overlay{align-items:flex-end}
+  .section-eyebrow{font-size:11px}
 }
 </style>
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
