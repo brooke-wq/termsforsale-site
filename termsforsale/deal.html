@@ -183,8 +183,21 @@ footer{background:var(--navy);padding:44px 40px 0}
 .footer-links{display:flex;gap:18px}
 .footer-links a{color:rgba(255,255,255,.35);text-decoration:none}
 
-@media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px}}
-@media(max-width:768px){nav{padding:0 20px}.bc{padding:10px 20px}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}}
+@media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px 16px}}
+@media(max-width:768px){
+  nav{padding:0 16px}
+  .bc{padding:10px 16px}
+  .terms-grid{grid-template-columns:1fr}
+  .deal-price{font-size:26px}
+  .carousel-slide img{height:260px}
+  .tabs-inner{gap:0;overflow-x:auto;scrollbar-width:none}
+  .tab-btn{padding:10px 14px;font-size:12px;white-space:nowrap}
+  .footer-top{grid-template-columns:1fr 1fr;gap:24px}
+  footer{padding:36px 20px 0}
+  .auth-modal{width:100%;max-width:100%;margin:0;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0}
+  .auth-overlay{align-items:flex-end}
+  .action-modal{width:100%;max-width:100%;margin:0;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0}
+}
 </style>
 </head>
 <body>
@@ -313,6 +326,22 @@ var GOOGLE_API_KEY = ''; // Key moved to Netlify env — photos load via /api/dr
 
 var SHEET_ID     = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
 var GHL_WEBHOOK       = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593'; // Inquiry / Access
+
+// ── UTM TRACKING ───────────────────────────────────────────────
+// Capture UTM params from URL and persist in sessionStorage
+(function(){
+  var p = new URLSearchParams(window.location.search);
+  var keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+  keys.forEach(function(k){ if(p.get(k)) sessionStorage.setItem(k, p.get(k)); });
+})();
+function getUTMs() {
+  var keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+  var o = {};
+  keys.forEach(function(k){ var v = sessionStorage.getItem(k); if(v) o[k] = v; });
+  // Always include referrer
+  if (document.referrer) o.referrer = document.referrer;
+  return o;
+}
 var GHL_OFFER_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1'; // Offer Submission
 var PORTAL_URL   = 'https://termsforsale.app.clientclub.net/';
 var BOOK_A_CALL  = 'https://calendar.app.google/DXJoTQwDpGhCjicu6';
@@ -750,6 +779,8 @@ function submitAction(type, dealId) {
   }
 
   var webhook = type === 'offer' ? GHL_OFFER_WEBHOOK : GHL_WEBHOOK;
+  var utms = getUTMs();
+  Object.assign(payload, utms);
   fetch(webhook, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
     .catch(function(){});
 
@@ -924,6 +955,27 @@ function render(deal, allDeals) {
   document.getElementById('bc-addr').textContent =
     (deal.streetAddress||'Deal') + ' \u2014 ' + (deal.nearestMetro||deal.city+', '+deal.state);
   document.title = (deal.streetAddress||'Deal') + ' \u2014 Terms For Sale';
+
+  // ── DYNAMIC SEO META TAGS ──
+  var metaDesc = deal.dealType + ' deal in ' + deal.city + ', ' + deal.state + '. '
+    + (deal.entryFee ? money(deal.entryFee) + ' entry. ' : '')
+    + (deal.compsArv ? money(deal.compsArv) + ' ARV. ' : '')
+    + (deal.beds ? deal.beds + 'bd/' + deal.baths + 'ba. ' : '')
+    + (deal.sqft ? Number(deal.sqft).toLocaleString() + ' sqft. ' : '')
+    + 'Off-market deal via Terms For Sale.';
+  metaDesc = metaDesc.substring(0, 155);
+
+  function setMeta(name, content, prop) {
+    var sel = prop ? 'meta[property="'+name+'"]' : 'meta[name="'+name+'"]';
+    var el = document.querySelector(sel);
+    if (!el) { el = document.createElement('meta'); el.setAttribute(prop?'property':'name', name); document.head.appendChild(el); }
+    el.setAttribute('content', content);
+  }
+  setMeta('description', metaDesc);
+  setMeta('og:title', deal.streetAddress + ' — ' + deal.dealType + ' Deal | Terms For Sale', true);
+  setMeta('og:description', metaDesc, true);
+  setMeta('og:type', 'article', true);
+  if (deal.coverPhoto) setMeta('og:image', deal.coverPhoto, true);
 
   // ── PHOTO HEADER ──
   var photoHtml = '<div class="photo-gallery">'
@@ -1106,15 +1158,39 @@ function render(deal, allDeals) {
   // ── SIMILAR DEALS ──
   var similar = (allDeals||[]).filter(function(x){return x.id!==deal.id;}).slice(0,3);
   var simHtml = similar.length
-    ? '<div style="margin-top:40px"><div style="font-size:16px;font-weight:700;margin-bottom:16px">Similar Deals</div>'
-        + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">'
+    ? '<div style="margin-top:48px">'
+        +'<div style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:20px;display:flex;align-items:center;gap:10px">'
+          +'Similar Deals <span style="font-size:12px;font-weight:500;color:var(--text-light)">— you might also like these</span>'
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">'
         + similar.map(function(s){
+            var sEntry = s.entryFee || s.askingPrice;
+            var sPhoto = (s.coverPhoto && extractFileId(s.coverPhoto))
+              ? 'https://drive.google.com/thumbnail?id='+extractFileId(s.coverPhoto)+'&sz=w600'
+              : null;
+            var sBadgeColor = s.dealType==='Cash'?'#10B981':s.dealType==='SubTo'||s.dealType==='Subject To'?'var(--blue)':'var(--orange)';
             return '<a href="deal.html?id='+encodeURIComponent(s.id)+'" '
-              +'style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);text-decoration:none;color:inherit;display:block">'
-              +'<div style="height:120px;background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>'
-              +'<div style="padding:12px"><div style="font-size:14px;font-weight:700">'+money(s.entryFee||s.askingPrice)+'</div>'
-              +'<div style="font-size:12px;color:var(--text-light);margin-top:4px">'+(s.nearestMetro||s.city+', '+s.state)+'</div>'
-              +'<div style="font-size:11px;color:var(--text-light);margin-top:4px">'+s.dealType+'</div></div></a>';
+              +'style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);border:1px solid var(--border);text-decoration:none;color:inherit;display:block;transition:all .2s" '
+              +'onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 28px rgba(0,0,0,.12)\'" '
+              +'onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 2px 12px rgba(0,0,0,.08)\'">'
+              +'<div style="height:140px;position:relative;overflow:hidden;'+(sPhoto?'background:#e2ecf4':'background:linear-gradient(135deg,#c8e8f5,#a8d4ea)')+';">'
+                +(sPhoto?'<img src="'+sPhoto+'" alt="'+s.city+'" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy" onerror="this.parentElement.style.background=\'linear-gradient(135deg,#c8e8f5,#a8d4ea)\';this.remove()">':'')
+                +'<div style="position:absolute;top:10px;left:10px;padding:3px 9px;border-radius:5px;background:'+sBadgeColor+';color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px">'+s.dealType+'</div>'
+                +(sEntry!==s.askingPrice?'<div style="position:absolute;bottom:10px;right:10px;background:rgba(13,31,60,.85);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px">'+money(sEntry)+' entry</div>':'')
+              +'</div>'
+              +'<div style="padding:14px">'
+                +'<div style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:3px">'+money(sEntry)+'</div>'
+                +'<div style="font-size:12px;color:var(--text-light);margin-bottom:8px;display:flex;align-items:center;gap:4px">'
+                  +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+                  +(s.nearestMetro||s.city+', '+s.state)
+                +'</div>'
+                +'<div style="display:flex;gap:8px;font-size:11px;color:var(--text-light)">'
+                  +(s.beds?'<span>'+s.beds+' bd</span>':'')
+                  +(s.baths?'<span>'+s.baths+' ba</span>':'')
+                  +(s.sqft?'<span>'+Number(s.sqft).toLocaleString()+' sqft</span>':'')
+                +'</div>'
+              +'</div>'
+            +'</a>';
           }).join('')
         +'</div></div>'
     : '';
