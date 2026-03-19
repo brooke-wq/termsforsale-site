@@ -853,7 +853,21 @@ function money(n){if(!n&&n!==0)return'—';const v=+n;if(isNaN(v)||v===0)return'
 function typeClass(t){if(t==='Cash')return'type-cash';if(t==='SubTo')return'type-subto';if(t==='Seller Finance')return'type-sf';return'type-hybrid';}
 function typeLabel(t){if(t==='Seller Finance')return'Seller Finance';if(t==='SubTo')return'Subject To';return t||'Deal';}
 
-// ─── DEAL STORE ────────────────────────────────────────────────
+// ─── SAVED DEALS ──────────────────────────────────────
+function getSaved(){try{return JSON.parse(localStorage.getItem('tfs_saved')||'[]');}catch(e){return[];}}
+function toggleSave(e,id,el){
+  e.stopPropagation();
+  var saved=getSaved();
+  var idx=saved.indexOf(id);
+  if(idx>-1){saved.splice(idx,1);}else{saved.push(id);}
+  localStorage.setItem('tfs_saved',JSON.stringify(saved));
+  var isSaved=saved.indexOf(id)>-1;
+  var svg=el.querySelector('svg');
+  svg.setAttribute('fill',isSaved?'#ef4444':'none');
+  svg.setAttribute('stroke',isSaved?'#ef4444':'currentColor');
+  // Record activity
+  try{var acts=JSON.parse(localStorage.getItem('tfs_activity')||'[]');acts.unshift({text:(isSaved?'Saved':'Unsaved')+' deal '+id,color:isSaved?'#C53030':'#718096',time:new Date().toISOString()});localStorage.setItem('tfs_activity',JSON.stringify(acts.slice(0,20)));}catch(ex){}
+}
 const DEAL_STORE={};
 function storeDeal(d){DEAL_STORE[d.id]=d;}
 function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href='deal.html?id='+encodeURIComponent(id);}
@@ -891,11 +905,15 @@ function makeCard(d){
     ? `<div style="position:absolute;top:8px;right:8px;background:rgba(247,148,29,.95);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px">⏰ ${dl}d left</div>`
     : '';
 
+  const isSaved=getSaved().indexOf(d.id)>-1;
+  const saveFill=isSaved?'#ef4444':'none';
+  const saveStroke=isSaved?'#ef4444':'currentColor';
+
   return`<div class="deal-card" onclick="clickDeal('${safeId}')">
     <div class="deal-card-photo">
       ${photoHtml}
       ${statusBadge}
-      <div class="deal-card-save"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+      <div class="deal-card-save" onclick="toggleSave(event,'${safeId}',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="${saveFill}" stroke="${saveStroke}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
       <div class="deal-card-type ${typeClass(d.dealType)}">${typeLabel(d.dealType)}</div>
     </div>
     <div class="deal-card-body">
@@ -1129,8 +1147,9 @@ function updateNavAuth(user){
   el.innerHTML=`<div class="nav-avatar-wrap">
     <div class="nav-avatar">${user.initials}</div>
     <div class="nav-dropdown">
-      <a href="${GHL_PORTAL_URL}" target="_blank">My Dashboard</a>
+      <a href="/dashboard.html">My Dashboard</a>
       <a href="/">All Deals</a>
+      <a href="/blog/">Blog</a>
       <hr>
       <button onclick="clearUser();location.reload()">Log Out</button>
     </div>
