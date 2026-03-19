@@ -361,22 +361,9 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
       </div>
 
       <div class="field-group">
-        <label>Risks <span>*</span></label>
-        <textarea id="risks" rows="4" placeholder="List each risk on its own line. Be honest — it builds trust.&#10;&#10;e.g. Due-on-sale clause risk — consult a creative finance attorney before closing&#10;Roof is original (2004) — budget for potential replacement within 5-7 years&#10;HOA rental restrictions — confirm rules before assuming any rental strategy"></textarea>
-        <div class="field-hint">One risk per line. Minimum 3 risks.</div>
-      </div>
-
-      <div class="field-row">
-        <div>
-          <label>Best Fit For (one per line) <span>*</span></label>
-          <textarea id="buyerFitYes" rows="4" placeholder="Want stable monthly cash flow&#10;Comfortable with creative finance&#10;Have reserves and plan to hold 5+ years"></textarea>
-          <div class="field-hint">These show as green ✓ boxes</div>
-        </div>
-        <div>
-          <label>Not a Fit For (one per line) <span>*</span></label>
-          <textarea id="buyerFitNo" rows="4" placeholder="Need to flip fast&#10;Require conventional financing&#10;Don't have a creative finance attorney"></textarea>
-          <div class="field-hint">These show as red ✗ boxes</div>
-        </div>
+        <label>Best Fit For (one per line) <span>*</span></label>
+        <textarea id="buyerFitYes" rows="4" placeholder="Buy and hold investors targeting cash flow&#10;Want to lock in a below-market rate&#10;Comfortable with creative finance&#10;Have reserves and plan to hold 5+ years"></textarea>
+        <div class="field-hint">These show as green ✓ boxes on the published post</div>
       </div>
 
       <div class="btn-row">
@@ -511,9 +498,7 @@ function validateStep(step) {
     3: [
       { id: 'whyExists', label: 'Why Does This Deal Exist' },
       { id: 'strategies', label: 'Investment Strategies' },
-      { id: 'risks', label: 'Risks' },
-      { id: 'buyerFitYes', label: 'Best Fit For' },
-      { id: 'buyerFitNo', label: 'Not a Fit For' }
+      { id: 'buyerFitYes', label: 'Best Fit For' }
     ]
   };
 
@@ -628,9 +613,7 @@ function publishPost() {
     sfTerms:      document.getElementById('sfTerms').value.trim(),
     whyExists:    document.getElementById('whyExists').value.trim(),
     strategies:   document.getElementById('strategies').value.trim(),
-    risks:        document.getElementById('risks').value.trim(),
     buyerFitYes:  document.getElementById('buyerFitYes').value.trim(),
-    buyerFitNo:   document.getElementById('buyerFitNo').value.trim(),
     password:     sessionStorage.getItem('tfs_builder_pw') || ''
   };
 
