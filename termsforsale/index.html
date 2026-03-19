@@ -729,9 +729,35 @@ window.addEventListener('scroll', () => {
 
 // ─── SHEET PARSE ───────────────────────────────────────────────
 function parseGviz(text){const m=text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);if(m)return JSON.parse(m[1]);const s=text.indexOf('{');if(s>-1)return JSON.parse(text.substring(s,text.lastIndexOf('}')+1));throw new Error('Cannot parse gviz');}
-function parseSheet(text){const json=parseGviz(text);const cols=json.table.cols.map(c=>c.label.trim());const rows=json.table.rows.map(row=>{const o={};cols.forEach((c,i)=>{const cell=row.c[i];o[c]=cell?(cell.v!==null?String(cell.v).trim():''):'';});return o;});return{cols,rows};}
+function parseSheet(text){
+  const json=parseGviz(text);
+  const cols=json.table.cols.map(c=>c.label.trim());
+  const rows=json.table.rows.map(row=>{
+    const o={};
+    const seen={};
+    cols.forEach((c,i)=>{
+      const cell=row.c[i];
+      const val=cell?(cell.v!==null?String(cell.v).trim():''):'';
+      // Handle duplicate column names — store first occurrence as _0, _1 etc
+      if(seen[c]===undefined){
+        seen[c]=0;
+        o[c]=val;
+        o[c+'__0']=val; // also store indexed version
+      } else {
+        seen[c]++;
+        o[c+'__'+seen[c]]=val;
+        o[c]=val; // last value wins for plain key (status = "Actively Marketing")
+      }
+    });
+    return o;
+  });
+  return{cols,rows};
+}
 function col(raw,...names){for(const n of names){if(raw[n]!==undefined&&raw[n]!=='')return raw[n];}return'';}
-function parseRow(raw){return{id:col(raw,'Deal ID'),dealType:col(raw,'Deal Type'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:+col(raw,'SubTo Rate','SubTo Rate (%)')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
+function parseRow(raw){return{
+  // Column A "Deal Status" contains the unique hash ID — use as deal ID
+  id:col(raw,'Deal ID','Deal Status__0'),
+  dealType:col(raw,'Deal Type'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:+col(raw,'SubTo Rate','SubTo Rate (%)')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
   // Photo columns — Cover Photo is a single direct file share URL, Photos is folder or comma-list
   coverPhoto:col(raw,'Cover Photo','cover photo','Cover photo','Photo 1','photo1'),
   photos:col(raw,'Photos'),
@@ -1067,11 +1093,13 @@ function updateNavAuth(user){
 (async function(){
   const u=getUser();if(u)updateNavAuth(u);
   try{
-    const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=0`);
+    const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=0&headers=1`);
     if(!r.ok)throw new Error('HTTP '+r.status);
     const t=await r.text();
     const {rows}=parseSheet(t);
-    ALL_DEALS=rows.filter(r=>(r['Deal Status']||'').trim().toLowerCase()==='actively marketing').map(parseRow).filter(d=>d.id);
+    // Accept any variation of "actively marketing" or "active" status
+    const ACTIVE_STATUSES=['actively marketing','active marketing','active','actively listed','marketing'];
+    ALL_DEALS=rows.filter(r=>ACTIVE_STATUSES.includes((r['Deal Status']||'').trim().toLowerCase())).map(parseRow).filter(d=>d.id);
     if(ALL_DEALS.length){
       updateStats();
       populateStates();
