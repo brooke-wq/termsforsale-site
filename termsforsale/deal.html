@@ -784,7 +784,7 @@ function g(row) {
 }
 function parseRow(r) {
   return {
-    id:           g(r,'Deal ID'),
+    id:           g(r,'Deal ID','Deal Status__0'),
     dealType:     g(r,'Deal Type'),
     streetAddress:g(r,'Street Address'),
     city:         g(r,'City'),
@@ -826,18 +826,33 @@ function parseRow(r) {
 }
 
 function fetchDeals() {
-  return fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0')
+  return fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0&headers=1')
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
     .then(function(text){
       var json = parseGviz(text);
       var cols = json.table.cols.map(function(c){return c.label.trim();});
       var rows = json.table.rows.map(function(row){
         var o={};
-        cols.forEach(function(c,i){var cell=row.c[i];o[c]=cell?(cell.v!==null?String(cell.v).trim():''):'';});
+        var seen={};
+        cols.forEach(function(c,i){
+          var cell=row.c[i];
+          var val=cell?(cell.v!==null?String(cell.v).trim():''):'';
+          // Handle duplicate column names — keep indexed copies
+          if(seen[c]===undefined){
+            seen[c]=0;
+            o[c]=val;
+            o[c+'__0']=val;
+          } else {
+            seen[c]++;
+            o[c+'__'+seen[c]]=val;
+            o[c]=val; // last value wins (status = "Actively Marketing")
+          }
+        });
         return o;
       });
+      var ACTIVE_STATUSES=['actively marketing','active marketing','active','actively listed','marketing'];
       return rows
-        .filter(function(r){return (r['Deal Status']||'').trim().toLowerCase()==='actively marketing';})
+        .filter(function(r){return ACTIVE_STATUSES.indexOf((r['Deal Status']||'').trim().toLowerCase())>-1;})
         .map(parseRow)
         .filter(function(d){return !!d.id;});
     });
