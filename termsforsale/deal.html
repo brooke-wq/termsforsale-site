@@ -949,6 +949,13 @@ function render(deal, allDeals) {
   var isSF    = /Seller Finance|Hybrid|Morby|Wrap/i.test(deal.dealType);
   var entry   = deal.entryFee || deal.askingPrice;
   var dl      = daysLeft(deal.coe);
+
+  // Field name aliases — index.html sessionStorage uses different names than deal.html parseRow
+  // Normalize both so whichever source the deal came from, fields work correctly
+  if (!deal.subtoBalance && deal.subtoLoanBalance) deal.subtoBalance = parseMoney(deal.subtoLoanBalance);
+  if (!deal.sfAmount     && deal.sfLoanAmount)     deal.sfAmount     = parseMoney(deal.sfLoanAmount);
+  if (!deal.subtoRate    && deal.subtoRate === undefined) deal.subtoRate = '';
+  if (!deal.piti         && deal.piti === undefined)      deal.piti = 0;
   var folderId = getFolderId(deal.photos || '');
   var folderUrl = folderId ? ('https://drive.google.com/drive/folders/'+folderId) : '';
 
@@ -1273,11 +1280,11 @@ function render(deal, allDeals) {
     +'</div>';
 
   // Trigger async photo load after DOM is ready
-  if (folderId) {
-    // Show cover photo instantly if available, then load full grid
+  // Trigger photo loading — works with coverPhoto alone OR folder
+  if (folderId || deal.coverPhoto) {
     setTimeout(function(){
       tryShowCoverPhoto(deal);
-      loadPhotos(folderId, folderUrl);
+      if (folderId) loadPhotos(folderId, folderUrl);
     }, 60);
   }
 }
