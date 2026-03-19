@@ -1260,7 +1260,9 @@ function render(deal, allDeals) {
       +'<div>'
         + photoHtml
         +'<div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px">'
+          +'<div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">'+(deal.dealType==='Cash'?'Cash to Close':'Entry Cost')+'</div>'
           +'<span class="deal-price">'+money(entry)+'</span>'
+          +'<div style="font-size:11px;color:var(--text-light);margin-top:3px;font-weight:500">+ cc &amp; tc (closing costs &amp; transaction coordination)</div>'
           +(entry&&entry!==deal.askingPrice?'<span style="font-size:16px;font-weight:600;color:var(--orange)">'+money(deal.askingPrice)+' asking</span>':'')
         +'</div>'
         +'<div class="deal-specs">'
