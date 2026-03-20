@@ -185,6 +185,9 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .type-subto{background:rgba(41,171,226,.9);color:#fff}
 .type-sf{background:rgba(247,148,29,.9);color:#fff}
 .type-hybrid{background:rgba(139,92,246,.9);color:#fff}
+.type-lease{background:rgba(236,72,153,.9);color:#fff}
+.type-novation{background:rgba(14,165,233,.9);color:#fff}
+.type-wrap{background:rgba(168,85,247,.9);color:#fff}
 .deal-card-body{padding:12px 16px 16px}
 .deal-card-price-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px}
 .deal-card-price{font-size:21px;font-weight:700;color:var(--navy-card);line-height:1}
@@ -850,8 +853,28 @@ function getFirstPhoto(d){
 
 // ─── FORMAT ────────────────────────────────────────────────────
 function money(n){if(!n&&n!==0)return'—';const v=+n;if(isNaN(v)||v===0)return'—';return'$'+v.toLocaleString();}
-function typeClass(t){if(t==='Cash')return'type-cash';if(t==='SubTo')return'type-subto';if(t==='Seller Finance')return'type-sf';return'type-hybrid';}
-function typeLabel(t){if(t==='Seller Finance')return'Seller Finance';if(t==='SubTo')return'Subject To';return t||'Deal';}
+function typeClass(t){
+  if(!t)return'type-cash';
+  var l=t.toLowerCase();
+  if(l==='cash')return'type-cash';
+  if(l==='subto'||l.includes('subject'))return'type-subto';
+  if(l.includes('seller finance')||l==='sf')return'type-sf';
+  if(l.includes('lease'))return'type-lease';
+  if(l.includes('novation'))return'type-novation';
+  if(l.includes('wrap'))return'type-wrap';
+  return'type-hybrid';
+}
+function typeLabel(t){
+  if(!t)return'Deal';
+  var l=t.toLowerCase();
+  if(l==='seller finance')return'Seller Finance';
+  if(l==='subto')return'Subject To';
+  if(l.includes('lease'))return'Lease Option';
+  if(l.includes('novation'))return'Novation';
+  if(l.includes('wrap'))return'Wrap';
+  if(l.includes('morby')||l.includes('stack'))return'Stack Method';
+  return t;
+}
 
 // ─── SAVED DEALS ──────────────────────────────────────
 function getSaved(){try{return JSON.parse(localStorage.getItem('tfs_saved')||'[]');}catch(e){return[];}}
