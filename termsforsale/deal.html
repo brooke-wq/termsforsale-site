@@ -109,8 +109,8 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .calc-stat-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
 .calc-stat-val{font-size:22px;font-weight:800;color:var(--navy)}
 .calc-stat-sub{font-size:11px;color:var(--text-light);margin-top:2px}
-.calc-stat.positive{background:#E6F9F0;border-color:#b2dfce}.calc-stat.positive .calc-stat-val{color:#276749}
-.calc-stat.negative{background:#fff5f5;border-color:#feb2b2}.calc-stat.negative .calc-stat-val{color:#e53e3e}
+.calc-stat.positive{background:#F0FDF4;border-color:#bbf7d0}.calc-stat.positive .calc-stat-val{color:#166534}
+.calc-stat.negative{background:#FFFBEB;border-color:#fde68a}.calc-stat.negative .calc-stat-val{color:#92400e}
 .calc-stat.highlight{background:var(--blue-light);border-color:#d0eef9}.calc-stat.highlight .calc-stat-val{color:var(--blue-dark)}
 .calc-section{margin-bottom:20px}
 .calc-section-title{font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
@@ -991,13 +991,12 @@ function fmtCoe(d) {
 }
 // HOA — Notion may send "$150/mo", "$150", "150/mo", "150" — normalize to "$150/mo"
 function fmtHoa(v) {
-  if (!v) return null;
+  if (v === null || v === undefined || v === '') return null;
   var s = String(v).trim();
-  if (!s) return null;
-  // Strip existing $ and /mo suffixes
+  if (!s || s === '0') return null;
   var clean = s.replace(/[$]/g,'').replace(/\/mo(nth)?/gi,'').trim();
   var num = parseFloat(clean.replace(/,/g,''));
-  if (!num) return s; // return as-is if can't parse
+  if (!num || num === 0) return null;
   return '$' + num.toLocaleString() + '/mo';
 }
 function daysLeft(d){
@@ -1032,8 +1031,10 @@ function trackCta(type) {
 function render(deal, allDeals) {
   var user    = getUser();
   var app     = document.getElementById('app');
-  var isSubTo = /SubTo|Hybrid|Morby|Wrap/i.test(deal.dealType);
-  var isSF    = /Seller Finance|Hybrid|Morby|Wrap/i.test(deal.dealType);
+  var isSubTo = /SubTo|Subject.To|Hybrid|Morby|Wrap/i.test(deal.dealType)
+    || (!deal.dealType && !!(deal.subtoBalance || deal.subtoLoanBalance));
+  var isSF    = /Seller.Finance|SF|Hybrid|Morby|Wrap/i.test(deal.dealType)
+    || (!deal.dealType && !!(deal.sfAmount || deal.sfLoanAmount));
   var entry   = deal.entryFee || deal.askingPrice;
   var dl      = daysLeft(deal.coe);
 
@@ -1129,10 +1130,11 @@ function render(deal, allDeals) {
     terms.push({l:'SF Payment', v:deal.sfPayment?money(deal.sfPayment)+'/mo':'&#8212;'});
     terms.push({l:'SF Term', v:deal.sfTerm||'&#8212;'});
   }
-  if (deal.compsArv) terms.push({l:'Comps ARV', v:money(deal.compsArv)});
+  if (deal.compsArv) terms.push({l:'ARV', v:money(deal.compsArv)});
   var hoaFmt = fmtHoa(deal.hoa);
-  if (hoaFmt) terms.push({l:'HOA', v:hoaFmt});
+  if (hoaFmt && hoaFmt !== '$0/mo') terms.push({l:'HOA', v:hoaFmt});
   if (deal.access) terms.push({l:'Access', v:deal.access});
+  if (deal.occupancy) terms.push({l:'Occupancy', v:deal.occupancy});
 
   var termsHtml = '<div class="terms-grid">'
     + terms.map(function(t){
@@ -1603,7 +1605,7 @@ function updateCalc(dealId) {
   var cfEl = document.getElementById('cf-val-'+dealId);
   if (cfEl) {
     cfEl.textContent = (cf>=0?'+':'')+'$'+Math.abs(Math.round(cf)).toLocaleString()+'/mo';
-    cfEl.closest('.calc-stat').className = 'calc-stat '+(cf>=0?'positive':'negative');
+    cfEl.closest('.calc-stat').className = 'calc-stat '+(cf>=100?'positive':cf<-200?'negative':'');
   }
   sv('cocr-val-'+dealId, cocr+'%');
   sv('cap-val-'+dealId, capRate+'%');
