@@ -985,6 +985,22 @@ function daysLeft(d){
 }
 
 // ─── RENDER ────────────────────────────────────────────────────
+// ── A/B CTA TEST ────────────────────────────────────────
+// Rotates through 4 variants per session so we can see which drives more clicks in GA4
+var _ctaVariant = (function(){
+  var v = sessionStorage.getItem('cta_v');
+  if (!v) { v = String(Math.floor(Math.random()*4)); sessionStorage.setItem('cta_v',v); }
+  return +v;
+})();
+function ctaCopy(type) {
+  var unlock = ['🔓 Unlock Full Address','📋 Get the Address','🔑 See the Full Details','📍 Reveal Address'];
+  var access = ['📋 Request Access / Walkthrough','🏠 Schedule a Walkthrough','📞 Get Access to This Deal','✅ I\'m Interested — Let\'s Talk'];
+  return type==='unlock' ? unlock[_ctaVariant] : access[_ctaVariant];
+}
+function trackCta(type) {
+  if(typeof gtag==='function') gtag('event','cta_click',{cta_type:type,cta_variant:_ctaVariant,cta_copy:ctaCopy(type)});
+}
+
 function render(deal, allDeals) {
   var user    = getUser();
   var app     = document.getElementById('app');
@@ -1131,8 +1147,16 @@ function render(deal, allDeals) {
   var str = Math.round(ltr * 2.3);
   var strNightly = Math.round(str / 25); // ~25 occupied nights/mo avg
 
-  // ── PadSplit / Co-living: per room
-  var padRoom = beds >= 2 ? Math.round(beds * 650) : 0;
+  // ── PadSplit / Co-living: per room with market-adjusted rates
+  var padRatePerRoom = 650; // base rate
+  if (deal.state==='FL') padRatePerRoom=720;
+  if (deal.state==='TX') padRatePerRoom=680;
+  if (deal.state==='GA') padRatePerRoom=700;
+  if (deal.state==='AZ') padRatePerRoom=660;
+  if (deal.state==='TN') padRatePerRoom=630;
+  var padRoom     = beds >= 2 ? Math.round(beds * padRatePerRoom) : 0;
+  var padExpenses = padRoom ? Math.round(padRoom * 0.30) : 0; // ~30% platform + mgmt fees
+  var padCf       = padRoom ? padRoom - (piti||0) - padExpenses - hoaN : 0;
 
   // ── Cash flow (LTR scenario)
   var expenses = piti + hoaN + Math.round(ltr * 0.08) + Math.round(ltr * 0.05) + Math.round(price * 0.01 / 12);
@@ -1169,7 +1193,18 @@ function render(deal, allDeals) {
         +statBox('LTR &mdash; Long-Term Rental','$'+ltr.toLocaleString()+'/mo','30+ day tenants, lowest mgmt','#1a6f8a')
         +statBox('MTR &mdash; Mid-Term Rental','$'+mtr.toLocaleString()+'/mo','30-90 days, furnished ~1.4x LTR','#7c3aed')
         +statBox('STR &mdash; Short-Term Rental','$'+str.toLocaleString()+'/mo','Airbnb/VRBO, est. $'+strNightly+'/night','#d97c0e')
-        +(beds>=2?statBox('PadSplit / Co-Living','$'+padRoom.toLocaleString()+'/mo',beds+' rooms × ~$650/room est.','#059669'):'')
+        +(beds>=2
+          ?'<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
+            +'<div style="font-size:10px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">PadSplit / Co-Living</div>'
+            +'<div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px">$'+padRoom.toLocaleString()+'/mo</div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px">'
+              +'<div style="color:var(--text-light)">'+beds+' rooms × $'+padRatePerRoom+'/mo</div>'
+              +'<div style="color:var(--text-light)">Platform fees ~30%</div>'
+              +'<div style="color:var(--text-light)">Net after fees: $'+(padRoom-padExpenses).toLocaleString()+'</div>'
+              +(piti?'<div style="color:'+(padCf>=0?'#059669':'#e53e3e')+';font-weight:700">CF: '+(padCf>=0?'+':'')+'$'+padCf.toLocaleString()+'</div>':'')
+            +'</div>'
+          +'</div>'
+          :'')
       +'</div>'
     +'</div>'
     // Cash Flow
@@ -1309,10 +1344,10 @@ function render(deal, allDeals) {
         +'<div class="sidebar-card">'
           +'<div class="sidebar-head"><h3>Take Action on This Deal</h3><p>Move fast — active deals go quickly.</p></div>'
           +'<div class="sidebar-body" style="gap:8px">'
-            // Unlock address
-            +(user ? '' : '<button onclick="openAuth(\'login\')" class="btn btn-outline" style="width:100%;justify-content:center;border-color:var(--blue);color:var(--blue)">&#128274; Unlock Full Address</button>')
-            // Request Access / Walkthrough
-            +'<button onclick="openActionModal(\'access\',\''+deal.id+'\')" class="btn btn-blue" style="width:100%;justify-content:center;font-size:13px">&#128203; Request Access / Walkthrough</button>'
+            // Unlock address — A/B test rotating copy
+            +(user ? '' : '<button onclick="openAuth(\'login\');trackCta(\'unlock\')" class="btn btn-outline" style="width:100%;justify-content:center;border-color:var(--blue);color:var(--blue)">'+ctaCopy('unlock')+'</button>')
+            // Request Access — A/B test rotating copy
+            +'<button onclick="openActionModal(\'access\',\''+deal.id+'\');trackCta(\'access\')" class="btn btn-blue" style="width:100%;justify-content:center;font-size:13px">'+ctaCopy('access')+'</button>'
             // Submit Offer
             +'<button onclick="openActionModal(\'offer\',\''+deal.id+'\')" class="btn btn-orange" style="width:100%;justify-content:center;font-size:13px">&#128176; Submit an Offer</button>'
           +'</div>'
