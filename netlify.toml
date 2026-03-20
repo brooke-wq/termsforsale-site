@@ -3,6 +3,11 @@
   functions = "termsforsale/netlify/functions"
 
 [[redirects]]
+  from = "/api/hud-fmr"
+  to = "/.netlify/functions/hud-fmr"
+  status = 200
+
+[[redirects]]
   from = "/api/drive-photos"
   to = "/.netlify/functions/drive-photos"
   status = 200
