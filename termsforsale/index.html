@@ -830,6 +830,7 @@ function parseSheet(text){
   return{cols,rows};
 }
 function col(raw,...names){for(const n of names){if(raw[n]!==undefined&&raw[n]!=='')return raw[n];}return'';}
+function parseYear(v){if(!v)return'';var s=String(v).trim();var gm=s.match(/^Date\((\d{4}),/);if(gm)return gm[1];var ym=s.match(/^(\d{4})$/);if(ym)return ym[1];var dm=s.match(/^(\d{4})-/);if(dm)return dm[1];return s;}
 function parseRow(raw){return{
   // Column A "Deal Status" contains the unique hash ID — use as deal ID
   id:col(raw,'Deal ID','Deal Status__0'),
@@ -837,7 +838,7 @@ function parseRow(raw){return{
   // Photo columns — Cover Photo is a single direct file share URL, Photos is folder or comma-list
   coverPhoto:col(raw,'Cover Photo','cover photo','Cover photo','Photo 1','photo1'),
   photos:col(raw,'Photos'),
-  highlight1:col(raw,'Highlight 1'),highlight2:col(raw,'Highlight 2'),highlight3:col(raw,'Highlight 3'),entryBreakdown:col(raw,'Entry Breakdown'),details:col(raw,'Details','Details '),beds:col(raw,'Beds'),baths:col(raw,'Baths'),sqft:col(raw,'Sqft'),yearBuilt:col(raw,'Year Built','Year Build')};}
+  highlight1:col(raw,'Highlight 1'),highlight2:col(raw,'Highlight 2'),highlight3:col(raw,'Highlight 3'),entryBreakdown:col(raw,'Entry Breakdown'),details:col(raw,'Details','Details '),beds:col(raw,'Beds'),baths:col(raw,'Baths'),sqft:col(raw,'Sqft'),yearBuilt:parseYear(col(raw,'Year Built','Year Build'))};}
 
 // ─── PHOTO HELPERS ─────────────────────────────────────────────
 // Extract a Drive file ID from ANY Google Drive URL format
