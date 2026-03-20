@@ -997,13 +997,23 @@ function rate(r){
 function parseYear(v) {
   if (!v) return '';
   var s = String(v).trim();
-  // gviz Date format: Date(1905,5,27) — extract the year
-  var gm = s.match(/^Date\((\d{4}),/);
-  if (gm) return gm[1];
-  // Plain 4-digit year
+  // gviz Date format: Date(yr,mo,dy) — Sheets stores year-built as a serial number
+  // which gviz converts to a date. Serial 2005 -> Date(1905,5,27).
+  // Reverse: recompute the serial from the gviz date to recover the actual year.
+  var gm = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if (gm) {
+    var yr = parseInt(gm[1]), mo = parseInt(gm[2]), dy = parseInt(gm[3]);
+    if (yr < 1940) {
+      // The year was stored as a serial number — reverse it
+      var d = new Date(yr, mo, dy);
+      var epoch = new Date(1899, 11, 30); // Sheets epoch: Dec 30 1899
+      var serial = Math.round((d - epoch) / 86400000);
+      if (serial >= 1800 && serial <= 2200) return String(serial);
+    }
+    return String(yr);
+  }
   var ym = s.match(/^(\d{4})$/);
   if (ym) return ym[1];
-  // Year at start of string like "1965-01-01"
   var dm = s.match(/^(\d{4})-/);
   if (dm) return dm[1];
   return s;
