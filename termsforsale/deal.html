@@ -461,11 +461,23 @@ function getFolderId(url) {
 // Extract Drive file ID from any URL format
 function extractFileId(url) {
   if (!url) return null;
-  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]{20,})/);
+  url = url.trim();
+  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]{25,})/);
   if (m) return m[1];
-  m = url.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);
+  m = url.match(/[?&]id=([a-zA-Z0-9_-]{25,})/);
+  if (m) return m[1];
+  m = url.match(/\/(?:open|uc)\?.*id=([a-zA-Z0-9_-]{25,})/);
+  if (m) return m[1];
+  m = url.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]{25,})/);
+  if (m) return m[1];
+  m = url.match(/^([a-zA-Z0-9_-]{25,})$/);
   if (m) return m[1];
   return null;
+}
+function driveThumbUrl(id, size) {
+  if (!id) return null;
+  // Server-side proxy — uses Google API key, avoids browser auth issues
+  return '/api/drive-thumb?id=' + id + '&sz=' + (size || 800);
 }
 
 // Try to show cover photo instantly in carousel format
@@ -475,7 +487,7 @@ function tryShowCoverPhoto(deal) {
   var src = null;
   if (deal.coverPhoto) {
     var fid = extractFileId(deal.coverPhoto);
-    if (fid) src = 'https://drive.google.com/thumbnail?id=' + fid + '&sz=w1200';
+    if (fid) src = driveThumbUrl(fid, 1200);
     else if (deal.coverPhoto.match(/^https?:\/\//)) src = deal.coverPhoto;
   }
   if (!src) return false;
@@ -604,10 +616,10 @@ function buildGrid(fileIds, folderUrl) {
   if (!wrap) return;
   // Build URLs for lightbox (full res) and carousel (thumb)
   LB.photos = fileIds.map(function(id) {
-    return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1600';
+    return driveThumbUrl(id, 1600);
   });
   var thumbUrls = fileIds.map(function(id) {
-    return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1200';
+    return driveThumbUrl(id, 1200);
   });
   buildCarousel(thumbUrls, folderUrl, false);
 }
@@ -1078,7 +1090,7 @@ function updateSeo(deal) {
   var ogImg = 'https://deals.termsforsale.com/og-default.png';
   if (deal.coverPhoto) {
     var fid = extractFileId ? extractFileId(deal.coverPhoto) : null;
-    if (fid) ogImg = 'https://drive.google.com/thumbnail?id=' + fid + '&sz=w1200';
+    if (fid) ogImg = driveThumbUrl(fid, 1200);
   }
 
   document.title = title;
@@ -1532,7 +1544,7 @@ function render(deal, allDeals) {
         + similar.map(function(s){
             var sEntry = s.entryFee || s.askingPrice;
             var sPhoto = (s.coverPhoto && extractFileId(s.coverPhoto))
-              ? 'https://drive.google.com/thumbnail?id='+extractFileId(s.coverPhoto)+'&sz=w600'
+              ? driveThumbUrl(extractFileId(s.coverPhoto), 600)
               : null;
             var sBadgeColor = s.dealType==='Cash'?'#10B981':s.dealType==='SubTo'||s.dealType==='Subject To'?'var(--blue)':'var(--orange)';
             return '<a href="deal.html?id='+encodeURIComponent(s.id)+'" '
