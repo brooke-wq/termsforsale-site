@@ -3,7 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deal Details — Terms For Sale</title>
+<title id="page-title">Deal Details — Terms For Sale</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- SEO — updated dynamically per deal by JS -->
+  <meta name="description" id="meta-desc" content="Off-market real estate deal — Terms For Sale. Subject-to, seller finance, and cash deals updated weekly.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" id="meta-canonical" href="https://deals.termsforsale.com/deal.html">
+
+  <!-- Open Graph — updated dynamically -->
+  <meta property="og:type" content="product">
+  <meta property="og:site_name" content="Terms For Sale">
+  <meta property="og:title" id="og-title" content="Deal Details — Terms For Sale">
+  <meta property="og:description" id="og-desc" content="Off-market real estate deal from Terms For Sale.">
+  <meta property="og:url" id="og-url" content="https://deals.termsforsale.com/deal.html">
+  <meta property="og:image" id="og-image" content="https://deals.termsforsale.com/og-default.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@termsforsale">
+  <meta name="twitter:title" id="tw-title" content="Deal Details — Terms For Sale">
+  <meta name="twitter:description" id="tw-desc" content="Off-market real estate deal from Terms For Sale.">
+  <meta name="twitter:image" id="tw-image" content="https://deals.termsforsale.com/og-default.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1028,8 +1054,70 @@ function daysLeft(d){
 }
 
 // ─── RENDER ────────────────────────────────────────────────────
+
+// ── DYNAMIC SEO PER DEAL ─────────────────────────────────────────
+function updateSeo(deal) {
+  var addr  = deal.streetAddress || deal.city;
+  var metro = deal.nearestMetro  || (deal.city + ', ' + deal.state);
+  var type  = deal.dealType || 'Investment';
+  var price = deal.entryFee  || deal.askingPrice;
+  var priceStr = price ? '$' + Number(price).toLocaleString() : '';
+  var beds  = deal.beds  ? deal.beds  + 'bd ' : '';
+  var baths = deal.baths ? deal.baths + 'ba '  : '';
+
+  var title = addr + ' \u2014 ' + type + ' Deal | Terms For Sale';
+  var desc  = type + ' deal in ' + metro + '. '
+    + (priceStr ? priceStr + ' entry. ' : '')
+    + beds + baths
+    + (deal.compsArv ? 'ARV $' + Number(deal.compsArv).toLocaleString() + '. ' : '')
+    + (deal.rentFinal ? 'Est. rent $' + Number(deal.rentFinal).toLocaleString() + '/mo. ' : '')
+    + 'Off-market. Deal Pros LLC.';
+
+  var url = 'https://deals.termsforsale.com/deal.html?id=' + encodeURIComponent(deal.id || '');
+
+  var ogImg = 'https://deals.termsforsale.com/og-default.png';
+  if (deal.coverPhoto) {
+    var fid = extractFileId ? extractFileId(deal.coverPhoto) : null;
+    if (fid) ogImg = 'https://drive.google.com/thumbnail?id=' + fid + '&sz=w1200';
+  }
+
+  document.title = title;
+  var titleEl = document.getElementById('page-title');
+  if (titleEl) titleEl.textContent = title;
+
+  function setMeta(id, val) { var el = document.getElementById(id); if (el) el.setAttribute('content', val); }
+  function setHref(id, val) { var el = document.getElementById(id); if (el) el.setAttribute('href', val); }
+  setMeta('meta-desc', desc);   setHref('meta-canonical', url);
+  setMeta('og-title',  title);  setMeta('og-desc',  desc);
+  setMeta('og-url',    url);    setMeta('og-image',  ogImg);
+  setMeta('tw-title',  title);  setMeta('tw-desc',   desc);
+  setMeta('tw-image',  ogImg);
+
+  var schema = {
+    '@context': 'https://schema.org',
+    '@type':    'Product',
+    'name':     title,
+    'description': desc,
+    'url':      url,
+    'offers': {
+      '@type': 'Offer',
+      'price': String(price || deal.askingPrice || 0),
+      'priceCurrency': 'USD',
+      'availability': 'https://schema.org/InStock',
+      'seller': { '@type': 'Organization', 'name': 'Terms For Sale', 'url': 'https://deals.termsforsale.com' }
+    }
+  };
+  var schemaEl = document.getElementById('deal-schema');
+  if (!schemaEl) {
+    schemaEl = document.createElement('script');
+    schemaEl.type = 'application/ld+json';
+    schemaEl.id   = 'deal-schema';
+    document.head.appendChild(schemaEl);
+  }
+  schemaEl.textContent = JSON.stringify(schema);
+}
+
 // ── A/B CTA TEST ────────────────────────────────────────
-// Rotates through 4 variants per session so we can see which drives more clicks in GA4
 var _ctaVariant = (function(){
   var v = sessionStorage.getItem('cta_v');
   if (!v) { v = String(Math.floor(Math.random()*4)); sessionStorage.setItem('cta_v',v); }
@@ -1045,6 +1133,8 @@ function trackCta(type) {
 }
 
 function render(deal, allDeals) {
+  updateSeo(deal);
+
   var user    = getUser();
   var app     = document.getElementById('app');
   var isSubTo = /SubTo|Subject.To|Hybrid|Morby|Wrap/i.test(deal.dealType)
@@ -1786,3 +1876,4 @@ if (!dealId) {
 </script>
 </body>
 </html>
+ + Number(price).toLocaleString() : '';
