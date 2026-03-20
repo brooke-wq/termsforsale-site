@@ -103,6 +103,34 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .tab-panel{display:none}
 .tab-panel.on{display:block}
 
+/* ── DEAL ANALYZER ─────────────────────────────────────────── */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.calc-stat{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid var(--border-light)}
+.calc-stat-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.calc-stat-val{font-size:22px;font-weight:800;color:var(--navy)}
+.calc-stat-sub{font-size:11px;color:var(--text-light);margin-top:2px}
+.calc-stat.positive{background:#E6F9F0;border-color:#b2dfce}.calc-stat.positive .calc-stat-val{color:#276749}
+.calc-stat.negative{background:#fff5f5;border-color:#feb2b2}.calc-stat.negative .calc-stat-val{color:#e53e3e}
+.calc-stat.highlight{background:var(--blue-light);border-color:#d0eef9}.calc-stat.highlight .calc-stat-val{color:var(--blue-dark)}
+.calc-section{margin-bottom:20px}
+.calc-section-title{font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.slider-wrap{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.slider-label{font-size:12px;color:var(--text-mid);font-weight:500}
+input[type=range].calc-slider{width:100%;height:4px;-webkit-appearance:none;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+input[type=range].calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.slider-val{font-size:13px;font-weight:700;color:var(--navy);min-width:48px;text-align:right}
+.scenario-tabs{display:flex;gap:6px;margin-bottom:16px}
+.scenario-btn{padding:6px 14px;border-radius:6px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text-mid);transition:all .15s}
+.scenario-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.amort-table{width:100%;border-collapse:collapse;font-size:12px}
+.amort-table th{background:var(--navy);color:#fff;padding:8px 10px;text-align:right;font-weight:600;font-size:11px}
+.amort-table th:first-child{text-align:left}
+.amort-table td{padding:7px 10px;border-bottom:1px solid var(--border-light);text-align:right;color:var(--text-mid)}
+.amort-table td:first-child{text-align:left;font-weight:600;color:var(--text)}
+.amort-table tr:nth-child(even) td{background:var(--bg)}
+.amort-table tr.yr td{background:var(--blue-light);font-weight:700;color:var(--navy)}
+.fmr-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:var(--blue-light);border-radius:6px;font-size:11px;font-weight:600;color:var(--blue-dark)}
+
 /* TERMS */
 .terms-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .term-item{padding:12px 16px;border-bottom:1px solid #EDF2F7}
@@ -1177,66 +1205,207 @@ function render(deal, allDeals) {
   var refiVal    = Math.round((arv || arvForFlip) * 0.75); // 75% LTV refi
   var cashOut    = Math.max(0, refiVal - entry);
 
-  function statBox(label, val, sub, color) {
-    return '<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
-      +'<div style="font-size:10px;font-weight:700;color:'+(color||'var(--text-light)')+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">'+label+'</div>'
-      +'<div style="font-size:20px;font-weight:800;color:var(--navy)">'+val+'</div>'
-      +(sub?'<div style="font-size:11px;color:var(--text-light);margin-top:2px">'+sub+'</div>':'')
-      +'</div>';
+  // ── INTERACTIVE DEAL ANALYZER ──────────────────────────────
+  // Calculator renders as interactive HTML — sliders update everything in real time
+  var _dealId = deal.id;
+  var _price  = price;
+  var _entry  = entry;
+  var _arv    = arv || arvForFlip;
+  var _ltr    = ltr;
+  var _piti   = piti || 0;
+  var _hoa    = hoaN;
+  var _beds   = beds;
+  var _sqft   = sqft;
+  var _state  = deal.state || '';
+  var _city   = deal.city || '';
+  var _sfAmt  = deal.sfAmount || 0;
+  var _sfRate = deal.sfRate ? parseFloat(deal.sfRate) : 0;
+  var _sfPmt  = deal.sfPayment || 0;
+
+  // Amortization helper
+  function amortTable(principal, annualRate, months, label) {
+    if (!principal || !annualRate || !months) return '';
+    var r = (parseFloat(annualRate) < 1 ? parseFloat(annualRate) : parseFloat(annualRate)/100) / 12;
+    var pmt = principal * r * Math.pow(1+r,months) / (Math.pow(1+r,months)-1);
+    var rows = '';
+    var bal = principal;
+    var totalInt = 0;
+    var totalPrin = 0;
+    var checkYears = [1,2,3,5,10,15,20,25,Math.ceil(months/12)];
+    for (var m = 1; m <= months; m++) {
+      var intPmt = bal * r;
+      var prinPmt = pmt - intPmt;
+      bal -= prinPmt;
+      totalInt += intPmt;
+      totalPrin += prinPmt;
+      if (checkYears.includes(m/12) && m % 12 === 0) {
+        var yr = m/12;
+        rows += '<tr class="yr"><td>Year '+yr+'</td><td>$'+Math.round(pmt).toLocaleString()+'/mo</td>'
+          +'<td>$'+Math.round(totalPrin).toLocaleString()+'</td>'
+          +'<td>$'+Math.round(totalInt).toLocaleString()+'</td>'
+          +'<td>$'+Math.max(0,Math.round(bal)).toLocaleString()+'</td></tr>';
+      }
+    }
+    return rows;
   }
 
-  var rentHtml = '<div style="display:flex;flex-direction:column;gap:20px">'
-    // Rental Strategies
-    +'<div>'
-      +'<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Rental Strategies (Est.)</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
-        +statBox('LTR &mdash; Long-Term Rental','$'+ltr.toLocaleString()+'/mo','30+ day tenants, lowest mgmt','#1a6f8a')
-        +statBox('MTR &mdash; Mid-Term Rental','$'+mtr.toLocaleString()+'/mo','30-90 days, furnished ~1.4x LTR','#7c3aed')
-        +statBox('STR &mdash; Short-Term Rental','$'+str.toLocaleString()+'/mo','Airbnb/VRBO, est. $'+strNightly+'/night','#d97c0e')
-        +(beds>=2
-          ?'<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
-            +'<div style="font-size:10px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">PadSplit / Co-Living</div>'
-            +'<div style="font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px">$'+padRoom.toLocaleString()+'/mo</div>'
-            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px">'
-              +'<div style="color:var(--text-light)">'+beds+' rooms × $'+padRatePerRoom+'/mo</div>'
-              +'<div style="color:var(--text-light)">Platform fees ~30%</div>'
-              +'<div style="color:var(--text-light)">Net after fees: $'+(padRoom-padExpenses).toLocaleString()+'</div>'
-              +(piti?'<div style="color:'+(padCf>=0?'#059669':'#e53e3e')+';font-weight:700">CF: '+(padCf>=0?'+':'')+'$'+padCf.toLocaleString()+'</div>':'')
-            +'</div>'
-          +'</div>'
-          :'')
-      +'</div>'
-    +'</div>'
-    // Cash Flow
-    +(cfLtr!==null?'<div>'
-      +'<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">LTR Cash Flow Estimate</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
-        +'<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
-          +'<div style="font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Gross Rent</div>'
-          +'<div style="font-size:18px;font-weight:800;color:var(--navy)">$'+ltr.toLocaleString()+'</div>'
-        +'</div>'
-        +'<div style="background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #EDF2F7">'
-          +'<div style="font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Est. Expenses</div>'
-          +'<div style="font-size:18px;font-weight:800;color:#e53e3e">-$'+expenses.toLocaleString()+'</div>'
-          +'<div style="font-size:10px;color:var(--text-light);margin-top:2px">PITI + HOA + mgmt + vacancy</div>'
-        +'</div>'
-        +'<div style="background:'+(cfLtr>=0?'#E6F9F0':'#fff5f5')+';border-radius:10px;padding:14px 16px;border:1px solid '+(cfLtr>=0?'#b2dfce':'#feb2b2')+'">'
-          +'<div style="font-size:10px;font-weight:700;color:'+(cfLtr>=0?'#276749':'#e53e3e')+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Monthly Cash Flow</div>'
-          +'<div style="font-size:18px;font-weight:800;color:'+(cfLtr>=0?'#276749':'#e53e3e')+'">'+(cfLtr>=0?'+':'')+'$'+Math.abs(cfLtr).toLocaleString()+'</div>'
-        +'</div>'
-      +'</div>'
-    +'</div>':'')
-    // Exit Strategies
-    +'<div>'
-      +'<div style="font-size:12px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Exit Strategies (Est.)</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'
-        +statBox('Fix &amp; Flip Profit','$'+Math.max(0,flipProfit).toLocaleString(),'After entry + $'+repairEst.toLocaleString()+' repairs + fees','#c05621')
-        +(arv||true?statBox('BRRRR Cash-Out','$'+cashOut.toLocaleString(),'75% LTV refi of $'+(arv||arvForFlip).toLocaleString()+' ARV','#1a6f8a'):'')
-        +(capRate?statBox('Cap Rate',capRate+'%','Based on LTR NOI ÷ price','#718096'):'')
-        +statBox('Gross Yield',(price?((ltr*12/price)*100).toFixed(1):'?')+'%','Annual rent ÷ asking price','#718096')
-      +'</div>'
-    +'</div>'
-  +'</div>';
+  var rentHtml = '<div id="deal-analyzer-'+_dealId+'">'
+
+    // Header + FMR badge
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">'
+      + '<div style="font-size:16px;font-weight:800;color:var(--navy)">Interactive Deal Analyzer</div>'
+      + '<div id="fmr-badge-'+_dealId+'" class="fmr-loading">Loading market rent data…</div>'
+    + '</div>'
+
+    // Scenario selector
+    + '<div class="scenario-tabs" id="scenarios-'+_dealId+'">'
+      + '<button class="scenario-btn on" onclick="setScenario(\'conservative\',this,\''+_dealId+'\')">Conservative</button>'
+      + '<button class="scenario-btn" onclick="setScenario(\'moderate\',this,\''+_dealId+'\')">Moderate</button>'
+      + '<button class="scenario-btn" onclick="setScenario(\'optimistic\',this,\''+_dealId+'\')">Optimistic</button>'
+    + '</div>'
+
+    // Key metrics grid
+    + '<div class="calc-grid" id="metrics-grid-'+_dealId+'">'
+      + '<div class="calc-stat highlight" id="c-rent-'+_dealId+'">'
+        + '<div class="calc-stat-label">Est. Monthly Rent</div>'
+        + '<div class="calc-stat-val">$'+_ltr.toLocaleString()+'</div>'
+        + '<div class="calc-stat-sub">HUD FMR market rate</div>'
+      + '</div>'
+      + '<div class="calc-stat" id="c-payment-'+_dealId+'">'
+        + '<div class="calc-stat-label">Monthly Payment</div>'
+        + '<div class="calc-stat-val">$'+(_piti||_sfPmt||0).toLocaleString()+'</div>'
+        + '<div class="calc-stat-sub">'+(isSubTo?'PITI (existing loan)':isSF?'Seller finance payment':'Estimated</div>')
+      + '</div>'
+      + '<div class="calc-stat" id="c-cashflow-'+_dealId+'">'
+        + '<div class="calc-stat-label">Monthly Cash Flow</div>'
+        + '<div class="calc-stat-val" id="cf-val-'+_dealId+'">Calculating…</div>'
+        + '<div class="calc-stat-sub">After all expenses</div>'
+      + '</div>'
+      + '<div class="calc-stat" id="c-cocr-'+_dealId+'">'
+        + '<div class="calc-stat-label">Cash-on-Cash Return</div>'
+        + '<div class="calc-stat-val" id="cocr-val-'+_dealId+'">—</div>'
+        + '<div class="calc-stat-sub">Annual CF ÷ entry</div>'
+      + '</div>'
+      + '<div class="calc-stat" id="c-equity-'+_dealId+'">'
+        + '<div class="calc-stat-label">Equity at Entry</div>'
+        + '<div class="calc-stat-val">'+(_arv&&_price?'$'+Math.max(0,_arv-_price).toLocaleString():'—')+'</div>'
+        + '<div class="calc-stat-sub">ARV $'+(_arv?_arv.toLocaleString():'?')+' − Price $'+_price.toLocaleString()+'</div>'
+      + '</div>'
+      + '<div class="calc-stat" id="c-caprate-'+_dealId+'">'
+        + '<div class="calc-stat-label">Cap Rate</div>'
+        + '<div class="calc-stat-val" id="cap-val-'+_dealId+'">—</div>'
+        + '<div class="calc-stat-sub">NOI ÷ asking price</div>'
+      + '</div>'
+    + '</div>'
+
+    // Adjustable assumptions
+    + '<div class="calc-section">'
+      + '<div class="calc-section-title">Adjust Assumptions</div>'
+
+      + '<div class="slider-wrap"><span class="slider-label">Monthly Rent</span>'
+        + '<input type="range" class="calc-slider" id="sl-rent-'+_dealId+'" min="'+Math.round(_ltr*0.6)+'" max="'+Math.round(_ltr*1.8)+'" value="'+_ltr+'" step="25" oninput="updateCalc(\''+_dealId+'\')">'
+        + '<span class="slider-val" id="sv-rent-'+_dealId+'">$'+_ltr.toLocaleString()+'</span></div>'
+
+      + '<div class="slider-wrap"><span class="slider-label">Management Fee</span>'
+        + '<input type="range" class="calc-slider" id="sl-mgmt-'+_dealId+'" min="0" max="15" value="8" step="1" oninput="updateCalc(\''+_dealId+'\')">'
+        + '<span class="slider-val" id="sv-mgmt-'+_dealId+'">8%</span></div>'
+
+      + '<div class="slider-wrap"><span class="slider-label">Vacancy Rate</span>'
+        + '<input type="range" class="calc-slider" id="sl-vac-'+_dealId+'" min="0" max="15" value="5" step="1" oninput="updateCalc(\''+_dealId+'\')">'
+        + '<span class="slider-val" id="sv-vac-'+_dealId+'">5%</span></div>'
+
+      + '<div class="slider-wrap"><span class="slider-label">CapEx Reserve</span>'
+        + '<input type="range" class="calc-slider" id="sl-capex-'+_dealId+'" min="0" max="10" value="1" step="0.5" oninput="updateCalc(\''+_dealId+'\')">'
+        + '<span class="slider-val" id="sv-capex-'+_dealId+'">1%/yr</span></div>'
+
+      + '<div class="slider-wrap"><span class="slider-label">Repair / Rehab Needed</span>'
+        + '<input type="range" class="calc-slider" id="sl-repair-'+_dealId+'" min="0" max="'+Math.round(_price*0.3)+'" value="'+Math.round(_sqft*15||_price*0.05)+'" step="1000" oninput="updateCalc(\''+_dealId+'\')">'
+        + '<span class="slider-val" id="sv-repair-'+_dealId+'">$'+Math.round(_sqft*15||_price*0.05).toLocaleString()+'</span></div>'
+
+    + '</div>'
+
+    // All Strategies comparison
+    + '<div class="calc-section">'
+      + '<div class="calc-section-title">All Rental Strategies</div>'
+      + '<div class="calc-grid" id="strategies-grid-'+_dealId+'">'
+        + '<div class="calc-stat">'
+          + '<div class="calc-stat-label">LTR — Long-Term</div>'
+          + '<div class="calc-stat-val" id="s-ltr-'+_dealId+'">$'+_ltr.toLocaleString()+'/mo</div>'
+          + '<div class="calc-stat-sub">30+ day tenant</div>'
+        + '</div>'
+        + '<div class="calc-stat">'
+          + '<div class="calc-stat-label">MTR — Mid-Term</div>'
+          + '<div class="calc-stat-val" id="s-mtr-'+_dealId+'">$'+mtr.toLocaleString()+'/mo</div>'
+          + '<div class="calc-stat-sub">30-90 days furnished</div>'
+        + '</div>'
+        + '<div class="calc-stat">'
+          + '<div class="calc-stat-label">STR — Short-Term</div>'
+          + '<div class="calc-stat-val" id="s-str-'+_dealId+'">$'+str.toLocaleString()+'/mo</div>'
+          + '<div class="calc-stat-sub">Airbnb/VRBO ~$'+strNightly+'/night</div>'
+        + '</div>'
+        + (beds>=2?'<div class="calc-stat">'
+          + '<div class="calc-stat-label">PadSplit / Co-Living</div>'
+          + '<div class="calc-stat-val">$'+padRoom.toLocaleString()+'/mo</div>'
+          + '<div class="calc-stat-sub">'+beds+' rooms × $'+padRatePerRoom+' • Net $'+(padRoom-padExpenses).toLocaleString()+'</div>'
+        + '</div>':'')
+      + '</div>'
+    + '</div>'
+
+    // Exit strategies
+    + '<div class="calc-section">'
+      + '<div class="calc-section-title">Exit Strategy Calculator</div>'
+      + '<div class="calc-grid">'
+        + '<div class="calc-stat">'
+          + '<div class="calc-stat-label">Fix &amp; Flip Profit</div>'
+          + '<div class="calc-stat-val" id="flip-val-'+_dealId+'">$'+Math.max(0,flipProfit).toLocaleString()+'</div>'
+          + '<div class="calc-stat-sub">ARV $'+_arv.toLocaleString()+' − entry − repairs − fees</div>'
+        + '</div>'
+        + '<div class="calc-stat highlight">'
+          + '<div class="calc-stat-label">BRRRR Cash-Out</div>'
+          + '<div class="calc-stat-val">$'+cashOut.toLocaleString()+'</div>'
+          + '<div class="calc-stat-sub">75% LTV of $'+_arv.toLocaleString()+' ARV</div>'
+        + '</div>'
+        + '<div class="calc-stat">'
+          + '<div class="calc-stat-label">Rate Advantage vs Market</div>'
+          + (isSubTo&&deal.subtoRate?'<div class="calc-stat-val positive">$'+Math.round(((_price*(0.065/12))-(deal.piti||_piti||0))*(360)).toLocaleString()+'</div><div class="calc-stat-sub">Saved vs 6.5% new loan over loan life</div>'
+            :'<div class="calc-stat-val">—</div><div class="calc-stat-sub">N/A for this deal type</div>')
+        + '</div>'
+        + '<div class="calc-stat">'
+          + '<div class="calc-stat-label">Gross Yield</div>'
+          + '<div class="calc-stat-val">'+(price?((ltr*12/price)*100).toFixed(1):'?')+'%</div>'
+          + '<div class="calc-stat-sub">Annual rent ÷ asking price</div>'
+        + '</div>'
+      + '</div>'
+    + '</div>'
+
+    // Amortization table (SubTo or SF deals)
+    + ((isSubTo&&deal.subtoBalance&&deal.subtoRate)||(isSF&&_sfAmt&&_sfRate)
+      ? '<div class="calc-section">'
+          + '<div class="calc-section-title">Loan Amortization Schedule</div>'
+          + '<div style="overflow-x:auto">'
+            + '<table class="amort-table">'
+              + '<thead><tr><th>Period</th><th>Payment/mo</th><th>Principal Paid</th><th>Interest Paid</th><th>Balance</th></tr></thead>'
+              + '<tbody>'
+                + amortTable(
+                    isSubTo&&deal.subtoBalance ? deal.subtoBalance : _sfAmt,
+                    isSubTo&&deal.subtoRate ? deal.subtoRate : _sfRate,
+                    isSubTo ? 360 : (deal.sfTerm ? (parseInt(deal.sfTerm)*12||360) : 360),
+                    isSubTo ? 'Existing Mortgage' : 'Seller Finance'
+                  )
+              + '</tbody>'
+            + '</table>'
+          + '</div>'
+        + '</div>'
+      : '')
+
+  + '</div>';
+
+  // Kick off HUD FMR fetch after render
+  setTimeout(function() {
+    fetchHudFmr(deal);
+  }, 200);
+
+
 
   // ── URGENCY ──
   var urgencyHtml = (dl!==null&&dl<=10)
@@ -1389,6 +1558,155 @@ function submitRequest() {
   if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
   var btn = event.target;
   btn.innerHTML = '&#10003; Request Sent!'; btn.style.cssText += ';background:#276749;cursor:default'; btn.disabled=true;
+}
+
+// ─── DEAL ANALYZER FUNCTIONS ────────────────────────────────────
+
+var _calcState = {};
+
+function updateCalc(dealId) {
+  var s = _calcState[dealId] || {};
+  var rent   = parseInt(document.getElementById('sl-rent-'+dealId).value) || s.rent || 0;
+  var mgmt   = parseInt(document.getElementById('sl-mgmt-'+dealId).value) || 8;
+  var vac    = parseInt(document.getElementById('sl-vac-'+dealId).value) || 5;
+  var capexP = parseFloat(document.getElementById('sl-capex-'+dealId).value) || 1;
+  var repair = parseInt(document.getElementById('sl-repair-'+dealId).value) || 0;
+
+  // Update display values
+  var sv = function(id, val) { var el = document.getElementById(id); if(el) el.textContent = val; };
+  sv('sv-rent-'+dealId, '$'+rent.toLocaleString());
+  sv('sv-mgmt-'+dealId, mgmt+'%');
+  sv('sv-vac-'+dealId, vac+'%');
+  sv('sv-capex-'+dealId, capexP+'%/yr');
+  sv('sv-repair-'+dealId, '$'+repair.toLocaleString());
+
+  var price  = s.price  || 0;
+  var entry  = s.entry  || price;
+  var piti   = s.piti   || s.sfPmt || 0;
+  var hoa    = s.hoa    || 0;
+  var arv    = s.arv    || 0;
+
+  // Expense waterfall
+  var mgmtAmt  = Math.round(rent * mgmt / 100);
+  var vacAmt   = Math.round(rent * vac / 100);
+  var capexAmt = Math.round(price * capexP / 100 / 12);
+  var totalExp = piti + hoa + mgmtAmt + vacAmt + capexAmt;
+  var cf       = rent - totalExp;
+  var cocr     = entry > 0 ? ((cf * 12) / entry * 100).toFixed(1) : 0;
+  var noi      = (rent - hoa - mgmtAmt - vacAmt - capexAmt) * 12;
+  var capRate  = price > 0 ? (noi / price * 100).toFixed(1) : 0;
+
+  // Flip profit with current repair
+  var flipProfit = Math.round((arv || price*1.3) * 0.92 - entry - repair - entry*0.03);
+
+  // Update metric displays
+  var cfEl = document.getElementById('cf-val-'+dealId);
+  if (cfEl) {
+    cfEl.textContent = (cf>=0?'+':'')+'$'+Math.abs(Math.round(cf)).toLocaleString()+'/mo';
+    cfEl.closest('.calc-stat').className = 'calc-stat '+(cf>=0?'positive':'negative');
+  }
+  sv('cocr-val-'+dealId, cocr+'%');
+  sv('cap-val-'+dealId, capRate+'%');
+  sv('flip-val-'+dealId, '$'+Math.max(0,flipProfit).toLocaleString());
+
+  // MTR/STR strategies
+  var tier = s.tier || { mtr_mult:1.4, str_mult:2.3 };
+  sv('s-ltr-'+dealId, '$'+rent.toLocaleString()+'/mo');
+  sv('s-mtr-'+dealId, '$'+Math.round(rent*tier.mtr_mult).toLocaleString()+'/mo');
+  sv('s-str-'+dealId, '$'+Math.round(rent*tier.str_mult).toLocaleString()+'/mo');
+}
+
+function setScenario(scenario, btn, dealId) {
+  document.querySelectorAll('#scenarios-'+dealId+' .scenario-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+
+  var s = _calcState[dealId] || {};
+  var baseRent = s.fmrRent || s.rent || 1000;
+
+  var rentMap  = { conservative: Math.round(baseRent*0.90), moderate: baseRent, optimistic: Math.round(baseRent*1.15) };
+  var mgmtMap  = { conservative: 10, moderate: 8, optimistic: 7 };
+  var vacMap   = { conservative: 8,  moderate: 5, optimistic: 3 };
+  var capexMap = { conservative: 2,  moderate: 1, optimistic: 0.5 };
+
+  var setSlider = function(id, val) {
+    var el = document.getElementById(id);
+    if (el) { el.value = val; }
+  };
+  setSlider('sl-rent-'+dealId,  rentMap[scenario]);
+  setSlider('sl-mgmt-'+dealId,  mgmtMap[scenario]);
+  setSlider('sl-vac-'+dealId,   vacMap[scenario]);
+  setSlider('sl-capex-'+dealId, capexMap[scenario]);
+  updateCalc(dealId);
+}
+
+function fetchHudFmr(deal) {
+  var dealId = deal.id;
+  var badge  = document.getElementById('fmr-badge-'+dealId);
+  if (!badge) return;
+
+  var beds = parseInt(deal.beds) || 2;
+  var url  = '/api/hud-fmr?state='+ encodeURIComponent(deal.state||'')
+           + '&city=' + encodeURIComponent(deal.city||'')
+           + '&beds=' + beds;
+
+  fetch(url)
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data) {
+      if (!data) { badge.textContent = 'Market data unavailable'; return; }
+
+      // Update badge
+      badge.className = 'fmr-badge';
+      badge.innerHTML = '&#x2713; HUD FMR — '+data.metro+' ($'+data.ltr.toLocaleString()+'/mo est.)';
+
+      // Store in calc state
+      _calcState[dealId] = {
+        price:   deal.askingPrice || 0,
+        entry:   deal.entryFee || deal.askingPrice || 0,
+        piti:    deal.piti || 0,
+        sfPmt:   deal.sfPayment || 0,
+        hoa:     parseMoney(deal.hoa) || 0,
+        arv:     deal.compsArv || 0,
+        beds:    beds,
+        rent:    deal.rentFinal || data.ltr,
+        fmrRent: data.ltr,
+        fmrLow:  data.ltrLow,
+        fmrHigh: data.ltrHigh,
+        tier:    { mtr_mult: data.mtr/data.ltr, str_mult: data.str/data.ltr }
+      };
+
+      // Set rent slider to FMR or sheet value if provided
+      var useRent = deal.rentFinal || data.ltr;
+      var rentSlider = document.getElementById('sl-rent-'+dealId);
+      if (rentSlider) {
+        rentSlider.min   = Math.round(data.ltrLow * 0.7);
+        rentSlider.max   = Math.round(data.ltrHigh * 1.4);
+        rentSlider.value = useRent;
+      }
+
+      // Update MTR/STR displays
+      var sv = function(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; };
+      sv('s-mtr-'+dealId, '$'+data.mtr.toLocaleString()+'/mo');
+      sv('s-str-'+dealId, '$'+data.str.toLocaleString()+'/mo');
+
+      // If sheet has rent data, show comparison
+      if (deal.rentFinal && Math.abs(deal.rentFinal - data.ltr) > 50) {
+        badge.innerHTML += ' <span style="font-size:10px;color:var(--text-light)">(sheet: $'+deal.rentFinal.toLocaleString()+')</span>';
+      }
+
+      updateCalc(dealId);
+    })
+    .catch(function() {
+      badge.textContent = '';
+      // Still init the calc state from deal data
+      _calcState[dealId] = {
+        price: deal.askingPrice||0, entry: deal.entryFee||deal.askingPrice||0,
+        piti: deal.piti||0, sfPmt: deal.sfPayment||0,
+        hoa: parseMoney(deal.hoa)||0, arv: deal.compsArv||0,
+        beds: parseInt(deal.beds)||2, rent: deal.rentFinal||0,
+        fmrRent: deal.rentFinal||0, tier: {mtr_mult:1.4,str_mult:2.3}
+      };
+      updateCalc(dealId);
+    });
 }
 
 // ─── INIT ──────────────────────────────────────────────────────
