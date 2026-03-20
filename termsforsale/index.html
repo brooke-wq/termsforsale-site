@@ -95,15 +95,15 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .nav-dropdown hr{border:none;border-top:1px solid var(--border);margin:4px 0}
 
 /* ── HERO ───────────────────────────────── */
-.hero{position:relative;height:100vh;min-height:700px;overflow:hidden}
+.hero{position:relative;height:auto;min-height:360px;overflow:hidden}
 .hero-bg{position:absolute;inset:0}
 .hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block}
-.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom, rgba(5,20,40,.25) 0%, rgba(5,20,40,.18) 30%, rgba(5,20,40,.55) 75%, rgba(5,20,40,.75) 100%)}
-.hero-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:0 55px 72px;max-width:1440px;margin:0 auto;width:100%}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom, rgba(5,20,40,.3) 0%, rgba(5,20,40,.55) 100%)}
+.hero-content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;padding:44px 55px 48px;max-width:1440px;margin:0 auto;width:100%}
 /* Headline */
-.hero-headline{max-width:620px;margin-bottom:32px}
-.hero-headline h1{font-size:64px;font-weight:900;color:#fff;line-height:1.05;letter-spacing:-1.5px;margin-bottom:16px}
-.hero-headline p{font-size:17px;color:rgba(255,255,255,.65);max-width:380px;line-height:1.6}
+.hero-headline{max-width:520px;margin-bottom:0}
+.hero-headline h1{font-size:44px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:12px}
+.hero-headline p{font-size:15px;color:rgba(255,255,255,.7);max-width:400px;line-height:1.6}
 /* Search Widget */
 .hero-widget{background:rgba(13,31,60,.72);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:22px 24px;width:520px}
 .hw-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
@@ -480,7 +480,7 @@ footer{background:var(--navy);padding:52px 55px 0}
   <div class="hero-bg">
     <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&auto=format&fit=crop&q=85" alt="Property">
   </div>
-  <div class="hero-content">
+  <div class="hero-content" style="display:grid;grid-template-columns:1fr 440px;gap:48px;align-items:center">
     <div class="hero-headline">
       <h1>Cash and Creative Financing Deals Tailored for Every Investor</h1>
       <p>While others search listings, we find you deals that never make it to market.</p>
@@ -514,104 +514,6 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </section>
 
-<!-- STREAMLINED -->
-<section class="streamlined">
-  <div class="streamlined-inner">
-    <div class="st-img">
-      <img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=700&auto=format&fit=crop&q=80" alt="Property" loading="lazy">
-    </div>
-    <div class="st-text">
-      <div class="eyebrow" style="font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Streamlined Matched Deals</div>
-      <h2>Streamlined Matched Deals <span class="daily-pill">Daily</span></h2>
-      <p style="margin-top:14px">From cash offers to creative financing, discover the perfect match for your next investment.</p>
-    </div>
-    <div class="st-stats">
-      <div class="st-stat">
-        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
-        <div><div class="st-stat-num" id="st-count">&mdash;</div><div class="st-stat-lbl">Active Deals</div></div>
-      </div>
-      <div class="st-stat">
-        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <div><div class="st-stat-num">100+</div><div class="st-stat-lbl">Members</div></div>
-      </div>
-      <div class="st-stat">
-        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div><div class="st-stat-num">250+</div><div class="st-stat-lbl">Completed Deals</div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="how">
-  <div class="how-inner">
-    <div class="how-label">Deal Assignment</div>
-    <div class="how-header">
-      <h2>How Does<br>This Work?</h2>
-      <div class="how-header-right"><p>Your simple step-by-step path to <strong>finding and closing your next deal</strong> with confidence.</p></div>
-    </div>
-    <!-- Step 1 -->
-    <div class="how-step">
-      <div class="how-step-text">
-        <div class="step-num">Step 1</div>
-        <h3>Explore Off-Market Deals</h3>
-        <p>Browse available opportunities on our website. Use filters like price, location, or deal type to find your perfect match.</p>
-      </div>
-      <div class="step-visual">
-        <div class="mini-grid" id="how-mini-grid">
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#d4eadf,#a8d4c0)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#f5e6c8,#e8d5a8)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#e8c8f5,#d4a8e8)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
-        </div>
-      </div>
-    </div>
-    <!-- Step 2 -->
-    <div class="how-step" style="direction:rtl">
-      <div class="how-step-text" style="direction:ltr">
-        <div class="step-num">Step 2</div>
-        <h3>Make It Official</h3>
-        <p>When you're ready, send in your offer for review. If accepted, lock in your position with an EMD deposit.</p>
-      </div>
-      <div class="step-visual" style="direction:ltr;background:transparent;border:none">
-        <div class="big-card-wrap" id="how-big-card">
-          <div class="big-card-check"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <div class="big-card">
-            <div class="big-card-img" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>
-            <div class="big-card-body">
-              <div class="big-card-price">Loading&hellip;</div>
-              <div class="big-card-loc"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>&mdash;</div>
-              <div class="big-card-specs">&mdash;</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Step 3 -->
-    <div class="how-step">
-      <div class="how-step-text">
-        <div class="step-num">Step 3</div>
-        <h3>Close with Confidence</h3>
-        <p>Your coordinator will guide you through each step to ensure everything stays on track so you can finalize your contract and confidently step into your next opportunity.</p>
-      </div>
-      <div class="step-visual">
-        <div class="my-deals-wrap">
-          <div class="my-deals-title">My Deals</div>
-          <div class="my-deals-grid" id="how-my-deals">
-            <div class="my-deal-thumb"><div class="my-deal-photo" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div></div>
-            <div class="my-deal-thumb"><div class="my-deal-photo" style="background:linear-gradient(135deg,#d4eadf,#a8d4c0)"></div></div>
-            <div class="my-deal-thumb"><div class="my-deal-photo" style="background:linear-gradient(135deg,#f5e6c8,#e8d5a8)"></div></div>
-            <div class="my-deal-thumb"><div class="my-deal-photo" style="background:linear-gradient(135deg,#e8c8f5,#d4a8e8)"></div></div>
-            <div class="my-deal-thumb"><div class="my-deal-photo" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div></div>
-            <div class="my-deal-thumb"><div class="my-deal-photo" style="background:linear-gradient(135deg,#d4eadf,#a8d4c0)"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- EXPLORE DEALS -->
 <section class="explore" id="all-deals">
   <div class="explore-inner">
     <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
@@ -651,7 +553,85 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </section>
 
-<!-- MAP — placed prominently after deals -->
+<section style="background:#fff;border-top:1px solid #E2E8F0;padding:56px 40px">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:44px">
+      <div style="font-size:12px;font-weight:700;color:#29ABE2;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px">How It Works</div>
+      <div style="font-size:28px;font-weight:900;color:#0D1F3C;letter-spacing:-.3px">From browse to close in 3 steps</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px">
+      <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
+        <div style="width:52px;height:52px;border-radius:14px;background:#EBF8FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#29ABE2;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 1</div>
+        <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Browse Active Deals</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Filter by city, state, price, or deal type. Every listing is off-market with full terms, numbers, and photos.</div>
+      </div>
+      <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
+        <div style="width:52px;height:52px;border-radius:14px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F7941D" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#F7941D;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 2</div>
+        <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Submit Your Offer</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Request access or walkthrough, then submit your offer. If accepted, lock your position with an EMD deposit.</div>
+      </div>
+      <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
+        <div style="width:52px;height:52px;border-radius:14px;background:#E6F9F0;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#10B981;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 3</div>
+        <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Close with Confidence</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Your deal coordinator walks you through close. No agents. No MLS. Just you, the seller, and a clean contract.</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        No agent needed
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Close in 7-30 days
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        SubTo, seller finance, cash
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Entry from $15K
+      </div>
+    </div>
+  </div>
+</section>
+<section class="streamlined">
+  <div class="streamlined-inner">
+    <div class="st-img">
+      <img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=700&auto=format&fit=crop&q=80" alt="Property" loading="lazy">
+    </div>
+    <div class="st-text">
+      <div class="eyebrow" style="font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Streamlined Matched Deals</div>
+      <h2>Streamlined Matched Deals <span class="daily-pill">Daily</span></h2>
+      <p style="margin-top:14px">From cash offers to creative financing, discover the perfect match for your next investment.</p>
+    </div>
+    <div class="st-stats">
+      <div class="st-stat">
+        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div><div class="st-stat-num" id="st-count">&mdash;</div><div class="st-stat-lbl">Active Deals</div></div>
+      </div>
+      <div class="st-stat">
+        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><div class="st-stat-num">100+</div><div class="st-stat-lbl">Members</div></div>
+      </div>
+      <div class="st-stat">
+        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div><div class="st-stat-num">250+</div><div class="st-stat-lbl">Completed Deals</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="map-section">
   <div style="max-width:1330px;margin:0 auto">
     <div class="map-head">
@@ -881,11 +861,30 @@ function driveFileId(url){
   if(m)return m[1];
   return null;
 }
-function driveThumb(url,size){
-  const id=driveFileId(url);
-  if(!id)return null;
-  // Route through server-side Netlify proxy — uses API key, no browser auth needed
-  return`/api/drive-thumb?id=${id}&sz=${size||800}`;
+function driveThumb(url, size) {
+  const id = driveFileId(url);
+  if (!id) return null;
+  // Primary: server proxy via Netlify function (uses API key, most reliable)
+  return `/api/drive-thumb?id=${id}&sz=${size||800}`;
+}
+// Called on img onerror — tries next URL format
+function driveImgFallback(img, id) {
+  const tried = img.dataset.tried || '';
+  // Try each format in order
+  const formats = [
+    `/api/drive-thumb?id=${id}&sz=800`,
+    `https://lh3.googleusercontent.com/d/${id}=s800`,
+    `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
+    `https://drive.google.com/uc?export=view&id=${id}`,
+  ];
+  const next = formats.find(f => !tried.includes(f));
+  if (next) {
+    img.dataset.tried = (tried + '|' + next);
+    img.src = next;
+  } else {
+    // All formats failed — show empty state
+    img.parentElement.innerHTML = '<div class="deal-card-photo-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".35"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+  }
 }
 function getFolderId(url){
   if(!url)return null;
@@ -989,7 +988,8 @@ function makeCard(d){
   // Photo HTML
   let photoHtml;
   if(photo){
-    photoHtml=`<img src="${photo}" alt="${d.city}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='<div class=\\'deal-card-photo-empty\\'></div>'">`;
+    const _pid = driveFileId((d.coverPhoto||d.photos||''));
+    photoHtml=`<img src="${photo}" alt="${d.city}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" ${_pid?`data-id="${_pid}" onerror="driveImgFallback(this,'${_pid}')"`:"onerror=\"this.style.display='none'\""}>`;
   } else if(folderId){
     photoHtml=`<div class="deal-card-photo-empty" id="${cardId}"><div style="width:22px;height:22px;border:2.5px solid rgba(4,62,92,.15);border-top-color:#29ABE2;border-radius:50%;animation:spin .7s linear infinite"></div></div>`;
   } else {
