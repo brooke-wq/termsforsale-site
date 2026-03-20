@@ -894,7 +894,7 @@ function parseRow(r) {
     beds:         g(r,'Beds','Bedrooms','BD'),
     baths:        g(r,'Baths','Bathrooms','BA'),
     sqft:         g(r,'Sqft','Sq Ft','Square Feet','SQFT'),
-    yearBuilt:    g(r,'Year Built','Year Build','Yr Built')
+    yearBuilt:    parseYear(g(r,'Year Built','Year Build','Yr Built'))
   };
 }
 
@@ -953,6 +953,22 @@ function rate(r){
   // Format cleanly — remove trailing zeros
   var formatted = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(3).replace(/\.?0+$/, '');
   return formatted + '%';
+}
+
+// Parse year from gviz Date(y,m,d) string or plain number
+function parseYear(v) {
+  if (!v) return '';
+  var s = String(v).trim();
+  // gviz Date format: Date(1905,5,27) — extract the year
+  var gm = s.match(/^Date\((\d{4}),/);
+  if (gm) return gm[1];
+  // Plain 4-digit year
+  var ym = s.match(/^(\d{4})$/);
+  if (ym) return ym[1];
+  // Year at start of string like "1965-01-01"
+  var dm = s.match(/^(\d{4})-/);
+  if (dm) return dm[1];
+  return s;
 }
 
 // Robust COE date parser — handles ISO, M/D/Y, gviz Date(y,m,d), serial numbers
@@ -1033,8 +1049,9 @@ function render(deal, allDeals) {
   var app     = document.getElementById('app');
   var isSubTo = /SubTo|Subject.To|Hybrid|Morby|Wrap/i.test(deal.dealType)
     || (!deal.dealType && !!(deal.subtoBalance || deal.subtoLoanBalance));
-  var isSF    = /Seller.Finance|SF|Hybrid|Morby|Wrap/i.test(deal.dealType)
-    || (!deal.dealType && !!(deal.sfAmount || deal.sfLoanAmount));
+  var isSF = /Seller.Finance/i.test(deal.dealType)
+    || /Hybrid|Morby|Wrap/i.test(deal.dealType)
+    || (!deal.dealType && !!(deal.sfAmount || deal.sfLoanAmount) && !(deal.subtoBalance || deal.subtoLoanBalance));
   var entry   = deal.entryFee || deal.askingPrice;
   var dl      = daysLeft(deal.coe);
 
