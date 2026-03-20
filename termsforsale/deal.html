@@ -1223,7 +1223,7 @@ function render(deal, allDeals) {
   // ── TAGS ──
   var tagItems = [
     deal.dealType,
-    deal.yearBuilt  ? 'Built ' + deal.yearBuilt : null,
+    deal.yearBuilt  ? 'Year Built: ' + parseYear(deal.yearBuilt) : null,
     deal.sqft       ? Number(deal.sqft).toLocaleString() + ' sqft' : null,
     deal.propertyType || null
   ].filter(Boolean);
@@ -1231,10 +1231,16 @@ function render(deal, allDeals) {
   if (deal.occupancy) tagsHtml += '<span class="tag tag-orange">' + deal.occupancy + '</span>';
 
   // ── TERMS TABLE ──
+  var detectedType = deal.dealType
+    || (isSubTo && isSF ? 'Hybrid'
+        : isSubTo ? 'SubTo'
+        : isSF ? 'Seller Finance'
+        : '');
+
   var terms = [
     {l:'Asking Price', v:money(deal.askingPrice)},
     {l:'Close of Escrow', v:fmtCoe(deal.coe)},
-    {l:'Deal Type', v:deal.dealType||'&#8212;'},
+    {l:'Deal Type', v:detectedType||'&#8212;'},
     {l:'Entry Fee', v:(entry&&entry!==deal.askingPrice)?money(entry):'&#8212;'}
   ];
   if (isSubTo) {
