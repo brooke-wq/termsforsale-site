@@ -791,7 +791,7 @@ function col(raw,...names){for(const n of names){if(raw[n]!==undefined&&raw[n]!=
 function parseRow(raw){return{
   // Column A "Deal Status" contains the unique hash ID — use as deal ID
   id:col(raw,'Deal ID','Deal Status__0'),
-  dealType:col(raw,'Deal Type'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoBalance:+col(raw,'SubTo Loan Balance')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:col(raw,'SubTo Rate','SubTo Rate (%)'),loanType:col(raw,'Loan Type','SubTo Loan Type','Mortgage Type'),sfAmount:+col(raw,'SF Loan Amount')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate','SF Rate (%)'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
+  dealStatus:col(raw,'Deal Status'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoBalance:+col(raw,'SubTo Loan Balance')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:col(raw,'SubTo Rate','SubTo Rate (%)'),loanType:col(raw,'Loan Type','SubTo Loan Type','Mortgage Type'),sfAmount:+col(raw,'SF Loan Amount')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate','SF Rate (%)'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
   // Photo columns — Cover Photo is a single direct file share URL, Photos is folder or comma-list
   coverPhoto:col(raw,'Cover Photo','cover photo','Cover photo','Photo 1','photo1'),
   photos:col(raw,'Photos'),
@@ -901,7 +901,12 @@ function makeCard(d){
     return Math.ceil((dt-new Date())/864e5);
   })(d.coe);
 
-  const statusBadge = dl!==null&&dl<=7
+  const dsLower=(d.dealStatus||'').toLowerCase().trim();
+  const statusBadge = dsLower==='under contract'
+    ? `<div style="position:absolute;top:8px;left:8px;background:rgba(247,148,29,.95);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px">🔒 Under Contract</div>`
+    : dsLower==='sold'
+    ? `<div style="position:absolute;top:8px;left:8px;background:rgba(107,114,128,.9);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px">✓ Sold</div>`
+    : dl!==null&&dl<=7
     ? `<div style="position:absolute;top:8px;right:8px;background:rgba(247,148,29,.95);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px">⏰ ${dl}d left</div>`
     : '';
 
@@ -1164,8 +1169,8 @@ function updateNavAuth(user){
     if(!r.ok)throw new Error('HTTP '+r.status);
     const t=await r.text();
     const {rows}=parseSheet(t);
-    // Accept any variation of "actively marketing" or "active" status
     const ACTIVE_STATUSES=['actively marketing','active marketing','active','actively listed','marketing'];
+    const SHOW_STATUSES=[...ACTIVE_STATUSES,'under contract','sold'];
     ALL_DEALS=rows.filter(r=>ACTIVE_STATUSES.includes((r['Deal Status']||'').trim().toLowerCase())).map(parseRow).filter(d=>d.id);
     if(ALL_DEALS.length){
       updateStats();
