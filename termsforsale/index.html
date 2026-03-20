@@ -830,7 +830,27 @@ function parseSheet(text){
   return{cols,rows};
 }
 function col(raw,...names){for(const n of names){if(raw[n]!==undefined&&raw[n]!=='')return raw[n];}return'';}
-function parseYear(v){if(!v)return'';var s=String(v).trim();var gm=s.match(/^Date\((\d{4}),/);if(gm)return gm[1];var ym=s.match(/^(\d{4})$/);if(ym)return ym[1];var dm=s.match(/^(\d{4})-/);if(dm)return dm[1];return s;}
+function parseYear(v){
+  if(!v)return'';
+  var s=String(v).trim();
+  var gm=s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if(gm){
+    var yr=parseInt(gm[1]),mo=parseInt(gm[2]),dy=parseInt(gm[3]);
+    // Sheets stores year-built as a serial number (days since Dec 30 1899)
+    // gviz converts that serial to a date — year comes out as ~1900+serial/365
+    // Reverse: recompute the serial from the gviz date to get the actual year
+    if(yr<1940){
+      var d=new Date(yr,mo,dy);
+      var epoch=new Date(1899,11,30);
+      var serial=Math.round((d-epoch)/86400000);
+      if(serial>=1800&&serial<=2200)return String(serial);
+    }
+    return String(yr);
+  }
+  var ym=s.match(/^(\d{4})$/);if(ym)return ym[1];
+  var dm=s.match(/^(\d{4})-/);if(dm)return dm[1];
+  return s;
+}
 function parseRow(raw){return{
   // Column A "Deal Status" contains the unique hash ID — use as deal ID
   id:col(raw,'Deal ID','Deal Status__0'),
