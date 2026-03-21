@@ -1095,11 +1095,12 @@ function applyFilters(){
   const type=document.getElementById('f-type').value;
   const state=document.getElementById('f-state').value;
   const typeNorm=normType(type);
+  const CREATIVE_TYPES = ['subto','sf','hybrid','wrap','lease','novation'];
   let filtered=ALL_DEALS.filter(d=>{
     if(q&&!`${d.city} ${d.state} ${d.zip} ${d.nearestMetro} ${d.dealType} ${d.streetAddress}`.toLowerCase().includes(q))return false;
     if(type&&normType(d.dealType)!==typeNorm)return false;
     if(state&&d.state!==state)return false;
-    if(_tab==='creative'&&normType(d.dealType)==='cash')return false;
+    if(_tab==='creative'&&CREATIVE_TYPES.indexOf(normType(d.dealType))===-1)return false;
     if(_tab==='cash'&&normType(d.dealType)!=='cash')return false;
     return true;
   });
