@@ -538,7 +538,12 @@ footer{background:var(--navy);padding:52px 55px 0}
       <input class="filter-input" id="f-search" placeholder="Search by city, state, zip, or deal type…" oninput="applyFilters()">
       <select class="filter-select" id="f-type" onchange="applyFilters()">
         <option value="">All Types</option>
-        <option>Cash</option><option>SubTo</option><option>Seller Finance</option><option>Hybrid</option><option>Morby Method</option>
+        <option value="cash">Cash</option>
+        <option value="subto">Subject To</option>
+        <option value="sf">Seller Finance</option>
+        <option value="hybrid">Hybrid / Morby</option>
+        <option value="wrap">Wrap</option>
+        <option value="lease">Lease Option</option>
       </select>
       <select class="filter-select" id="f-state" onchange="applyFilters()">
         <option value="">All States</option>
@@ -1072,16 +1077,30 @@ function makeCard(d){
 let ALL_DEALS=[];
 let _tab='';
 
+function normType(t){
+  if(!t)return'';
+  var l=t.toLowerCase().replace(/[^a-z]/g,'');
+  if(l.includes('cash'))return'cash';
+  if(l.includes('subto')||l.includes('subject'))return'subto';
+  if(l.includes('seller')||l==='sf')return'sf';
+  if(l.includes('hybrid')||l.includes('morby')||l.includes('stack'))return'hybrid';
+  if(l.includes('wrap'))return'wrap';
+  if(l.includes('lease')||l.includes('option'))return'lease';
+  if(l.includes('novation'))return'novation';
+  return l;
+}
+
 function applyFilters(){
   const q=(document.getElementById('f-search').value||'').toLowerCase();
   const type=document.getElementById('f-type').value;
   const state=document.getElementById('f-state').value;
+  const typeNorm=normType(type);
   let filtered=ALL_DEALS.filter(d=>{
     if(q&&!`${d.city} ${d.state} ${d.zip} ${d.nearestMetro} ${d.dealType} ${d.streetAddress}`.toLowerCase().includes(q))return false;
-    if(type&&d.dealType!==type)return false;
+    if(type&&normType(d.dealType)!==typeNorm)return false;
     if(state&&d.state!==state)return false;
-    if(_tab==='creative'&&d.dealType==='Cash')return false;
-    if(_tab==='cash'&&d.dealType!=='Cash')return false;
+    if(_tab==='creative'&&normType(d.dealType)==='cash')return false;
+    if(_tab==='cash'&&normType(d.dealType)!=='cash')return false;
     return true;
   });
   const el=document.getElementById('filter-count');
