@@ -398,6 +398,35 @@ footer{background:var(--navy);padding:52px 55px 0}
   gtag('js', new Date());
   gtag('config', 'G-DRV6NWNY06');
 </script>
+  <!-- TFS Buy Box App — inline button (no external embed.js needed) -->
+  <script>
+    var TFS_BUYBOX_URL = 'https://6232db2e-1dda-4ec2-873d-ab219f8f172f-00-38peagumm808d.kirk.replit.dev';
+    function renderBuyBoxNavBtn() {
+      var container = document.getElementById('tfs-buybox-container');
+      if (!container) return;
+      // Check for session token saved by the Replit app
+      var token = localStorage.getItem('tfs_bb_token') || localStorage.getItem('buybox_token') || localStorage.getItem('token');
+      var user  = null;
+      try { user = JSON.parse(localStorage.getItem('tfs_buyer') || 'null'); } catch(e){}
+      var isLoggedIn = !!(token || (user && user.email));
+
+      if (isLoggedIn) {
+        container.innerHTML = '<a href="' + TFS_BUYBOX_URL + '/dashboard" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#29ABE2;color:#fff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s" onmouseover="this.style.background=\'#1a8bbf\'" onmouseout="this.style.background=\'#29ABE2\'">'
+          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+          + 'My Buy Box</a>';
+      } else {
+        container.innerHTML = '<a href="' + TFS_BUYBOX_URL + '/login" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:transparent;border:1.5px solid #29ABE2;color:#29ABE2;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s" onmouseover="this.style.background=\'#29ABE2\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'#29ABE2\'">'
+          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+          + 'Set My Buy Box</a>';
+      }
+    }
+    // Run after DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderBuyBoxNavBtn);
+    } else {
+      renderBuyBoxNavBtn();
+    }
+  </script>
 </head>
 <body>
 
@@ -411,6 +440,7 @@ footer{background:var(--navy);padding:52px 55px 0}
     <a href="mailto:support@termsforsale.com">Help</a>
   </div>
   <div class="nav-right" id="nav-right">
+    <div id="tfs-buybox-container"></div>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -859,6 +889,7 @@ function parseYear(v){
 function parseRow(raw){return{
   // Column A "Deal Status" contains the unique hash ID — use as deal ID
   id:col(raw,'Deal ID','Deal Status__0'),
+  dealType:col(raw,'Deal Type'),
   dealStatus:col(raw,'Deal Status'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoBalance:+col(raw,'SubTo Loan Balance')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:col(raw,'SubTo Rate','SubTo Rate (%)'),loanType:col(raw,'Loan Type','SubTo Loan Type','Mortgage Type'),sfAmount:+col(raw,'SF Loan Amount')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate','SF Rate (%)'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
   // Photo columns — Cover Photo is a single direct file share URL, Photos is folder or comma-list
   coverPhoto:col(raw,'Cover Photo','cover photo','Cover photo','Photo 1','photo1'),
@@ -1305,22 +1336,28 @@ async function doSignup(){
 function updateNavAuth(user){
   const el=document.getElementById('nav-right');
   if(!el||!user)return;
+  // embedLoaded: Replit Buy Box app is live and controls the button
+  const embedLoaded = window.TFSBuyBox && typeof window.TFSBuyBox.init==='function';
+  const buyBoxBtn = embedLoaded ? ''
+    : `<button onclick="openBuyBox()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#EBF8FF;border:1.5px solid #29ABE2;color:#1a8bbf;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='#29ABE2';this.style.color='#fff'" onmouseout="this.style.background='#EBF8FF';this.style.color='#1a8bbf'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        My Buy Box
+      </button>`;
+  const bbClick = embedLoaded ? 'window.TFSBuyBox&&window.TFSBuyBox.open();return false' : 'openBuyBox();return false';
   el.innerHTML=`
-    <button onclick="openBuyBox()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#EBF8FF;border:1.5px solid #29ABE2;color:#1a8bbf;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='#29ABE2';this.style.color='#fff'" onmouseout="this.style.background='#EBF8FF';this.style.color='#1a8bbf'">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      My Buy Box
-    </button>
+    <div id="tfs-buybox-container">${buyBoxBtn}</div>
     <div class="nav-avatar-wrap">
       <div class="nav-avatar">${user.initials}</div>
       <div class="nav-dropdown">
         <a href="/dashboard.html">📊 My Dashboard</a>
-        <a href="#" onclick="openBuyBox();return false">✏️ Update Buy Box</a>
+        <a href="#" onclick="${bbClick}">✏️ Update Buy Box</a>
         <a href="/">🏠 All Deals</a>
         <a href="/blog/">📝 Blog</a>
         <hr>
         <button onclick="clearUser();location.reload()">Log Out</button>
       </div>
     </div>`;
+  if(embedLoaded) window.TFSBuyBox.init('#tfs-buybox-container',{user});
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
