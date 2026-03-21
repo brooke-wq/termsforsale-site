@@ -1304,16 +1304,22 @@ async function doSignup(){
 function updateNavAuth(user){
   const el=document.getElementById('nav-right');
   if(!el||!user)return;
-  el.innerHTML=`<div class="nav-avatar-wrap">
-    <div class="nav-avatar">${user.initials}</div>
-    <div class="nav-dropdown">
-      <a href="/dashboard.html">My Dashboard</a>
-      <a href="/">All Deals</a>
-      <a href="/blog/">Blog</a>
-      <hr>
-      <button onclick="clearUser();location.reload()">Log Out</button>
-    </div>
-  </div>`;
+  el.innerHTML=`
+    <button onclick="openBuyBox()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#EBF8FF;border:1.5px solid #29ABE2;color:#1a8bbf;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='#29ABE2';this.style.color='#fff'" onmouseout="this.style.background='#EBF8FF';this.style.color='#1a8bbf'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      My Buy Box
+    </button>
+    <div class="nav-avatar-wrap">
+      <div class="nav-avatar">${user.initials}</div>
+      <div class="nav-dropdown">
+        <a href="/dashboard.html">📊 My Dashboard</a>
+        <a href="#" onclick="openBuyBox();return false">✏️ Update Buy Box</a>
+        <a href="/">🏠 All Deals</a>
+        <a href="/blog/">📝 Blog</a>
+        <hr>
+        <button onclick="clearUser();location.reload()">Log Out</button>
+      </div>
+    </div>`;
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
@@ -1351,6 +1357,170 @@ if (window.netlifyIdentity) {
     }
   });
 }
+</script>
+<!-- BUY BOX MODAL -->
+<div id="buybox-overlay" style="display:none;position:fixed;inset:0;background:rgba(13,31,60,.55);z-index:800;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden;max-height:90vh;overflow-y:auto">
+    <!-- Header -->
+    <div style="background:#0D1F3C;padding:22px 28px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#93C5FD;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">My Profile</div>
+        <div style="font-size:20px;font-weight:800;color:#fff">Update My Buy Box</div>
+      </div>
+      <button onclick="closeBuyBox()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">&times;</button>
+    </div>
+    <!-- Body -->
+    <div style="padding:24px 28px;display:flex;flex-direction:column;gap:16px">
+      <p style="font-size:13px;color:#718096;margin:0">Tell us exactly what you're looking for. We'll match you to deals that fit and alert you first when they drop.</p>
+
+      <!-- Deal types -->
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Deal Types I Buy</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-types">
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Cash">Cash</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="SubTo">Subject To</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Seller Finance">Seller Finance</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Hybrid">Hybrid / Morby</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Lease Option">Lease Option</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Wrap">Wrap</button>
+        </div>
+      </div>
+
+      <!-- Markets -->
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Target Markets</label>
+        <input id="bb-markets" class="bb-input" placeholder="e.g. Phoenix AZ, San Antonio TX, Tampa FL" style="width:100%">
+        <div style="font-size:11px;color:#A0AEC0;margin-top:4px">Enter cities or states separated by commas</div>
+      </div>
+
+      <!-- Entry budget -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Entry Budget (Min)</label>
+          <input id="bb-entry-min" class="bb-input" placeholder="$10,000" type="text">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Entry Budget (Max)</label>
+          <input id="bb-entry-max" class="bb-input" placeholder="$100,000" type="text">
+        </div>
+      </div>
+
+      <!-- Exit strategy -->
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Exit Strategies</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-exits">
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Buy & Hold">Buy &amp; Hold</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="BRRRR">BRRRR</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Flip">Fix &amp; Flip</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="STR">Short-Term Rental</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="MTR">Mid-Term Rental</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="PadSplit">PadSplit</button>
+        </div>
+      </div>
+
+      <!-- Property types -->
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Property Types</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-props">
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Single Family">Single Family</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Multifamily">Multifamily</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Condo">Condo / Townhouse</button>
+          <button type="button" class="bb-chip" onclick="toggleChip(this)" data-val="Commercial">Commercial</button>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Anything Else We Should Know?</label>
+        <textarea id="bb-notes" class="bb-input" rows="2" placeholder="Min beds, preferred neighborhoods, deal size, timeline…" style="width:100%;resize:vertical"></textarea>
+      </div>
+
+      <!-- Submit -->
+      <button id="bb-submit" onclick="submitBuyBox()" style="padding:13px;background:#29ABE2;color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:background .15s" onmouseover="this.style.background='#1a8bbf'" onmouseout="this.style.background='#29ABE2'">
+        Save My Buy Box
+      </button>
+      <div id="bb-success" style="display:none;text-align:center;padding:12px;background:#E6F9F0;border-radius:8px;font-size:13px;font-weight:600;color:#276749">
+        ✓ Buy box saved! We'll alert you when matching deals drop.
+      </div>
+      <div style="font-size:11px;color:#A0AEC0;text-align:center">Your criteria are shared with our team and used to match you to active deals.</div>
+    </div>
+  </div>
+</div>
+
+<style>
+.bb-chip{padding:7px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;color:#4A5568;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.bb-chip:hover{border-color:#29ABE2;color:#29ABE2}
+.bb-chip.on{background:#0D1F3C;border-color:#0D1F3C;color:#fff}
+.bb-input{padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:var(--font);font-size:13px;color:#0D1F3C;outline:none;transition:border .2s;background:#FAFAFA}
+.bb-input:focus{border-color:#29ABE2;background:#fff}
+.bb-input::placeholder{color:#A0AEC0}
+</style>
+
+<script>
+function openBuyBox(){
+  var ov=document.getElementById('buybox-overlay');
+  ov.style.display='flex';
+  // Pre-fill from saved user data
+  var user=getUser()||{};
+  var bb=user.buyBox||{};
+  if(bb.markets)document.getElementById('bb-markets').value=bb.markets;
+  if(bb.entryMin)document.getElementById('bb-entry-min').value=bb.entryMin;
+  if(bb.entryMax)document.getElementById('bb-entry-max').value=bb.entryMax;
+  if(bb.notes)document.getElementById('bb-notes').value=bb.notes;
+  // Re-activate chips
+  document.querySelectorAll('.bb-chip').forEach(function(c){
+    c.classList.remove('on');
+    var list=(bb.types||[]).concat(bb.exits||[]).concat(bb.props||[]);
+    if(list.indexOf(c.dataset.val)>-1)c.classList.add('on');
+  });
+  document.getElementById('bb-success').style.display='none';
+}
+function closeBuyBox(){
+  document.getElementById('buybox-overlay').style.display='none';
+}
+function toggleChip(el){el.classList.toggle('on');}
+function getChips(containerId){
+  return Array.from(document.querySelectorAll('#'+containerId+' .bb-chip.on')).map(function(c){return c.dataset.val;});
+}
+function submitBuyBox(){
+  var user=getUser()||{};
+  var types=getChips('bb-types');
+  var exits=getChips('bb-exits');
+  var props=getChips('bb-props');
+  var markets=document.getElementById('bb-markets').value.trim();
+  var entryMin=document.getElementById('bb-entry-min').value.trim();
+  var entryMax=document.getElementById('bb-entry-max').value.trim();
+  var notes=document.getElementById('bb-notes').value.trim();
+
+  // Save to localStorage
+  user.buyBox={types:types,exits:exits,props:props,markets:markets,entryMin:entryMin,entryMax:entryMax,notes:notes};
+  setUser(user);
+
+  // Save to GHL via webhook
+  var payload=Object.assign({
+    firstName:user.name?user.name.split(' ')[0]:'',
+    email:user.email||'',
+    phone:user.phone||'',
+    deal_structure:types.join(', '),
+    exits:exits.join(', '),
+    target_zips:markets,
+    notes:'Entry: '+entryMin+'-'+entryMax+' | Props: '+props.join(', ')+(notes?' | '+notes:''),
+    source:'TFS Buy Box Update'
+  },getUTMs());
+
+  fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+  }).catch(function(){});
+
+  var btn=document.getElementById('bb-submit');
+  btn.textContent='✓ Saved!';btn.style.background='#10B981';
+  document.getElementById('bb-success').style.display='block';
+  setTimeout(function(){closeBuyBox();btn.textContent='Save My Buy Box';btn.style.background='#29ABE2';},2200);
+}
+// Close on overlay click
+document.getElementById('buybox-overlay').addEventListener('click',function(e){
+  if(e.target===this)closeBuyBox();
+});
 </script>
 </body>
 </html>
