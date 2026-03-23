@@ -1275,7 +1275,7 @@ async function submitVIP(){
   if(!agreed){alert('Please agree to the Terms of Service & Privacy Policy.');return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Sending…';
   try{
-    await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,target_zips:market,deal_structure:type,exits:exit,source:'TFS Website - VIP Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['Get Deal Alerts Form Submitted','TFS Buyer']},getUTMs()))});
+    await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,target_zips:market,deal_structure:type,exits:exit,source:'TFS Website - VIP Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['Buying Criteria Form Submitted','TFS Buyer']},getUTMs()))});
     btn.textContent='✓ You\'re on the list!';btn.style.background='#10B981';
     const user={name:fn,email,phone,initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()};
     setUser(user);updateNavAuth(user);
