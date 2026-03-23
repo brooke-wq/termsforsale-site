@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Set Your Get Deal Alerts — Terms For Sale</title>
+<title>Set Your Buying Criteria — Terms For Sale</title>
 <meta name="description" content="Tell us exactly what deals you're looking for. We'll match you to off-market SubTo, Seller Finance, and Cash deals that fit your buy box.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -180,7 +180,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
 <!-- HERO -->
 <div class="hero-band">
   <div class="eyebrow">Deal Pros — Terms For Sale</div>
-  <h1>Set Your Get Deal Alerts</h1>
+  <h1>Set Your Buying Criteria</h1>
   <p>Tell us exactly what you buy. We match you to off-market deals the moment they drop — SubTo, Seller Finance, and Cash.</p>
   <div class="perks-row">
     <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Deals matched to your exact criteria</div>
@@ -990,7 +990,7 @@ function buildReview(){
     if(lx&&lx.value) rows.push(['Max Loan','$'+Number(lx.value).toLocaleString()]);
     if(ltv&&ltv.value) rows.push(['Max LTV',ltv.value+'%']);
   }
-  card.innerHTML = '<div class="card-title">Your Get Deal Alerts Summary</div>'
+  card.innerHTML = '<div class="card-title">Your Buying Criteria Summary</div>'
     + rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:13px"><span style="color:var(--text-light);font-weight:500">${l}</span><span style="color:var(--text);font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('');
 }
 
@@ -1049,8 +1049,8 @@ async function submitForm(){
     weekly_alert_opt_in: 'true',
     buy_box_complete: 'true',
     buy_box_updated:  new Date().toISOString().split('T')[0],
-    lead_source:     'Get Deal Alerts Form',
-    source:          'TFS - Get Deal Alerts Page',
+    lead_source:     'Buying Criteria Form',
+    source:          'TFS - Buying Criteria Page',
     pipeline_name:   'Buyer Inquiries',
     pipeline_stage:  'New Lead',
     tags:            profileTags,
@@ -1123,7 +1123,7 @@ async function submitForm(){
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify(Object.assign({}, payload, {
           deal_id: params.get('deal_id'),
-          source: 'TFS - Get Deal Alerts + Deal Inquiry'
+          source: 'TFS - Buying Criteria + Deal Inquiry'
         }))
       });
     } catch(e){ console.warn('Inquiry webhook error:', e); }
