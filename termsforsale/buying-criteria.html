@@ -425,13 +425,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
       <div class="row-2" style="margin-top:14px">
         <div class="field-group">
           <label class="field-label">Min Bedrooms</label>
-          <select class="f-select" id="bc-min-beds">
-            <option value="">Any</option>
-            <option value="2+">2+</option>
-            <option value="3+">3+</option>
-            <option value="4+">4+</option>
-            <option value="5+">5+</option>
-          </select>
+          <input class="f-input" id="bc-min-beds" type="number" min="0" max="10" placeholder="e.g. 3">
         </div>
         <div class="field-group">
           <label class="field-label">Min Year Built</label>
@@ -631,12 +625,9 @@ function cashForm(){
   html += card('Purchase Budget',
     row2(
       field('Max Purchase Price ($)', numInput('bc-max-price','e.g. 250000')),
-      field('Max All-In Cost ($)', numInput('bc-max-all-in','e.g. 300000'))
+      field('Max Repair Budget ($)', numInput('bc-max-repair','e.g. 50000'))
     ) +
-    '<div class="row-2" style="margin-top:14px">' +
-    field('Max Repair Budget ($)', numInput('bc-max-repair','e.g. 50000')) +
-    field('Min ARV ($)', numInput('bc-min-arv','e.g. 200000')) +
-    '</div>'
+    field('Min ARV ($)', numInput('bc-min-arv','e.g. 200000'))
   );
   html += card('Return Requirements',
     '<div class="row-2">' +
@@ -665,7 +656,7 @@ function creativeForm(){
     chipRow('grp-structures',
       chipBtn('Subject To','Subject To','grp-structures',true,false) +
       chipBtn('Seller Finance','Seller Finance','grp-structures',false,false) +
-      chipBtn('Hybrid / Morby','Hybrid / Morby','grp-structures',false,false) +
+      chipBtn('Stack / Morby Method','Stack / Morby Method','grp-structures',false,false) +
       chipBtn('Wrap','Wrap','grp-structures',false,false) +
       chipBtn('Lease Option','Lease Option','grp-structures',false,false) +
       chipBtn('Novation','Novation','grp-structures',false,false)
@@ -684,14 +675,6 @@ function creativeForm(){
     field('Min Cash-on-Cash (%)', numInput('bc-coc-creative','e.g. 8')) +
     field('Target ARV Spread (%)', numInput('bc-arv-spread-creative','e.g. 20')) +
     '</div>' +
-    labelRow('Rate Sensitivity',
-      chipRow('grp-rate-pref',
-        chipBtn('Only below 4%','Only below 4%','grp-rate-pref',false,true) +
-        chipBtn('Up to 5%','Up to 5%','grp-rate-pref',false,true) +
-        chipBtn('Up to 6.5%','Up to 6.5%','grp-rate-pref',true,true) +
-        chipBtn('Any rate if CF positive','Any rate if CF positive','grp-rate-pref',false,true)
-      )
-    ) +
     labelRow('Balloon Tolerance',
       chipRow('grp-balloon',
         chipBtn('No balloon','No balloon','grp-balloon',true,true) +
@@ -897,7 +880,7 @@ async function submitForm(){
     bb_max_sqft:        v('bc-max-sqft'),
     bb_min_beds:        v('bc-min-beds'),
     bb_year_built_min:  v('bc-year-built'),
-    bb_max_hoa:         v('bc-max-hoa'),
+    bb_max_hoa:         getExcl('grp-hoa'),
     close_timeline:     v('bc-timeline'),
     bb_occupancy_pref:  getExcl('grp-occupancy'),
     sms_opt_in:         getExcl('grp-sms-opt'),
@@ -919,7 +902,6 @@ async function submitForm(){
       cash_max_price:    v('bc-max-price'),
       cash_max_repair:   v('bc-max-repair'),
       cash_min_arv:      v('bc-min-arv'),
-      cash_max_all_in:   v('bc-max-all-in'),
       cash_min_equity_pct: v('bc-min-equity'),
       bb_target_arv_spread: v('bc-arv-spread'),
       bb_min_coc:        v('bc-min-coc'),
@@ -933,7 +915,6 @@ async function submitForm(){
       creative_max_pmt:     v('bc-max-pmt'),
       creative_min_cf:      v('bc-min-cf'),
       creative_max_rate:    v('bc-max-rate'),
-      creative_rate_pref:   getExcl('grp-rate-pref'),
       creative_balloon_tolerance: getExcl('grp-balloon'),
       bb_target_arv_spread: v('bc-arv-spread-creative') || v('bc-arv-spread'),
       bb_min_coc:           v('bc-coc-creative') || v('bc-min-coc'),
@@ -953,23 +934,33 @@ async function submitForm(){
     });
   }
 
-  try {
-    await fetch(GHL_SIGNUP_WEBHOOK, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-  } catch(e){ console.warn('Webhook error (non-blocking):', e); }
+  // sendBeacon is the most reliable for GHL — fires even if page transitions
+  var payloadStr = JSON.stringify(payload);
+  console.log('GHL payload:', payload); // remove after confirming sync works
+  var sent = false;
+  if(navigator.sendBeacon){
+    try {
+      sent = navigator.sendBeacon(GHL_SIGNUP_WEBHOOK, new Blob([payloadStr], {type:'application/json'}));
+    } catch(e){}
+  }
+  // Fallback to fetch if sendBeacon unavailable or failed
+  if(!sent){
+    try {
+      await fetch(GHL_SIGNUP_WEBHOOK, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type':'text/plain'},
+        body: payloadStr
+      });
+    } catch(e){ console.warn('GHL webhook error:', e); }
+  }
 
   var params = new URLSearchParams(window.location.search);
   if(params.get('deal_id')){
-    try {
-      await fetch(GHL_INQUIRY_WEBHOOK, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(Object.assign({}, payload, {deal_id: params.get('deal_id'), source:'TFS - Buying Criteria + Deal Inquiry'}))
-      });
-    } catch(e){}
+    var p2 = JSON.stringify(Object.assign({}, payload, {deal_id: params.get('deal_id'), source:'TFS - Buying Criteria + Deal Inquiry'}));
+    if(navigator.sendBeacon){
+      try{ navigator.sendBeacon(GHL_INQUIRY_WEBHOOK, new Blob([p2], {type:'application/json'})); }catch(e){}
+    }
   }
 
   try{
