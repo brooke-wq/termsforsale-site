@@ -398,34 +398,25 @@ footer{background:var(--navy);padding:52px 55px 0}
   gtag('js', new Date());
   gtag('config', 'G-DRV6NWNY06');
 </script>
-  <!-- TFS Buy Box App — inline button (no external embed.js needed) -->
+  <!-- TFS Buy Box — native page button -->
   <script>
-    var TFS_BUYBOX_URL = 'https://6232db2e-1dda-4ec2-873d-ab219f8f172f-00-38peagumm808d.kirk.replit.dev';
     function renderBuyBoxNavBtn() {
       var container = document.getElementById('tfs-buybox-container');
       if (!container) return;
-      // Check for session token saved by the Replit app
-      var token = localStorage.getItem('tfs_bb_token') || localStorage.getItem('buybox_token') || localStorage.getItem('token');
-      var user  = null;
+      var user = null;
       try { user = JSON.parse(localStorage.getItem('tfs_buyer') || 'null'); } catch(e){}
-      var isLoggedIn = !!(token || (user && user.email));
-
-      if (isLoggedIn) {
-        container.innerHTML = '<a href="' + TFS_BUYBOX_URL + '/dashboard" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#29ABE2;color:#fff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s" onmouseover="this.style.background=\'#1a8bbf\'" onmouseout="this.style.background=\'#29ABE2\'">'
-          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
-          + 'My Buy Box</a>';
+      var loggedIn = !!(user && user.email);
+      if (loggedIn) {
+        container.innerHTML = '<a href="/buy-box.html" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#29ABE2;color:#fff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s" onmouseover="this.style.background=\'#1a8bbf\'" onmouseout="this.style.background=\'#29ABE2\'">'
+          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>My Buy Box</a>';
       } else {
-        container.innerHTML = '<a href="' + TFS_BUYBOX_URL + '/login" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:transparent;border:1.5px solid #29ABE2;color:#29ABE2;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s" onmouseover="this.style.background=\'#29ABE2\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'#29ABE2\'">'
-          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
-          + 'Set My Buy Box</a>';
+        container.innerHTML = '<a href="/buy-box.html" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:transparent;border:1.5px solid #29ABE2;color:#29ABE2;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s" onmouseover="this.style.background=\'#29ABE2\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'#29ABE2\'">'
+          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Set My Buy Box</a>';
       }
     }
-    // Run after DOM ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', renderBuyBoxNavBtn);
-    } else {
-      renderBuyBoxNavBtn();
-    }
+    } else { renderBuyBoxNavBtn(); }
   </script>
 </head>
 <body>
