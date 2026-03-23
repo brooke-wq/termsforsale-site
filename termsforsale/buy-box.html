@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Buy Box — Terms For Sale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;--navy2:#132848;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;
+  --orange:#F7941D;--orange-dark:#d97c0e;
+  --green:#10B981;--green-light:#E6F9F0;
+  --white:#fff;--bg:#F4F6F9;
+  --text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;
+  --border:#E2E8F0;--border-light:#EDF2F7;
+  --card-shadow:0 2px 12px rgba(0,0,0,.07);
+  --r:12px;--font:'Poppins',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* NAV */
+nav{background:var(--white);border-bottom:1px solid var(--border);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-brand-icon{width:38px;height:38px;border-radius:10px;background:var(--navy);display:flex;align-items:center;justify-content:center}
+.nav-brand-name{font-size:16px;font-weight:800;color:var(--navy)}
+.nav-brand-name span{color:var(--blue)}
+.nav-center{display:flex;align-items:center;gap:6px}
+.nav-link{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:500;color:var(--text-mid);transition:all .15s}
+.nav-link:hover{background:var(--bg);color:var(--text)}
+.nav-link svg{opacity:.6}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn-new{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;background:var(--orange);color:var(--white);font-family:var(--font);font-size:13px;font-weight:700;border:none;cursor:pointer;text-decoration:none;transition:background .15s}
+.btn-new:hover{background:var(--orange-dark)}
+.nav-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:var(--white);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.nav-user-info{text-align:right}
+.nav-user-name{font-size:13px;font-weight:600;color:var(--text)}
+.nav-user-sub{font-size:11px;color:var(--text-light)}
+
+/* TOP BAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:64px;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.btn-back{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text-mid);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font);padding:0;transition:color .15s}
+.btn-back:hover{color:var(--blue)}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);display:none}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.unsaved-badge{font-size:12px;font-weight:500;color:var(--text-light)}
+.unsaved-badge.show{color:var(--orange);font-weight:600}
+.btn-save{display:inline-flex;align-items:center;gap:7px;padding:9px 22px;border-radius:8px;background:var(--blue);color:var(--white);font-family:var(--font);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .15s}
+.btn-save:hover{background:var(--blue-dark)}
+.btn-save.saved{background:var(--green)}
+.btn-save:disabled{opacity:.65;cursor:default}
+
+/* LAYOUT */
+.page{max-width:780px;margin:0 auto;padding:28px 20px 80px}
+
+/* PROFILE TABS */
+.profile-tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.profile-tab{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;border:2px solid var(--border);background:var(--white);color:var(--text-mid);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.profile-tab:hover{border-color:var(--blue);color:var(--blue)}
+.profile-tab.on{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.profile-tab .tab-icon{font-size:16px}
+
+/* ASSET TABS */
+.asset-tabs-wrap{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:0 20px;margin-bottom:20px;display:flex;overflow-x:auto;gap:0;box-shadow:var(--card-shadow)}
+.asset-tab{padding:14px 20px;border:none;background:transparent;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text-light);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s}
+.asset-tab:hover{color:var(--blue)}
+.asset-tab.on{color:var(--navy);border-bottom-color:var(--navy)}
+.asset-tab .asset-saved-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:6px;vertical-align:middle}
+
+/* CARD */
+.bb-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border-light);padding:24px;margin-bottom:16px;box-shadow:var(--card-shadow)}
+.bb-card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px}
+.bb-card-sub{font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;margin-top:16px}
+.bb-card-sub:first-child{margin-top:0}
+
+/* PROFILE BANNER */
+.profile-banner{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.profile-banner.cash{background:#E6F9F0;color:#276749;border-left:3px solid var(--green)}
+.profile-banner.creative{background:#F3E8FF;color:#6B21A8;border-left:3px solid #7C3AED}
+.profile-banner.lender{background:#FFF3E0;color:#c05621;border-left:3px solid var(--orange)}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text-mid);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.chip.exclusive:hover{border-color:var(--blue);color:var(--blue)}
+.chip.exclusive.on{background:var(--navy);border-color:var(--navy);color:var(--white)}
+
+/* INPUTS */
+.bb-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bb-field{display:flex;flex-direction:column;gap:6px}
+.bb-label{font-size:12px;font-weight:700;color:var(--text);display:block}
+.bb-sublabel{font-size:11px;color:var(--text-light);margin-top:-3px}
+.bb-input{padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border .2s;width:100%}
+.bb-input:focus{border-color:var(--blue)}
+.bb-input::placeholder{color:#C0C8D4}
+.bb-textarea{padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border .2s;width:100%;resize:vertical;min-height:90px}
+.bb-textarea:focus{border-color:var(--blue)}
+.bb-textarea::placeholder{color:#C0C8D4}
+
+/* ASSET SPECIFICS PANEL */
+.asset-specifics{background:var(--bg);border-radius:8px;border:1px solid var(--border-light);padding:16px;margin-top:4px}
+.asset-specifics-label{font-size:11px;font-weight:800;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+
+/* DIVIDER */
+.bb-divider{height:1px;background:var(--border-light);margin:20px 0}
+
+/* SUCCESS */
+.save-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:var(--white);padding:12px 24px;border-radius:50px;font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.22);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:999;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.save-toast.show{transform:translateX(-50%) translateY(0)}
+
+/* GATED STATE */
+.gated{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 32px;gap:16px}
+.gated h2{font-size:22px;font-weight:800;color:var(--navy)}
+.gated p{font-size:14px;color:var(--text-mid);max-width:380px}
+.btn-cta{display:inline-flex;align-items:center;gap:7px;padding:12px 28px;border-radius:10px;background:var(--blue);color:var(--white);font-family:var(--font);font-size:14px;font-weight:700;text-decoration:none;border:none;cursor:pointer;transition:background .15s;margin-top:8px}
+.btn-cta:hover{background:var(--blue-dark)}
+
+/* BACK TO SITE */
+.site-link{text-align:center;padding:20px 0 8px;font-size:12px;color:var(--text-light)}
+.site-link a{color:var(--text-light);text-decoration:none;transition:color .15s}
+.site-link a:hover{color:var(--blue)}
+footer.mini{background:var(--white);border-top:1px solid var(--border);padding:14px 32px;text-align:center;font-size:12px;color:var(--text-light);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  nav{padding:0 16px}
+  .nav-center{display:none}
+  .nav-user-info{display:none}
+  .topbar{padding:0 16px}
+  .page{padding:20px 12px 60px}
+  .bb-row{grid-template-columns:1fr}
+  .profile-tab{padding:8px 14px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-brand">
+    <div class="nav-brand-icon">
+      <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="TFS" style="height:26px;width:auto">
+    </div>
+    <span class="nav-brand-name">My <span>Buy Box</span></span>
+  </a>
+
+  <div class="nav-center">
+    <a href="/" class="nav-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Dashboard
+    </a>
+    <a href="/buy-box.html" class="nav-link" style="color:var(--blue)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Buy Box
+    </a>
+  </div>
+
+  <div class="nav-right">
+    <button class="btn-new" onclick="addNewBuyBox()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Buy Box
+    </button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="nav-user-info">
+        <div class="nav-user-name" id="nav-name">—</div>
+        <div class="nav-user-sub">Deal Pros</div>
+      </div>
+      <div class="nav-avatar" id="nav-avatar">?</div>
+    </div>
+  </div>
+</nav>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="btn-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      Back
+    </a>
+    <div class="topbar-title" id="topbar-title">Buy Box</div>
+  </div>
+  <div class="topbar-right">
+    <span class="unsaved-badge" id="unsaved-badge">All changes saved</span>
+    <button class="btn-save" id="btn-save" onclick="saveBuyBox()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save Buy Box
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page" id="page-main">
+  <!-- injected by renderPage() -->
+</div>
+
+<!-- GATED (not logged in) -->
+<div class="gated" id="page-gated" style="display:none">
+  <div style="font-size:48px">🔑</div>
+  <h2>Sign in to manage your Buy Box</h2>
+  <p>Your buy box tells us exactly what deals to send you — sign up free, takes 30 seconds.</p>
+  <button class="btn-cta" onclick="document.dispatchEvent(new CustomEvent('openAuth',{detail:'signup'}))">
+    Create Free Account
+  </button>
+  <button class="btn-cta" style="background:transparent;color:var(--blue);border:1.5px solid var(--blue)" onclick="document.dispatchEvent(new CustomEvent('openAuth',{detail:'login'}))">
+    Log In
+  </button>
+</div>
+
+<footer class="mini">
+  <span>© 2026 Terms For Sale / Deal Pros LLC</span>
+  <a href="/" style="color:var(--text-light);text-decoration:none">← Back to deals.termsforsale.com</a>
+</footer>
+
+<div class="save-toast" id="save-toast">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+  Buy Box saved! We'll match you to deals automatically.
+</div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────
+const AUTH_KEY = 'tfs_buyer';
+const GHL_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
+const BB_STORAGE_PREFIX = 'tfs_bb__';
+
+// ── AUTH ───────────────────────────────────────────────────────
+function getUser(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null');}catch{return null;}}
+function getUTMs(){
+  const p=new URLSearchParams(window.location.search);
+  const r={};
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{if(p.get(k))r[k]=p.get(k);});
+  return r;
+}
+
+// ── BUY BOX STORAGE ───────────────────────────────────────────
+// Key: tfs_bb__{profile}__{asset}
+let _profile = 'creative'; // cash | creative | lender
+let _asset   = 'sf';       // sf | mf | commercial | land
+let _dirty   = false;
+
+function bbKey(p,a){ return BB_STORAGE_PREFIX+(p||_profile)+'__'+(a||_asset); }
+function loadBB(p,a){ try{return JSON.parse(localStorage.getItem(bbKey(p,a))||'null');}catch{return null;} }
+function saveBBLocal(data){ localStorage.setItem(bbKey(),JSON.stringify(data)); }
+function hasSavedBB(p,a){ return !!localStorage.getItem(bbKey(p,a)); }
+
+// ── UI HELPERS ────────────────────────────────────────────────
+function setDirty(d){
+  _dirty=d;
+  const badge=document.getElementById('unsaved-badge');
+  if(badge){badge.textContent=d?'Unsaved changes':'All changes saved';badge.className='unsaved-badge'+(d?' show':'');}
+}
+function showToast(msg){
+  const t=document.getElementById('save-toast');
+  if(msg)t.childNodes[1].textContent=' '+msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function getInputVal(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+function getChipsVal(containerId){
+  return Array.from(document.querySelectorAll('#'+containerId+' .chip.on')).map(c=>c.dataset.val);
+}
+function getExclusiveVal(containerId){
+  const el=document.querySelector('#'+containerId+' .chip.on');
+  return el?el.dataset.val:'';
+}
+
+function toggleChip(el){
+  el.classList.toggle('on');
+  setDirty(true);
+}
+function toggleExclusive(el,groupId){
+  document.querySelectorAll('#'+groupId+' .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  setDirty(true);
+}
+
+// ── ASSET SAVED DOTS ──────────────────────────────────────────
+function refreshAssetDots(profile){
+  ['sf','mf','commercial','land'].forEach(a=>{
+    const dot=document.getElementById('dot-'+a);
+    if(dot)dot.style.display=hasSavedBB(profile,a)?'inline-block':'none';
+  });
+}
+
+// ── PROFILE TABS ──────────────────────────────────────────────
+function setProfile(p,btn){
+  _profile=p;
+  document.querySelectorAll('.profile-tab').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  refreshAssetDots(p);
+  renderForm();
+}
+
+// ── ASSET TABS ────────────────────────────────────────────────
+function setAsset(a,btn){
+  _asset=a;
+  document.querySelectorAll('.asset-tab').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  renderForm();
+}
+
+// ── FORM TEMPLATES ────────────────────────────────────────────
+function chipHtml(val,label,group,exclusive,saved){
+  const isOn=(saved&&(Array.isArray(saved)?saved.includes(val):saved===val))?'on':'';
+  const fn=exclusive?`toggleExclusive(this,'${group}')`:`toggleChip(this)`;
+  return `<button type="button" class="chip${exclusive?' exclusive':''} ${isOn}" data-val="${val}" onclick="${fn};setDirty(true)">${label}</button>`;
+}
+
+function formCash(saved){
+  const s=saved||{};
+  const assetLabel={sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_asset];
+  const showBeds=_asset==='sf'||_asset==='mf';
+  const showUnits=_asset==='mf';
+  return `
+  <div class="profile-banner cash">💵 Cash Buyer — ${assetLabel}</div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Purchase Criteria</div>
+    <div class="bb-row">
+      <div class="bb-field"><label class="bb-label">Max Purchase Price ($)</label><input class="bb-input" id="bb-max-price" placeholder="e.g. 250000" value="${s.maxPrice||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Max Repair Budget ($)</label><input class="bb-input" id="bb-max-repair" placeholder="e.g. 30000" value="${s.maxRepair||''}" oninput="setDirty(true)"></div>
+    </div>
+    <div class="bb-row" style="margin-top:14px">
+      <div class="bb-field"><label class="bb-label">Min ARV ($)</label><input class="bb-input" id="bb-min-arv" placeholder="e.g. 150000" value="${s.minArv||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Min Equity at Entry (%)</label><input class="bb-input" id="bb-min-equity" placeholder="e.g. 20" value="${s.minEquity||''}" oninput="setDirty(true)"></div>
+    </div>
+    ${showBeds?`
+    <div class="bb-divider"></div>
+    <div class="bb-card-title" style="margin-bottom:10px">Min Bedrooms</div>
+    <div class="chips" id="grp-beds">
+      ${['Any','2+','3+','4+'].map(v=>chipHtml(v,v,'grp-beds',true,s.beds||'Any')).join('')}
+    </div>`:''}
+    ${showUnits?`
+    <div class="bb-divider"></div>
+    <div class="bb-card-title" style="margin-bottom:10px">Unit Count</div>
+    <div class="chips" id="grp-units">
+      ${['2-4 units','5-20 units','20+ units'].map(v=>chipHtml(v,v,'grp-units',true,s.units||'')).join('')}
+    </div>`:''}
+    ${_asset==='commercial'?`
+    <div class="bb-divider"></div>
+    <div class="asset-specifics">
+      <div class="asset-specifics-label">Asset Specifics — Property Subtype</div>
+      <div class="chips" id="grp-subtype">
+        ${['Retail','Office','Industrial','Mixed Use','Warehouse','NNN Lease'].map(v=>chipHtml(v,v,'grp-subtype',false,s.subtypes||[])).join('')}
+      </div>
+    </div>`:''}
+    ${_asset==='land'?`
+    <div class="bb-divider"></div>
+    <div class="asset-specifics">
+      <div class="asset-specifics-label">Asset Specifics — Land Details</div>
+      <div class="bb-row">
+        <div class="bb-field"><label class="bb-label">Min Acreage</label><input class="bb-input" id="bb-min-acres" placeholder="e.g. 0.25" value="${s.minAcres||''}" oninput="setDirty(true)"></div>
+        <div class="bb-field"><label class="bb-label">Zoning Preference</label><input class="bb-input" id="bb-zoning" placeholder="e.g. Residential, Commercial" value="${s.zoning||''}" oninput="setDirty(true)"></div>
+      </div>
+    </div>`:''}
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Exit Strategies</div>
+    <div class="chips" id="grp-exits">
+      ${['Buy & Hold','BRRRR','Fix & Flip','STR / Airbnb','Mid-Term Rental','PadSplit','Wholesaler Resell'].map(v=>chipHtml(v,v,'grp-exits',false,s.exits||[])).join('')}
+    </div>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Close Timeline</div>
+    <div class="chips" id="grp-timeline">
+      ${['ASAP (7 days)','10-14 days','14-21 days','21-30 days','30-45 days'].map(v=>chipHtml(v,v,'grp-timeline',true,s.timeline||'')).join('')}
+    </div>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Target Markets</div>
+    <textarea class="bb-textarea" id="bb-markets" placeholder="List cities, states, zip codes, or general regions..." oninput="setDirty(true)">${s.markets||''}</textarea>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Additional Notes / Hard Criteria</div>
+    <textarea class="bb-textarea" id="bb-notes" placeholder="Any absolute dealbreakers or specific requirements not covered above?" oninput="setDirty(true)">${s.notes||''}</textarea>
+  </div>`;
+}
+
+function formCreative(saved){
+  const s=saved||{};
+  const assetLabel={sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_asset];
+  const showBeds=_asset==='sf'||_asset==='mf';
+  return `
+  <div class="profile-banner creative">🔑 Creative Finance Buyer — ${assetLabel}</div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Deal Structures Accepted</div>
+    <div class="chips" id="grp-structures">
+      ${['Subject To','Seller Finance','Hybrid / Morby','Wrap','Lease Option','Novation'].map(v=>chipHtml(v,v,'grp-structures',false,s.structures||[])).join('')}
+    </div>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Financial Criteria</div>
+    <div class="bb-row">
+      <div class="bb-field">
+        <label class="bb-label">Max Entry Fee ($)</label>
+        <input class="bb-input" id="bb-max-entry" placeholder="e.g. 35000" value="${s.maxEntry||''}" oninput="setDirty(true)">
+      </div>
+      <div class="bb-field">
+        <label class="bb-label">Max Monthly PITI ($)</label>
+        <input class="bb-input" id="bb-max-pmt" placeholder="e.g. 2500" value="${s.maxPmt||''}" oninput="setDirty(true)">
+      </div>
+    </div>
+    <div class="bb-row" style="margin-top:14px">
+      <div class="bb-field">
+        <label class="bb-label">Min Monthly Cash Flow ($)</label>
+        <input class="bb-input" id="bb-min-cf" placeholder="e.g. 200" value="${s.minCf||''}" oninput="setDirty(true)">
+      </div>
+      <div class="bb-field">
+        <label class="bb-label">Max Interest Rate (%)</label>
+        <input class="bb-input" id="bb-max-rate" placeholder="e.g. 6.5" value="${s.maxRate||''}" oninput="setDirty(true)">
+      </div>
+    </div>
+    <div class="bb-divider"></div>
+    <div class="bb-card-title" style="margin-bottom:10px">Rate Sensitivity</div>
+    <div class="chips" id="grp-rate-pref">
+      ${['Only below 4%','Up to 5%','Up to 6.5%','Any rate if CF positive'].map(v=>chipHtml(v,v,'grp-rate-pref',true,s.ratePref||'')).join('')}
+    </div>
+    ${showBeds?`
+    <div class="bb-divider"></div>
+    <div class="bb-card-title" style="margin-bottom:10px">Min Bedrooms</div>
+    <div class="chips" id="grp-beds">
+      ${['Any','2+','3+','4+'].map(v=>chipHtml(v,v,'grp-beds',true,s.beds||'Any')).join('')}
+    </div>`:''}
+    ${_asset==='commercial'?`
+    <div class="bb-divider"></div>
+    <div class="asset-specifics">
+      <div class="asset-specifics-label">Asset Specifics — Property Subtype</div>
+      <div class="chips" id="grp-subtype">
+        ${['Retail','Office','Industrial','Mixed Use'].map(v=>chipHtml(v,v,'grp-subtype',false,s.subtypes||[])).join('')}
+      </div>
+    </div>`:''}
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Exit Strategies</div>
+    <div class="chips" id="grp-exits">
+      ${['Buy & Hold','BRRRR (refi out)','Wrap & Resell','Mid-Term Rental','STR / Airbnb','PadSplit'].map(v=>chipHtml(v,v,'grp-exits',false,s.exits||[])).join('')}
+    </div>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Target Markets</div>
+    <textarea class="bb-textarea" id="bb-markets" placeholder="List cities, states, zip codes, or general regions..." oninput="setDirty(true)">${s.markets||''}</textarea>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Additional Notes / Hard Criteria</div>
+    <textarea class="bb-textarea" id="bb-notes" placeholder="Any absolute dealbreakers or specific requirements not covered above?" oninput="setDirty(true)">${s.notes||''}</textarea>
+  </div>`;
+}
+
+function formLender(saved){
+  const s=saved||{};
+  const assetLabel={sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_asset];
+  return `
+  <div class="profile-banner lender">🏦 Lender / Capital Partner — ${assetLabel}</div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Loan Types I Offer</div>
+    <div class="chips" id="grp-loan-types">
+      ${['Hard Money','Private Money','DSCR','Bridge Loan','Fix & Flip','Gap Funding','Equity Partner','Transactional'].map(v=>chipHtml(v,v,'grp-loan-types',false,s.loanTypes||[])).join('')}
+    </div>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Lending Parameters</div>
+    <div class="bb-row">
+      <div class="bb-field"><label class="bb-label">Min Loan Amount ($)</label><input class="bb-input" id="bb-loan-min" placeholder="e.g. 50000" value="${s.loanMin||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Max Loan Amount ($)</label><input class="bb-input" id="bb-loan-max" placeholder="e.g. 2000000" value="${s.loanMax||''}" oninput="setDirty(true)"></div>
+    </div>
+    <div class="bb-row" style="margin-top:14px">
+      <div class="bb-field"><label class="bb-label">Max LTV (%)</label><input class="bb-input" id="bb-max-ltv" placeholder="e.g. 75" value="${s.maxLtv||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Typical Rate Range</label><input class="bb-input" id="bb-rate-range" placeholder="e.g. 9-12%" value="${s.rateRange||''}" oninput="setDirty(true)"></div>
+    </div>
+    <div class="bb-row" style="margin-top:14px">
+      <div class="bb-field"><label class="bb-label">Min Credit Score</label><input class="bb-input" id="bb-min-credit" placeholder="e.g. 620" value="${s.minCredit||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Points Charged</label><input class="bb-input" id="bb-points" placeholder="e.g. 2" value="${s.points||''}" oninput="setDirty(true)"></div>
+    </div>
+    <div class="bb-divider"></div>
+    <div class="bb-card-title" style="margin-bottom:10px">Close Speed</div>
+    <div class="chips" id="grp-close-speed">
+      ${['3-5 days','7 days','10-14 days','2-3 weeks'].map(v=>chipHtml(v,v,'grp-close-speed',true,s.closeSpeed||'')).join('')}
+    </div>
+    <div class="bb-divider"></div>
+    <div class="bb-card-title" style="margin-bottom:10px">Recourse</div>
+    <div class="chips" id="grp-recourse">
+      ${['Recourse only','Non-recourse only','Either'].map(v=>chipHtml(v,v,'grp-recourse',true,s.recourse||'')).join('')}
+    </div>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Markets I Lend In</div>
+    <textarea class="bb-textarea" id="bb-markets" placeholder="National, or list specific states / cities..." oninput="setDirty(true)">${s.markets||''}</textarea>
+  </div>
+
+  <div class="bb-card">
+    <div class="bb-card-title">Additional Notes / Requirements</div>
+    <textarea class="bb-textarea" id="bb-notes" placeholder="Seasoning requirements, foreign national, recourse details, etc." oninput="setDirty(true)">${s.notes||''}</textarea>
+  </div>`;
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderForm(){
+  const saved = loadBB();
+  const formEl = document.getElementById('bb-form');
+  if(!formEl) return;
+  if(_profile==='cash')         formEl.innerHTML = formCash(saved);
+  else if(_profile==='creative') formEl.innerHTML = formCreative(saved);
+  else                           formEl.innerHTML = formLender(saved);
+  setDirty(false);
+}
+
+function renderPage(){
+  const user = getUser();
+  const page = document.getElementById('page-main');
+  const gated = document.getElementById('page-gated');
+
+  if(!user){
+    page.style.display='none';
+    gated.style.display='flex';
+    return;
+  }
+
+  page.style.display='block';
+  gated.style.display='none';
+
+  // Update nav
+  const navName=document.getElementById('nav-name');
+  const navAvatar=document.getElementById('nav-avatar');
+  if(navName)navName.textContent=user.name||user.email||'Buyer';
+  if(navAvatar)navAvatar.textContent=user.initials||(user.name?user.name[0].toUpperCase():'B');
+
+  page.innerHTML = `
+    <!-- Profile type selector -->
+    <div class="profile-tabs">
+      <button class="profile-tab${_profile==='cash'?' on':''}" onclick="setProfile('cash',this)"><span class="tab-icon">💵</span> Cash Buyer</button>
+      <button class="profile-tab${_profile==='creative'?' on':''}" onclick="setProfile('creative',this)"><span class="tab-icon">🔑</span> Creative Finance</button>
+      <button class="profile-tab${_profile==='lender'?' on':''}" onclick="setProfile('lender',this)"><span class="tab-icon">🏦</span> Lender / Capital</button>
+    </div>
+
+    <!-- Asset type tabs -->
+    <div class="asset-tabs-wrap">
+      <button class="asset-tab${_asset==='sf'?' on':''}" onclick="setAsset('sf',this)">Single Family<span id="dot-sf" class="asset-saved-dot" style="display:none"></span></button>
+      <button class="asset-tab${_asset==='mf'?' on':''}" onclick="setAsset('mf',this)">Multifamily<span id="dot-mf" class="asset-saved-dot" style="display:none"></span></button>
+      <button class="asset-tab${_asset==='commercial'?' on':''}" onclick="setAsset('commercial',this)">Commercial<span id="dot-commercial" class="asset-saved-dot" style="display:none"></span></button>
+      <button class="asset-tab${_asset==='land'?' on':''}" onclick="setAsset('land',this)">Land<span id="dot-land" class="asset-saved-dot" style="display:none"></span></button>
+    </div>
+
+    <!-- Dynamic form -->
+    <div id="bb-form"></div>
+
+    <div class="site-link">
+      <a href="/">← Back to deals.termsforsale.com</a>
+    </div>`;
+
+  refreshAssetDots(_profile);
+  renderForm();
+}
+
+// ── COLLECT DATA ──────────────────────────────────────────────
+function collectData(){
+  const data = { profile:_profile, asset:_asset, updatedAt:new Date().toISOString() };
+  // Text inputs
+  ['max-price','max-repair','min-arv','min-equity','max-entry','max-pmt','min-cf','max-rate',
+   'loan-min','loan-max','max-ltv','rate-range','min-credit','points','markets','notes',
+   'min-acres','zoning'].forEach(k=>{
+    const el=document.getElementById('bb-'+k);
+    if(el&&el.value.trim()) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=el.value.trim();
+  });
+  // Multi-select chips
+  ['structures','exits','loan-types','subtypes'].forEach(k=>{
+    const id='grp-'+k;
+    const chips=Array.from(document.querySelectorAll('#'+id+' .chip.on')).map(c=>c.dataset.val);
+    if(chips.length) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=chips;
+  });
+  // Exclusive chips
+  ['beds','units','rate-pref','timeline','close-speed','recourse'].forEach(k=>{
+    const el=document.querySelector('#grp-'+k+' .chip.on');
+    if(el) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=el.dataset.val;
+  });
+  return data;
+}
+
+// ── SAVE ──────────────────────────────────────────────────────
+function saveBuyBox(){
+  const user = getUser()||{};
+  const data = collectData();
+
+  // Save to localStorage
+  saveBBLocal(data);
+
+  // Build GHL payload
+  const profileLabel = {cash:'Cash Buyer',creative:'Creative Finance Buyer',lender:'Lender / Capital Partner'}[_profile];
+  const assetLabel   = {sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_asset];
+  const ghlPayload   = Object.assign({
+    firstName:  user.name?user.name.split(' ')[0]:'',
+    lastName:   user.name?user.name.split(' ').slice(1).join(' '):'',
+    email:      user.email||'',
+    phone:      user.phone||'',
+    deal_structure: (data.structures||[]).join(', ') || (_profile==='cash'?'Cash':''),
+    exits:      (data.exits||[]).join(', ')||'',
+    target_zips: data.markets||'',
+    buyer_profile_type: profileLabel,
+    notes: `[${profileLabel} — ${assetLabel}]`
+          +` Entry: ${data.maxEntry||data.maxPrice||'—'}`
+          +` | Pmt: ${data.maxPmt||'—'}`
+          +` | CF: ${data.minCf||'—'}`
+          +` | Rate: ${data.maxRate||data.rateRange||'—'}`
+          +` | LoanTypes: ${(data.loanTypes||[]).join(', ')||'—'}`
+          +` | ${data.notes||''}`,
+    source: `TFS Buy Box — ${profileLabel} — ${assetLabel}`,
+    buy_box_updated: new Date().toISOString().split('T')[0],
+    buy_box_complete: 'true',
+    lender_loan_types: (data.loanTypes||[]).join(', ')||'',
+    lender_max_ltv:    data.maxLtv||'',
+    lender_rate_range: data.rateRange||'',
+    creative_max_entry: data.maxEntry||'',
+    creative_max_pmt:   data.maxPmt||'',
+    creative_min_cf:    data.minCf||'',
+    creative_max_rate:  data.maxRate||'',
+    creative_rate_pref: data.ratePref||'',
+    cash_max_price:     data.maxPrice||'',
+    cash_max_repair:    data.maxRepair||'',
+    cash_min_arv:       data.minArv||'',
+    property_types:     assetLabel,
+    tags: ['tfs buyer', _profile==='lender'?'tfs lender':'tfs buyer', 'buy box complete'],
+  }, getUTMs());
+
+  fetch(GHL_WEBHOOK,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(ghlPayload)
+  }).catch(()=>{});
+
+  // UI feedback
+  const btn=document.getElementById('btn-save');
+  if(btn){btn.textContent='✓ Saved!';btn.classList.add('saved');}
+  setDirty(false);
+  refreshAssetDots(_profile);
+  showToast('Buy box saved! We\'ll match you to deals automatically.');
+  setTimeout(()=>{
+    if(btn){btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Buy Box';btn.classList.remove('saved');}
+  },2500);
+}
+
+// ── ADD NEW BOX ───────────────────────────────────────────────
+function addNewBuyBox(){
+  // Cycle to next uncompleted profile/asset combo
+  const profiles=['cash','creative','lender'];
+  const assets=['sf','mf','commercial','land'];
+  for(const p of profiles){
+    for(const a of assets){
+      if(!hasSavedBB(p,a)){
+        _profile=p; _asset=a;
+        renderPage();
+        return;
+      }
+    }
+  }
+  // All boxes saved — just reset to creative/sf
+  _profile='creative'; _asset='sf';
+  renderPage();
+}
+
+// ── LISTEN FOR AUTH EVENTS FROM PARENT SITE ───────────────────
+document.addEventListener('openAuth', e=>{
+  // If the main site auth modal is on the page, open it
+  if(typeof openAuth==='function') openAuth(e.detail||'login');
+  else window.location.href='/?auth='+((e.detail||'login'));
+});
+window.addEventListener('message', e=>{
+  if(e.data&&e.data.type==='tfs_login'){
+    renderPage();
+  }
+});
+// Also watch localStorage for auth changes (if user logs in on another tab)
+window.addEventListener('storage', e=>{
+  if(e.key===AUTH_KEY) renderPage();
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+renderPage();
+</script>
+</body>
+</html>
