@@ -556,14 +556,14 @@ const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zp
 const GHL_INQUIRY_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
 
 // ── STATE ────────────────────────────────────────────────────────
-let _step = 1;
-let _profile = 'Cash Buyer';
+var _step = 1;
+var _profile = 'Cash Buyer';
 
 // ── UTMs ─────────────────────────────────────────────────────────
 function getUTMs(){
-  const p = new URLSearchParams(window.location.search);
-  const r = {};
-  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{
+  var p = new URLSearchParams(window.location.search);
+  var r = {};
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){
     if(p.get(k)) r[k] = p.get(k);
   });
   return r;
@@ -572,340 +572,206 @@ function getUTMs(){
 // ── CHIP HELPERS ─────────────────────────────────────────────────
 function toggleChip(el){ el.classList.toggle('on'); }
 function toggleExcl(el, groupId){
-  document.querySelectorAll('#'+groupId+' .chip').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('#'+groupId+' .chip').forEach(function(c){ c.classList.remove('on'); });
   el.classList.add('on');
 }
 function getChips(groupId){
-  return Array.from(document.querySelectorAll('#'+groupId+' .chip.on')).map(c=>c.dataset.val);
+  return Array.from(document.querySelectorAll('#'+groupId+' .chip.on')).map(function(c){ return c.dataset.val; });
 }
 function getExcl(groupId){
-  const el = document.querySelector('#'+groupId+' .chip.on');
+  var el = document.querySelector('#'+groupId+' .chip.on');
   return el ? el.dataset.val : '';
 }
 
-// ── STATES HELPER ────────────────────────────────────────────────
+// ── STATE HELPER ────────────────────────────────────────────────
 function toggleState(el){
   el.classList.toggle('on');
-  // Sync into markets textarea
-  const states = getChips('grp-states');
-  const textarea = document.getElementById('bc-markets');
-  const existing = textarea.value.split(',').map(s=>s.trim()).filter(s=>s && !s.match(/^[A-Z]{2}$/) && s !== 'National');
-  const combined = [...existing, ...states].filter(Boolean);
-  textarea.value = combined.join(', ');
+  var states = getChips('grp-states');
+  var textarea = document.getElementById('bc-markets');
+  var existing = textarea.value.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s && !s.match(/^[A-Z]{2}$/) && s !== 'National'; });
+  textarea.value = existing.concat(states).filter(Boolean).join(', ');
 }
 
 // ── PROFILE SELECTION ────────────────────────────────────────────
 function toggleProfile(card){
   card.classList.toggle('on');
-  // At least one must always be selected
-  const selected = document.querySelectorAll('.profile-card.on');
+  var selected = document.querySelectorAll('.profile-card.on');
   if(selected.length === 0) card.classList.add('on');
   renderStep3();
 }
 
 function getSelectedProfiles(){
-  return Array.from(document.querySelectorAll('.profile-card.on')).map(c=>c.dataset.val);
+  return Array.from(document.querySelectorAll('.profile-card.on')).map(function(c){ return c.dataset.val; });
 }
 
-// ── STEP 3 DYNAMIC FORM ──────────────────────────────────────────
-function renderStep3(){
-  const container = document.getElementById('s3-form');
-  if(!container) return;
-  const profiles = getSelectedProfiles();
-
-  // Update title
-  if(profiles.length === 1){
-    _profile = profiles[0];
-    document.getElementById('s3-title').textContent = profiles[0] === 'Cash Buyer' ? 'Cash Buyer Criteria' : profiles[0] === 'Creative Finance Buyer' ? 'Creative Finance Criteria' : 'Lending Parameters';
-    document.getElementById('s3-sub').textContent = profiles[0] === 'Cash Buyer' ? 'Set your financial parameters — we only send deals that fit.' : profiles[0] === 'Creative Finance Buyer' ? 'Tell us your payment and cash flow thresholds — we filter every deal against these.' : 'Tell us what you fund so we can match you to buyers who need your capital.';
-  } else {
-    _profile = profiles.join(', ');
-    document.getElementById('s3-title').textContent = 'Your Criteria (' + profiles.length + ' profiles)';
-    document.getElementById('s3-sub').textContent = 'Fill in criteria for each profile — we\'ll set up separate buy boxes for each.';
-  }
-
-  // Build each profile section
-  let html = '';
-  if(profiles.includes('Cash Buyer')) html += cashForm();
-  if(profiles.includes('Creative Finance Buyer')) html += creativeForm();
-  if(profiles.includes('Lender')) html += lenderForm();
-  container.innerHTML = html;
+// ── HTML BUILDER HELPERS ─────────────────────────────────────────
+function profileBanner(icon, label, bg){
+  return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:'+bg+';border-radius:8px;margin-bottom:14px"><span style="font-size:18px">'+icon+'</span><span style="font-size:13px;font-weight:700;color:#0D1F3C">'+label+'</span></div>';
 }
 
-function profileHeader(icon, label, color){
-  return `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:${color};border-radius:8px;margin-bottom:14px"><span style="font-size:18px">${icon}</span><span style="font-size:13px;font-weight:700;color:#0D1F3C">${label}</span></div>`;
+function chipBtn(val, label, group, isOn, exclusive){
+  var fn = exclusive ? "toggleExcl(this,'"+group+"')" : "toggleChip(this)";
+  return '<button type="button" class="chip'+(isOn?' on':'')+'" data-val="'+val+'" onclick="'+fn+'">'+label+'</button>';
 }
 
+function row2(a, b){ return '<div class="row-2">'+a+b+'</div>'; }
+function field(labelText, inputHtml){ return '<div class="field-group"><label class="field-label">'+labelText+'</label>'+inputHtml+'</div>'; }
+function sub(text){ return '<div class="field-sublabel">'+text+'</div>'; }
+function numInput(id, ph){ return '<input class="f-input" id="'+id+'" type="number" placeholder="'+ph+'">'; }
+function txtInput(id, ph){ return '<input class="f-input" id="'+id+'" placeholder="'+ph+'">'; }
+function card(titleText, bodyHtml){ return '<div class="card"><div class="card-title">'+titleText+'</div>'+bodyHtml+'</div>'; }
+function chipRow(id, chips){ return '<div class="chips" id="'+id+'">'+chips+'</div>'; }
+function labelRow(text, html){ return '<div style="margin-top:14px"><label class="field-label" style="display:block;margin-bottom:8px">'+text+'</label>'+html+'</div>'; }
+
+// ── FORM FUNCTIONS ───────────────────────────────────────────────
 function cashForm(){
-  const multi = getSelectedProfiles().length > 1;
-  return `
-  <div class="card" id="cash-section">
-    ${multi ? profileHeader('💵','Cash Buyer Criteria','#E6F9F0') : ''}
-    <div class="card-title">Purchase Budget</div>
-    <div class="row-2">
-      <div class="field-group">
-        <label class="field-label">Max Purchase Price ($)</label>
-        <input class="f-input" id="bc-max-price" type="number" placeholder="e.g. 250000">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Max All-In Cost ($) <span class="opt-badge">price + repairs</span></label>
-        <input class="f-input" id="bc-max-all-in" type="number" placeholder="e.g. 300000">
-      </div>
-    </div>
-    <div class="row-2" style="margin-top:14px">
-      <div class="field-group">
-        <label class="field-label">Max Repair Budget ($)</label>
-        <input class="f-input" id="bc-max-repair" type="number" placeholder="e.g. 50000">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Min ARV ($)</label>
-        <input class="f-input" id="bc-min-arv" type="number" placeholder="e.g. 200000">
-      </div>
-    </div>
-    <div class="row-2" style="margin-top:14px">
-      <div class="field-group">
-        <label class="field-label">Min Equity at Entry (%)</label>
-        <input class="f-input" id="bc-min-equity" type="number" placeholder="e.g. 20">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Target ARV Spread (%)</label>
-        <input class="f-input" id="bc-arv-spread" type="number" placeholder="e.g. 30">
-      </div>
-    </div>
-    <div class="row-2" style="margin-top:14px">
-      <div class="field-group">
-        <label class="field-label">Min Cash-on-Cash (%)</label>
-        <input class="f-input" id="bc-min-coc" type="number" placeholder="e.g. 8">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Financing Method</label>
-        <select class="f-select" id="bc-financing">
-          <option value="">Select...</option>
-          <option>All Cash</option><option>Hard Money</option><option>DSCR Loan</option><option>Conventional</option><option>Private Money</option><option>Equity Partner</option>
-        </select>
-      </div>
-    </div>
-  </div>`;
+  var multi = getSelectedProfiles().length > 1;
+  var html = '';
+  if(multi) html += profileBanner('💵','Cash Buyer Criteria','#E6F9F0');
+  html += card('Purchase Budget',
+    row2(
+      field('Max Purchase Price ($)', numInput('bc-max-price','e.g. 250000')),
+      field('Max All-In Cost ($)', numInput('bc-max-all-in','e.g. 300000'))
+    ) +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Max Repair Budget ($)', numInput('bc-max-repair','e.g. 50000')) +
+    field('Min ARV ($)', numInput('bc-min-arv','e.g. 200000')) +
+    '</div>'
+  );
+  html += card('Return Requirements',
+    '<div class="row-2">' +
+    field('Min Equity at Entry (%)', numInput('bc-min-equity','e.g. 20')) +
+    field('Target ARV Spread (%)', sub('% below ARV you need') + numInput('bc-arv-spread','e.g. 30')) +
+    '</div>' +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Cash-on-Cash (%)', numInput('bc-min-coc','e.g. 8')) +
+    field('Financing Method',
+      '<select class="f-select" id="bc-financing">' +
+      '<option value="">Select...</option>' +
+      '<option>All Cash</option><option>Hard Money</option><option>DSCR Loan</option>' +
+      '<option>Conventional</option><option>Private Money</option><option>Equity Partner</option>' +
+      '</select>'
+    ) +
+    '</div>'
+  );
+  return '<div id="cash-section">'+html+'</div>';
 }
 
 function creativeForm(){
-  const multi = getSelectedProfiles().length > 1;
-  return `
-  <div class="card" id="creative-section">
-    ${multi ? profileHeader('🔑','Creative Finance Buyer Criteria','#F3E8FF') : ''}
-    <div class="card-title">Deal Structures You Buy</div>
-    <div class="chips" id="grp-structures">
-      <button type="button" class="chip on" data-val="Subject To" onclick="toggleChip(this)">Subject To</button>
-      <button type="button" class="chip" data-val="Seller Finance" onclick="toggleChip(this)">Seller Finance</button>
-      <button type="button" class="chip" data-val="Hybrid / Morby" onclick="toggleChip(this)">Hybrid / Morby</button>
-      <button type="button" class="chip" data-val="Wrap" onclick="toggleChip(this)">Wrap</button>
-      <button type="button" class="chip" data-val="Lease Option" onclick="toggleChip(this)">Lease Option</button>
-      <button type="button" class="chip" data-val="Novation" onclick="toggleChip(this)">Novation</button>
-    </div>
-    <div class="row-2" style="margin-top:16px">
-      <div class="field-group">
-        <label class="field-label">Max Entry Fee ($)</label>
-        <div class="field-sublabel">Cash to close / down payment</div>
-        <input class="f-input" id="bc-max-entry" type="number" placeholder="e.g. 35000">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Max Monthly PITI ($)</label>
-        <div class="field-sublabel">Payment you will assume</div>
-        <input class="f-input" id="bc-max-pmt" type="number" placeholder="e.g. 2500">
-      </div>
-    </div>
-    <div class="row-2" style="margin-top:14px">
-      <div class="field-group">
-        <label class="field-label">Min Monthly Cash Flow ($)</label>
-        <input class="f-input" id="bc-min-cf" type="number" placeholder="e.g. 200">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Max Interest Rate (%)</label>
-        <input class="f-input" id="bc-max-rate" type="number" placeholder="e.g. 6.5">
-      </div>
-    </div>
-    <div class="row-2" style="margin-top:14px">
-      <div class="field-group">
-        <label class="field-label">Min Cash-on-Cash (%)</label>
-        <input class="f-input" id="bc-coc-creative" type="number" placeholder="e.g. 8">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Target ARV Spread (%)</label>
-        <input class="f-input" id="bc-arv-spread-creative" type="number" placeholder="e.g. 20">
-      </div>
-    </div>
-    <div style="margin-top:14px">
-      <label class="field-label" style="display:block;margin-bottom:8px">Rate Sensitivity</label>
-      <div class="chips" id="grp-rate-pref">
-        <button type="button" class="chip" data-val="Only below 4%" onclick="toggleExcl(this,'grp-rate-pref')">Only below 4%</button>
-        <button type="button" class="chip" data-val="Up to 5%" onclick="toggleExcl(this,'grp-rate-pref')">Up to 5%</button>
-        <button type="button" class="chip on" data-val="Up to 6.5%" onclick="toggleExcl(this,'grp-rate-pref')">Up to 6.5%</button>
-        <button type="button" class="chip" data-val="Any rate if CF positive" onclick="toggleExcl(this,'grp-rate-pref')">Any rate if CF positive</button>
-      </div>
-    </div>
-    <div style="margin-top:14px">
-      <label class="field-label" style="display:block;margin-bottom:8px">Balloon Tolerance</label>
-      <div class="chips" id="grp-balloon">
-        <button type="button" class="chip on" data-val="No balloon" onclick="toggleExcl(this,'grp-balloon')">No balloon</button>
-        <button type="button" class="chip" data-val="Up to 5yr" onclick="toggleExcl(this,'grp-balloon')">Up to 5yr</button>
-        <button type="button" class="chip" data-val="Up to 10yr" onclick="toggleExcl(this,'grp-balloon')">Up to 10yr</button>
-        <button type="button" class="chip" data-val="Any" onclick="toggleExcl(this,'grp-balloon')">Any balloon OK</button>
-      </div>
-    </div>
-  </div>`;
+  var multi = getSelectedProfiles().length > 1;
+  var html = '';
+  if(multi) html += profileBanner('🔑','Creative Finance Buyer Criteria','#F3E8FF');
+  html += card('Deal Structures You Buy',
+    chipRow('grp-structures',
+      chipBtn('Subject To','Subject To','grp-structures',true,false) +
+      chipBtn('Seller Finance','Seller Finance','grp-structures',false,false) +
+      chipBtn('Hybrid / Morby','Hybrid / Morby','grp-structures',false,false) +
+      chipBtn('Wrap','Wrap','grp-structures',false,false) +
+      chipBtn('Lease Option','Lease Option','grp-structures',false,false) +
+      chipBtn('Novation','Novation','grp-structures',false,false)
+    )
+  );
+  html += card('Financial Parameters',
+    row2(
+      field('Max Entry Fee ($)', sub('Cash to close / down payment') + numInput('bc-max-entry','e.g. 35000')),
+      field('Max Monthly PITI ($)', sub('Payment you will assume') + numInput('bc-max-pmt','e.g. 2500'))
+    ) +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Monthly Cash Flow ($)', numInput('bc-min-cf','e.g. 200')) +
+    field('Max Interest Rate (%)', numInput('bc-max-rate','e.g. 6.5')) +
+    '</div>' +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Cash-on-Cash (%)', numInput('bc-coc-creative','e.g. 8')) +
+    field('Target ARV Spread (%)', numInput('bc-arv-spread-creative','e.g. 20')) +
+    '</div>' +
+    labelRow('Rate Sensitivity',
+      chipRow('grp-rate-pref',
+        chipBtn('Only below 4%','Only below 4%','grp-rate-pref',false,true) +
+        chipBtn('Up to 5%','Up to 5%','grp-rate-pref',false,true) +
+        chipBtn('Up to 6.5%','Up to 6.5%','grp-rate-pref',true,true) +
+        chipBtn('Any rate if CF positive','Any rate if CF positive','grp-rate-pref',false,true)
+      )
+    ) +
+    labelRow('Balloon Tolerance',
+      chipRow('grp-balloon',
+        chipBtn('No balloon','No balloon','grp-balloon',true,true) +
+        chipBtn('Up to 5yr','Up to 5yr balloon','grp-balloon',false,true) +
+        chipBtn('Up to 10yr','Up to 10yr balloon','grp-balloon',false,true) +
+        chipBtn('Any','Any balloon OK','grp-balloon',false,true)
+      )
+    )
+  );
+  return '<div id="creative-section">'+html+'</div>';
 }
 
 function lenderForm(){
-  const multi = getSelectedProfiles().length > 1;
-  return `
-  <div class="card" id="lender-section">
-    ${multi ? profileHeader('🏦','Lender / Capital Partner Criteria','#FFF3E0') : ''}
-    <div class="card-title">Loan Types You Offer</div>
-    <div class="chips" id="grp-loan-types">
-      <button type="button" class="chip" data-val="Hard Money" onclick="toggleChip(this)">Hard Money</button>
-      <button type="button" class="chip" data-val="Private Money" onclick="toggleChip(this)">Private Money</button>
-      <button type="button" class="chip" data-val="DSCR" onclick="toggleChip(this)">DSCR</button>
-      <button type="button" class="chip" data-val="Bridge Loan" onclick="toggleChip(this)">Bridge Loan</button>
-      <button type="button" class="chip" data-val="Fix & Flip" onclick="toggleChip(this)">Fix &amp; Flip</button>
-      <button type="button" class="chip" data-val="Gap Funding" onclick="toggleChip(this)">Gap Funding</button>
-      <button type="button" class="chip" data-val="Equity Partner" onclick="toggleChip(this)">Equity Partner</button>
-      <button type="button" class="chip" data-val="Transactional" onclick="toggleChip(this)">Transactional</button>
-    </div>
-    <div class="row-2" style="margin-top:16px">
-      <div class="field-group">
-        <label class="field-label">Min Loan Amount ($)</label>
-        <input class="f-input" id="bc-loan-min" type="number" placeholder="e.g. 50000">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Max Loan Amount ($)</label>
-        <input class="f-input" id="bc-loan-max" type="number" placeholder="e.g. 2000000">
-      </div>
-    </div>
-    <div class="row-2" style="margin-top:14px">
-      <div class="field-group">
-        <label class="field-label">Max LTV (%)</label>
-        <input class="f-input" id="bc-max-ltv" type="number" placeholder="e.g. 75">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Typical Rate Range</label>
-        <input class="f-input" id="bc-rate-range" placeholder="e.g. 9-12%">
-      </div>
-    </div>
-    <div class="row-2" style="margin-top:14px">
-      <div class="field-group">
-        <label class="field-label">Min Credit Score</label>
-        <input class="f-input" id="bc-min-credit" type="number" placeholder="e.g. 620">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Points Charged</label>
-        <input class="f-input" id="bc-points" placeholder="e.g. 2">
-      </div>
-    </div>
-    <div style="margin-top:14px">
-      <label class="field-label" style="display:block;margin-bottom:8px">Close Speed</label>
-      <div class="chips" id="grp-close-speed">
-        <button type="button" class="chip" data-val="3-5 days" onclick="toggleExcl(this,'grp-close-speed')">3-5 days</button>
-        <button type="button" class="chip on" data-val="7 days" onclick="toggleExcl(this,'grp-close-speed')">7 days</button>
-        <button type="button" class="chip" data-val="10-14 days" onclick="toggleExcl(this,'grp-close-speed')">10-14 days</button>
-        <button type="button" class="chip" data-val="2-3 weeks" onclick="toggleExcl(this,'grp-close-speed')">2-3 weeks</button>
-      </div>
-    </div>
-  </div>`;
+  var multi = getSelectedProfiles().length > 1;
+  var html = '';
+  if(multi) html += profileBanner('🏦','Lender / Capital Partner Criteria','#FFF3E0');
+  html += card('Loan Types You Offer',
+    chipRow('grp-loan-types',
+      chipBtn('Hard Money','Hard Money','grp-loan-types',false,false) +
+      chipBtn('Private Money','Private Money','grp-loan-types',false,false) +
+      chipBtn('DSCR','DSCR','grp-loan-types',false,false) +
+      chipBtn('Bridge Loan','Bridge Loan','grp-loan-types',false,false) +
+      chipBtn('Fix &amp; Flip','Fix & Flip','grp-loan-types',false,false) +
+      chipBtn('Gap Funding','Gap Funding','grp-loan-types',false,false) +
+      chipBtn('Equity Partner','Equity Partner','grp-loan-types',false,false) +
+      chipBtn('Transactional','Transactional','grp-loan-types',false,false)
+    )
+  );
+  html += card('Lending Parameters',
+    row2(
+      field('Min Loan Amount ($)', numInput('bc-loan-min','e.g. 50000')),
+      field('Max Loan Amount ($)', numInput('bc-loan-max','e.g. 2000000'))
+    ) +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Max LTV (%)', numInput('bc-max-ltv','e.g. 75')) +
+    field('Typical Rate Range', txtInput('bc-rate-range','e.g. 9-12%')) +
+    '</div>' +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Credit Score', numInput('bc-min-credit','e.g. 620')) +
+    field('Points Charged', txtInput('bc-points','e.g. 2')) +
+    '</div>' +
+    labelRow('Close Speed',
+      chipRow('grp-close-speed',
+        chipBtn('3-5 days','3-5 days','grp-close-speed',false,true) +
+        chipBtn('7 days','7 days','grp-close-speed',true,true) +
+        chipBtn('10-14 days','10-14 days','grp-close-speed',false,true) +
+        chipBtn('2-3 weeks','2-3 weeks','grp-close-speed',false,true)
+      )
+    )
+  );
+  return '<div id="lender-section">'+html+'</div>';
 }
-          <input class="f-input" id="bc-min-coc" type="number" placeholder="e.g. 8">
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Financing Method</div>
-      <div class="chips" id="grp-financing">
-        <button type="button" class="chip on" data-val="Cash" onclick="toggleExcl(this,'grp-financing')">All Cash</button>
-        <button type="button" class="chip" data-val="Hard Money" onclick="toggleExcl(this,'grp-financing')">Hard Money</button>
-        <button type="button" class="chip" data-val="DSCR" onclick="toggleExcl(this,'grp-financing')">DSCR Loan</button>
-        <button type="button" class="chip" data-val="Conventional" onclick="toggleExcl(this,'grp-financing')">Conventional</button>
-        <button type="button" class="chip" data-val="Private Money" onclick="toggleExcl(this,'grp-financing')">Private Money</button>
-        <button type="button" class="chip" data-val="Partner" onclick="toggleExcl(this,'grp-financing')">Equity Partner</button>
-      </div>
-    </div>`;
 
-  } else if(_profile === 'Creative Finance Buyer'){
-    document.getElementById('s3-title').textContent = 'Creative Finance Criteria';
-    document.getElementById('s3-sub').textContent = 'Tell us your payment and cash flow thresholds — we filter every deal against these.';
-    container.innerHTML = `
-    <div class="card">
-      <div class="card-title">Deal Structures You Buy</div>
-      <div class="chips" id="grp-structures">
-        <button type="button" class="chip on" data-val="Subject To" onclick="toggleChip(this)">Subject To</button>
-        <button type="button" class="chip" data-val="Seller Finance" onclick="toggleChip(this)">Seller Finance</button>
-        <button type="button" class="chip" data-val="Hybrid / Morby" onclick="toggleChip(this)">Hybrid / Morby</button>
-        <button type="button" class="chip" data-val="Wrap" onclick="toggleChip(this)">Wrap</button>
-        <button type="button" class="chip" data-val="Lease Option" onclick="toggleChip(this)">Lease Option</button>
-        <button type="button" class="chip" data-val="Novation" onclick="toggleChip(this)">Novation</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Financial Parameters</div>
-      <div class="row-2">
-        <div class="field-group">
-          <label class="field-label">Max Entry Fee ($)</label>
-          <div class="field-sublabel">Cash to close / down payment</div>
-          <input class="f-input" id="bc-max-entry" type="number" placeholder="e.g. 35000">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Max Monthly PITI ($)</label>
-          <div class="field-sublabel">Payment you will assume</div>
-          <input class="f-input" id="bc-max-pmt" type="number" placeholder="e.g. 2500">
-        </div>
-      </div>
-      <div class="row-2" style="margin-top:14px">
-        <div class="field-group">
-          <label class="field-label">Min Monthly Cash Flow ($)</label>
-          <input class="f-input" id="bc-min-cf" type="number" placeholder="e.g. 200">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Max Interest Rate (%)</label>
-          <input class="f-input" id="bc-max-rate" type="number" placeholder="e.g. 6.5">
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Return Requirements</div>
-      <div class="row-2">
-        <div class="field-group">
-          <label class="field-label">Min Cash-on-Cash Return (%)</label>
-          <input class="f-input" id="bc-min-coc" type="number" placeholder="e.g. 8">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Target ARV Spread (%)</label>
-          <input class="f-input" id="bc-arv-spread" type="number" placeholder="e.g. 20">
-        </div>
-      </div>
-      <div style="margin-top:14px">
-        <label class="field-label" style="display:block;margin-bottom:8px">Rate Sensitivity</label>
-        <div class="chips" id="grp-rate-pref">
-          <button type="button" class="chip" data-val="Only below 4%" onclick="toggleExcl(this,'grp-rate-pref')">Only below 4%</button>
-          <button type="button" class="chip" data-val="Up to 5%" onclick="toggleExcl(this,'grp-rate-pref')">Up to 5%</button>
-          <button type="button" class="chip on" data-val="Up to 6.5%" onclick="toggleExcl(this,'grp-rate-pref')">Up to 6.5%</button>
-          <button type="button" class="chip" data-val="Any rate if CF positive" onclick="toggleExcl(this,'grp-rate-pref')">Any rate if CF positive</button>
-        </div>
-      </div>
-      <div style="margin-top:14px">
-        <label class="field-label" style="display:block;margin-bottom:8px">Balloon Tolerance</label>
-        <div class="chips" id="grp-balloon">
-          <button type="button" class="chip on" data-val="No balloon" onclick="toggleExcl(this,'grp-balloon')">No balloon</button>
-          <button type="button" class="chip" data-val="Up to 5yr" onclick="toggleExcl(this,'grp-balloon')">Up to 5yr balloon</button>
-          <button type="button" class="chip" data-val="Up to 10yr" onclick="toggleExcl(this,'grp-balloon')">Up to 10yr balloon</button>
-          <button type="button" class="chip" data-val="Any" onclick="toggleExcl(this,'grp-balloon')">Any balloon OK</button>
-        </div>
-      </div>
-    </div>`;
+// ── RENDER STEP 3 ────────────────────────────────────────────────
+function renderStep3(){
+  var container = document.getElementById('s3-form');
+  if(!container) return;
+  var profiles = getSelectedProfiles();
 
+  if(profiles.length === 1){
+    _profile = profiles[0];
+    var titles = {'Cash Buyer':'Cash Buyer Criteria','Creative Finance Buyer':'Creative Finance Criteria','Lender':'Lending Parameters'};
+    var subs = {'Cash Buyer':'Set your financial parameters — we only send deals that fit.','Creative Finance Buyer':'Tell us your payment and cash flow thresholds.','Lender':'Tell us what you fund so we can match you to buyers.'};
+    document.getElementById('s3-title').textContent = titles[_profile] || 'Your Criteria';
+    document.getElementById('s3-sub').textContent = subs[_profile] || '';
+  } else {
+    _profile = profiles.join(', ');
+    document.getElementById('s3-title').textContent = 'Your Criteria (' + profiles.length + ' profiles)';
+    document.getElementById('s3-sub').textContent = "Fill in criteria for each profile — we'll set up separate buy boxes for each.";
+  }
+
+  var html = '';
+  if(profiles.indexOf('Cash Buyer') > -1) html += cashForm();
+  if(profiles.indexOf('Creative Finance Buyer') > -1) html += creativeForm();
+  if(profiles.indexOf('Lender') > -1) html += lenderForm();
+  container.innerHTML = html;
+}
 
 // ── STEP NAVIGATION ──────────────────────────────────────────────
-function goToStep(n){
-  if(n > _step) return; // can only go back
-  setStep(n);
-}
+function goToStep(n){ if(n > _step) return; setStep(n); }
 
 function nextStep(from){
   if(!validateStep(from)) return;
@@ -913,152 +779,142 @@ function nextStep(from){
   if(from + 1 === 5) buildReview();
 }
 
-function prevStep(from){
-  setStep(from - 1);
-}
+function prevStep(from){ setStep(from - 1); }
 
 function setStep(n){
   _step = n;
-  document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
-  const panel = document.getElementById('step-'+n);
+  document.querySelectorAll('.step-panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('step-'+n);
   if(panel){ panel.classList.add('active'); panel.scrollIntoView({behavior:'smooth',block:'start'}); }
 
-  // Progress indicators
-  for(let i=1;i<=5;i++){
-    const si = document.getElementById('si-'+i);
-    const sd = document.getElementById('sd-'+i);
+  for(var i=1; i<=5; i++){
+    var si = document.getElementById('si-'+i);
+    var sd = document.getElementById('sd-'+i);
     if(!si||!sd) continue;
     si.classList.remove('active','done');
     if(i < n){ si.classList.add('done'); sd.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'; }
     else if(i === n){ si.classList.add('active'); sd.textContent=i; }
     else { sd.textContent=i; }
-    const sc = document.getElementById('sc-'+i);
+    var sc = document.getElementById('sc-'+i);
     if(sc) sc.classList.toggle('done', i < n);
   }
   document.getElementById('progress-fill').style.width = (n/5*100)+'%';
 }
 
 function validateStep(step){
-  let ok = true;
+  var ok = true;
   if(step === 1){
-    const fname = document.getElementById('bc-fname').value.trim();
-    const phone = document.getElementById('bc-phone').value.trim();
-    const email = document.getElementById('bc-email').value.trim();
-    const errF = document.getElementById('err-fname');
-    const errP = document.getElementById('err-phone');
-    const errE = document.getElementById('err-email');
-    errF.classList.toggle('show', !fname);
-    errP.classList.toggle('show', !phone);
-    errE.classList.toggle('show', !email);
+    var fname = document.getElementById('bc-fname').value.trim();
+    var phone = document.getElementById('bc-phone').value.trim();
+    var email = document.getElementById('bc-email').value.trim();
+    document.getElementById('err-fname').classList.toggle('show', !fname);
+    document.getElementById('err-phone').classList.toggle('show', !phone);
+    document.getElementById('err-email').classList.toggle('show', !email);
     if(!fname||!phone||!email) ok = false;
   }
   return ok;
 }
 
-// ── REVIEW PANEL ─────────────────────────────────────────────────
+// ── REVIEW ───────────────────────────────────────────────────────
 function buildReview(){
-  const card = document.getElementById('review-card');
-  const rows = [
+  var card = document.getElementById('review-card');
+  var profiles = getSelectedProfiles();
+  var rows = [
     ['Name', (document.getElementById('bc-fname').value+' '+document.getElementById('bc-lname').value).trim()],
     ['Phone', document.getElementById('bc-phone').value],
     ['Email', document.getElementById('bc-email').value],
-    ['Profile', _profile],
+    ['Profile(s)', profiles.join(', ')],
     ['Asset Types', getChips('grp-asset-types').join(', ')||'—'],
     ['Exit Strategies', getChips('grp-exits').join(', ')||'—'],
     ['Target Markets', document.getElementById('bc-markets').value||'—'],
-    ['Close Timeline', document.getElementById('bc-timeline').value||'—'],
   ];
-  if(_profile==='Cash Buyer'){
-    const mp=document.getElementById('bc-max-price');const mr=document.getElementById('bc-max-repair');const ma=document.getElementById('bc-min-arv');const as=document.getElementById('bc-arv-spread');const cc=document.getElementById('bc-min-coc');
-    if(mp&&mp.value) rows.push(['Max Price','$'+Number(mp.value).toLocaleString()]);
-    if(mr&&mr.value) rows.push(['Max Repair','$'+Number(mr.value).toLocaleString()]);
-    if(ma&&ma.value) rows.push(['Min ARV','$'+Number(ma.value).toLocaleString()]);
-    if(as&&as.value) rows.push(['ARV Spread',as.value+'% below ARV']);
-    if(cc&&cc.value) rows.push(['Min CoC',cc.value+'%']);
-  } else if(_profile==='Creative Finance Buyer'){
-    const me=document.getElementById('bc-max-entry');const mp=document.getElementById('bc-max-pmt');const cf=document.getElementById('bc-min-cf');const mr=document.getElementById('bc-max-rate');const cc=document.getElementById('bc-min-coc');const st=document.getElementById('grp-structures');
-    rows.push(['Structures', getChips('grp-structures').join(', ')||'—']);
-    if(me&&me.value) rows.push(['Max Entry','$'+Number(me.value).toLocaleString()]);
-    if(mp&&mp.value) rows.push(['Max PITI','$'+Number(mp.value).toLocaleString()+'/mo']);
-    if(cf&&cf.value) rows.push(['Min Cash Flow','$'+Number(cf.value).toLocaleString()+'/mo']);
-    if(mr&&mr.value) rows.push(['Max Rate',mr.value+'%']);
-    if(cc&&cc.value) rows.push(['Min CoC',cc.value+'%']);
-  } else {
-    rows.push(['Loan Types', getChips('grp-loan-types').join(', ')||'—']);
-    const ll=document.getElementById('bc-loan-min');const lx=document.getElementById('bc-loan-max');const ltv=document.getElementById('bc-max-ltv');
-    if(ll&&ll.value) rows.push(['Min Loan','$'+Number(ll.value).toLocaleString()]);
-    if(lx&&lx.value) rows.push(['Max Loan','$'+Number(lx.value).toLocaleString()]);
-    if(ltv&&ltv.value) rows.push(['Max LTV',ltv.value+'%']);
+
+  function v(id){ var el=document.getElementById(id); return el&&el.value.trim()?el.value.trim():''; }
+  if(profiles.indexOf('Cash Buyer') > -1){
+    if(v('bc-max-price')) rows.push(['Max Price', '$'+Number(v('bc-max-price')).toLocaleString()]);
+    if(v('bc-min-coc')) rows.push(['Min CoC', v('bc-min-coc')+'%']);
+    if(v('bc-arv-spread')) rows.push(['ARV Spread', v('bc-arv-spread')+'% below ARV']);
   }
+  if(profiles.indexOf('Creative Finance Buyer') > -1){
+    rows.push(['Structures', getChips('grp-structures').join(', ')||'—']);
+    if(v('bc-max-entry')) rows.push(['Max Entry', '$'+Number(v('bc-max-entry')).toLocaleString()]);
+    if(v('bc-max-pmt')) rows.push(['Max PITI', '$'+Number(v('bc-max-pmt')).toLocaleString()+'/mo']);
+    if(v('bc-min-cf')) rows.push(['Min CF', '$'+Number(v('bc-min-cf')).toLocaleString()+'/mo']);
+  }
+  if(profiles.indexOf('Lender') > -1){
+    rows.push(['Loan Types', getChips('grp-loan-types').join(', ')||'—']);
+    if(v('bc-loan-max')) rows.push(['Max Loan', '$'+Number(v('bc-loan-max')).toLocaleString()]);
+  }
+
   card.innerHTML = '<div class="card-title">Your Buying Criteria Summary</div>'
-    + rows.map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:13px"><span style="color:var(--text-light);font-weight:500">${l}</span><span style="color:var(--text);font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('');
+    + rows.map(function(r){
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EDF2F7;font-size:13px">'
+          +'<span style="color:#718096;font-weight:500">'+r[0]+'</span>'
+          +'<span style="color:#0D1F3C;font-weight:600;text-align:right;max-width:60%">'+r[1]+'</span></div>';
+      }).join('');
 }
 
 // ── SUBMIT ───────────────────────────────────────────────────────
 async function submitForm(){
-  const agreed = document.getElementById('bc-agree').checked;
+  var agreed = document.getElementById('bc-agree').checked;
   document.getElementById('err-agree').classList.toggle('show', !agreed);
   if(!agreed) return;
 
-  const btn = document.getElementById('bc-submit-btn');
+  var btn = document.getElementById('bc-submit-btn');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .7s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving your criteria…';
+  btn.textContent = 'Saving your criteria…';
 
-  const fn    = document.getElementById('bc-fname').value.trim();
-  const ln    = document.getElementById('bc-lname').value.trim();
-  const phone = document.getElementById('bc-phone').value.trim();
-  const email = document.getElementById('bc-email').value.trim();
-  const entity= document.getElementById('bc-entity').value.trim();
-  const profiles = getSelectedProfiles();
+  var fn    = document.getElementById('bc-fname').value.trim();
+  var ln    = document.getElementById('bc-lname').value.trim();
+  var phone = document.getElementById('bc-phone').value.trim();
+  var email = document.getElementById('bc-email').value.trim();
+  var entity= document.getElementById('bc-entity').value.trim();
+  var profiles = getSelectedProfiles();
 
-  // Helper — safe get input value
-  function v(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+  function v(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
 
-  // Build combined tags from all selected profiles
-  const profileTags = ['tfs buyer','vip signup','buy box complete','website lead'];
-  if(profiles.includes('Cash Buyer'))             profileTags.push('cash buyer');
-  if(profiles.includes('Creative Finance Buyer')) profileTags.push('creative buyer');
-  if(profiles.includes('Lender'))                 profileTags.push('tfs lender');
+  var profileTags = ['tfs buyer','vip signup','buy box complete','website lead'];
+  if(profiles.indexOf('Cash Buyer') > -1)             profileTags.push('cash buyer');
+  if(profiles.indexOf('Creative Finance Buyer') > -1) profileTags.push('creative buyer');
+  if(profiles.indexOf('Lender') > -1)                 profileTags.push('tfs lender');
 
-  // Determine combined deal_structure
-  const structures = [];
-  if(profiles.includes('Cash Buyer'))             structures.push('Cash');
-  if(profiles.includes('Creative Finance Buyer')){ const s=getChips('grp-structures'); if(s.length) structures.push(...s); else structures.push('Creative Finance'); }
-  if(profiles.includes('Lender'))                 structures.push('Lender');
+  var structures = [];
+  if(profiles.indexOf('Cash Buyer') > -1)             structures.push('Cash');
+  if(profiles.indexOf('Creative Finance Buyer') > -1){ var s=getChips('grp-structures'); structures.push(s.length?s.join(', '):'Creative Finance'); }
+  if(profiles.indexOf('Lender') > -1)                 structures.push('Lender');
 
-  const payload = Object.assign({
-    firstName: fn, lastName: ln, email, phone,
+  var payload = Object.assign({
+    firstName: fn, lastName: ln, email: email, phone: phone,
     company: entity,
     preferred_contact: getExcl('grp-contact-pref'),
     buyer_profile_type: profiles.join(', '),
-    property_types:  getChips('grp-asset-types').join(', '),
-    buyer_asset_type: getChips('grp-asset-types').join(', '),
-    exits:           getChips('grp-exits').join(', '),
-    deal_structure:  structures.join(', '),
-    target_zips:     v('bc-markets'),
-    bb_min_sqft:     v('bc-min-sqft'),
-    bb_max_sqft:     v('bc-max-sqft'),
-    bb_min_beds:     v('bc-min-beds'),
-    bb_year_built_min: v('bc-year-built'),
-    bb_max_hoa:      v('bc-max-hoa'),
-    close_timeline:  v('bc-timeline'),
-    bb_occupancy_pref: getExcl('grp-occupancy'),
-    sms_opt_in:      getExcl('grp-sms-opt'),
-    email_opt_in:    getExcl('grp-email-opt'),
-    alert_frequency: getExcl('grp-alert-freq'),
-    weekly_alert_opt_in: 'true',
-    buy_box_complete: 'true',
-    buy_box_updated:  new Date().toISOString().split('T')[0],
-    lead_source:     'Buying Criteria Form',
-    source:          'TFS - Buying Criteria Page',
-    pipeline_name:   'Buyer Inquiries',
-    pipeline_stage:  'New Lead',
-    tags:            profileTags,
-    notes:           v('bc-notes'),
+    property_types:     getChips('grp-asset-types').join(', '),
+    buyer_asset_type:   getChips('grp-asset-types').join(', '),
+    exits:              getChips('grp-exits').join(', '),
+    deal_structure:     structures.join(', '),
+    target_zips:        v('bc-markets'),
+    bb_min_sqft:        v('bc-min-sqft'),
+    bb_max_sqft:        v('bc-max-sqft'),
+    bb_min_beds:        v('bc-min-beds'),
+    bb_year_built_min:  v('bc-year-built'),
+    bb_max_hoa:         v('bc-max-hoa'),
+    close_timeline:     v('bc-timeline'),
+    bb_occupancy_pref:  getExcl('grp-occupancy'),
+    sms_opt_in:         getExcl('grp-sms-opt'),
+    email_opt_in:       getExcl('grp-email-opt'),
+    alert_frequency:    getExcl('grp-alert-freq'),
+    weekly_alert_opt_in:'true',
+    buy_box_complete:   'true',
+    buy_box_updated:    new Date().toISOString().split('T')[0],
+    lead_source:        'Buying Criteria Form',
+    source:             'TFS - Buying Criteria Page',
+    pipeline_name:      'Buyer Inquiries',
+    pipeline_stage:     'New Lead',
+    tags:               profileTags,
+    notes:              v('bc-notes'),
   }, getUTMs());
 
-  // Cash buyer fields
-  if(profiles.includes('Cash Buyer')){
+  if(profiles.indexOf('Cash Buyer') > -1){
     Object.assign(payload,{
       cash_max_price:    v('bc-max-price'),
       cash_max_repair:   v('bc-max-repair'),
@@ -1070,9 +926,7 @@ async function submitForm(){
       financing_method:  v('bc-financing'),
     });
   }
-
-  // Creative buyer fields
-  if(profiles.includes('Creative Finance Buyer')){
+  if(profiles.indexOf('Creative Finance Buyer') > -1){
     Object.assign(payload,{
       creative_structures:  getChips('grp-structures').join(', '),
       creative_max_entry:   v('bc-max-entry'),
@@ -1085,9 +939,7 @@ async function submitForm(){
       bb_min_coc:           v('bc-coc-creative') || v('bc-min-coc'),
     });
   }
-
-  // Lender fields
-  if(profiles.includes('Lender')){
+  if(profiles.indexOf('Lender') > -1){
     Object.assign(payload,{
       lender_loan_types:  getChips('grp-loan-types').join(', '),
       lender_loan_min:    v('bc-loan-min'),
@@ -1101,65 +953,48 @@ async function submitForm(){
     });
   }
 
-  // Fire webhook — treat any response (including non-2xx) as success
-  // GHL webhooks return 200 but sometimes trigger CORS preflight issues
   try {
     await fetch(GHL_SIGNUP_WEBHOOK, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(payload)
     });
-  } catch(e) {
-    // Network error only — still proceed to show success
-    console.warn('Webhook fetch error (non-blocking):', e);
-  }
+  } catch(e){ console.warn('Webhook error (non-blocking):', e); }
 
-  // Fire inquiry webhook if deal_id in URL
-  const params = new URLSearchParams(window.location.search);
+  var params = new URLSearchParams(window.location.search);
   if(params.get('deal_id')){
     try {
       await fetch(GHL_INQUIRY_WEBHOOK, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(Object.assign({}, payload, {
-          deal_id: params.get('deal_id'),
-          source: 'TFS - Buying Criteria + Deal Inquiry'
-        }))
+        body: JSON.stringify(Object.assign({}, payload, {deal_id: params.get('deal_id'), source:'TFS - Buying Criteria + Deal Inquiry'}))
       });
-    } catch(e){ console.warn('Inquiry webhook error:', e); }
+    } catch(e){}
   }
 
-  // Save to localStorage
   try{
-    localStorage.setItem('tfs_buyer', JSON.stringify({
-      name:fn, email, phone, initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()
-    }));
-    // Save each profile's buy box separately
+    localStorage.setItem('tfs_buyer', JSON.stringify({name:fn, email:email, phone:phone, initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()}));
     profiles.forEach(function(p){
-      const key = 'tfs_bb__'+(p==='Cash Buyer'?'cash':p==='Lender'?'lender':'creative')+'__sf';
-      const d = Object.assign({profile:p, updatedAt:new Date().toISOString()}, payload);
-      localStorage.setItem(key, JSON.stringify(d));
+      var key = 'tfs_bb__'+(p==='Cash Buyer'?'cash':p==='Lender'?'lender':'creative')+'__sf';
+      localStorage.setItem(key, JSON.stringify(Object.assign({profile:p, updatedAt:new Date().toISOString()}, payload)));
     });
   } catch(e){}
 
-  // Always show success
-  const mainEl = document.querySelector('.main');
-  const successEl = document.getElementById('success-panel');
+  var mainEl = document.querySelector('.main');
+  var successEl = document.getElementById('success-panel');
   mainEl.innerHTML = '';
-  successEl.classList.add('show');
   successEl.style.display = 'block';
   mainEl.appendChild(successEl);
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-
-// Init step 3 on load
+// Init
 renderStep3();
 
-// CSS keyframe for spinner
-const style = document.createElement('style');
-style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
-document.head.appendChild(style);
+// Spinner keyframe
+var s = document.createElement('style');
+s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(s);
 </script>
 </body>
 </html>
