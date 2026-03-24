@@ -579,4 +579,9 @@ async function init(){
     const raw=rows.find(r=>String(r['Deal ID'])===String(id));
     if(!raw){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
     renderDeal(parse(raw),allDeals);
-  }catch(e){console.error(e);document.getElementById(
+  }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
+}
+init();
+</script>
+</body>
+</html>
