@@ -77,13 +77,16 @@ html{scroll-behavior:smooth}
 body{font-family:var(--font);color:var(--text);overflow-x:hidden;background:var(--white);-webkit-font-smoothing:antialiased}
 
 /* ── WHOLESALER TOPBAR ───────────────────── */
-.topbar{position:fixed;top:0;left:0;right:0;z-index:501;height:36px;background:var(--navy);display:flex;align-items:center;justify-content:center;gap:16px}
-.topbar-text{font-size:12px;color:rgba(255,255,255,.65);font-weight:500}
-.topbar-text strong{color:rgba(255,255,255,.9)}
-.topbar-cta{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:var(--orange);color:#fff;border-radius:50px;font-size:11px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:501;height:36px;background:var(--navy);display:flex;align-items:center;justify-content:center;gap:14px;padding:0 20px}
+.topbar-text{font-size:12px;color:rgba(255,255,255,.55);font-weight:500;white-space:nowrap}
+.topbar-divider{width:1px;height:14px;background:rgba(255,255,255,.15);flex-shrink:0}
+.topbar-cta{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:var(--orange);color:#fff;border-radius:50px;font-size:11px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap;flex-shrink:0}
 .topbar-cta:hover{background:var(--orange-dark)}
+.topbar-cta-blue{background:var(--blue)}
+.topbar-cta-blue:hover{background:var(--blue-dark)}
 .topbar-cta svg{flex-shrink:0}
-.topbar-divider{width:1px;height:14px;background:rgba(255,255,255,.15)}
+.topbar-label{font-size:10px;opacity:.7;font-weight:500;display:block;line-height:1.1}
+.topbar-name{font-size:11px;font-weight:800;display:block;line-height:1.2}
 
 /* ── NAV ────────────────────────────────── */
 nav{position:fixed;top:36px;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;padding:0 55px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06);transition:box-shadow .3s}
@@ -434,11 +437,16 @@ footer{background:var(--navy);padding:52px 55px 0}
 
 <!-- WHOLESALER TOPBAR -->
 <div class="topbar">
-  <span class="topbar-text">Are you a <strong>wholesaler or JV partner?</strong></span>
+  <span class="topbar-text">Wholesalers →</span>
   <div class="topbar-divider"></div>
-  <a href="/acquisition-assist.html" class="topbar-cta">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
-    Submit a Deal
+  <a href="/acquisition-assist.html" class="topbar-cta topbar-cta-blue">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span><span class="topbar-label">No contract yet?</span><span class="topbar-name">Acquisition Assist</span></span>
+  </a>
+  <div class="topbar-divider"></div>
+  <a href="/dispo-submit.html" class="topbar-cta">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+    <span><span class="topbar-label">Have a contract?</span><span class="topbar-name">Dispo Buddy</span></span>
   </a>
 </div>
 
@@ -449,7 +457,7 @@ footer{background:var(--navy);padding:52px 55px 0}
     <a href="https://dispobuddy.com" target="_blank">Sell Your Deal</a>
     <a href="/buying-criteria.html">Get Deal Alerts</a>
     <a href="/map.html" target="_blank" style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Deal Map</a>
-    <a href="/cdn-cgi/l/email-protection#4c3f393c3c233e380c38293e213f2a233e3f2d2029622f2321">Help</a>
+    <a href="/cdn-cgi/l/email-protection#7605030606190402360213041b0510190405171a135815191b">Help</a>
   </div>
   <div class="nav-right" id="nav-right">
     <div id="tfs-buybox-container"></div>
@@ -818,7 +826,7 @@ footer{background:var(--navy);padding:52px 55px 0}
         <div class="footer-brand-sub">By subscribing, you agree to receive marketing emails and accept our Privacy Policy.</div>
       </div>
       <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="/">Active Deals</a></li><li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li><li><a href="https://calendar.app.google/DXJoTQwDpGhCjicu6" target="_blank">Book a Call</a></li></ul></div>
-      <div class="footer-col"><h4>Contact</h4><ul><li><a href="/cdn-cgi/l/email-protection#c8a1a6aea788bcadbaa5bbaea7babba9a4ade6aba7a5"><span class="__cf_email__" data-cfemail="11787f777e516574637c62777e6362707d743f727e7c">[email&#160;protected]</span></a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
+      <div class="footer-col"><h4>Contact</h4><ul><li><a href="/cdn-cgi/l/email-protection#4e272028210e3a2b3c233d28213c3d2f222b602d2123"><span class="__cf_email__" data-cfemail="5b32353d341b2f3e2936283d3429283a373e75383436">[email&#160;protected]</span></a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
       <div class="footer-col"><h4>Social Media</h4><ul><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">X / Twitter</a></li></ul></div>
     </div>
     <div class="footer-bottom"><span>&copy; 2025 Deal Pros LLC. All Rights Reserved.</span><div class="footer-links"><a href="#">Privacy</a><a href="#">Cookie Policy</a><a href="#">Terms</a></div></div>
