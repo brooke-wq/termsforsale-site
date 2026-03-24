@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submit Your Deal — Dispo Buddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--blue-mid:#d0eef9;
+  --orange:#F7941D;--orange-dark:#d97c0e;
+  --green:#22c55e;--green-dark:#16a34a;--green-light:#dcfce7;
+  --white:#fff;--bg:#0D1F3C;--bg-card:#132848;--bg-light:#F7FAFC;
+  --text:#fff;--text-mid:rgba(255,255,255,.7);--text-light:rgba(255,255,255,.45);
+  --border:rgba(255,255,255,.12);--border-light:rgba(255,255,255,.07);
+  --red:#ef4444;--red-light:rgba(239,68,68,.1);
+  --r:10px;--r-lg:14px;--font:'Poppins',sans-serif;
+}
+body{background:var(--navy);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* NAV */
+nav{background:rgba(13,31,60,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:200}
+.nav-logo img{height:40px;width:auto}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-link{color:var(--text-mid);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s}
+.nav-link:hover{color:var(--white)}
+.btn-nav{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;border:none}
+.btn-nav-outline{background:transparent;color:var(--blue);border:1.5px solid rgba(41,171,226,.4)}
+.btn-nav-outline:hover{border-color:var(--blue);background:rgba(41,171,226,.08)}
+.btn-nav-primary{background:var(--orange);color:var(--white)}
+.btn-nav-primary:hover{background:var(--orange-dark)}
+
+/* HERO */
+.hero{padding:52px 48px 44px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(41,171,226,.08) 0%,transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:var(--green);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin-bottom:18px}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
+.hero h1{font-size:38px;font-weight:900;color:var(--white);line-height:1.1;letter-spacing:-1px;margin-bottom:12px}
+.hero h1 span{color:var(--orange)}
+.hero p{font-size:14px;color:var(--text-mid);max-width:480px;margin:0 auto 24px}
+.hero-requirements{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:680px;margin:0 auto}
+.req-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-mid);font-weight:500}
+.req-item svg{color:var(--orange);flex-shrink:0}
+
+/* PROGRESS */
+.progress-wrap{background:rgba(10,24,40,.8);border-bottom:1px solid var(--border);padding:18px 48px;position:sticky;top:68px;z-index:100;backdrop-filter:blur(12px)}
+.progress-inner{max-width:780px;margin:0 auto}
+.progress-steps{display:flex;align-items:center}
+.progress-step{display:flex;align-items:center;flex:1;gap:8px}
+.progress-step:last-child{flex:none}
+.step-num{width:28px;height:28px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s}
+.step-label{font-size:11px;font-weight:600;white-space:nowrap;transition:color .25s}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 8px;transition:background .25s}
+.progress-step.done .step-num{background:var(--green);color:var(--white)}
+.progress-step.done .step-label{color:var(--green)}
+.progress-step.done+.step-line,.step-line.done{background:var(--green)}
+.progress-step.active .step-num{background:var(--orange);color:var(--white);box-shadow:0 0 0 3px rgba(247,148,29,.25)}
+.progress-step.active .step-label{color:var(--orange)}
+.progress-step.pending .step-num{background:rgba(255,255,255,.1);color:var(--text-light)}
+.progress-step.pending .step-label{color:var(--text-light)}
+.progress-bar-wrap{margin-top:10px;height:2px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--orange));border-radius:4px;transition:width .4s ease}
+
+/* MAIN */
+.form-wrap{max-width:780px;margin:32px auto 80px;padding:0 48px}
+
+/* STEP */
+.step-panel{display:none;animation:fadeUp .3s ease}
+.step-panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.section-card{background:var(--bg-card);border-radius:var(--r-lg);border:1px solid var(--border);margin-bottom:16px;overflow:hidden}
+.section-head{padding:18px 24px 14px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:12px}
+.section-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.section-icon.orange{background:rgba(247,148,29,.15)}
+.section-icon.blue{background:rgba(41,171,226,.15)}
+.section-icon.green{background:rgba(34,197,94,.15)}
+.section-title{font-size:14px;font-weight:700;color:var(--white)}
+.section-sub{font-size:12px;color:var(--text-light)}
+.section-body{padding:20px 24px}
+.step-counter{margin-left:auto;font-size:11px;color:var(--text-light);font-weight:500}
+
+/* FIELDS */
+.field-grid{display:grid;gap:14px}
+.cols-2{grid-template-columns:1fr 1fr}
+.cols-3{grid-template-columns:1fr 1fr 1fr}
+.field-group{display:flex;flex-direction:column;gap:5px}
+.field-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.7)}
+.field-label .req{color:var(--orange);margin-left:2px}
+.field-hint{font-size:11px;color:var(--text-light);margin-top:2px}
+.fi{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--white);background:rgba(255,255,255,.05);outline:none;transition:border .2s,background .2s;width:100%}
+.fi:focus{border-color:var(--orange);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(247,148,29,.1)}
+.fi::placeholder{color:rgba(255,255,255,.25)}
+.fi option{background:var(--navy3);color:var(--white)}
+.fi-select{padding-right:32px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;cursor:pointer}
+.fi-textarea{resize:vertical;min-height:80px}
+.fi-currency{position:relative}
+.fi-currency::before{content:'$';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.35);font-size:13px;font-weight:600;pointer-events:none}
+.fi-currency .fi{padding-left:26px}
+.fi.error{border-color:var(--red);background:var(--red-light)}
+.field-err{font-size:11px;color:var(--red);margin-top:3px;display:none}
+.field-err.show{display:block}
+
+/* DEAL TYPE CARDS */
+.deal-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px}
+.deal-card{border:1.5px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.03);text-align:left}
+.deal-card:hover{border-color:rgba(247,148,29,.4);background:rgba(247,148,29,.05)}
+.deal-card.selected{border-color:var(--orange);background:rgba(247,148,29,.1);box-shadow:0 0 0 3px rgba(247,148,29,.1)}
+.deal-card .dc-icon{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;margin-bottom:8px;transition:background .2s}
+.deal-card.selected .dc-icon{background:var(--orange)}
+.deal-card .dc-name{font-size:12px;font-weight:700;color:var(--white);margin-bottom:2px}
+.deal-card .dc-desc{font-size:10px;color:var(--text-light);line-height:1.4}
+
+/* RADIO OPTIONS */
+.radio-group{display:flex;gap:8px;flex-wrap:wrap}
+.radio-opt{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--border);border-radius:50px;cursor:pointer;transition:all .15s;font-size:12px;font-weight:600;color:var(--text-mid)}
+.radio-opt:hover{border-color:var(--orange);color:var(--white)}
+.radio-opt input{display:none}
+.radio-opt.checked{background:var(--orange);border-color:var(--orange);color:var(--white)}
+
+/* CONDITIONAL BLOCKS */
+.cond-block{display:none;border-left:3px solid var(--orange);border-radius:0 var(--r) var(--r) 0;padding:16px 20px;background:rgba(247,148,29,.05);margin-top:12px}
+.cond-block.sf{border-color:var(--blue);background:rgba(41,171,226,.05)}
+.cond-block.active{display:block;animation:fadeUp .25s ease}
+.cond-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:6px;color:var(--orange)}
+.cond-label.blue{color:var(--blue)}
+
+/* CHECKLIST CARD */
+.checklist-card{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px 20px;margin-bottom:20px}
+.checklist-title{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.checklist-items{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.checklist-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-mid)}
+.checklist-item svg{color:var(--green);flex-shrink:0}
+
+/* ERROR BANNER */
+.error-banner{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fca5a5;display:none;align-items:center;gap:8px}
+.error-banner.show{display:flex}
+
+/* REVIEW */
+.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.review-item{background:rgba(255,255,255,.04);border-radius:8px;padding:11px 14px;border:1px solid var(--border-light)}
+.review-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.review-value{font-size:13px;font-weight:600;color:var(--white)}
+.review-value.empty{color:rgba(255,255,255,.2);font-style:italic;font-weight:400}
+.review-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-light);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border-light)}
+
+/* CONSENT */
+.consent-wrap{background:rgba(41,171,226,.07);border:1.5px solid rgba(41,171,226,.2);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:border .2s;margin-top:16px}
+.consent-wrap:has(input:checked){border-color:var(--blue)}
+.consent-inner{display:flex;gap:10px}
+.consent-inner input{width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:var(--blue);margin-top:2px}
+.consent-text{font-size:12px;color:var(--text-mid);line-height:1.6}
+
+/* DIVIDER */
+.sub-divider{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-light);padding:6px 0 4px;border-bottom:1px solid var(--border-light);margin:16px 0 0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 24px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;border:none;white-space:nowrap}
+.btn-ghost{background:transparent;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:rgba(255,255,255,.3);color:var(--white)}
+.btn-primary{background:var(--orange);color:var(--white);padding:12px 32px}
+.btn-primary:hover{background:var(--orange-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(247,148,29,.3)}
+.btn-submit{background:linear-gradient(135deg,var(--green),var(--green-dark));color:var(--white);padding:14px 40px;font-size:14px}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,197,94,.35)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-back{color:var(--text-light);background:none;border:none;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;font-family:var(--font);transition:color .15s}
+.btn-back:hover{color:var(--white)}
+
+/* NAV ROW */
+.step-nav{display:flex;align-items:center;justify-content:space-between;margin-top:24px;padding-top:20px;border-top:1px solid var(--border-light)}
+
+/* SUCCESS */
+.success-wrap{text-align:center;padding:64px 40px;display:none}
+.success-wrap.show{display:block;animation:fadeUp .4s ease}
+.success-icon{width:76px;height:76px;background:rgba(34,197,94,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;border:2px solid rgba(34,197,94,.3)}
+.success-wrap h2{font-size:30px;font-weight:900;color:var(--white);margin-bottom:10px}
+.success-wrap p{font-size:14px;color:var(--text-mid);max-width:440px;margin:0 auto 28px;line-height:1.7}
+.next-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:680px;margin:0 auto 32px;text-align:left}
+.ns-item{background:var(--bg-card);border-radius:var(--r);padding:14px;border:1px solid var(--border)}
+.ns-num{font-size:20px;font-weight:900;color:rgba(247,148,29,.4);margin-bottom:4px}
+.ns-text{font-size:11px;color:var(--text-mid);line-height:1.5}
+
+/* FIRST DEAL NOTICE */
+.first-deal-notice{background:rgba(247,148,29,.08);border:1px solid rgba(247,148,29,.2);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:12px;color:rgba(247,148,29,.9);line-height:1.6;display:none}
+.first-deal-notice.show{display:block}
+
+/* FOOTER */
+footer{background:var(--navy2);border-top:1px solid var(--border);padding:24px 48px}
+.footer-inner{max-width:780px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-links{display:flex;gap:16px}
+.footer-links a{font-size:12px;color:var(--text-light);text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:var(--text-mid)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  nav{padding:0 16px}
+  .hero{padding:32px 16px}
+  .hero h1{font-size:26px}
+  .form-wrap{padding:0 16px;margin-top:20px}
+  .progress-wrap{padding:12px 16px}
+  .cols-2,.cols-3{grid-template-columns:1fr}
+  .deal-type-grid{grid-template-columns:1fr 1fr}
+  .review-grid{grid-template-columns:1fr}
+  .next-steps{grid-template-columns:1fr 1fr}
+  .step-label{display:none}
+  footer{padding:20px 16px}
+}
+@media(max-width:480px){
+  .deal-type-grid{grid-template-columns:1fr}
+  .next-steps{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="https://dispobuddy.com">
+    <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy" class="nav-logo">
+  </a>
+  <div class="nav-right">
+    <a href="https://dispobuddy.com/process" class="nav-link">How It Works</a>
+    <a href="https://dispobuddy.com/buyers-list" class="nav-link btn-nav btn-nav-outline">Join Buyers List</a>
+    <a href="https://deals.termsforsale.com" class="nav-link btn-nav btn-nav-primary" target="_blank">Browse Deals</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">
+    <div class="dot"></div>
+    50/50 Split · No Upfront Fees · 24–48hr Review
+  </div>
+  <h1>Submit Your <span>Deal.</span><br>We'll Find the Buyer.</h1>
+  <p>You locked it up. We dispo it. Submit your contract below and our team reviews within 24–48 hours.</p>
+  <div class="hero-requirements">
+    <div class="req-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Executed purchase agreement</div>
+    <div class="req-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Property photos</div>
+    <div class="req-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Access instructions</div>
+    <div class="req-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Direct to seller — no daisy chains</div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-inner">
+    <div class="progress-steps" id="progressSteps">
+      <div class="progress-step active" data-step="1">
+        <div class="step-num">1</div>
+        <div class="step-label">About You</div>
+      </div>
+      <div class="step-line" id="line-1"></div>
+      <div class="progress-step pending" data-step="2">
+        <div class="step-num">2</div>
+        <div class="step-label">The Property</div>
+      </div>
+      <div class="step-line" id="line-2"></div>
+      <div class="progress-step pending" data-step="3">
+        <div class="step-num">3</div>
+        <div class="step-label">Deal & Numbers</div>
+      </div>
+      <div class="step-line" id="line-3"></div>
+      <div class="progress-step pending" data-step="4">
+        <div class="step-num">4</div>
+        <div class="step-label">Review & Submit</div>
+      </div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:25%"></div></div>
+  </div>
+</div>
+
+<!-- FORM WRAP -->
+<div class="form-wrap" id="formWrap">
+
+  <!-- SUCCESS -->
+  <div class="success-wrap" id="successWrap">
+    <div class="success-icon">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Deal Submitted! 🤝</h2>
+    <p>We've received your submission. Our team reviews within 24–48 hours. If it's a fit, we'll send over a JV agreement and start moving the deal.</p>
+    <div class="next-steps">
+      <div class="ns-item"><div class="ns-num">01</div><div class="ns-text">Team reviews & underwrites your deal within 24–48 hrs</div></div>
+      <div class="ns-item"><div class="ns-num">02</div><div class="ns-text">If accepted, you'll receive a simple non-exclusive JV agreement</div></div>
+      <div class="ns-item"><div class="ns-num">03</div><div class="ns-text">We handle buyer outreach, offers & transaction coordination</div></div>
+      <div class="ns-item"><div class="ns-num">04</div><div class="ns-text">Assignment fee split 50/50 at close — you get paid from title</div></div>
+    </div>
+    <a href="https://dispobuddy.com" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:var(--orange);color:white;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">← Back to Dispo Buddy</a>
+    <button onclick="resetForm()" style="display:block;margin:12px auto 0;background:none;border:none;color:var(--text-light);font-size:12px;cursor:pointer;font-family:var(--font)">Submit another deal</button>
+  </div>
+
+  <!-- ===================== STEP 1: ABOUT YOU ===================== -->
+  <div class="step-panel active" id="step1">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon orange">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <div class="section-title">About You</div>
+          <div class="section-sub">Your contact info as the JV partner</div>
+        </div>
+        <span class="step-counter">Step 1 of 4</span>
+      </div>
+      <div class="section-body">
+        <div class="error-banner" id="err1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="err1text">Please fill in all required fields.</span></div>
+
+        <div class="field-grid cols-2">
+          <div class="field-group" style="grid-column:1/-1">
+            <label class="field-label">Full Name <span class="req">*</span></label>
+            <input class="fi" type="text" id="jvName" placeholder="Jane Smith" autocomplete="name">
+            <div class="field-err" id="name-err">Required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Phone Number <span class="req">*</span></label>
+            <input class="fi" type="tel" id="jvPhone" placeholder="(555) 000-0000" autocomplete="tel">
+            <div class="field-err" id="phone-err">Required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Email Address <span class="req">*</span></label>
+            <input class="fi" type="email" id="jvEmail" placeholder="jane@yourco.com" autocomplete="email">
+            <div class="field-err" id="email-err">Valid email required</div>
+          </div>
+        </div>
+
+        <div class="sub-divider" style="margin-top:20px;margin-bottom:14px">Your Relationship to This Deal</div>
+
+        <div class="field-group" style="margin-bottom:14px">
+          <label class="field-label">Do you have the property under contract? <span class="req">*</span></label>
+          <select class="fi fi-select" id="underContract" onchange="handleContractChange(this.value)">
+            <option value="">Select one</option>
+            <option value="Yes - direct to seller/agent">Yes — direct to seller / agent</option>
+            <option value="Yes - JV Agreement with direct wholesaler">Yes — JV agreement with direct wholesaler</option>
+            <option value="No">No — not yet under contract</option>
+          </select>
+          <div class="field-err" id="contract-err">Required</div>
+        </div>
+
+        <div id="notUnderContractWarn" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:12px 16px;font-size:12px;color:#fca5a5;line-height:1.6">
+          ⚠️ Dispo Buddy only reviews deals that are under contract. If you have a lead that isn't locked up yet, submit it through <a href="/acquisition-assist.html" style="color:var(--orange);font-weight:600">Acquisition Assist</a> instead.
+        </div>
+
+        <div class="field-grid cols-2" style="margin-top:14px">
+          <div class="field-group">
+            <label class="field-label">Is this your first deal with Dispo Buddy? <span class="req">*</span></label>
+            <div class="radio-group" id="firstDealGroup">
+              <label class="radio-opt" onclick="selectRadio(this,'firstDealGroup','firstDeal')" data-val="Yes">
+                <input type="radio" name="firstDeal" value="Yes">Yes, first time
+              </label>
+              <label class="radio-opt" onclick="selectRadio(this,'firstDealGroup','firstDeal')" data-val="No">
+                <input type="radio" name="firstDeal" value="No">No, returning partner
+              </label>
+            </div>
+            <input type="hidden" id="firstDeal">
+            <div class="field-err" id="firstdeal-err">Required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">How did you hear about us?</label>
+            <select class="fi fi-select" id="hearAboutUs">
+              <option value="">Select one</option>
+              <option>Referral from another wholesaler</option>
+              <option>Facebook / Social media</option>
+              <option>YouTube</option>
+              <option>Podcast</option>
+              <option>Google search</option>
+              <option>Real estate meetup / event</option>
+              <option>Text / cold outreach</option>
+              <option>Terms For Sale website</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="first-deal-notice" id="firstDealNotice">
+          👋 Welcome! Since this is your first deal with us, please make sure you've read our <a href="https://dispobuddy.com/process" target="_blank" style="color:var(--orange)">JV Guidelines</a> before submitting. We'll send you the JV agreement after we review and accept your deal.
+        </div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextStep(1)">
+        Continue — The Property
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 2: THE PROPERTY ===================== -->
+  <div class="step-panel" id="step2">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon blue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <div class="section-title">The Property</div>
+          <div class="section-sub">Address, occupancy, access, and close date</div>
+        </div>
+        <span class="step-counter">Step 2 of 4</span>
+      </div>
+      <div class="section-body">
+        <div class="error-banner" id="err2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="err2text">Please fill in all required fields.</span></div>
+
+        <div class="checklist-card">
+          <div class="checklist-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Submission Requirements Reminder
+          </div>
+          <div class="checklist-items">
+            <div class="checklist-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Fully executed purchase agreement</div>
+            <div class="checklist-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Property photos (interior + exterior)</div>
+            <div class="checklist-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Seller disclosures + addendums</div>
+            <div class="checklist-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Mortgage/lien docs (creative finance)</div>
+          </div>
+        </div>
+
+        <div class="field-grid cols-1" style="margin-bottom:14px">
+          <div class="field-group">
+            <label class="field-label">Street Address <span class="req">*</span></label>
+            <input class="fi" type="text" id="propAddress" placeholder="123 Main St">
+            <div class="field-err" id="addr-err">Required</div>
+          </div>
+        </div>
+        <div class="field-grid cols-3" style="margin-bottom:14px">
+          <div class="field-group">
+            <label class="field-label">City <span class="req">*</span></label>
+            <input class="fi" type="text" id="propCity" placeholder="Phoenix">
+            <div class="field-err" id="city-err">Required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">State <span class="req">*</span></label>
+            <select class="fi fi-select" id="propState">
+              <option value="">State</option>
+              <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option>
+              <option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option>
+              <option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+              <option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+              <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option>
+              <option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option>
+              <option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+              <option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+              <option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
+              <option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+            </select>
+            <div class="field-err" id="state-err">Required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">ZIP Code <span class="req">*</span></label>
+            <input class="fi" type="text" id="propZip" placeholder="85001" maxlength="5">
+            <div class="field-err" id="zip-err">Required</div>
+          </div>
+        </div>
+
+        <div class="field-grid cols-3">
+          <div class="field-group">
+            <label class="field-label">Close of Escrow (COE) <span class="req">*</span></label>
+            <input class="fi" type="date" id="coe">
+            <div class="field-err" id="coe-err">Required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Property Occupancy <span class="req">*</span></label>
+            <select class="fi fi-select" id="propOccupancy">
+              <option value="">Select</option>
+              <option>Vacant</option>
+              <option>Seller Occupied</option>
+              <option>Tenant Occupied</option>
+            </select>
+            <div class="field-err" id="occ-err">Required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">How can we access the property? <span class="req">*</span></label>
+            <input class="fi" type="text" id="propertyAccess" placeholder="Lockbox #1234 / owner appt / key at office">
+            <div class="field-err" id="access-err">Required</div>
+          </div>
+        </div>
+
+        <div class="sub-divider" style="margin-top:6px;margin-bottom:14px">Documents & Photos</div>
+        <div class="field-grid cols-2">
+          <div class="field-group">
+            <label class="field-label">Link to Photos <span class="req">*</span></label>
+            <input class="fi" type="url" id="photoLink" placeholder="https://drive.google.com/...">
+            <div class="field-hint">Google Drive, Dropbox, or any shareable link</div>
+            <div class="field-err" id="photo-err">Required — photos are required for review</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Link to Supporting Documents</label>
+            <input class="fi" type="url" id="docsLink" placeholder="https://drive.google.com/...">
+            <div class="field-hint">Purchase agreement, mortgage statement, disclosures</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-back" onclick="prevStep(2)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back
+      </button>
+      <button class="btn btn-primary" onclick="nextStep(2)">
+        Continue — Deal & Numbers
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 3: DEAL & NUMBERS ===================== -->
+  <div class="step-panel" id="step3">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon orange">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div>
+          <div class="section-title">Deal Type & Numbers</div>
+          <div class="section-sub">Select deal type — relevant fields will appear</div>
+        </div>
+        <span class="step-counter">Step 3 of 4</span>
+      </div>
+      <div class="section-body">
+        <div class="error-banner" id="err3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="err3text">Please select a deal type and fill required fields.</span></div>
+
+        <!-- Deal Type -->
+        <div class="field-group" style="margin-bottom:20px">
+          <label class="field-label" style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:10px">Deal Type <span class="req">*</span></label>
+          <div class="deal-type-grid" id="dealTypeGrid">
+            <div class="deal-card" data-val="Cash" onclick="selectDealType(this)">
+              <div class="dc-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="dc-name">Cash</div>
+              <div class="dc-desc">Straight cash assignment</div>
+            </div>
+            <div class="deal-card" data-val="Subto" onclick="selectDealType(this)">
+              <div class="dc-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+              <div class="dc-name">Subject-To</div>
+              <div class="dc-desc">Buyer takes over existing loan</div>
+            </div>
+            <div class="deal-card" data-val="Seller Finance" onclick="selectDealType(this)">
+              <div class="dc-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+              <div class="dc-name">Seller Finance</div>
+              <div class="dc-desc">Seller carries the note</div>
+            </div>
+            <div class="deal-card" data-val="Hybrid" onclick="selectDealType(this)">
+              <div class="dc-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+              <div class="dc-name">Hybrid</div>
+              <div class="dc-desc">SubTo + seller carry</div>
+            </div>
+            <div class="deal-card" data-val="Morby/Stack Method" onclick="selectDealType(this)">
+              <div class="dc-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/></svg></div>
+              <div class="dc-name">Morby / Stack</div>
+              <div class="dc-desc">Cash down + seller carry</div>
+            </div>
+          </div>
+          <input type="hidden" id="dealType">
+          <div class="field-err" id="deal-err">Please select a deal type</div>
+        </div>
+
+        <!-- CORE NUMBERS — always shown once deal type picked -->
+        <div id="coreNumbers" style="display:none">
+          <div class="sub-divider" style="margin-top:0;margin-bottom:14px">Core Numbers</div>
+          <div class="field-grid cols-2" style="margin-bottom:14px">
+            <div class="field-group">
+              <label class="field-label">Contract Price <span class="req">*</span></label>
+              <div class="fi-currency"><input class="fi" type="number" id="contractedPrice" placeholder="155,000" min="0"></div>
+              <div class="field-hint">Price on your purchase agreement</div>
+              <div class="field-err" id="cprice-err">Required</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Desired Asking Price <span class="req">*</span></label>
+              <div class="fi-currency"><input class="fi" type="number" id="desiredAskingPrice" placeholder="175,000" min="0"></div>
+              <div class="field-hint">Contract price + total assignment fee</div>
+              <div class="field-err" id="daprice-err">Required</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">ARV (Your Estimate) <span class="req">*</span></label>
+              <div class="fi-currency"><input class="fi" type="number" id="arvEstimate" placeholder="220,000" min="0"></div>
+              <div class="field-err" id="arv-err">Required</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Buyer Entry Fee <span class="req">*</span></label>
+              <div class="fi-currency"><input class="fi" type="number" id="buyerEntryFee" placeholder="20,000" min="0"></div>
+              <div class="field-hint">Including assignment fee, before CC + TC</div>
+              <div class="field-err" id="entry-err">Required</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Contracted Entry Fee</label>
+              <div class="fi-currency"><input class="fi" type="number" id="contractedEntryFee" placeholder="20,000" min="0"></div>
+              <div class="field-hint">Entry fee on the actual contract</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Est. Taxes & Insurance (monthly)</label>
+              <div class="fi-currency"><input class="fi" type="number" id="estTaxesInsurance" placeholder="250" min="0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBTO BLOCK -->
+        <div class="cond-block" id="subtoBlock">
+          <div class="cond-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Subject-To Loan Details
+          </div>
+          <div class="field-grid cols-2">
+            <div class="field-group">
+              <label class="field-label">Loan Balance <span class="req">*</span></label>
+              <div class="fi-currency"><input class="fi" type="number" id="subtoBalance" placeholder="135,000" min="0"></div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Interest Rate (%)</label>
+              <input class="fi" type="text" id="subtoRate" placeholder="3.25%">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Monthly Payment (PITI)</label>
+              <div class="fi-currency"><input class="fi" type="number" id="subtoPayment" placeholder="1,210" min="0"></div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Loan Maturity</label>
+              <input class="fi" type="text" id="subtoMaturity" placeholder="e.g. Jan 2052">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Balloon Payment ($)</label>
+              <div class="fi-currency"><input class="fi" type="number" id="subtoBalloon" placeholder="0" min="0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SF BLOCK -->
+        <div class="cond-block sf" id="sfBlock">
+          <div class="cond-label blue">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            Seller Finance Details
+          </div>
+          <div class="field-grid cols-2">
+            <div class="field-group">
+              <label class="field-label">SF Loan Amount</label>
+              <div class="fi-currency"><input class="fi" type="number" id="sfLoanAmount" placeholder="190,000" min="0"></div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Monthly SF Payment</label>
+              <div class="fi-currency"><input class="fi" type="number" id="sfPayment" placeholder="965" min="0"></div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Interest Rate (%)</label>
+              <input class="fi" type="text" id="sfRate" placeholder="4.5%">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Loan Term</label>
+              <input class="fi" type="text" id="sfTerm" placeholder="e.g. 30 years">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Balloon Payment ($)</label>
+              <div class="fi-currency"><input class="fi" type="number" id="sfBalloon" placeholder="0" min="0"></div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">DSCR Loan Amount (if applicable)</label>
+              <div class="fi-currency"><input class="fi" type="number" id="dscrLoanAmount" placeholder="0" min="0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMPORTANT DETAILS -->
+        <div style="margin-top:16px">
+          <div class="field-group">
+            <label class="field-label">Important Details / Notes</label>
+            <textarea class="fi fi-textarea" id="importantDetails" placeholder="Seller motivation, known repairs, why this deal makes sense, anything else we need to know..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-back" onclick="prevStep(3)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back
+      </button>
+      <button class="btn btn-primary" onclick="nextStep(3)">
+        Review & Submit
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 4: REVIEW & SUBMIT ===================== -->
+  <div class="step-panel" id="step4">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon green">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="section-title">Review & Submit</div>
+          <div class="section-sub">Confirm everything looks right before we review</div>
+        </div>
+        <span class="step-counter">Step 4 of 4</span>
+      </div>
+      <div class="section-body">
+        <div class="error-banner" id="err4"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="err4text">Please check your consent box below.</span></div>
+
+        <div class="review-section-label">JV Partner</div>
+        <div class="review-grid" id="reviewPartner"></div>
+
+        <div class="review-section-label">Property</div>
+        <div class="review-grid" id="reviewProperty"></div>
+
+        <div class="review-section-label">Deal & Numbers</div>
+        <div class="review-grid" id="reviewDeal"></div>
+
+        <!-- Consent -->
+        <label class="consent-wrap">
+          <div class="consent-inner">
+            <input type="checkbox" id="consentCheck">
+            <div class="consent-text">
+              <strong>I confirm this deal is under contract and I am direct to seller or hold equitable interest.</strong> I consent to receive SMS and email from Dispo Buddy / Deal Pros LLC regarding this submission. I understand the JV split is 50/50 of the net assignment fee, paid at close. Reply STOP to opt out of SMS.
+            </div>
+          </div>
+        </label>
+        <div class="field-err" id="consent-err" style="margin-top:6px">You must confirm to submit.</div>
+
+        <!-- Notes -->
+        <div style="margin-top:14px">
+          <label class="field-label">Anything else we should know?</label>
+          <textarea class="fi fi-textarea" id="additionalNotes" placeholder="Any final context, timing constraints, or questions..." style="margin-top:6px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-back" onclick="prevStep(4)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back
+      </button>
+      <button class="btn btn-submit" id="submitBtn" onclick="submitForm()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+        Submit Deal to Dispo Buddy
+      </button>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<footer>
+  <div class="footer-inner">
+    <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy" style="height:28px;width:auto;opacity:.7">
+    <div class="footer-links">
+      <a href="https://dispobuddy.com/process">How It Works</a>
+      <a href="https://dispobuddy.com/buyers-list">Join Buyers List</a>
+      <a href="https://deals.termsforsale.com">Terms For Sale</a>
+    </div>
+    <div style="font-size:11px;color:var(--text-light)">© 2025 Dispo Buddy LLC · 50/50 Performance Split</div>
+  </div>
+</footer>
+
+<script>
+let currentStep = 1;
+const TOTAL = 4;
+let selectedDealType = '';
+
+// ── NAVIGATION ──────────────────────────────────────────────
+function nextStep(from) {
+  if (!validateStep(from)) return;
+  currentStep = from + 1;
+  showStep(currentStep);
+  if (currentStep === 4) buildReview();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function prevStep(from) {
+  currentStep = from - 1;
+  showStep(currentStep);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function showStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  updateProgress(n);
+}
+function updateProgress(n) {
+  document.querySelectorAll('.progress-step').forEach((s, i) => {
+    const sn = i + 1;
+    s.className = 'progress-step ' + (sn < n ? 'done' : sn === n ? 'active' : 'pending');
+  });
+  document.querySelectorAll('.step-line').forEach((l, i) => {
+    l.className = 'step-line ' + (i + 1 < n ? 'done' : '');
+  });
+  document.getElementById('progressBar').style.width = (n / TOTAL * 100) + '%';
+}
+
+// ── VALIDATION ──────────────────────────────────────────────
+function validateStep(n) {
+  let valid = true;
+  function check(id, errId) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const ok = el.value.trim() !== '';
+    el.classList.toggle('error', !ok);
+    const errEl = errId ? document.getElementById(errId) : null;
+    if (errEl) errEl.classList.toggle('show', !ok);
+    if (!ok) valid = false;
+  }
+  if (n === 1) {
+    check('jvName', 'name-err');
+    check('jvPhone', 'phone-err');
+    check('jvEmail', 'email-err');
+    const email = document.getElementById('jvEmail').value.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('jvEmail').classList.add('error');
+      document.getElementById('email-err').classList.add('show');
+      valid = false;
+    }
+    check('underContract', 'contract-err');
+    if (!document.getElementById('firstDeal').value) {
+      document.getElementById('firstdeal-err').classList.add('show');
+      valid = false;
+    }
+  }
+  if (n === 2) {
+    check('propAddress', 'addr-err');
+    check('propCity', 'city-err');
+    check('propState', 'state-err');
+    check('propZip', 'zip-err');
+    check('coe', 'coe-err');
+    check('propOccupancy', 'occ-err');
+    check('propertyAccess', 'access-err');
+    check('photoLink', 'photo-err');
+  }
+  if (n === 3) {
+    if (!selectedDealType) {
+      document.getElementById('deal-err').classList.add('show');
+      valid = false;
+    }
+    check('contractedPrice', 'cprice-err');
+    check('desiredAskingPrice', 'daprice-err');
+    check('arvEstimate', 'arv-err');
+    check('buyerEntryFee', 'entry-err');
+  }
+  const errBanner = document.getElementById('err' + n);
+  if (errBanner) errBanner.classList.toggle('show', !valid);
+  return valid;
+}
+
+// ── DEAL TYPE SELECTION ──────────────────────────────────────
+function selectDealType(el) {
+  document.querySelectorAll('.deal-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDealType = el.dataset.val;
+  document.getElementById('dealType').value = selectedDealType;
+  document.getElementById('deal-err').classList.remove('show');
+  document.getElementById('coreNumbers').style.display = 'block';
+  const showSubto = ['Subto', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType);
+  const showSf = ['Seller Finance', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType);
+  toggleBlock('subtoBlock', showSubto);
+  toggleBlock('sfBlock', showSf);
+}
+function toggleBlock(id, show) {
+  const el = document.getElementById(id);
+  if (show) el.classList.add('active');
+  else el.classList.remove('active');
+}
+
+// ── RADIO ────────────────────────────────────────────────────
+function selectRadio(label, groupId, hiddenId) {
+  document.querySelectorAll('#' + groupId + ' .radio-opt').forEach(l => l.classList.remove('checked'));
+  label.classList.add('checked');
+  document.getElementById(hiddenId).value = label.dataset.val;
+  document.getElementById(groupId.replace('Group', '') + '-err') && document.getElementById(groupId.replace('Group', '') + '-err').classList.remove('show');
+  if (hiddenId === 'firstDeal') {
+    document.getElementById('firstDealNotice').classList.toggle('show', label.dataset.val === 'Yes');
+    document.getElementById('firstdeal-err').classList.remove('show');
+  }
+}
+
+// ── CONTRACT TOGGLE ──────────────────────────────────────────
+function handleContractChange(val) {
+  const warn = document.getElementById('notUnderContractWarn');
+  warn.style.display = val === 'No' ? 'block' : 'none';
+}
+
+// ── REVIEW ───────────────────────────────────────────────────
+function buildReview() {
+  function rv(label, id, prefix) {
+    const el = document.getElementById(id);
+    const val = el ? el.value.trim() : '';
+    const disp = val ? (prefix || '') + val : '';
+    return `<div class="review-item"><div class="review-label">${label}</div><div class="review-value ${disp ? '' : 'empty'}">${disp || '—'}</div></div>`;
+  }
+  document.getElementById('reviewPartner').innerHTML =
+    rv('Full Name', 'jvName') + rv('Phone', 'jvPhone') +
+    rv('Email', 'jvEmail') + rv('Under Contract', 'underContract') +
+    rv('First Deal?', 'firstDeal') + rv('How They Heard', 'hearAboutUs');
+
+  document.getElementById('reviewProperty').innerHTML =
+    rv('Address', 'propAddress') + rv('City', 'propCity') +
+    rv('State', 'propState') + rv('ZIP', 'propZip') +
+    rv('COE', 'coe') + rv('Occupancy', 'propOccupancy') +
+    rv('Access', 'propertyAccess') + rv('Photo Link', 'photoLink');
+
+  let dealHtml = `<div class="review-item"><div class="review-label">Deal Type</div><div class="review-value ${selectedDealType ? '' : 'empty'}">${selectedDealType || '—'}</div></div>`;
+  dealHtml += rv('Contract Price', 'contractedPrice', '$') + rv('Asking Price', 'desiredAskingPrice', '$');
+  dealHtml += rv('ARV', 'arvEstimate', '$') + rv('Buyer Entry Fee', 'buyerEntryFee', '$');
+  if (['Subto', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType)) {
+    dealHtml += rv('SubTo Balance', 'subtoBalance', '$') + rv('SubTo Rate', 'subtoRate');
+  }
+  if (['Seller Finance', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType)) {
+    dealHtml += rv('SF Loan Amount', 'sfLoanAmount', '$') + rv('SF Rate', 'sfRate');
+  }
+  document.getElementById('reviewDeal').innerHTML = dealHtml;
+}
+
+// ── GATHER DATA ──────────────────────────────────────────────
+function gatherData() {
+  function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  return {
+    // JV Partner — exact GHL field keys
+    jv_partner_name: v('jvName'),
+    jv_phone_number: v('jvPhone'),
+    jv_partner_email: v('jvEmail'),
+    do_you_have_the_property_under_contract: v('underContract'),
+    is_this_your_first_deal_with_dispo_buddy: v('firstDeal'),
+    how_did_you_hear_about_us: v('hearAboutUs'),
+    // Property
+    property_address: v('propAddress'),
+    property_city: v('propCity'),
+    property_state: v('propState'),
+    property_zip: v('propZip'),
+    coe: v('coe'),
+    property_occupancy: v('propOccupancy'),
+    how_can_we_access_the_property: v('propertyAccess'),
+    link_to_photos: v('photoLink'),
+    link_to_supporting_documents: v('docsLink'),
+    // Deal
+    deal_type: selectedDealType,
+    contracted_price: v('contractedPrice'),
+    desired_asking_price: v('desiredAskingPrice'),
+    arv_estimate: v('arvEstimate'),
+    what_is_the_buyer_entry_fee: v('buyerEntryFee'),
+    contracted_entry_fee: v('contractedEntryFee'),
+    est_taxes__insurance: v('estTaxesInsurance'),
+    // SubTo
+    subto_loan_balance: v('subtoBalance'),
+    interest_rate: v('subtoRate'),
+    monthly_payment: v('subtoPayment'),
+    loan_maturity: v('subtoMaturity'),
+    subto_balloon: v('subtoBalloon'),
+    // SF
+    seller_finance_loan_amount: v('sfLoanAmount'),
+    sf_loan_payment: v('sfPayment'),
+    interest_rate_seller_finance: v('sfRate'),
+    loan_term: v('sfTerm'),
+    sf_balloon: v('sfBalloon'),
+    dscr_loan_amount: v('dscrLoanAmount'),
+    // Notes
+    important_details: v('importantDetails'),
+    additional_notes: v('additionalNotes'),
+  };
+}
+
+// ── SUBMIT ───────────────────────────────────────────────────
+async function submitForm() {
+  const consent = document.getElementById('consentCheck');
+  const consentErr = document.getElementById('consent-err');
+  if (!consent.checked) {
+    consentErr.classList.add('show');
+    document.getElementById('err4').classList.add('show');
+    return;
+  }
+  consentErr.classList.remove('show');
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Submitting...';
+
+  try {
+    const data = gatherData();
+    const res = await fetch('/.netlify/functions/dispo-buddy-submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Submission failed');
+    }
+    document.getElementById('progressWrap').style.display = 'none';
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('successWrap').classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg> Submit Deal to Dispo Buddy';
+    document.getElementById('err4text').textContent = 'Submission failed: ' + e.message + '. Call (480) 842-5332.';
+    document.getElementById('err4').classList.add('show');
+  }
+}
+
+function resetForm() { window.location.reload(); }
+</script>
+</body>
+</html>
