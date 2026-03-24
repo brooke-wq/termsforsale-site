@@ -198,9 +198,50 @@ footer{background:var(--navy);padding:44px 40px 0}
 .footer-bottom a:hover{color:rgba(255,255,255,.65)}
 .footer-bottom-links{display:flex;gap:18px}
 
+/* AUTH */
+.btn-signup{padding:8px 20px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text-mid);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s}
+.btn-signup:hover{background:var(--bg);border-color:var(--text-mid)}
+.btn-login{padding:8px 22px;border-radius:8px;background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:background .15s}
+.btn-login:hover{background:var(--blue-dark)}
+.nav-avatar-wrap{position:relative}
+.nav-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-dropdown{position:absolute;top:48px;right:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.15);min-width:180px;padding:6px 0;display:none;z-index:600}
+.nav-avatar-wrap:hover .nav-dropdown{display:block}
+.nav-dropdown a,.nav-dropdown button{display:block;padding:10px 16px;font-size:13px;color:var(--text-mid);text-decoration:none;background:none;border:none;width:100%;text-align:left;cursor:pointer;font-family:var(--font)}
+.nav-dropdown a:hover,.nav-dropdown button:hover{background:var(--bg);color:var(--text)}
+.nav-dropdown hr{border:none;border-top:1px solid var(--border);margin:4px 0}
+.auth-overlay{position:fixed;inset:0;background:rgba(13,31,60,.8);backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.auth-overlay.open{opacity:1;pointer-events:all}
+.auth-modal{background:#fff;border-radius:20px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.25);transform:translateY(16px);transition:transform .25s}
+.auth-overlay.open .auth-modal{transform:translateY(0)}
+.auth-head{background:var(--navy);padding:24px 28px;position:relative}
+.auth-head h2{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.auth-head p{font-size:12px;color:rgba(255,255,255,.55)}
+.auth-x{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.55);font-size:24px;cursor:pointer;line-height:1;padding:2px}
+.auth-body{padding:24px 28px 28px}
+.auth-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px}
+.auth-tab{padding:8px 16px;font-size:13px;font-weight:600;color:var(--text-light);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.auth-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.a-field{margin-bottom:10px}
+.a-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
+.a-input:focus{border-color:var(--blue);background:#fff}
+.a-input::placeholder{color:var(--text-light)}
+.a-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
+.a-perks{padding:10px 12px;background:var(--blue-light);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:5px}
+.a-perk{display:flex;align-items:center;gap:7px;font-size:12px;color:#1a6f8a;font-weight:500}
+.a-err{font-size:12px;color:#e53e3e;background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
+.a-ok{font-size:12px;color:#276749;background:#E6F9F0;border:1px solid #b2dfce;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
+.a-note{font-size:10px;color:var(--text-light);text-align:center;margin-top:9px;line-height:1.6}
+.a-note a{color:var(--blue)}
+.btn-full-blue{display:block;width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-full-blue:hover{background:var(--blue-dark)}
+
 /* RESPONSIVE */
 @media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px}.deal-sidebar{position:static}.similar-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:768px){nav{padding:0 20px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 20px}.photo-grid{grid-template-rows:180px 90px;grid-template-columns:1fr 1fr;}.photo-main{grid-row:1/2;grid-column:1/3}.photo-thumb:nth-child(n+4){display:none}.similar-grid{grid-template-columns:1fr}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}}
+@media(max-width:768px){nav{padding:0 20px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 20px}.photo-grid{grid-template-rows:180px 90px;grid-template-columns:1fr 1fr;}.photo-main{grid-row:1/2;grid-column:1/3}.photo-thumb:nth-child(n+4){display:none}.similar-grid{grid-template-columns:1fr}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}
+  .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
+  .auth-overlay{align-items:flex-end}
+}
 </style>
 </head>
 <body>
@@ -215,14 +256,73 @@ footer{background:var(--navy);padding:44px 40px 0}
   <a href="/" class="nav-logo">
     <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:44px;width:auto">
   </a>
-  <div class="nav-right">
+  <div class="nav-right" id="nav-right">
     <a href="https://buyingcriteria.com" target="_blank">Buying Criteria</a>
     <a href="#" style="display:none">FAQ</a>
     <a href="https://dealproszoom.com" target="_blank">Help</a>
-    <a href="#" class="btn btn-outline" style="padding:7px 18px;font-size:13px">Log In</a>
-    <a href="https://buyingcriteria.com" target="_blank" class="btn btn-blue" style="padding:7px 18px;font-size:13px">Sign Up</a>
+    <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
+    <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
 </nav>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-modal">
+    <div class="auth-head">
+      <button class="auth-x" onclick="closeAuth()">&#215;</button>
+      <h2>Welcome to Terms For Sale</h2>
+      <p>Unlock addresses, photos and your buyer dashboard</p>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="at-li" onclick="switchAuthTab('login')">Log In</button>
+        <button class="auth-tab" id="at-su" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <!-- LOGIN -->
+      <div id="ap-login">
+        <div class="a-err" id="a-li-err"></div>
+        <div class="a-ok" id="a-li-ok"></div>
+        <div class="a-field"><input class="a-input" id="li-email" type="email" placeholder="Email address"></div>
+        <div class="a-field"><input class="a-input" id="li-phone" type="tel" placeholder="Phone number"></div>
+        <button class="btn-full-blue" onclick="doLogin()">Log In</button>
+        <div class="a-note">No account? <a href="#" onclick="switchAuthTab('signup');return false">Sign up free &rarr;</a></div>
+      </div>
+      <!-- SIGNUP -->
+      <div id="ap-signup" style="display:none">
+        <div class="a-perks">
+          <div class="a-perk">&#10003; Full address + photos unlocked</div>
+          <div class="a-perk">&#10003; Early access before public</div>
+          <div class="a-perk">&#10003; Buyer dashboard</div>
+        </div>
+        <div class="a-err" id="a-su-err"></div>
+        <div class="a-ok" id="a-su-ok"></div>
+        <div class="a-row" style="margin-bottom:10px">
+          <input class="a-input" id="su-fn" placeholder="First name">
+          <input class="a-input" id="su-ln" placeholder="Last name">
+        </div>
+        <div class="a-field"><input class="a-input" id="su-email" type="email" placeholder="Email address"></div>
+        <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
+        <div class="a-field">
+          <select class="a-input" id="su-buy" style="appearance:none;cursor:pointer">
+            <option value="">How do you buy?</option>
+            <option>Cash</option>
+            <option>Subject To</option>
+            <option>Seller Finance</option>
+            <option>Lease Option</option>
+            <option>Novation</option>
+            <option>Morby Method</option>
+            <option>Assumable Loans</option>
+            <option>Partnerships/JV</option>
+            <option>Traditional Financing</option>
+            <option>DSCR</option>
+          </select>
+        </div>
+        <button class="btn-full-blue" onclick="doSignup()">Create Free Account</button>
+        <div class="a-note">By signing up you agree to receive SMS &amp; email alerts. Reply STOP to opt out.</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- BREADCRUMB -->
 <div class="breadcrumb">
@@ -298,6 +398,73 @@ const SAMPLE=[
   {id:'DP-005',dealType:'Seller Finance',streetAddress:'San Antonio (address on request)',city:'San Antonio',state:'TX',zip:'78254',nearestMetro:'San Antonio, TX',propertyType:'Single Family',askingPrice:212835,entryFee:22500,compsArv:300000,aiArvBase:295000,piti:'',subtoLoanBalance:'',subtoRate:'',sfLoanAmount:190335,sfRate:'4.5%',sfTerm:'30yr',sfPayment:965,rentFinal:1600,rentLow:1500,rentMid:1575,rentHigh:1650,occupancy:'Vacant',hoa:'21',solar:'',access:'Lockbox',coe:'2026-05-01',deckLink:'',photos:'',highlight1:'Free & clear — seller financing at 4.5%/30yr',highlight2:"$22.5K entry — $1,600/mo rent potential",highlight3:'HOA only $21/mo — 4bd/3ba family home',entryBreakdown:'$22,500 + closing costs. SF balance: $190,335 at 4.5%/30yr.',details:'4bd/3ba, 2,897 SF. Built 2004.',beds:4,baths:3,sqft:2897,yearBuilt:2004}
 ];
 
+// ─── AUTH ──────────────────────────────────────────────────────
+const AUTH_KEY = 'tfs_buyer';
+const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/88c6d9de-eb76-45ef-ac83-db284b7da5ac';
+const GHL_LOGIN_WEBHOOK  = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/caa1f812-8957-48af-ae00-45322992102b';
+function getUser(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null');}catch{return null;}}
+function setUser(u){try{localStorage.setItem(AUTH_KEY,JSON.stringify(u));}catch(e){}}
+function clearUser(){try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+function openAuth(tab='login'){switchAuthTab(tab);document.getElementById('auth-overlay').classList.add('open');setTimeout(()=>{const f=document.getElementById(tab==='login'?'li-email':'su-fn');if(f)f.focus();},100);}
+function closeAuth(){document.getElementById('auth-overlay').classList.remove('open');}
+function switchAuthTab(tab){
+  document.getElementById('ap-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('ap-signup').style.display=tab==='signup'?'block':'none';
+  document.getElementById('at-li').classList.toggle('on',tab==='login');
+  document.getElementById('at-su').classList.toggle('on',tab==='signup');
+  ['a-li-err','a-li-ok','a-su-err','a-su-ok'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+}
+async function doLogin(){
+  const email=document.getElementById('li-email').value.trim();
+  const phone=document.getElementById('li-phone').value.trim();
+  const err=document.getElementById('a-li-err'),ok=document.getElementById('a-li-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!email&&!phone){err.textContent='Please enter email or phone.';err.style.display='block';return;}
+  const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
+  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,phone,source:'TFS Website Login'})});}catch(e){}
+  const name=email?email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'Buyer';
+  const user={name,email,phone,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
+  setUser(user);updateNavAuth(user);
+  ok.textContent='Welcome back, '+user.name+'!';ok.style.display='block';
+  setTimeout(()=>closeAuth(),1200);
+  btn.disabled=false;btn.textContent='Log In';
+}
+async function doSignup(){
+  const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
+  const email=document.getElementById('su-email').value.trim(),phone=document.getElementById('su-phone').value.trim();
+  const buy=document.getElementById('su-buy').value;
+  const err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!fn||!email||!phone){err.textContent='Please fill in first name, email and phone.';err.style.display='block';return;}
+  const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
+  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']})});}catch(e){}
+  const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
+  const user={name:fn,email,phone,initials};
+  setUser(user);updateNavAuth(user);
+  ok.textContent='Account created! Welcome, '+fn+' 🎉';ok.style.display='block';
+  setTimeout(()=>closeAuth(),1400);
+  btn.disabled=false;btn.textContent='Create Free Account';
+}
+function updateNavAuth(user){
+  const el=document.getElementById('nav-right');
+  if(!el||!user)return;
+  el.innerHTML=`
+    <a href="https://buyingcriteria.com" target="_blank">Buying Criteria</a>
+    <a href="https://dealproszoom.com" target="_blank">Help</a>
+    <div class="nav-avatar-wrap">
+      <div class="nav-avatar">${user.initials}</div>
+      <div class="nav-dropdown">
+        <a href="/dashboard.html">📊 My Dashboard</a>
+        <a href="/buy-box.html">✏️ Update Buy Box</a>
+        <a href="/">🏠 All Deals</a>
+        <hr>
+        <button onclick="clearUser();location.reload()">Log Out</button>
+      </div>
+    </div>`;
+  // unlock photos if logged in
+  document.querySelectorAll('.photo-unlock-btn').forEach(b=>{b.closest('.photo-thumb-lock')&&(b.closest('.photo-thumb-lock').style.display='none');});
+}
+
 function fc(n){if(!n&&n!==0)return'—';const v=+n;if(isNaN(v)||v===0)return'—';return'$'+v.toLocaleString()}
 function fmtRate(r){if(!r&&r!==0)return'—';const v=+r;if(isNaN(v)||v===0)return r||'—';return v<1?(v*100).toFixed(2)+'%':v+'%'}
 function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())/864e5)}
@@ -317,10 +484,10 @@ function renderDeal(d,allDeals){
   // PHOTO GRID
   const photoHtml=d.photos
     ?`<div class="photo-main"><img src="${d.photos}" alt="${d.streetAddress}"><div class="photo-count-badge">📷 Photos available</div></div>
-       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Log in to unlock</span><button class="photo-unlock-btn">Log In</button></div></div>
+       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Log in to unlock</span><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div></div>
        <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">20 images</span></div></div>`
     :`<div class="photo-main"><div class="photo-main-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:12px;font-weight:600;color:var(--text-light)">Photos Available on Request</span><p style="font-size:11px;color:var(--text-light)">Text your deal ID to 480-637-3117</p></div></div>
-       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><button class="photo-unlock-btn">Log In</button></div></div>
+       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div></div>
        <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div></div>`;
 
   // TAGS
@@ -581,6 +748,7 @@ async function init(){
     renderDeal(parse(raw),allDeals);
   }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
 }
+const u=getUser();if(u)updateNavAuth(u);
 init();
 </script>
 </body>
