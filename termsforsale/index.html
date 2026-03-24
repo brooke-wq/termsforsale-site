@@ -76,8 +76,17 @@
 html{scroll-behavior:smooth}
 body{font-family:var(--font);color:var(--text);overflow-x:hidden;background:var(--white);-webkit-font-smoothing:antialiased}
 
+/* ── WHOLESALER TOPBAR ───────────────────── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:501;height:36px;background:var(--navy);display:flex;align-items:center;justify-content:center;gap:16px}
+.topbar-text{font-size:12px;color:rgba(255,255,255,.65);font-weight:500}
+.topbar-text strong{color:rgba(255,255,255,.9)}
+.topbar-cta{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:var(--orange);color:#fff;border-radius:50px;font-size:11px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap}
+.topbar-cta:hover{background:var(--orange-dark)}
+.topbar-cta svg{flex-shrink:0}
+.topbar-divider{width:1px;height:14px;background:rgba(255,255,255,.15)}
+
 /* ── NAV ────────────────────────────────── */
-nav{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;padding:0 55px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06);transition:box-shadow .3s}
+nav{position:fixed;top:36px;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;padding:0 55px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06);transition:box-shadow .3s}
 nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .nav-logo img{height:46px;width:auto;display:block}
 .nav-links{display:flex;align-items:center;gap:32px;margin-left:52px}
@@ -97,7 +106,7 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .nav-dropdown hr{border:none;border-top:1px solid var(--border);margin:4px 0}
 
 /* ── HERO ───────────────────────────────── */
-.hero{position:relative;height:auto;min-height:360px;overflow:hidden;margin-top:72px}
+.hero{position:relative;height:auto;min-height:360px;overflow:hidden;margin-top:108px}
 .hero-bg{position:absolute;inset:0}
 .hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block}
 .hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom, rgba(5,20,40,.3) 0%, rgba(5,20,40,.55) 100%)}
@@ -423,6 +432,16 @@ footer{background:var(--navy);padding:52px 55px 0}
 </head>
 <body>
 
+<!-- WHOLESALER TOPBAR -->
+<div class="topbar">
+  <span class="topbar-text">Are you a <strong>wholesaler or JV partner?</strong></span>
+  <div class="topbar-divider"></div>
+  <a href="/acquisition-assist.html" class="topbar-cta">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+    Submit a Deal
+  </a>
+</div>
+
 <!-- NAV -->
 <nav id="main-nav">
   <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:46px"></a>
@@ -430,7 +449,7 @@ footer{background:var(--navy);padding:52px 55px 0}
     <a href="https://dispobuddy.com" target="_blank">Sell Your Deal</a>
     <a href="/buying-criteria.html">Get Deal Alerts</a>
     <a href="/map.html" target="_blank" style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Deal Map</a>
-    <a href="mailto:support@termsforsale.com">Help</a>
+    <a href="/cdn-cgi/l/email-protection#4c3f393c3c233e380c38293e213f2a233e3f2d2029622f2321">Help</a>
   </div>
   <div class="nav-right" id="nav-right">
     <div id="tfs-buybox-container"></div>
@@ -799,14 +818,14 @@ footer{background:var(--navy);padding:52px 55px 0}
         <div class="footer-brand-sub">By subscribing, you agree to receive marketing emails and accept our Privacy Policy.</div>
       </div>
       <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="/">Active Deals</a></li><li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li><li><a href="https://calendar.app.google/DXJoTQwDpGhCjicu6" target="_blank">Book a Call</a></li></ul></div>
-      <div class="footer-col"><h4>Contact</h4><ul><li><a href="mailto:info@termsforsale.com">info@termsforsale.com</a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
+      <div class="footer-col"><h4>Contact</h4><ul><li><a href="/cdn-cgi/l/email-protection#c8a1a6aea788bcadbaa5bbaea7babba9a4ade6aba7a5"><span class="__cf_email__" data-cfemail="11787f777e516574637c62777e6362707d743f727e7c">[email&#160;protected]</span></a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
       <div class="footer-col"><h4>Social Media</h4><ul><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">X / Twitter</a></li></ul></div>
     </div>
     <div class="footer-bottom"><span>&copy; 2025 Deal Pros LLC. All Rights Reserved.</span><div class="footer-links"><a href="#">Privacy</a><a href="#">Cookie Policy</a><a href="#">Terms</a></div></div>
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ─── CONFIG ────────────────────────────────────────────────────
 const SHEET_ID  = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
 const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/88c6d9de-eb76-45ef-ac83-db284b7da5ac';
@@ -1658,16 +1677,4 @@ function submitBuyBox(){
 }
 
 function openBuyBox(){
-  var ov=document.getElementById('buybox-overlay');
-  ov.style.display='flex';
-  renderBBForm();
-}
-function closeBuyBox(){
-  document.getElementById('buybox-overlay').style.display='none';
-}
-document.getElementById('buybox-overlay').addEventListener('click',function(e){
-  if(e.target===this)closeBuyBox();
-});
-</script>
-</body>
-</html>
+  var ov=document.getElementById('buybox-ov
