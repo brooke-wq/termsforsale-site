@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set Your Buying Criteria — Terms For Sale by Deal Pros</title>
+<meta name="description" content="Tell us exactly what deals you buy. We match you to off-market SubTo, Seller Finance, and Cash deals the moment they drop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" href="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" type="image/svg+xml">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #0D1F3C;
+  --navy2: #132848;
+  --blue: #29ABE2;
+  --blue-dark: #1a8bbf;
+  --blue-light: #EBF8FF;
+  --orange: #F7941D;
+  --orange-dark: #d97c0e;
+  --green: #10B981;
+  --green-dark: #276749;
+  --white: #fff;
+  --bg: #F4F6F9;
+  --text: #0D1F3C;
+  --mid: #4A5568;
+  --light: #718096;
+  --border: #E2E8F0;
+  --r: 12px;
+  --font: 'Poppins', sans-serif;
+  --shadow: 0 4px 24px rgba(13,31,60,.1);
+  --shadow-lg: 0 16px 48px rgba(13,31,60,.18);
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ────────────────────────────────────────────────── */
+.page-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+/* ── LEFT PANEL ─────────────────────────────────────────────── */
+.left-panel {
+  background: var(--navy);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 52px;
+  overflow: hidden;
+}
+
+/* animated background dots */
+.left-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(41,171,226,.12) 1px, transparent 1px);
+  background-size: 32px 32px;
+  animation: panBg 20s linear infinite;
+}
+@keyframes panBg { from { background-position: 0 0; } to { background-position: 64px 64px; } }
+
+/* glow blob */
+.left-panel::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(41,171,226,.2) 0%, transparent 70%);
+  bottom: -100px;
+  right: -100px;
+  pointer-events: none;
+}
+
+.left-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.lp-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 52px;
+  text-decoration: none;
+}
+.lp-logo img { height: 44px; width: auto; }
+.lp-logo-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,.45);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lp-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+}
+
+.lp-headline {
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1.08;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+}
+
+.lp-headline span { color: var(--blue); }
+
+.lp-body {
+  font-size: 15px;
+  color: rgba(255,255,255,.65);
+  line-height: 1.7;
+  max-width: 380px;
+  margin-bottom: 40px;
+}
+
+.lp-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.lp-perk {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lp-perk-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(41,171,226,.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.lp-perk-icon svg { color: var(--blue); }
+
+.lp-perk-text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 2px;
+}
+
+.lp-perk-text span {
+  font-size: 12px;
+  color: rgba(255,255,255,.5);
+}
+
+.lp-deals-ticker {
+  margin-top: auto;
+  padding: 20px;
+  background: rgba(255,255,255,.06);
+  border-radius: var(--r);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.lp-ticker-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,.35);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.deal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deal-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.db-subto { background: rgba(41,171,226,.2); color: #93C5FD; }
+.db-sf    { background: rgba(247,148,29,.2); color: #FCD34D; }
+.db-cash  { background: rgba(16,185,129,.2); color: #6EE7B7; }
+
+.lp-link {
+  margin-top: 20px;
+  font-size: 12px;
+  color: rgba(255,255,255,.3);
+}
+.lp-link a {
+  color: rgba(255,255,255,.4);
+  text-decoration: none;
+  transition: color .15s;
+}
+.lp-link a:hover { color: var(--blue); }
+
+/* ── RIGHT PANEL ─────────────────────────────────────────────── */
+.right-panel {
+  background: var(--bg);
+  overflow-y: auto;
+  padding: 0;
+}
+
+.rp-inner {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+/* ── PROGRESS ───────────────────────────────────────────────── */
+.progress-bar-wrap {
+  margin-bottom: 36px;
+}
+
+.step-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.step-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--light);
+  transition: color .2s;
+}
+
+.step-label.active { color: var(--blue); }
+.step-label.done { color: var(--green); }
+
+.progress-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), #6FC8E8);
+  border-radius: 4px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  width: 20%;
+}
+
+.step-counter {
+  font-size: 12px;
+  color: var(--light);
+  margin-top: 8px;
+  text-align: right;
+}
+
+/* ── STEP PANELS ────────────────────────────────────────────── */
+.step-panel { display: none; }
+.step-panel.active { display: block; animation: fadeUp .25s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+.step-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -.5px;
+  margin-bottom: 6px;
+}
+
+.step-sub {
+  font-size: 14px;
+  color: var(--mid);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+/* ── CARDS ──────────────────────────────────────────────────── */
+.fc {
+  background: var(--white);
+  border-radius: var(--r);
+  border: 1px solid #EDF2F7;
+  padding: 22px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
+
+.fc-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 14px;
+}
+
+/* ── FORM FIELDS ────────────────────────────────────────────── */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.fg { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.fg:last-child { margin-bottom: 0; }
+.fl { font-size: 11px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: .4px; }
+.fsub { font-size: 11px; color: var(--light); margin-top: -2px; }
+
+input.fi, select.fi, textarea.fi {
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--white);
+  outline: none;
+  transition: border .2s, box-shadow .2s;
+  width: 100%;
+}
+input.fi:focus, select.fi:focus, textarea.fi:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(41,171,226,.12);
+}
+input.fi::placeholder, textarea.fi::placeholder { color: #C0C8D4; }
+select.fi {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+textarea.fi { resize: vertical; min-height: 80px; }
+.fi.error { border-color: #FC8181; }
+.err-msg { font-size: 11px; color: #E53E3E; display: none; margin-top: 3px; }
+.err-msg.show { display: block; }
+
+/* ── CHIPS ──────────────────────────────────────────────────── */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--mid);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.chip:hover { border-color: var(--blue); color: var(--blue); }
+.chip.on { background: var(--navy); border-color: var(--navy); color: var(--white); }
+.chip.sm { padding: 5px 11px; font-size: 11px; }
+
+/* ── PROFILE CARDS ─────────────────────────────────────────── */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.pcard {
+  padding: 18px 14px;
+  border-radius: var(--r);
+  border: 2px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  text-align: center;
+  transition: all .2s;
+  position: relative;
+}
+
+.pcard:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: var(--shadow); }
+.pcard.on { border-color: var(--navy); background: #F8FAFF; }
+.pcard.on::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--green);
+}
+.pcard-icon { font-size: 26px; margin-bottom: 8px; }
+.pcard-label { font-size: 12px; font-weight: 700; color: var(--navy); }
+.pcard-sub { font-size: 10px; color: var(--light); margin-top: 3px; line-height: 1.4; }
+.pcard.on .pcard-label { color: var(--blue); }
+
+/* profile section banners */
+.pbanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pbanner-cash    { background: #E6F9F0; color: #276749; border-left: 3px solid var(--green); }
+.pbanner-creative{ background: #F3E8FF; color: #6B21A8; border-left: 3px solid #7C3AED; }
+.pbanner-lender  { background: #FFF3E0; color: #c05621; border-left: 3px solid var(--orange); }
+
+/* ── NAV BUTTONS ─────────────────────────────────────────────── */
+.step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  border: none;
+  text-decoration: none;
+}
+
+.btn-prev {
+  background: var(--white);
+  color: var(--mid);
+  border: 1.5px solid var(--border);
+}
+.btn-prev:hover { border-color: var(--blue); color: var(--blue); }
+
+.btn-next {
+  background: var(--blue);
+  color: var(--white);
+  flex: 1;
+  justify-content: center;
+}
+.btn-next:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(41,171,226,.35); }
+
+.btn-submit {
+  background: var(--orange);
+  color: var(--white);
+  width: 100%;
+  justify-content: center;
+  padding: 16px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+.btn-submit:hover { background: var(--orange-dark); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(247,148,29,.4); }
+.btn-submit:disabled { opacity: .65; cursor: default; transform: none; box-shadow: none; }
+
+/* ── CONSENT ──────────────────────────────────────────────── */
+.agree-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+.agree-wrap input[type="checkbox"] {
+  width: 16px; height: 16px;
+  margin-top: 2px;
+  accent-color: var(--blue);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.agree-wrap label {
+  font-size: 11px;
+  color: var(--mid);
+  line-height: 1.6;
+  cursor: pointer;
+}
+.agree-wrap a { color: var(--blue); }
+
+/* ── REVIEW ────────────────────────────────────────────────── */
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid #EDF2F7;
+  font-size: 13px;
+}
+.review-row:last-child { border-bottom: none; }
+.review-label { color: var(--light); font-weight: 500; }
+.review-val { color: var(--navy); font-weight: 600; text-align: right; max-width: 58%; }
+
+/* ── SUCCESS ────────────────────────────────────────────────── */
+.success-wrap {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+  animation: fadeUp .4s ease;
+}
+.success-wrap.show { display: block; }
+.success-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #E6F9F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  animation: pop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+.success-title { font-size: 28px; font-weight: 900; color: var(--navy); margin-bottom: 10px; letter-spacing: -.5px; }
+.success-sub { font-size: 14px; color: var(--mid); max-width: 380px; margin: 0 auto 32px; line-height: 1.7; }
+.success-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-success-primary { background: var(--navy); color: var(--white); }
+.btn-success-primary:hover { background: var(--navy2); }
+.btn-success-outline { background: var(--white); color: var(--blue); border: 1.5px solid var(--blue); }
+.btn-success-outline:hover { background: var(--blue); color: var(--white); }
+.success-note { font-size: 11px; color: var(--light); margin-top: 20px; }
+
+/* ── MOBILE ─────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .page-wrap { grid-template-columns: 1fr; }
+  .left-panel { position: relative; height: auto; padding: 32px 24px 40px; }
+  .lp-deals-ticker { display: none; }
+  .lp-headline { font-size: 32px; }
+  .lp-perks { gap: 10px; }
+  .right-panel { overflow-y: visible; }
+  .rp-inner { padding: 32px 20px 60px; }
+  .row2 { grid-template-columns: 1fr; }
+  .row3 { grid-template-columns: 1fr 1fr; }
+  .profile-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .lp-headline { font-size: 26px; }
+  .step-labels { display: none; }
+  .row3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- ── LEFT PANEL ──────────────────────────────────────────── -->
+  <div class="left-panel">
+    <div class="left-inner">
+
+      <a href="https://deals.termsforsale.com" class="lp-logo">
+        <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale">
+        <span class="lp-logo-tag">by Deal Pros</span>
+      </a>
+
+      <div class="lp-eyebrow">Verified Buyer Program</div>
+
+      <h1 class="lp-headline">
+        Get deals<br>matched to<br><span>your criteria.</span>
+      </h1>
+
+      <p class="lp-body">
+        Tell us exactly what you buy. We match you to off-market deals — Subject To, Seller Finance, and Cash — the moment they drop. No MLS. No agents. No bidding wars.
+      </p>
+
+      <div class="lp-perks">
+        <div class="lp-perk">
+          <div class="lp-perk-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="lp-perk-text">
+            <strong>Deals matched to your exact buy box</strong>
+            <span>Cash, creative, or both — we filter before alerting you</span>
+          </div>
+        </div>
+        <div class="lp-perk">
+          <div class="lp-perk-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="lp-perk-text">
+            <strong>SMS + email alerts before anyone else</strong>
+            <span>Verified buyers get first access to new inventory</span>
+          </div>
+        </div>
+        <div class="lp-perk">
+          <div class="lp-perk-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="lp-perk-text">
+            <strong>SubTo rates locking in under 3%</strong>
+            <span>Market rate is 7%+ — these deals don't last</span>
+          </div>
+        </div>
+        <div class="lp-perk">
+          <div class="lp-perk-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="lp-perk-text">
+            <strong>Entry fees from $15K</strong>
+            <span>Seller finance and SubTo deals with low entry</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-deals-ticker">
+        <div class="lp-ticker-label">Active deal types</div>
+        <div class="deal-badges">
+          <span class="deal-badge db-subto">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+            Subject To
+          </span>
+          <span class="deal-badge db-sf">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+            Seller Finance
+          </span>
+          <span class="deal-badge db-cash">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+            Cash / Below ARV
+          </span>
+          <span class="deal-badge db-subto">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+            Stack / Morby
+          </span>
+        </div>
+      </div>
+
+      <div class="lp-link">
+        Already set up? <a href="https://deals.termsforsale.com">Browse active deals →</a>
+      </div>
+
+    </div>
+  </div><!-- /left-panel -->
+
+  <!-- ── RIGHT PANEL ─────────────────────────────────────────── -->
+  <div class="right-panel">
+    <div class="rp-inner">
+
+      <!-- SUCCESS STATE -->
+      <div class="success-wrap" id="success-panel">
+        <div class="success-circle">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="success-title">You're verified! 🎉</div>
+        <p class="success-sub">We'll match you to deals that fit your buy box and send you alerts the moment they drop. Keep an eye on your phone and email.</p>
+        <div class="success-links">
+          <a href="https://deals.termsforsale.com" class="btn btn-success-primary">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Browse Active Deals
+          </a>
+          <a href="https://deals.termsforsale.com/buy-box.html" class="btn btn-success-outline">
+            Edit My Buy Box
+          </a>
+        </div>
+        <div class="success-note">Deals update weekly. You'll always get early access.</div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div id="form-wrap">
+        <div class="progress-bar-wrap">
+          <div class="step-labels">
+            <span class="step-label active" id="sl-1">You</span>
+            <span class="step-label" id="sl-2">Profile</span>
+            <span class="step-label" id="sl-3">Criteria</span>
+            <span class="step-label" id="sl-4">Markets</span>
+            <span class="step-label" id="sl-5">Confirm</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
+          <div class="step-counter" id="step-counter">Step 1 of 5</div>
+        </div>
+
+        <!-- ── STEP 1: CONTACT ─────────────────────────────── -->
+        <div class="step-panel active" id="step-1">
+          <div class="step-title">Tell us about yourself</div>
+          <div class="step-sub">We'll use this to send you deal alerts and reach out when something matches.</div>
+
+          <div class="fc">
+            <div class="row2">
+              <div class="fg">
+                <label class="fl">First Name</label>
+                <input class="fi" id="bc-fname" placeholder="Jane" autocomplete="given-name">
+                <span class="err-msg" id="err-fname">Required</span>
+              </div>
+              <div class="fg">
+                <label class="fl">Last Name</label>
+                <input class="fi" id="bc-lname" placeholder="Smith" autocomplete="family-name">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="fg">
+                <label class="fl">Phone Number</label>
+                <input class="fi" id="bc-phone" type="tel" placeholder="(480) 555-0100" autocomplete="tel">
+                <span class="err-msg" id="err-phone">Required</span>
+              </div>
+              <div class="fg">
+                <label class="fl">Email Address</label>
+                <input class="fi" id="bc-email" type="email" placeholder="jane@email.com" autocomplete="email">
+                <span class="err-msg" id="err-email">Required</span>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label class="fl">Company / Entity <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--light)">(optional)</span></label>
+              <input class="fi" id="bc-entity" placeholder="Jane Smith LLC">
+            </div>
+          </div>
+
+          <div class="fc">
+            <div class="fc-title">Preferred Contact Method</div>
+            <div class="chips" id="grp-contact-pref">
+              <button type="button" class="chip on" data-val="SMS" onclick="toggleExcl(this,'grp-contact-pref')">📱 SMS</button>
+              <button type="button" class="chip" data-val="Email" onclick="toggleExcl(this,'grp-contact-pref')">📧 Email</button>
+              <button type="button" class="chip" data-val="Both" onclick="toggleExcl(this,'grp-contact-pref')">Both</button>
+              <button type="button" class="chip" data-val="Phone Call" onclick="toggleExcl(this,'grp-contact-pref')">📞 Call</button>
+            </div>
+          </div>
+
+          <div class="step-nav">
+            <div></div>
+            <button class="btn btn-next" onclick="nextStep(1)">
+              Next: Your Profile
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 2: PROFILE ─────────────────────────────── -->
+        <div class="step-panel" id="step-2">
+          <div class="step-title">What type of investor are you?</div>
+          <div class="step-sub">Select all that apply — you can set separate criteria for each profile.</div>
+
+          <div class="profile-grid">
+            <div class="pcard on" data-val="Cash Buyer" onclick="toggleProfile(this)">
+              <div class="pcard-icon">💵</div>
+              <div class="pcard-label">Cash Buyer</div>
+              <div class="pcard-sub">Cash, hard money, or conventional</div>
+            </div>
+            <div class="pcard" data-val="Creative Finance Buyer" onclick="toggleProfile(this)">
+              <div class="pcard-icon">🔑</div>
+              <div class="pcard-label">Creative Finance</div>
+              <div class="pcard-sub">SubTo, Seller Finance, Stack / Morby, Wrap</div>
+            </div>
+            <div class="pcard" data-val="Lender" onclick="toggleProfile(this)">
+              <div class="pcard-icon">🏦</div>
+              <div class="pcard-label">Lender</div>
+              <div class="pcard-sub">Hard money, DSCR, private lending</div>
+            </div>
+          </div>
+
+          <div class="fc">
+            <div class="fc-title">Asset Classes</div>
+            <div class="chips" id="grp-asset-types">
+              <button type="button" class="chip on" data-val="Single Family" onclick="toggleChip(this)">🏠 Single Family</button>
+              <button type="button" class="chip" data-val="Multifamily" onclick="toggleChip(this)">🏢 Multifamily</button>
+              <button type="button" class="chip" data-val="Commercial" onclick="toggleChip(this)">🏪 Commercial</button>
+              <button type="button" class="chip" data-val="Land" onclick="toggleChip(this)">🌿 Land</button>
+              <button type="button" class="chip" data-val="Condo/Townhouse" onclick="toggleChip(this)">🏘 Condo / Townhouse</button>
+            </div>
+          </div>
+
+          <div class="fc">
+            <div class="fc-title">Exit Strategies</div>
+            <div class="chips" id="grp-exits">
+              <button type="button" class="chip" data-val="Buy & Hold" onclick="toggleChip(this)">Buy &amp; Hold</button>
+              <button type="button" class="chip" data-val="BRRRR" onclick="toggleChip(this)">BRRRR</button>
+              <button type="button" class="chip" data-val="Fix & Flip" onclick="toggleChip(this)">Fix &amp; Flip</button>
+              <button type="button" class="chip" data-val="STR / Airbnb" onclick="toggleChip(this)">STR / Airbnb</button>
+              <button type="button" class="chip" data-val="Mid-Term Rental" onclick="toggleChip(this)">Mid-Term Rental</button>
+              <button type="button" class="chip" data-val="PadSplit" onclick="toggleChip(this)">PadSplit</button>
+              <button type="button" class="chip" data-val="Wrap & Resell" onclick="toggleChip(this)">Wrap &amp; Resell</button>
+              <button type="button" class="chip" data-val="Section 8" onclick="toggleChip(this)">Section 8</button>
+              <button type="button" class="chip" data-val="Development" onclick="toggleChip(this)">Development</button>
+            </div>
+          </div>
+
+          <div class="step-nav">
+            <button class="btn btn-prev" onclick="prevStep(2)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              Back
+            </button>
+            <button class="btn btn-next" onclick="nextStep(2)">
+              Next: Deal Criteria
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 3: CRITERIA ────────────────────────────── -->
+        <div class="step-panel" id="step-3">
+          <div class="step-title" id="s3-title">Your deal criteria</div>
+          <div class="step-sub" id="s3-sub">These numbers are how we filter deals before alerting you.</div>
+          <div id="s3-form"></div>
+
+          <div class="step-nav">
+            <button class="btn btn-prev" onclick="prevStep(3)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              Back
+            </button>
+            <button class="btn btn-next" onclick="nextStep(3)">
+              Next: Target Markets
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 4: MARKETS ─────────────────────────────── -->
+        <div class="step-panel" id="step-4">
+          <div class="step-title">Where do you invest?</div>
+          <div class="step-sub">More specific = more targeted alerts. Nationwide is fine too.</div>
+
+          <div class="fc">
+            <div class="fc-title">Target Markets</div>
+            <div class="fg">
+              <label class="fl">Cities, States, or Zip Codes</label>
+              <div class="fsub">Separate with commas — e.g. Phoenix AZ, San Antonio TX, 85001</div>
+              <textarea class="fi" id="bc-markets" placeholder="Phoenix AZ, San Antonio TX, Tampa FL..." rows="3" style="margin-top:6px"></textarea>
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label class="fl">Quick-Select States</label>
+              <div class="chips" id="grp-states" style="margin-top:6px">
+                <button type="button" class="chip sm" data-val="AZ" onclick="toggleState(this)">Arizona</button>
+                <button type="button" class="chip sm" data-val="TX" onclick="toggleState(this)">Texas</button>
+                <button type="button" class="chip sm" data-val="FL" onclick="toggleState(this)">Florida</button>
+                <button type="button" class="chip sm" data-val="GA" onclick="toggleState(this)">Georgia</button>
+                <button type="button" class="chip sm" data-val="TN" onclick="toggleState(this)">Tennessee</button>
+                <button type="button" class="chip sm" data-val="KY" onclick="toggleState(this)">Kentucky</button>
+                <button type="button" class="chip sm" data-val="IN" onclick="toggleState(this)">Indiana</button>
+                <button type="button" class="chip sm" data-val="MO" onclick="toggleState(this)">Missouri</button>
+                <button type="button" class="chip sm" data-val="OH" onclick="toggleState(this)">Ohio</button>
+                <button type="button" class="chip sm" data-val="NC" onclick="toggleState(this)">N. Carolina</button>
+                <button type="button" class="chip sm" data-val="SC" onclick="toggleState(this)">S. Carolina</button>
+                <button type="button" class="chip sm" data-val="National" onclick="toggleState(this)">🌎 Nationwide</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="fc">
+            <div class="fc-title">Property Specs <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--light);font-size:11px">(optional — improves matching)</span></div>
+            <div class="row2">
+              <div class="fg">
+                <label class="fl">Min Sqft</label>
+                <input class="fi" id="bc-min-sqft" type="number" placeholder="e.g. 1000">
+              </div>
+              <div class="fg">
+                <label class="fl">Max Sqft</label>
+                <input class="fi" id="bc-max-sqft" type="number" placeholder="e.g. 3500">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="fg">
+                <label class="fl">Min Bedrooms</label>
+                <input class="fi" id="bc-min-beds" type="number" min="1" max="10" placeholder="e.g. 3">
+              </div>
+              <div class="fg">
+                <label class="fl">Min Year Built</label>
+                <input class="fi" id="bc-year-built" type="number" placeholder="e.g. 1990">
+              </div>
+            </div>
+            <div class="row2" style="margin-bottom:0">
+              <div class="fg" style="margin-bottom:0">
+                <label class="fl">HOA Acceptable?</label>
+                <div class="chips" id="grp-hoa" style="margin-top:6px">
+                  <button type="button" class="chip sm on" data-val="Yes" onclick="toggleExcl(this,'grp-hoa')">Yes</button>
+                  <button type="button" class="chip sm" data-val="No" onclick="toggleExcl(this,'grp-hoa')">No HOA only</button>
+                </div>
+              </div>
+              <div class="fg" style="margin-bottom:0">
+                <label class="fl">Close Timeline</label>
+                <select class="fi" id="bc-timeline" style="margin-top:6px">
+                  <option value="">Any timeline</option>
+                  <option>ASAP (7 days)</option>
+                  <option>10-14 days</option>
+                  <option>14-21 days</option>
+                  <option>21-30 days</option>
+                  <option>30-45 days</option>
+                  <option>45-60 days</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="fc">
+            <div class="fc-title">Occupancy Preference</div>
+            <div class="chips" id="grp-occupancy">
+              <button type="button" class="chip on" data-val="Either" onclick="toggleExcl(this,'grp-occupancy')">Either</button>
+              <button type="button" class="chip" data-val="Vacant" onclick="toggleExcl(this,'grp-occupancy')">Vacant preferred</button>
+              <button type="button" class="chip" data-val="Tenant Occupied" onclick="toggleExcl(this,'grp-occupancy')">Tenant OK</button>
+            </div>
+          </div>
+
+          <div class="fc">
+            <div class="fc-title">Additional Notes / Hard Criteria <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--light);font-size:11px">(optional)</span></div>
+            <textarea class="fi" id="bc-notes" placeholder="Dealbreakers, specific neighborhoods, size requirements, anything we should know before sending you deals..."></textarea>
+          </div>
+
+          <div class="step-nav">
+            <button class="btn btn-prev" onclick="prevStep(4)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              Back
+            </button>
+            <button class="btn btn-next" onclick="nextStep(4)">
+              Review &amp; Submit
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 5: CONFIRM ─────────────────────────────── -->
+        <div class="step-panel" id="step-5">
+          <div class="step-title">Review &amp; Submit</div>
+          <div class="step-sub">Quick look before we set you up. You can update your criteria anytime.</div>
+
+          <div class="fc" id="review-card"></div>
+
+          <div class="fc">
+            <div class="fc-title">Alert Preferences</div>
+            <div class="row2">
+              <div class="fg">
+                <label class="fl">SMS Alerts</label>
+                <div class="chips" id="grp-sms-opt" style="margin-top:6px">
+                  <button type="button" class="chip on" data-val="true" onclick="toggleExcl(this,'grp-sms-opt')">Yes please</button>
+                  <button type="button" class="chip" data-val="false" onclick="toggleExcl(this,'grp-sms-opt')">No thanks</button>
+                </div>
+              </div>
+              <div class="fg">
+                <label class="fl">Email Alerts</label>
+                <div class="chips" id="grp-email-opt" style="margin-top:6px">
+                  <button type="button" class="chip on" data-val="true" onclick="toggleExcl(this,'grp-email-opt')">Yes please</button>
+                  <button type="button" class="chip" data-val="false" onclick="toggleExcl(this,'grp-email-opt')">No thanks</button>
+                </div>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label class="fl">Alert Frequency</label>
+              <div class="chips" id="grp-alert-freq" style="margin-top:6px">
+                <button type="button" class="chip on" data-val="Immediately" onclick="toggleExcl(this,'grp-alert-freq')">Immediately (any new match)</button>
+                <button type="button" class="chip" data-val="Weekly Only" onclick="toggleExcl(this,'grp-alert-freq')">Weekly digest only</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="agree-wrap">
+            <input type="checkbox" id="bc-agree">
+            <label for="bc-agree">By submitting, I agree to receive SMS and email communications from Terms For Sale / Deal Pros regarding real estate deals and market updates. Reply STOP to opt out. I also agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label>
+          </div>
+          <span class="err-msg" id="err-agree" style="margin-bottom:10px">Please agree to the terms to continue</span>
+
+          <button class="btn btn-submit" id="bc-submit-btn" onclick="submitForm()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Become a Verified Buyer
+          </button>
+
+          <div style="text-align:center;font-size:11px;color:var(--light);margin-top:12px">
+            Your criteria are shared with our team to match you to the right deals.
+          </div>
+
+          <div class="step-nav" style="margin-top:12px">
+            <button class="btn btn-prev" onclick="prevStep(5)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              Back
+            </button>
+            <div></div>
+          </div>
+        </div>
+
+      </div><!-- /form-wrap -->
+    </div><!-- /rp-inner -->
+  </div><!-- /right-panel -->
+
+</div><!-- /page-wrap -->
+
+<script>
+var GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/88c6d9de-eb76-45ef-ac83-db284b7da5ac';
+var GHL_INQUIRY_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
+var AUTH_KEY = 'tfs_buyer';
+var _step = 1;
+
+function getUTMs(){
+  var p = new URLSearchParams(window.location.search), r = {};
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){ if(p.get(k)) r[k]=p.get(k); });
+  return r;
+}
+
+// ── CHIPS ───────────────────────────────────────────────────────
+function toggleChip(el){ el.classList.toggle('on'); }
+function toggleExcl(el, g){
+  document.querySelectorAll('#'+g+' .chip').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+}
+function getChips(g){ return Array.from(document.querySelectorAll('#'+g+' .chip.on')).map(function(c){ return c.dataset.val; }); }
+function getExcl(g){ var e=document.querySelector('#'+g+' .chip.on'); return e?e.dataset.val:''; }
+
+function toggleState(el){
+  el.classList.toggle('on');
+  var states = getChips('grp-states');
+  var ta = document.getElementById('bc-markets');
+  var existing = ta.value.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s && !s.match(/^[A-Z]{2}$/) && s!=='National'; });
+  ta.value = existing.concat(states).filter(Boolean).join(', ');
+}
+
+function toggleProfile(card){
+  card.classList.toggle('on');
+  if(document.querySelectorAll('.pcard.on').length === 0) card.classList.add('on');
+  renderStep3();
+}
+
+function getProfiles(){ return Array.from(document.querySelectorAll('.pcard.on')).map(function(c){ return c.dataset.val; }); }
+
+// ── FORM HELPERS ─────────────────────────────────────────────────
+function v(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+function numIn(id,ph){ return '<input class="fi" id="'+id+'" type="number" placeholder="'+ph+'">'; }
+function txtIn(id,ph){ return '<input class="fi" id="'+id+'" placeholder="'+ph+'">'; }
+function fld(lbl,inp,sub){ return '<div class="fg">'+(sub?'<label class="fl">'+lbl+'</label><div class="fsub">'+sub+'</div>'+inp:'<label class="fl">'+lbl+'</label>'+inp)+'</div>'; }
+function r2(a,b){ return '<div class="row2">'+a+b+'</div>'; }
+function chipBn(val,lbl,g,on,excl){
+  var fn = excl ? "toggleExcl(this,'"+g+"')" : "toggleChip(this)";
+  return '<button type="button" class="chip'+(on?' on':'')+'" data-val="'+val+'" onclick="'+fn+'">'+lbl+'</button>';
+}
+function chipRow(id,chips){ return '<div class="chips" id="'+id+'">'+chips+'</div>'; }
+function banner(icon,lbl,cls){ return '<div class="pbanner '+cls+'">'+icon+' '+lbl+'</div>'; }
+function card(title,body){ return '<div class="fc"><div class="fc-title">'+title+'</div>'+body+'</div>'; }
+function lrow(lbl,html){ return '<div style="margin-top:14px"><label class="fl" style="display:block;margin-bottom:8px">'+lbl+'</label>'+html+'</div>'; }
+
+// ── STEP 3 RENDER ─────────────────────────────────────────────────
+function renderStep3(){
+  var ps = getProfiles(), multi = ps.length > 1;
+  if(ps.length===1){
+    var ti={'Cash Buyer':'Cash Buyer Criteria','Creative Finance Buyer':'Creative Finance Criteria','Lender':'Lending Parameters'};
+    var su={'Cash Buyer':'Set your budget — we filter every deal against these numbers before alerting you.','Creative Finance Buyer':'Tell us your payment and cash flow thresholds.','Lender':'Tell us what you fund so we can match you to buyers.'};
+    document.getElementById('s3-title').textContent = ti[ps[0]]||'Your Criteria';
+    document.getElementById('s3-sub').textContent = su[ps[0]]||'';
+  } else {
+    document.getElementById('s3-title').textContent = 'Your Criteria ('+ps.length+' profiles)';
+    document.getElementById('s3-sub').textContent = "Fill out criteria for each — we'll create separate buy boxes for each profile.";
+  }
+  var html = '';
+  if(ps.indexOf('Cash Buyer')>-1) html += cashForm(multi);
+  if(ps.indexOf('Creative Finance Buyer')>-1) html += creativeForm(multi);
+  if(ps.indexOf('Lender')>-1) html += lenderForm(multi);
+  document.getElementById('s3-form').innerHTML = html;
+}
+
+function cashForm(multi){
+  var b = multi ? banner('💵','Cash Buyer','pbanner-cash') : '';
+  return card('Purchase Budget', b +
+    r2(fld('Max Purchase Price ($)',numIn('bc-max-price','e.g. 250000')),
+       fld('Max Repair Budget ($)',numIn('bc-max-repair','e.g. 50000'))) +
+    '<div style="margin-top:12px">' +
+    r2(fld('Min ARV ($)',numIn('bc-min-arv','e.g. 200000')),
+       fld('Min Equity at Entry (%)',numIn('bc-min-equity','e.g. 20'))) +
+    '</div>'
+  ) +
+  card('Return Requirements',
+    r2(fld('Target ARV Spread (%)','<div class="fsub">% below ARV you require</div>'+numIn('bc-arv-spread','e.g. 30')),
+       fld('Min Cash-on-Cash (%)',numIn('bc-min-coc','e.g. 8'))) +
+    '<div style="margin-top:12px">' +
+    fld('Financing Method',
+      '<select class="fi" id="bc-financing"><option value="">Select...</option>' +
+      '<option>All Cash</option><option>Hard Money</option><option>DSCR Loan</option>' +
+      '<option>Conventional</option><option>Private Money</option><option>Equity Partner</option></select>'
+    ) + '</div>'
+  );
+}
+
+function creativeForm(multi){
+  var b = multi ? banner('🔑','Creative Finance Buyer','pbanner-creative') : '';
+  return card('Deal Structures', b +
+    chipRow('grp-structures',
+      chipBn('Subject To','Subject To','grp-structures',true,false) +
+      chipBn('Seller Finance','Seller Finance','grp-structures',false,false) +
+      chipBn('Stack / Morby Method','Stack / Morby Method','grp-structures',false,false) +
+      chipBn('Wrap','Wrap','grp-structures',false,false) +
+      chipBn('Lease Option','Lease Option','grp-structures',false,false) +
+      chipBn('Novation','Novation','grp-structures',false,false)
+    )
+  ) +
+  card('Financial Parameters',
+    r2(fld('Max Entry Fee ($)','<div class="fsub">Cash to close / down payment</div>'+numIn('bc-max-entry','e.g. 35000')),
+       fld('Max Monthly PITI ($)','<div class="fsub">Payment you will assume</div>'+numIn('bc-max-pmt','e.g. 2500'))) +
+    '<div style="margin-top:12px">' +
+    r2(fld('Min Monthly Cash Flow ($)',numIn('bc-min-cf','e.g. 200')),
+       fld('Max Interest Rate (%)',numIn('bc-max-rate','e.g. 6.5'))) +
+    '</div>' +
+    '<div style="margin-top:12px">' +
+    r2(fld('Min Cash-on-Cash (%)',numIn('bc-coc-creative','e.g. 8')),
+       fld('Target ARV Spread (%)',numIn('bc-arv-spread-creative','e.g. 20'))) +
+    '</div>' +
+    lrow('Balloon Tolerance',
+      chipRow('grp-balloon',
+        chipBn('No balloon','No balloon','grp-balloon',true,true) +
+        chipBn('Up to 5yr','Up to 5yr balloon','grp-balloon',false,true) +
+        chipBn('Up to 10yr','Up to 10yr balloon','grp-balloon',false,true) +
+        chipBn('Any','Any balloon OK','grp-balloon',false,true)
+      )
+    )
+  );
+}
+
+function lenderForm(multi){
+  var b = multi ? banner('🏦','Lender / Capital Partner','pbanner-lender') : '';
+  return card('Loan Types', b +
+    chipRow('grp-loan-types',
+      chipBn('Hard Money','Hard Money','grp-loan-types',false,false) +
+      chipBn('Private Money','Private Money','grp-loan-types',false,false) +
+      chipBn('DSCR','DSCR','grp-loan-types',false,false) +
+      chipBn('Bridge Loan','Bridge Loan','grp-loan-types',false,false) +
+      chipBn('Fix & Flip','Fix &amp; Flip','grp-loan-types',false,false) +
+      chipBn('Gap Funding','Gap Funding','grp-loan-types',false,false) +
+      chipBn('Equity Partner','Equity Partner','grp-loan-types',false,false) +
+      chipBn('Transactional','Transactional','grp-loan-types',false,false)
+    )
+  ) +
+  card('Lending Parameters',
+    r2(fld('Min Loan Amount ($)',numIn('bc-loan-min','e.g. 50000')),
+       fld('Max Loan Amount ($)',numIn('bc-loan-max','e.g. 2000000'))) +
+    '<div style="margin-top:12px">' +
+    r2(fld('Max LTV (%)',numIn('bc-max-ltv','e.g. 75')),
+       fld('Typical Rate Range',txtIn('bc-rate-range','e.g. 9-12%'))) +
+    '</div>' +
+    '<div style="margin-top:12px">' +
+    r2(fld('Min Credit Score',numIn('bc-min-credit','e.g. 620')),
+       fld('Points Charged',txtIn('bc-points','e.g. 2'))) +
+    '</div>' +
+    lrow('Close Speed',
+      chipRow('grp-close-speed',
+        chipBn('3-5 days','3-5 days','grp-close-speed',false,true) +
+        chipBn('7 days','7 days','grp-close-speed',true,true) +
+        chipBn('10-14 days','10-14 days','grp-close-speed',false,true) +
+        chipBn('2-3 weeks','2-3 weeks','grp-close-speed',false,true)
+      )
+    )
+  );
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────
+function setStep(n){
+  _step = n;
+  document.querySelectorAll('.step-panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('step-'+n);
+  if(panel){ panel.classList.add('active'); document.querySelector('.right-panel').scrollTo({top:0,behavior:'smooth'}); }
+
+  ['sl-1','sl-2','sl-3','sl-4','sl-5'].forEach(function(id,i){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('active','done');
+    if(i+1 < n) el.classList.add('done');
+    else if(i+1 === n) el.classList.add('active');
+  });
+  document.getElementById('pfill').style.width = (n/5*100)+'%';
+  document.getElementById('step-counter').textContent = 'Step '+n+' of 5';
+}
+
+function nextStep(from){
+  if(!validate(from)) return;
+  setStep(from+1);
+  if(from+1===5) buildReview();
+}
+
+function prevStep(from){ setStep(from-1); }
+
+function validate(step){
+  if(step===1){
+    var fn=v('bc-fname'), ph=v('bc-phone'), em=v('bc-email');
+    document.getElementById('err-fname').classList.toggle('show',!fn);
+    document.getElementById('err-phone').classList.toggle('show',!ph);
+    document.getElementById('err-email').classList.toggle('show',!em);
+    return !!(fn&&ph&&em);
+  }
+  return true;
+}
+
+// ── REVIEW ───────────────────────────────────────────────────────
+function buildReview(){
+  var ps = getProfiles();
+  var rows = [
+    ['Name',(v('bc-fname')+' '+v('bc-lname')).trim()],
+    ['Phone',v('bc-phone')],
+    ['Email',v('bc-email')],
+    ['Profile(s)',ps.join(', ')],
+    ['Asset Types',getChips('grp-asset-types').join(', ')||'—'],
+    ['Exit Strategies',getChips('grp-exits').join(', ')||'—'],
+    ['Markets',v('bc-markets')||'—'],
+  ];
+  if(ps.indexOf('Cash Buyer')>-1){
+    if(v('bc-max-price')) rows.push(['Max Price','$'+Number(v('bc-max-price')).toLocaleString()]);
+    if(v('bc-arv-spread')) rows.push(['ARV Spread',v('bc-arv-spread')+'% below ARV']);
+    if(v('bc-min-coc')) rows.push(['Min CoC',v('bc-min-coc')+'%']);
+  }
+  if(ps.indexOf('Creative Finance Buyer')>-1){
+    rows.push(['Structures',getChips('grp-structures').join(', ')||'—']);
+    if(v('bc-max-entry')) rows.push(['Max Entry','$'+Number(v('bc-max-entry')).toLocaleString()]);
+    if(v('bc-max-pmt')) rows.push(['Max PITI','$'+Number(v('bc-max-pmt')).toLocaleString()+'/mo']);
+    if(v('bc-min-cf')) rows.push(['Min Cash Flow','$'+Number(v('bc-min-cf')).toLocaleString()+'/mo']);
+  }
+  if(ps.indexOf('Lender')>-1){
+    rows.push(['Loan Types',getChips('grp-loan-types').join(', ')||'—']);
+    if(v('bc-loan-max')) rows.push(['Max Loan','$'+Number(v('bc-loan-max')).toLocaleString()]);
+  }
+  var html = '';
+  rows.forEach(function(r){
+    html += '<div class="review-row"><span class="review-label">'+r[0]+'</span><span class="review-val">'+r[1]+'</span></div>';
+  });
+  document.getElementById('review-card').innerHTML = '<div class="fc-title">Summary</div>'+html;
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────
+async function submitForm(){
+  var agreed = document.getElementById('bc-agree').checked;
+  document.getElementById('err-agree').classList.toggle('show',!agreed);
+  if(!agreed) return;
+
+  var btn = document.getElementById('bc-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  var fn=v('bc-fname'), ln=v('bc-lname'), phone=v('bc-phone'), email=v('bc-email'), entity=v('bc-entity');
+  var ps = getProfiles();
+
+  var tags = ['tfs buyer','vip signup','buy box complete','website lead','buyingcriteria.com'];
+  if(ps.indexOf('Cash Buyer')>-1) tags.push('cash buyer');
+  if(ps.indexOf('Creative Finance Buyer')>-1) tags.push('creative buyer');
+  if(ps.indexOf('Lender')>-1) tags.push('tfs lender');
+
+  var structs = [];
+  if(ps.indexOf('Cash Buyer')>-1) structs.push('Cash');
+  if(ps.indexOf('Creative Finance Buyer')>-1){ var s=getChips('grp-structures'); structs.push(s.length?s.join(', '):'Creative Finance'); }
+  if(ps.indexOf('Lender')>-1) structs.push('Lender');
+
+  var payload = Object.assign({
+    firstName:fn, lastName:ln, email:email, phone:phone, company:entity,
+    preferred_contact: getExcl('grp-contact-pref'),
+    buyer_profile_type: ps.join(', '),
+    property_types: getChips('grp-asset-types').join(', '),
+    buyer_asset_type: getChips('grp-asset-types').join(', '),
+    exits: getChips('grp-exits').join(', '),
+    deal_structure: structs.join(', '),
+    target_zips: v('bc-markets'),
+    bb_min_sqft: v('bc-min-sqft'),
+    bb_max_sqft: v('bc-max-sqft'),
+    bb_min_beds: v('bc-min-beds'),
+    bb_year_built_min: v('bc-year-built'),
+    bb_max_hoa: getExcl('grp-hoa'),
+    close_timeline: v('bc-timeline'),
+    bb_occupancy_pref: getExcl('grp-occupancy'),
+    sms_opt_in: getExcl('grp-sms-opt'),
+    email_opt_in: getExcl('grp-email-opt'),
+    alert_frequency: getExcl('grp-alert-freq'),
+    weekly_alert_opt_in:'true',
+    buy_box_complete:'true',
+    buy_box_updated: new Date().toISOString().split('T')[0],
+    lead_source:'buyingcriteria.com',
+    source:'TFS - buyingcriteria.com',
+    pipeline_name:'Buyer Inquiries',
+    pipeline_stage:'New Lead',
+    tags:tags,
+    notes: v('bc-notes'),
+  }, getUTMs());
+
+  if(ps.indexOf('Cash Buyer')>-1) Object.assign(payload,{
+    cash_max_price:v('bc-max-price'), cash_max_repair:v('bc-max-repair'),
+    cash_min_arv:v('bc-min-arv'), cash_min_equity_pct:v('bc-min-equity'),
+    bb_target_arv_spread:v('bc-arv-spread'), bb_min_coc:v('bc-min-coc'),
+    financing_method:v('bc-financing'),
+  });
+
+  if(ps.indexOf('Creative Finance Buyer')>-1) Object.assign(payload,{
+    creative_structures: getChips('grp-structures').join(', '),
+    creative_max_entry:v('bc-max-entry'), creative_max_pmt:v('bc-max-pmt'),
+    creative_min_cf:v('bc-min-cf'), creative_max_rate:v('bc-max-rate'),
+    creative_balloon_tolerance:getExcl('grp-balloon'),
+    bb_target_arv_spread:v('bc-arv-spread-creative')||v('bc-arv-spread'),
+    bb_min_coc:v('bc-coc-creative')||v('bc-min-coc'),
+  });
+
+  if(ps.indexOf('Lender')>-1) Object.assign(payload,{
+    lender_loan_types:getChips('grp-loan-types').join(', '),
+    lender_loan_min:v('bc-loan-min'), lender_loan_max:v('bc-loan-max'),
+    lender_max_ltv:v('bc-max-ltv'), lender_rate_range:v('bc-rate-range'),
+    lender_min_credit:v('bc-min-credit'), lender_points:v('bc-points'),
+    lender_close_speed:getExcl('grp-close-speed'), lender_markets:v('bc-markets'),
+  });
+
+  console.log('Submitting to GHL:', payload);
+
+  try {
+    var res = await fetch(GHL_SIGNUP_WEBHOOK,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    console.log('GHL response:', res.status);
+  } catch(e){ console.warn('GHL webhook error:', e); }
+
+  // Save locally
+  try{
+    localStorage.setItem(AUTH_KEY, JSON.stringify({name:fn,email:email,phone:phone,initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()}));
+    ps.forEach(function(p){
+      var key='tfs_bb__'+(p==='Cash Buyer'?'cash':p==='Lender'?'lender':'creative')+'__sf';
+      localStorage.setItem(key,JSON.stringify(Object.assign({profile:p,updatedAt:new Date().toISOString()},payload)));
+    });
+  }catch(e){}
+
+  // Show success
+  document.getElementById('form-wrap').style.display = 'none';
+  document.getElementById('success-panel').classList.add('show');
+  document.querySelector('.right-panel').scrollTo({top:0,behavior:'smooth'});
+}
+
+// Init
+renderStep3();
+</script>
+</body>
+</html>

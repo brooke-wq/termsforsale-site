@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set Your Buying Criteria — Terms For Sale</title>
+<meta name="description" content="Tell us exactly what deals you're looking for. We'll match you to off-market SubTo, Seller Finance, and Cash deals that fit your buy box.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;--navy2:#132848;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--blue-mid:#d0eef9;
+  --orange:#F7941D;--orange-dark:#d97c0e;
+  --green:#10B981;--green-light:#E6F9F0;--green-dark:#276749;
+  --white:#fff;--bg:#F4F6F9;
+  --text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;
+  --border:#E2E8F0;--border-light:#EDF2F7;
+  --shadow:0 2px 12px rgba(0,0,0,.07);
+  --r:12px;--font:'Poppins',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* ── NAV ────────────────────────────────────────────────────── */
+nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo img{height:40px;width:auto}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-link{padding:8px 14px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:500;color:var(--text-mid);transition:all .15s}
+.nav-link:hover{background:var(--bg);color:var(--text)}
+.nav-link.active{color:var(--blue)}
+.btn-nav{padding:8px 20px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s;border:none}
+.btn-primary{background:var(--blue);color:var(--white)}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text-mid)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── HERO BAND ───────────────────────────────────────────────── */
+.hero-band{background:var(--navy);padding:48px 32px;text-align:center}
+.hero-band .eyebrow{font-size:12px;font-weight:700;color:#93C5FD;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px}
+.hero-band h1{font-size:36px;font-weight:900;color:#FFFFFF;letter-spacing:-.5px;line-height:1.1;margin-bottom:12px}
+.hero-band p{font-size:15px;color:rgba(255,255,255,.9);max-width:520px;margin:0 auto 24px}
+.perks-row{display:flex;justify-content:center;flex-wrap:wrap;gap:12px 28px}
+.perk{display:flex;align-items:center;gap:7px;font-size:13px;color:rgba(255,255,255,.95)}
+.perk svg{color:var(--green);flex-shrink:0}
+
+/* ── PROGRESS BAR ────────────────────────────────────────────── */
+.progress-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;position:sticky;top:68px;z-index:100}
+.progress-inner{max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+.step-indicator{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--text-light);cursor:pointer;transition:color .15s}
+.step-indicator.active{color:var(--blue)}
+.step-indicator.done{color:var(--green)}
+.step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-light);transition:all .2s;flex-shrink:0}
+.step-indicator.active .step-dot{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.step-indicator.done .step-dot{background:var(--green);border-color:var(--green);color:var(--white)}
+.step-connector{flex:1;height:2px;background:var(--border);margin:0 8px;transition:background .2s}
+.step-connector.done{background:var(--green)}
+.progress-bar{height:3px;background:var(--border-light);position:relative;overflow:hidden}
+.progress-fill{height:100%;background:var(--blue);transition:width .3s ease;border-radius:2px}
+
+/* ── MAIN ────────────────────────────────────────────────────── */
+.main{max-width:680px;margin:0 auto;padding:32px 20px 80px}
+
+/* ── STEP PANEL ──────────────────────────────────────────────── */
+.step-panel{display:none}
+.step-panel.active{display:block}
+.step-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.step-sub{font-size:14px;color:var(--text-mid);margin-bottom:28px}
+
+/* ── FORM ELEMENTS ───────────────────────────────────────────── */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border-light);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px}
+.field-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.field-group:last-child{margin-bottom:0}
+.field-label{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px}
+.field-sublabel{font-size:11px;color:var(--text-light);margin-top:-3px;margin-bottom:4px}
+.f-input{padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border .2s;width:100%}
+.f-input:focus{border-color:var(--blue)}
+.f-input::placeholder{color:#C0C8D4}
+.f-input.error{border-color:#FC8181}
+.f-select{padding:11px 28px 11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--white);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;width:100%;transition:border .2s}
+.f-select:focus{border-color:var(--blue)}
+.f-textarea{padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border .2s;width:100%;resize:vertical;min-height:80px}
+.f-textarea:focus{border-color:var(--blue)}
+.f-textarea::placeholder{color:#C0C8D4}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text-mid);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.chip.sm{padding:6px 12px;font-size:11px}
+
+/* PROFILE TYPE SELECTOR (Step 1) */
+.profile-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.profile-card{padding:20px 16px;border-radius:var(--r);border:2px solid var(--border);background:var(--white);cursor:pointer;text-align:center;transition:all .2s}
+.profile-card:hover{border-color:var(--blue)}
+.profile-card.on{border-color:var(--navy);background:#F8FAFF}
+.profile-card .pc-icon{font-size:28px;margin-bottom:8px}
+.profile-card .pc-label{font-size:13px;font-weight:700;color:var(--navy)}
+.profile-card .pc-sub{font-size:11px;color:var(--text-light);margin-top:3px}
+.profile-card.on .pc-label{color:var(--blue)}
+
+/* NAV BUTTONS */
+.step-nav{display:flex;align-items:center;justify-content:space-between;margin-top:24px}
+.btn-step{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;border:none}
+.btn-prev{background:var(--white);color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-prev:hover{border-color:var(--blue);color:var(--blue)}
+.btn-next{background:var(--blue);color:var(--white)}
+.btn-next:hover{background:var(--blue-dark)}
+.btn-submit{background:var(--orange);color:var(--white);width:100%;justify-content:center;padding:16px}
+.btn-submit:hover{background:var(--orange-dark)}
+.btn-submit:disabled{opacity:.6;cursor:default}
+
+/* AGREEMENT */
+.agree-row{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;background:var(--bg);border-radius:8px;border:1px solid var(--border-light);margin-top:8px}
+.agree-row input[type="checkbox"]{width:16px;height:16px;margin-top:2px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
+.agree-row label{font-size:12px;color:var(--text-mid);line-height:1.6;cursor:pointer}
+.agree-row a{color:var(--blue)}
+
+/* SUCCESS STATE */
+.success-panel{display:none;text-align:center;padding:60px 24px}
+.success-panel.show{display:block}
+.success-icon{width:72px;height:72px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.success-panel h2{font-size:26px;font-weight:800;color:var(--navy);margin-bottom:10px}
+.success-panel p{font-size:14px;color:var(--text-mid);max-width:420px;margin:0 auto 28px}
+.success-links{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-success{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:none;transition:all .15s}
+.btn-success-primary{background:var(--navy);color:var(--white)}
+.btn-success-primary:hover{background:var(--navy2)}
+.btn-success-outline{background:var(--white);color:var(--blue);border:1.5px solid var(--blue)}
+.btn-success-outline:hover{background:var(--blue);color:var(--white)}
+
+/* ERROR */
+.err-msg{font-size:12px;color:#E53E3E;margin-top:4px;display:none}
+.err-msg.show{display:block}
+
+/* OPTIONAL BADGE */
+.opt-badge{font-size:10px;font-weight:500;color:var(--text-light);background:var(--border-light);padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle}
+
+/* STEP COUNT */
+.step-count{font-size:12px;color:var(--text-light);font-weight:500}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  nav{padding:0 16px}
+  .nav-links{display:none}
+  .hero-band h1{font-size:26px}
+  .hero-band{padding:36px 20px}
+  .progress-wrap{padding:0 16px}
+  .profile-cards{grid-template-columns:1fr}
+  .row-2{grid-template-columns:1fr}
+  .row-3{grid-template-columns:1fr 1fr}
+  .step-indicator span{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale">
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Browse Deals</a>
+    <a href="/buy-box.html" class="nav-link">My Buy Box</a>
+    <a href="https://dealproszoom.com" target="_blank" class="nav-link">Book a Call</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="/" class="btn-nav btn-outline">View Deals</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-band">
+  <div class="eyebrow">Deal Pros — Terms For Sale</div>
+  <h1>Set Your Buying Criteria</h1>
+  <p>Tell us exactly what you buy. We match you to off-market deals the moment they drop — SubTo, Seller Finance, and Cash.</p>
+  <div class="perks-row">
+    <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Deals matched to your exact criteria</div>
+    <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>SMS + email alerts before public</div>
+    <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>No MLS — no agents — no bidding wars</div>
+    <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Takes 3 minutes</div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="step-indicator active" id="si-1" onclick="goToStep(1)">
+      <div class="step-dot" id="sd-1">1</div>
+      <span>You</span>
+    </div>
+    <div class="step-connector" id="sc-1"></div>
+    <div class="step-indicator" id="si-2" onclick="goToStep(2)">
+      <div class="step-dot" id="sd-2">2</div>
+      <span>Profile</span>
+    </div>
+    <div class="step-connector" id="sc-2"></div>
+    <div class="step-indicator" id="si-3" onclick="goToStep(3)">
+      <div class="step-dot" id="sd-3">3</div>
+      <span>Criteria</span>
+    </div>
+    <div class="step-connector" id="sc-3"></div>
+    <div class="step-indicator" id="si-4" onclick="goToStep(4)">
+      <div class="step-dot" id="sd-4">4</div>
+      <span>Markets</span>
+    </div>
+    <div class="step-connector" id="sc-4"></div>
+    <div class="step-indicator" id="si-5" onclick="goToStep(5)">
+      <div class="step-dot" id="sd-5">5</div>
+      <span>Confirm</span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+</div>
+
+<!-- MAIN FORM -->
+<div class="main">
+
+  <!-- SUCCESS -->
+  <div class="success-panel" id="success-panel">
+    <div class="success-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>You're on the list! 🎉</h2>
+    <p>We'll send you deals that match your criteria the moment they drop. Keep an eye on your phone and email.</p>
+    <div class="success-links">
+      <a href="/" class="btn-success btn-success-primary">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Browse Active Deals
+      </a>
+      <a href="/buy-box.html" class="btn-success btn-success-outline">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit My Buy Box
+      </a>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: CONTACT INFO ─────────────────────────────── -->
+  <div class="step-panel active" id="step-1">
+    <div class="step-title">Tell us about yourself</div>
+    <div class="step-sub">We'll use this to send you deal alerts and reach out when something matches.</div>
+
+    <div class="card">
+      <div class="row-2">
+        <div class="field-group">
+          <label class="field-label">First Name</label>
+          <input class="f-input" id="bc-fname" placeholder="Jane" autocomplete="given-name">
+          <span class="err-msg" id="err-fname">Please enter your first name</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Last Name</label>
+          <input class="f-input" id="bc-lname" placeholder="Smith" autocomplete="family-name">
+        </div>
+      </div>
+      <div class="row-2" style="margin-top:14px">
+        <div class="field-group">
+          <label class="field-label">Phone Number</label>
+          <input class="f-input" id="bc-phone" type="tel" placeholder="(480) 555-0100" autocomplete="tel">
+          <span class="err-msg" id="err-phone">Please enter your phone number</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email Address</label>
+          <input class="f-input" id="bc-email" type="email" placeholder="jane@email.com" autocomplete="email">
+          <span class="err-msg" id="err-email">Please enter your email address</span>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:14px">
+        <label class="field-label">Company / Entity Name <span class="opt-badge">Optional</span></label>
+        <input class="f-input" id="bc-entity" placeholder="Jane Smith LLC">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How do you prefer to be contacted?</div>
+      <div class="chips" id="grp-contact-pref">
+        <button type="button" class="chip on" data-val="SMS" onclick="toggleExcl(this,'grp-contact-pref')">📱 SMS</button>
+        <button type="button" class="chip" data-val="Email" onclick="toggleExcl(this,'grp-contact-pref')">📧 Email</button>
+        <button type="button" class="chip" data-val="Both" onclick="toggleExcl(this,'grp-contact-pref')">Both</button>
+        <button type="button" class="chip" data-val="Phone Call" onclick="toggleExcl(this,'grp-contact-pref')">📞 Phone Call</button>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <div class="step-count">Step 1 of 5</div>
+      <button class="btn-step btn-next" onclick="nextStep(1)">
+        Next: Your Profile
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: BUYER PROFILE ────────────────────────────── -->
+  <div class="step-panel" id="step-2">
+    <div class="step-title">What type of buyer are you?</div>
+    <div class="step-sub">Select all that apply — you can set separate criteria for each profile.</div>
+
+    <div class="profile-cards" id="profile-cards">
+      <div class="profile-card on" data-val="Cash Buyer" onclick="toggleProfile(this)">
+        <div class="pc-icon">💵</div>
+        <div class="pc-label">Cash Buyer</div>
+        <div class="pc-sub">I buy with cash, hard money, or conventional financing</div>
+      </div>
+      <div class="profile-card" data-val="Creative Finance Buyer" onclick="toggleProfile(this)">
+        <div class="pc-icon">🔑</div>
+        <div class="pc-label">Creative Finance</div>
+        <div class="pc-sub">I buy SubTo, Seller Finance, Hybrid, or Wrap</div>
+      </div>
+      <div class="profile-card" data-val="Lender" onclick="toggleProfile(this)">
+        <div class="pc-icon">🏦</div>
+        <div class="pc-label">Lender / Capital</div>
+        <div class="pc-sub">I fund deals — hard money, DSCR, private lending</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Asset classes you invest in</div>
+      <div class="chips" id="grp-asset-types">
+        <button type="button" class="chip on" data-val="Single Family" onclick="toggleChip(this)">🏠 Single Family</button>
+        <button type="button" class="chip" data-val="Multifamily" onclick="toggleChip(this)">🏢 Multifamily</button>
+        <button type="button" class="chip" data-val="Commercial" onclick="toggleChip(this)">🏪 Commercial</button>
+        <button type="button" class="chip" data-val="Land" onclick="toggleChip(this)">🌿 Land</button>
+        <button type="button" class="chip" data-val="Condo/Townhouse" onclick="toggleChip(this)">🏘️ Condo / Townhouse</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Exit strategies you use</div>
+      <div class="chips" id="grp-exits">
+        <button type="button" class="chip" data-val="Buy & Hold" onclick="toggleChip(this)">Buy &amp; Hold</button>
+        <button type="button" class="chip" data-val="BRRRR" onclick="toggleChip(this)">BRRRR</button>
+        <button type="button" class="chip" data-val="Fix & Flip" onclick="toggleChip(this)">Fix &amp; Flip</button>
+        <button type="button" class="chip" data-val="STR / Airbnb" onclick="toggleChip(this)">STR / Airbnb</button>
+        <button type="button" class="chip" data-val="Mid-Term Rental" onclick="toggleChip(this)">Mid-Term Rental</button>
+        <button type="button" class="chip" data-val="PadSplit" onclick="toggleChip(this)">PadSplit</button>
+        <button type="button" class="chip" data-val="Wrap & Resell" onclick="toggleChip(this)">Wrap &amp; Resell</button>
+        <button type="button" class="chip" data-val="Section 8" onclick="toggleChip(this)">Section 8</button>
+        <button type="button" class="chip" data-val="Development" onclick="toggleChip(this)">Development</button>
+        <button type="button" class="chip" data-val="Wholesale" onclick="toggleChip(this)">Wholesale / Assign</button>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-step btn-prev" onclick="prevStep(2)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back
+      </button>
+      <div class="step-count">Step 2 of 5</div>
+      <button class="btn-step btn-next" onclick="nextStep(2)">
+        Next: Deal Criteria
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: FINANCIAL CRITERIA ──────────────────────── -->
+  <div class="step-panel" id="step-3">
+    <div class="step-title" id="s3-title">Your deal criteria</div>
+    <div class="step-sub" id="s3-sub">These numbers are how we filter deals before alerting you — be specific.</div>
+    <div id="s3-form"><!-- injected by renderStep3() --></div>
+
+    <div class="step-nav">
+      <button class="btn-step btn-prev" onclick="prevStep(3)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back
+      </button>
+      <div class="step-count">Step 3 of 5</div>
+      <button class="btn-step btn-next" onclick="nextStep(3)">
+        Next: Target Markets
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: MARKETS & SPECS ──────────────────────────── -->
+  <div class="step-panel" id="step-4">
+    <div class="step-title">Where do you invest?</div>
+    <div class="step-sub">The more specific you are, the more targeted your deal alerts.</div>
+
+    <div class="card">
+      <div class="card-title">Target Markets</div>
+      <div class="field-group">
+        <label class="field-label">Cities, States, or Zip Codes</label>
+        <div class="field-sublabel">Separate with commas — e.g. Phoenix AZ, San Antonio TX, Tampa FL, 85001</div>
+        <textarea class="f-textarea" id="bc-markets" placeholder="Phoenix AZ, San Antonio TX, Tampa FL..." rows="3"></textarea>
+      </div>
+      <div class="field-group" style="margin-top:8px">
+        <label class="field-label">Quick-Select States</label>
+        <div class="chips" id="grp-states" style="margin-top:4px">
+          <button type="button" class="chip sm" data-val="AZ" onclick="toggleState(this)">Arizona</button>
+          <button type="button" class="chip sm" data-val="TX" onclick="toggleState(this)">Texas</button>
+          <button type="button" class="chip sm" data-val="FL" onclick="toggleState(this)">Florida</button>
+          <button type="button" class="chip sm" data-val="GA" onclick="toggleState(this)">Georgia</button>
+          <button type="button" class="chip sm" data-val="TN" onclick="toggleState(this)">Tennessee</button>
+          <button type="button" class="chip sm" data-val="KY" onclick="toggleState(this)">Kentucky</button>
+          <button type="button" class="chip sm" data-val="IN" onclick="toggleState(this)">Indiana</button>
+          <button type="button" class="chip sm" data-val="MO" onclick="toggleState(this)">Missouri</button>
+          <button type="button" class="chip sm" data-val="OH" onclick="toggleState(this)">Ohio</button>
+          <button type="button" class="chip sm" data-val="NC" onclick="toggleState(this)">N. Carolina</button>
+          <button type="button" class="chip sm" data-val="SC" onclick="toggleState(this)">S. Carolina</button>
+          <button type="button" class="chip sm" data-val="National" onclick="toggleState(this)">🌎 Nationwide</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Property Specifications <span class="opt-badge">Optional — improves matching</span></div>
+      <div class="row-2">
+        <div class="field-group">
+          <label class="field-label">Min Sqft</label>
+          <input class="f-input" id="bc-min-sqft" type="number" placeholder="e.g. 1000">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Max Sqft</label>
+          <input class="f-input" id="bc-max-sqft" type="number" placeholder="e.g. 3000">
+        </div>
+      </div>
+      <div class="row-2" style="margin-top:14px">
+        <div class="field-group">
+          <label class="field-label">Min Bedrooms</label>
+          <input class="f-input" id="bc-min-beds" type="number" min="0" max="10" placeholder="e.g. 3">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Min Year Built</label>
+          <input class="f-input" id="bc-year-built" type="number" placeholder="e.g. 1990">
+        </div>
+      </div>
+      <div class="row-2" style="margin-top:14px">
+        <div class="field-group">
+          <label class="field-label">Max HOA ($/mo)</label>
+          <div class="field-sublabel">0 = no HOA preferred</div>
+          <input class="f-input" id="bc-max-hoa" type="number" placeholder="e.g. 100">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Close Timeline</label>
+          <select class="f-select" id="bc-timeline">
+            <option value="">Any</option>
+            <option>ASAP (7 days)</option>
+            <option>10-14 days</option>
+            <option>14-21 days</option>
+            <option>21-30 days</option>
+            <option>30-45 days</option>
+            <option>45-60 days</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:14px">
+        <label class="field-label">Occupancy Preference</label>
+        <div class="chips" id="grp-occupancy" style="margin-top:6px">
+          <button type="button" class="chip sm on" data-val="Either" onclick="toggleExcl(this,'grp-occupancy')">Either</button>
+          <button type="button" class="chip sm" data-val="Vacant" onclick="toggleExcl(this,'grp-occupancy')">Vacant preferred</button>
+          <button type="button" class="chip sm" data-val="Tenant Occupied" onclick="toggleExcl(this,'grp-occupancy')">Tenant OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Anything else we should know? <span class="opt-badge">Optional</span></div>
+      <textarea class="f-textarea" id="bc-notes" placeholder="Hard limits, specific submarkets, deal size range, anything we should filter against before alerting you..."></textarea>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-step btn-prev" onclick="prevStep(4)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back
+      </button>
+      <div class="step-count">Step 4 of 5</div>
+      <button class="btn-step btn-next" onclick="nextStep(4)">
+        Review &amp; Submit
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: REVIEW & SUBMIT ──────────────────────────── -->
+  <div class="step-panel" id="step-5">
+    <div class="step-title">Review &amp; Submit</div>
+    <div class="step-sub">Quick look before we submit. You can always update your criteria at <a href="/buy-box.html" style="color:var(--blue)">deals.termsforsale.com/buy-box.html</a></div>
+
+    <div class="card" id="review-card">
+      <!-- injected by buildReview() -->
+    </div>
+
+    <div class="card">
+      <div class="card-title">Alert Preferences</div>
+      <div class="row-2">
+        <div class="field-group">
+          <label class="field-label">SMS Alerts</label>
+          <div class="chips" id="grp-sms-opt" style="margin-top:4px">
+            <button type="button" class="chip on" data-val="true" onclick="toggleExcl(this,'grp-sms-opt')">✓ Yes please</button>
+            <button type="button" class="chip" data-val="false" onclick="toggleExcl(this,'grp-sms-opt')">No thanks</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email Alerts</label>
+          <div class="chips" id="grp-email-opt" style="margin-top:4px">
+            <button type="button" class="chip on" data-val="true" onclick="toggleExcl(this,'grp-email-opt')">✓ Yes please</button>
+            <button type="button" class="chip" data-val="false" onclick="toggleExcl(this,'grp-email-opt')">No thanks</button>
+          </div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:14px">
+        <label class="field-label">Alert Frequency</label>
+        <div class="chips" id="grp-alert-freq" style="margin-top:4px">
+          <button type="button" class="chip on" data-val="Immediately" onclick="toggleExcl(this,'grp-alert-freq')">Immediately (any new match)</button>
+          <button type="button" class="chip" data-val="Weekly Only" onclick="toggleExcl(this,'grp-alert-freq')">Weekly only</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="agree-row">
+      <input type="checkbox" id="bc-agree">
+      <label for="bc-agree">By submitting, I agree to receive SMS and email communications from Terms For Sale regarding real estate deals, market updates, and investment opportunities. I can opt out at any time. I also agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label>
+    </div>
+    <span class="err-msg" id="err-agree" style="margin-top:6px">Please agree to continue</span>
+
+    <div style="margin-top:16px">
+      <button class="btn-step btn-submit" id="bc-submit-btn" onclick="submitForm()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Become a Verified Buyer
+      </button>
+      <div style="text-align:center;font-size:11px;color:var(--text-light);margin-top:10px">
+        Your criteria are sent to our team and used to match you to deals. You can update anytime at /buy-box.html
+      </div>
+    </div>
+
+    <div class="step-nav" style="margin-top:8px">
+      <button class="btn-step btn-prev" onclick="prevStep(5)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back
+      </button>
+      <div class="step-count">Step 5 of 5</div>
+      <div></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────
+const AUTH_KEY = 'tfs_buyer';
+const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/88c6d9de-eb76-45ef-ac83-db284b7da5ac';
+const GHL_INQUIRY_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
+
+// ── STATE ────────────────────────────────────────────────────────
+var _step = 1;
+var _profile = 'Cash Buyer';
+
+// ── UTMs ─────────────────────────────────────────────────────────
+function getUTMs(){
+  var p = new URLSearchParams(window.location.search);
+  var r = {};
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){
+    if(p.get(k)) r[k] = p.get(k);
+  });
+  return r;
+}
+
+// ── CHIP HELPERS ─────────────────────────────────────────────────
+function toggleChip(el){ el.classList.toggle('on'); }
+function toggleExcl(el, groupId){
+  document.querySelectorAll('#'+groupId+' .chip').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+}
+function getChips(groupId){
+  return Array.from(document.querySelectorAll('#'+groupId+' .chip.on')).map(function(c){ return c.dataset.val; });
+}
+function getExcl(groupId){
+  var el = document.querySelector('#'+groupId+' .chip.on');
+  return el ? el.dataset.val : '';
+}
+
+// ── STATE HELPER ────────────────────────────────────────────────
+function toggleState(el){
+  el.classList.toggle('on');
+  var states = getChips('grp-states');
+  var textarea = document.getElementById('bc-markets');
+  var existing = textarea.value.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s && !s.match(/^[A-Z]{2}$/) && s !== 'National'; });
+  textarea.value = existing.concat(states).filter(Boolean).join(', ');
+}
+
+// ── PROFILE SELECTION ────────────────────────────────────────────
+function toggleProfile(card){
+  card.classList.toggle('on');
+  var selected = document.querySelectorAll('.profile-card.on');
+  if(selected.length === 0) card.classList.add('on');
+  renderStep3();
+}
+
+function getSelectedProfiles(){
+  return Array.from(document.querySelectorAll('.profile-card.on')).map(function(c){ return c.dataset.val; });
+}
+
+// ── HTML BUILDER HELPERS ─────────────────────────────────────────
+function profileBanner(icon, label, bg){
+  return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:'+bg+';border-radius:8px;margin-bottom:14px"><span style="font-size:18px">'+icon+'</span><span style="font-size:13px;font-weight:700;color:#0D1F3C">'+label+'</span></div>';
+}
+
+function chipBtn(val, label, group, isOn, exclusive){
+  var fn = exclusive ? "toggleExcl(this,'"+group+"')" : "toggleChip(this)";
+  return '<button type="button" class="chip'+(isOn?' on':'')+'" data-val="'+val+'" onclick="'+fn+'">'+label+'</button>';
+}
+
+function row2(a, b){ return '<div class="row-2">'+a+b+'</div>'; }
+function field(labelText, inputHtml){ return '<div class="field-group"><label class="field-label">'+labelText+'</label>'+inputHtml+'</div>'; }
+function sub(text){ return '<div class="field-sublabel">'+text+'</div>'; }
+function numInput(id, ph){ return '<input class="f-input" id="'+id+'" type="number" placeholder="'+ph+'">'; }
+function txtInput(id, ph){ return '<input class="f-input" id="'+id+'" placeholder="'+ph+'">'; }
+function card(titleText, bodyHtml){ return '<div class="card"><div class="card-title">'+titleText+'</div>'+bodyHtml+'</div>'; }
+function chipRow(id, chips){ return '<div class="chips" id="'+id+'">'+chips+'</div>'; }
+function labelRow(text, html){ return '<div style="margin-top:14px"><label class="field-label" style="display:block;margin-bottom:8px">'+text+'</label>'+html+'</div>'; }
+
+// ── FORM FUNCTIONS ───────────────────────────────────────────────
+function cashForm(){
+  var multi = getSelectedProfiles().length > 1;
+  var html = '';
+  if(multi) html += profileBanner('💵','Cash Buyer Criteria','#E6F9F0');
+  html += card('Purchase Budget',
+    row2(
+      field('Max Purchase Price ($)', numInput('bc-max-price','e.g. 250000')),
+      field('Max Repair Budget ($)', numInput('bc-max-repair','e.g. 50000'))
+    ) +
+    field('Min ARV ($)', numInput('bc-min-arv','e.g. 200000'))
+  );
+  html += card('Return Requirements',
+    '<div class="row-2">' +
+    field('Min Equity at Entry (%)', numInput('bc-min-equity','e.g. 20')) +
+    field('Target ARV Spread (%)', sub('% below ARV you need') + numInput('bc-arv-spread','e.g. 30')) +
+    '</div>' +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Cash-on-Cash (%)', numInput('bc-min-coc','e.g. 8')) +
+    field('Financing Method',
+      '<select class="f-select" id="bc-financing">' +
+      '<option value="">Select...</option>' +
+      '<option>All Cash</option><option>Hard Money</option><option>DSCR Loan</option>' +
+      '<option>Conventional</option><option>Private Money</option><option>Equity Partner</option>' +
+      '</select>'
+    ) +
+    '</div>'
+  );
+  return '<div id="cash-section">'+html+'</div>';
+}
+
+function creativeForm(){
+  var multi = getSelectedProfiles().length > 1;
+  var html = '';
+  if(multi) html += profileBanner('🔑','Creative Finance Buyer Criteria','#F3E8FF');
+  html += card('Deal Structures You Buy',
+    chipRow('grp-structures',
+      chipBtn('Subject To','Subject To','grp-structures',true,false) +
+      chipBtn('Seller Finance','Seller Finance','grp-structures',false,false) +
+      chipBtn('Stack / Morby Method','Stack / Morby Method','grp-structures',false,false) +
+      chipBtn('Wrap','Wrap','grp-structures',false,false) +
+      chipBtn('Lease Option','Lease Option','grp-structures',false,false) +
+      chipBtn('Novation','Novation','grp-structures',false,false)
+    )
+  );
+  html += card('Financial Parameters',
+    row2(
+      field('Max Entry Fee ($)', sub('Cash to close / down payment') + numInput('bc-max-entry','e.g. 35000')),
+      field('Max Monthly PITI ($)', sub('Payment you will assume') + numInput('bc-max-pmt','e.g. 2500'))
+    ) +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Monthly Cash Flow ($)', numInput('bc-min-cf','e.g. 200')) +
+    field('Max Interest Rate (%)', numInput('bc-max-rate','e.g. 6.5')) +
+    '</div>' +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Cash-on-Cash (%)', numInput('bc-coc-creative','e.g. 8')) +
+    field('Target ARV Spread (%)', numInput('bc-arv-spread-creative','e.g. 20')) +
+    '</div>' +
+    labelRow('Balloon Tolerance',
+      chipRow('grp-balloon',
+        chipBtn('No balloon','No balloon','grp-balloon',true,true) +
+        chipBtn('Up to 5yr','Up to 5yr balloon','grp-balloon',false,true) +
+        chipBtn('Up to 10yr','Up to 10yr balloon','grp-balloon',false,true) +
+        chipBtn('Any','Any balloon OK','grp-balloon',false,true)
+      )
+    )
+  );
+  return '<div id="creative-section">'+html+'</div>';
+}
+
+function lenderForm(){
+  var multi = getSelectedProfiles().length > 1;
+  var html = '';
+  if(multi) html += profileBanner('🏦','Lender / Capital Partner Criteria','#FFF3E0');
+  html += card('Loan Types You Offer',
+    chipRow('grp-loan-types',
+      chipBtn('Hard Money','Hard Money','grp-loan-types',false,false) +
+      chipBtn('Private Money','Private Money','grp-loan-types',false,false) +
+      chipBtn('DSCR','DSCR','grp-loan-types',false,false) +
+      chipBtn('Bridge Loan','Bridge Loan','grp-loan-types',false,false) +
+      chipBtn('Fix &amp; Flip','Fix & Flip','grp-loan-types',false,false) +
+      chipBtn('Gap Funding','Gap Funding','grp-loan-types',false,false) +
+      chipBtn('Equity Partner','Equity Partner','grp-loan-types',false,false) +
+      chipBtn('Transactional','Transactional','grp-loan-types',false,false)
+    )
+  );
+  html += card('Lending Parameters',
+    row2(
+      field('Min Loan Amount ($)', numInput('bc-loan-min','e.g. 50000')),
+      field('Max Loan Amount ($)', numInput('bc-loan-max','e.g. 2000000'))
+    ) +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Max LTV (%)', numInput('bc-max-ltv','e.g. 75')) +
+    field('Typical Rate Range', txtInput('bc-rate-range','e.g. 9-12%')) +
+    '</div>' +
+    '<div class="row-2" style="margin-top:14px">' +
+    field('Min Credit Score', numInput('bc-min-credit','e.g. 620')) +
+    field('Points Charged', txtInput('bc-points','e.g. 2')) +
+    '</div>' +
+    labelRow('Close Speed',
+      chipRow('grp-close-speed',
+        chipBtn('3-5 days','3-5 days','grp-close-speed',false,true) +
+        chipBtn('7 days','7 days','grp-close-speed',true,true) +
+        chipBtn('10-14 days','10-14 days','grp-close-speed',false,true) +
+        chipBtn('2-3 weeks','2-3 weeks','grp-close-speed',false,true)
+      )
+    )
+  );
+  return '<div id="lender-section">'+html+'</div>';
+}
+
+// ── RENDER STEP 3 ────────────────────────────────────────────────
+function renderStep3(){
+  var container = document.getElementById('s3-form');
+  if(!container) return;
+  var profiles = getSelectedProfiles();
+
+  if(profiles.length === 1){
+    _profile = profiles[0];
+    var titles = {'Cash Buyer':'Cash Buyer Criteria','Creative Finance Buyer':'Creative Finance Criteria','Lender':'Lending Parameters'};
+    var subs = {'Cash Buyer':'Set your financial parameters — we only send deals that fit.','Creative Finance Buyer':'Tell us your payment and cash flow thresholds.','Lender':'Tell us what you fund so we can match you to buyers.'};
+    document.getElementById('s3-title').textContent = titles[_profile] || 'Your Criteria';
+    document.getElementById('s3-sub').textContent = subs[_profile] || '';
+  } else {
+    _profile = profiles.join(', ');
+    document.getElementById('s3-title').textContent = 'Your Criteria (' + profiles.length + ' profiles)';
+    document.getElementById('s3-sub').textContent = "Fill in criteria for each profile — we'll set up separate buy boxes for each.";
+  }
+
+  var html = '';
+  if(profiles.indexOf('Cash Buyer') > -1) html += cashForm();
+  if(profiles.indexOf('Creative Finance Buyer') > -1) html += creativeForm();
+  if(profiles.indexOf('Lender') > -1) html += lenderForm();
+  container.innerHTML = html;
+}
+
+// ── STEP NAVIGATION ──────────────────────────────────────────────
+function goToStep(n){ if(n > _step) return; setStep(n); }
+
+function nextStep(from){
+  if(!validateStep(from)) return;
+  setStep(from + 1);
+  if(from + 1 === 5) buildReview();
+}
+
+function prevStep(from){ setStep(from - 1); }
+
+function setStep(n){
+  _step = n;
+  document.querySelectorAll('.step-panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('step-'+n);
+  if(panel){ panel.classList.add('active'); panel.scrollIntoView({behavior:'smooth',block:'start'}); }
+
+  for(var i=1; i<=5; i++){
+    var si = document.getElementById('si-'+i);
+    var sd = document.getElementById('sd-'+i);
+    if(!si||!sd) continue;
+    si.classList.remove('active','done');
+    if(i < n){ si.classList.add('done'); sd.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'; }
+    else if(i === n){ si.classList.add('active'); sd.textContent=i; }
+    else { sd.textContent=i; }
+    var sc = document.getElementById('sc-'+i);
+    if(sc) sc.classList.toggle('done', i < n);
+  }
+  document.getElementById('progress-fill').style.width = (n/5*100)+'%';
+}
+
+function validateStep(step){
+  var ok = true;
+  if(step === 1){
+    var fname = document.getElementById('bc-fname').value.trim();
+    var phone = document.getElementById('bc-phone').value.trim();
+    var email = document.getElementById('bc-email').value.trim();
+    document.getElementById('err-fname').classList.toggle('show', !fname);
+    document.getElementById('err-phone').classList.toggle('show', !phone);
+    document.getElementById('err-email').classList.toggle('show', !email);
+    if(!fname||!phone||!email) ok = false;
+  }
+  return ok;
+}
+
+// ── REVIEW ───────────────────────────────────────────────────────
+function buildReview(){
+  var card = document.getElementById('review-card');
+  var profiles = getSelectedProfiles();
+  var rows = [
+    ['Name', (document.getElementById('bc-fname').value+' '+document.getElementById('bc-lname').value).trim()],
+    ['Phone', document.getElementById('bc-phone').value],
+    ['Email', document.getElementById('bc-email').value],
+    ['Profile(s)', profiles.join(', ')],
+    ['Asset Types', getChips('grp-asset-types').join(', ')||'—'],
+    ['Exit Strategies', getChips('grp-exits').join(', ')||'—'],
+    ['Target Markets', document.getElementById('bc-markets').value||'—'],
+  ];
+
+  function v(id){ var el=document.getElementById(id); return el&&el.value.trim()?el.value.trim():''; }
+  if(profiles.indexOf('Cash Buyer') > -1){
+    if(v('bc-max-price')) rows.push(['Max Price', '$'+Number(v('bc-max-price')).toLocaleString()]);
+    if(v('bc-min-coc')) rows.push(['Min CoC', v('bc-min-coc')+'%']);
+    if(v('bc-arv-spread')) rows.push(['ARV Spread', v('bc-arv-spread')+'% below ARV']);
+  }
+  if(profiles.indexOf('Creative Finance Buyer') > -1){
+    rows.push(['Structures', getChips('grp-structures').join(', ')||'—']);
+    if(v('bc-max-entry')) rows.push(['Max Entry', '$'+Number(v('bc-max-entry')).toLocaleString()]);
+    if(v('bc-max-pmt')) rows.push(['Max PITI', '$'+Number(v('bc-max-pmt')).toLocaleString()+'/mo']);
+    if(v('bc-min-cf')) rows.push(['Min CF', '$'+Number(v('bc-min-cf')).toLocaleString()+'/mo']);
+  }
+  if(profiles.indexOf('Lender') > -1){
+    rows.push(['Loan Types', getChips('grp-loan-types').join(', ')||'—']);
+    if(v('bc-loan-max')) rows.push(['Max Loan', '$'+Number(v('bc-loan-max')).toLocaleString()]);
+  }
+
+  card.innerHTML = '<div class="card-title">Your Buying Criteria Summary</div>'
+    + rows.map(function(r){
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EDF2F7;font-size:13px">'
+          +'<span style="color:#718096;font-weight:500">'+r[0]+'</span>'
+          +'<span style="color:#0D1F3C;font-weight:600;text-align:right;max-width:60%">'+r[1]+'</span></div>';
+      }).join('');
+}
+
+// ── SUBMIT ───────────────────────────────────────────────────────
+async function submitForm(){
+  var agreed = document.getElementById('bc-agree').checked;
+  document.getElementById('err-agree').classList.toggle('show', !agreed);
+  if(!agreed) return;
+
+  var btn = document.getElementById('bc-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving your criteria…';
+
+  var fn    = document.getElementById('bc-fname').value.trim();
+  var ln    = document.getElementById('bc-lname').value.trim();
+  var phone = document.getElementById('bc-phone').value.trim();
+  var email = document.getElementById('bc-email').value.trim();
+  var entity= document.getElementById('bc-entity').value.trim();
+  var profiles = getSelectedProfiles();
+
+  function v(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
+
+  var profileTags = ['tfs buyer','vip signup','buy box complete','website lead'];
+  if(profiles.indexOf('Cash Buyer') > -1)             profileTags.push('cash buyer');
+  if(profiles.indexOf('Creative Finance Buyer') > -1) profileTags.push('creative buyer');
+  if(profiles.indexOf('Lender') > -1)                 profileTags.push('tfs lender');
+
+  var structures = [];
+  if(profiles.indexOf('Cash Buyer') > -1)             structures.push('Cash');
+  if(profiles.indexOf('Creative Finance Buyer') > -1){ var s=getChips('grp-structures'); structures.push(s.length?s.join(', '):'Creative Finance'); }
+  if(profiles.indexOf('Lender') > -1)                 structures.push('Lender');
+
+  var payload = Object.assign({
+    firstName: fn, lastName: ln, email: email, phone: phone,
+    company: entity,
+    preferred_contact: getExcl('grp-contact-pref'),
+    buyer_profile_type: profiles.join(', '),
+    property_types:     getChips('grp-asset-types').join(', '),
+    buyer_asset_type:   getChips('grp-asset-types').join(', '),
+    exits:              getChips('grp-exits').join(', '),
+    deal_structure:     structures.join(', '),
+    target_zips:        v('bc-markets'),
+    bb_min_sqft:        v('bc-min-sqft'),
+    bb_max_sqft:        v('bc-max-sqft'),
+    bb_min_beds:        v('bc-min-beds'),
+    bb_year_built_min:  v('bc-year-built'),
+    bb_max_hoa:         getExcl('grp-hoa'),
+    close_timeline:     v('bc-timeline'),
+    bb_occupancy_pref:  getExcl('grp-occupancy'),
+    sms_opt_in:         getExcl('grp-sms-opt'),
+    email_opt_in:       getExcl('grp-email-opt'),
+    alert_frequency:    getExcl('grp-alert-freq'),
+    weekly_alert_opt_in:'true',
+    buy_box_complete:   'true',
+    buy_box_updated:    new Date().toISOString().split('T')[0],
+    lead_source:        'Buying Criteria Form',
+    source:             'TFS - Buying Criteria Page',
+    pipeline_name:      'Buyer Inquiries',
+    pipeline_stage:     'New Lead',
+    tags:               profileTags,
+    notes:              v('bc-notes'),
+  }, getUTMs());
+
+  if(profiles.indexOf('Cash Buyer') > -1){
+    Object.assign(payload,{
+      cash_max_price:    v('bc-max-price'),
+      cash_max_repair:   v('bc-max-repair'),
+      cash_min_arv:      v('bc-min-arv'),
+      cash_min_equity_pct: v('bc-min-equity'),
+      bb_target_arv_spread: v('bc-arv-spread'),
+      bb_min_coc:        v('bc-min-coc'),
+      financing_method:  v('bc-financing'),
+    });
+  }
+  if(profiles.indexOf('Creative Finance Buyer') > -1){
+    Object.assign(payload,{
+      creative_structures:  getChips('grp-structures').join(', '),
+      creative_max_entry:   v('bc-max-entry'),
+      creative_max_pmt:     v('bc-max-pmt'),
+      creative_min_cf:      v('bc-min-cf'),
+      creative_max_rate:    v('bc-max-rate'),
+      creative_balloon_tolerance: getExcl('grp-balloon'),
+      bb_target_arv_spread: v('bc-arv-spread-creative') || v('bc-arv-spread'),
+      bb_min_coc:           v('bc-coc-creative') || v('bc-min-coc'),
+    });
+  }
+  if(profiles.indexOf('Lender') > -1){
+    Object.assign(payload,{
+      lender_loan_types:  getChips('grp-loan-types').join(', '),
+      lender_loan_min:    v('bc-loan-min'),
+      lender_loan_max:    v('bc-loan-max'),
+      lender_max_ltv:     v('bc-max-ltv'),
+      lender_rate_range:  v('bc-rate-range'),
+      lender_min_credit:  v('bc-min-credit'),
+      lender_points:      v('bc-points'),
+      lender_close_speed: getExcl('grp-close-speed'),
+      lender_markets:     v('bc-markets'),
+    });
+  }
+
+  // Match exact pattern used by working webhooks on index.html
+  var payloadStr = JSON.stringify(payload);
+  console.log('Firing GHL webhook to:', GHL_SIGNUP_WEBHOOK);
+  console.log('Payload:', payload);
+
+  try {
+    var res = await fetch(GHL_SIGNUP_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: payloadStr
+    });
+    console.log('GHL response status:', res.status, res.statusText);
+  } catch(e){
+    console.error('GHL webhook failed:', e);
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  if(params.get('deal_id')){
+    try {
+      await fetch(GHL_INQUIRY_WEBHOOK, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(Object.assign({}, payload, {deal_id: params.get('deal_id'), source:'TFS - Buying Criteria + Deal Inquiry'}))
+      });
+    } catch(e){ console.error('Inquiry webhook failed:', e); }
+  }
+
+  try{
+    localStorage.setItem('tfs_buyer', JSON.stringify({name:fn, email:email, phone:phone, initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()}));
+    profiles.forEach(function(p){
+      var key = 'tfs_bb__'+(p==='Cash Buyer'?'cash':p==='Lender'?'lender':'creative')+'__sf';
+      localStorage.setItem(key, JSON.stringify(Object.assign({profile:p, updatedAt:new Date().toISOString()}, payload)));
+    });
+  } catch(e){}
+
+  var mainEl = document.querySelector('.main');
+  var successEl = document.getElementById('success-panel');
+  mainEl.innerHTML = '';
+  successEl.style.display = 'block';
+  mainEl.appendChild(successEl);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Init
+renderStep3();
+
+// Spinner keyframe
+var s = document.createElement('style');
+s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(s);
+</script>
+</body>
+</html>
