@@ -1329,28 +1329,24 @@ async function doSignup(){
 function updateNavAuth(user){
   const el=document.getElementById('nav-right');
   if(!el||!user)return;
-  // embedLoaded: Replit Buy Box app is live and controls the button
-  const embedLoaded = window.TFSBuyBox && typeof window.TFSBuyBox.init==='function';
-  const buyBoxBtn = embedLoaded ? ''
-    : `<button onclick="openBuyBox()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#EBF8FF;border:1.5px solid #29ABE2;color:#1a8bbf;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='#29ABE2';this.style.color='#fff'" onmouseout="this.style.background='#EBF8FF';this.style.color='#1a8bbf'">
+  el.innerHTML=`
+    <div id="tfs-buybox-container">
+      <a href="/buy-box.html" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#EBF8FF;border:1.5px solid #29ABE2;color:#1a8bbf;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:none;transition:all .15s" onmouseover="this.style.background='#29ABE2';this.style.color='#fff'" onmouseout="this.style.background='#EBF8FF';this.style.color='#1a8bbf'">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         My Buy Box
-      </button>`;
-  const bbClick = embedLoaded ? 'window.TFSBuyBox&&window.TFSBuyBox.open();return false' : 'openBuyBox();return false';
-  el.innerHTML=`
-    <div id="tfs-buybox-container">${buyBoxBtn}</div>
+      </a>
+    </div>
     <div class="nav-avatar-wrap">
       <div class="nav-avatar">${user.initials}</div>
       <div class="nav-dropdown">
         <a href="/dashboard.html">📊 My Dashboard</a>
-        <a href="#" onclick="${bbClick}">✏️ Update Buy Box</a>
+        <a href="/buy-box.html">✏️ Update Buy Box</a>
         <a href="/">🏠 All Deals</a>
         <a href="/blog/">📝 Blog</a>
         <hr>
         <button onclick="clearUser();location.reload()">Log Out</button>
       </div>
     </div>`;
-  if(embedLoaded) window.TFSBuyBox.init('#tfs-buybox-container',{user});
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
