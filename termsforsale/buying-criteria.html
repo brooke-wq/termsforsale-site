@@ -934,33 +934,31 @@ async function submitForm(){
     });
   }
 
-  // sendBeacon is the most reliable for GHL — fires even if page transitions
+  // Match exact pattern used by working webhooks on index.html
   var payloadStr = JSON.stringify(payload);
-  console.log('GHL payload:', payload); // remove after confirming sync works
-  var sent = false;
-  if(navigator.sendBeacon){
-    try {
-      sent = navigator.sendBeacon(GHL_SIGNUP_WEBHOOK, new Blob([payloadStr], {type:'application/json'}));
-    } catch(e){}
-  }
-  // Fallback to fetch if sendBeacon unavailable or failed
-  if(!sent){
-    try {
-      await fetch(GHL_SIGNUP_WEBHOOK, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {'Content-Type':'text/plain'},
-        body: payloadStr
-      });
-    } catch(e){ console.warn('GHL webhook error:', e); }
+  console.log('Firing GHL webhook to:', GHL_SIGNUP_WEBHOOK);
+  console.log('Payload:', payload);
+
+  try {
+    var res = await fetch(GHL_SIGNUP_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: payloadStr
+    });
+    console.log('GHL response status:', res.status, res.statusText);
+  } catch(e){
+    console.error('GHL webhook failed:', e);
   }
 
   var params = new URLSearchParams(window.location.search);
   if(params.get('deal_id')){
-    var p2 = JSON.stringify(Object.assign({}, payload, {deal_id: params.get('deal_id'), source:'TFS - Buying Criteria + Deal Inquiry'}));
-    if(navigator.sendBeacon){
-      try{ navigator.sendBeacon(GHL_INQUIRY_WEBHOOK, new Blob([p2], {type:'application/json'})); }catch(e){}
-    }
+    try {
+      await fetch(GHL_INQUIRY_WEBHOOK, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(Object.assign({}, payload, {deal_id: params.get('deal_id'), source:'TFS - Buying Criteria + Deal Inquiry'}))
+      });
+    } catch(e){ console.error('Inquiry webhook failed:', e); }
   }
 
   try{
