@@ -695,8 +695,8 @@ function renderDeal(d,allDeals){
         <button style="width:32px;height:32px;border-radius:50%;border:none;background:var(--blue);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center">→</button>
       </div>
     </div>
-    <div class="similar-grid">${similar.map(s=>{const sti=typeInfo(s.dealType);return`<a class="sim-card" href="deal.html?id=${s.id}" onclick="sessionStorage.setItem('deal',JSON.stringify(${JSON.stringify(s).replace(/"/g,'&quot;')}))">
-      <div class="sim-photo">${s.photos?`<img src="${s.photos}" alt="${s.streetAddress}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>'}<div class="sim-loc">${s.nearestMetro||s.city+', '+s.state}</div></div>
+    <div class="similar-grid">${similar.map(s=>{const sti=typeInfo(s.dealType);const simCover=driveFileId(s.coverPhoto);const simImg=simCover?thumbUrl(simCover,400):null;return`<a class="sim-card" href="deal.html?id=${s.id}" onclick="sessionStorage.setItem('deal',JSON.stringify(${JSON.stringify(s).replace(/"/g,'&quot;')}))">
+      <div class="sim-photo">${simImg?`<img src="${simImg}" alt="${s.city}, ${s.state}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>'}<div class="sim-loc">${s.nearestMetro||s.city+', '+s.state}</div></div>
       <div class="sim-body">
         <div class="sim-price">${fc(s.askingPrice)}</div>
         ${s.entryFee&&s.entryFee!==+s.askingPrice?`<div class="sim-entry">${fc(s.entryFee)} Entry Fee</div>`:''}
@@ -726,7 +726,7 @@ function renderDeal(d,allDeals){
           ${d.sqft?`<div class="deal-spec"><strong>${Number(d.sqft).toLocaleString()}</strong> sqft</div>`:''}
         </div>
         <div class="deal-addr">${d.streetAddress}, ${d.city}, ${d.state} ${d.zip||''}</div>
-        ${d.piti?`<div class="deal-refi-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Est. refi payment: <strong>${fc(d.piti)}/mo</strong> (existing loan) · <a href="https://dealproszoom.com" target="_blank" style="color:var(--blue)">Refinance your loan →</a></div>`:''}
+        ${d.piti?`<div class="deal-refi-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Est. PITI payment: <strong>${fc(d.piti)}/mo</strong> (existing loan)</div>`:''}
       </div>
 
       <div class="tags-row">${tagsHtml}</div>
