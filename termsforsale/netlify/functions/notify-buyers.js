@@ -131,30 +131,139 @@ function parseDeal(page) {
 
 // ─── GHL: Search contacts by tags/criteria ───────────────────
 
-// Map deal types to buyer tags
-var DEAL_TAG_MAP = {
-  'Cash': ['buy:cash'],
-  'SubTo': ['buy:subto', 'buy:creative'],
-  'Seller Finance': ['buy:seller-finance', 'buy:creative'],
-  'Hybrid': ['buy:hybrid', 'buy:creative'],
-  'Wrap': ['buy:creative'],
-  'Morby Method': ['buy:creative'],
-  'Lease Option': ['buy:creative'],
-  'Novation': ['buy:creative']
+// ─── GHL Custom Field IDs for Buy Box matching ──────────────
+var CF = {
+  TARGET_STATES:    'aewzY7iEvZh12JhMVi7E',  // Multi-select: ['AZ','TX']
+  TARGET_CITIES:    'DbY7dHIXk8YowpaWrxYj',  // Multi-select: ['Phoenix, AZ','Dallas, TX']
+  DEAL_STRUCTURES:  '0L0ycmmsEjy6OPDL0rgq',  // Multi-select: ['Cash','Subject To']
+  PROPERTY_TYPE:    'HGC6xWLpSqoAQPZr0uwY',  // Multi-select: ['Single Family']
+  MAX_PRICE:        'BcxuopmSK4wA3Z3NyanD',  // Monetary
+  MAX_ENTRY:        'SZmNHA3BQva2AZg00ZNP',  // Monetary
+  MIN_ARV:          'KKGEfgdaqu98yrZYkmoO',  // Monetary
+  MIN_BEDS:         'RRuCraVtRUlEMvdFXngv',  // Number
+  EXIT_STRATEGIES:  '98i8EKc3OWYSqS4Qb1nP',  // Multi-select
+  TARGET_MARKETS:   'XjXqGv6Y82iTP659pO4t',  // Large text
+  BUYER_TYPE:       '95PgdlIYfXYcMymnjsIv',  // Single select
 };
 
+// Map deal types to structure values in GHL custom fields
+var DEAL_STRUCTURE_MAP = {
+  'Cash': ['Cash'],
+  'SubTo': ['Subject To','Sub-To','SubTo'],
+  'Seller Finance': ['Seller Finance','Seller Financing','Owner Finance'],
+  'Hybrid': ['Hybrid','Subject To','Seller Finance'],
+  'Wrap': ['Wrap','Wrap Around'],
+  'Morby Method': ['Morby Method','Subject To'],
+  'Lease Option': ['Lease Option'],
+  'Novation': ['Novation']
+};
+
+function getCF(contact, fieldId) {
+  var cfs = contact.customFields || [];
+  var field = cfs.find(function(f) { return f.id === fieldId; });
+  if (!field) return null;
+  return field.value;
+}
+
+function matchesBuyBox(contact, deal) {
+  var reasons = [];
+  var fails = [];
+
+  // 1. Target States — must include deal state (if buyer has preferences)
+  var targetStates = getCF(contact, CF.TARGET_STATES);
+  if (targetStates && Array.isArray(targetStates) && targetStates.length > 0) {
+    var dealState = (deal.state || '').trim().toUpperCase();
+    var stateMatch = targetStates.some(function(s) {
+      return s.trim().toUpperCase() === dealState;
+    });
+    if (stateMatch) reasons.push('State: ' + dealState);
+    else { fails.push('State mismatch (wants ' + targetStates.join(',') + ', deal is ' + dealState + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  }
+
+  // 2. Target Cities — check if deal city/metro matches (if buyer has preferences)
+  var targetCities = getCF(contact, CF.TARGET_CITIES);
+  if (targetCities && Array.isArray(targetCities) && targetCities.length > 0) {
+    var dealCity = (deal.city || '').toLowerCase();
+    var dealMetro = (deal.nearestMetro || '').toLowerCase();
+    var cityMatch = targetCities.some(function(c) {
+      var cl = c.toLowerCase();
+      return cl.includes(dealCity) || dealCity.includes(cl.split(',')[0].trim()) || cl.includes(dealMetro) || dealMetro.includes(cl.split(',')[0].trim());
+    });
+    if (cityMatch) reasons.push('City: ' + deal.city);
+    // City is soft match — don't reject if no match, just don't add reason
+  }
+
+  // 3. Deal Structure — must accept this deal type (if buyer has preferences)
+  var dealStructures = getCF(contact, CF.DEAL_STRUCTURES);
+  var structureNames = DEAL_STRUCTURE_MAP[deal.dealType] || [deal.dealType];
+  if (dealStructures && Array.isArray(dealStructures) && dealStructures.length > 0) {
+    var structMatch = structureNames.some(function(s) {
+      return dealStructures.some(function(ds) {
+        return ds.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(ds.toLowerCase());
+      });
+    });
+    if (structMatch) reasons.push('Structure: ' + deal.dealType);
+    else { fails.push('Structure mismatch (wants ' + dealStructures.join(',') + ', deal is ' + deal.dealType + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  }
+
+  // 4. Max Purchase Price — deal must be at or under (if buyer has preference)
+  var maxPrice = getCF(contact, CF.MAX_PRICE);
+  if (maxPrice && +maxPrice > 0 && deal.askingPrice > 0) {
+    if (deal.askingPrice <= +maxPrice) reasons.push('Price: $' + deal.askingPrice.toLocaleString() + ' <= $' + (+maxPrice).toLocaleString());
+    else { fails.push('Over budget ($' + deal.askingPrice + ' > $' + maxPrice + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  }
+
+  // 5. Max Entry Fee — deal entry must be at or under (if buyer has preference)
+  var maxEntry = getCF(contact, CF.MAX_ENTRY);
+  if (maxEntry && +maxEntry > 0 && deal.entryFee > 0) {
+    if (deal.entryFee <= +maxEntry) reasons.push('Entry: $' + deal.entryFee.toLocaleString() + ' <= $' + (+maxEntry).toLocaleString());
+    else { fails.push('Entry too high ($' + deal.entryFee + ' > $' + maxEntry + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  }
+
+  // 6. Min ARV — deal ARV must be at or above (if buyer has preference)
+  var minArv = getCF(contact, CF.MIN_ARV);
+  if (minArv && +minArv > 0 && deal.arv > 0) {
+    if (deal.arv >= +minArv) reasons.push('ARV: $' + deal.arv.toLocaleString() + ' >= $' + (+minArv).toLocaleString());
+    else { fails.push('ARV too low ($' + deal.arv + ' < $' + minArv + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  }
+
+  // 7. Min Beds
+  var minBeds = getCF(contact, CF.MIN_BEDS);
+  if (minBeds && +minBeds > 0 && deal.beds) {
+    if (+deal.beds >= +minBeds) reasons.push('Beds: ' + deal.beds + ' >= ' + minBeds);
+    else { fails.push('Not enough beds (' + deal.beds + ' < ' + minBeds + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  }
+
+  // Must have at least state match or be a broad "tfs buyer" subscriber
+  var tags = (contact.tags || []).map(function(t) { return t.toLowerCase(); });
+  var isTfsBuyer = tags.indexOf('tfs buyer') > -1;
+  var isBuyerType = tags.some(function(t) { return t.startsWith('type:buyer'); });
+
+  if (reasons.length === 0 && !isTfsBuyer) {
+    fails.push('No matching criteria and not a TFS buyer subscriber');
+    return { match: false, reasons: reasons, fails: fails };
+  }
+
+  if (reasons.length === 0 && isTfsBuyer) {
+    reasons.push('TFS Buyer subscriber (broad match)');
+  }
+
+  return { match: true, reasons: reasons, fails: fails };
+}
+
 async function findMatchingBuyers(apiKey, locationId, deal) {
-  // Get tags that match this deal type
-  var matchTags = DEAL_TAG_MAP[deal.dealType] || ['tfs buyer'];
-
-  // Search GHL contacts with matching tags
   var allMatches = [];
+  var allChecked = 0;
 
-  for (var i = 0; i < matchTags.length; i++) {
-    var tag = matchTags[i];
+  // Fetch buyers in pages (GHL paginates at 100)
+  var hasMore = true;
+  var startAfter = '';
+  var startAfterId = '';
+
+  while (hasMore) {
     var searchUrl = 'https://services.leadconnectorhq.com/contacts/?locationId=' + locationId
-      + '&query=' + encodeURIComponent(tag)
-      + '&limit=100';
+      + '&limit=100'
+      + (startAfter ? '&startAfter=' + startAfter + '&startAfterId=' + startAfterId : '');
 
     var result = await httpRequest(searchUrl, {
       method: 'GET',
@@ -165,72 +274,51 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
       }
     });
 
-    if (result.status === 200 && result.body.contacts) {
-      result.body.contacts.forEach(function(contact) {
-        // Check if contact has the matching tag
-        var contactTags = (contact.tags || []).map(function(t) { return t.toLowerCase(); });
-        if (contactTags.indexOf(tag.toLowerCase()) > -1) {
-          // Check state/market match if buyer has preferences
-          var buyerState = (contact.customFields || []).find(function(f) {
-            return f.id === 'target_zips' || f.key === 'target_zips';
-          });
-          var stateMatch = !buyerState || !buyerState.value ||
-            buyerState.value.toLowerCase().includes(deal.state.toLowerCase()) ||
-            buyerState.value.toLowerCase().includes('nationwide') ||
-            buyerState.value.toLowerCase().includes('multiple');
+    if (result.status !== 200 || !result.body.contacts || !result.body.contacts.length) {
+      hasMore = false;
+      break;
+    }
 
-          if (stateMatch) {
-            // Deduplicate
-            if (!allMatches.find(function(m) { return m.id === contact.id; })) {
-              allMatches.push({
-                id: contact.id,
-                name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
-                email: contact.email || '',
-                phone: contact.phone || '',
-                tags: contact.tags || [],
-                matchedTag: tag,
-                matchReason: deal.dealType + ' deal in ' + deal.state + ' matched tag "' + tag + '"'
-              });
-            }
-          }
-        }
+    var contacts = result.body.contacts;
+    allChecked += contacts.length;
+
+    contacts.forEach(function(contact) {
+      var tags = (contact.tags || []).map(function(t) { return t.toLowerCase(); });
+      // Only check contacts tagged as buyers
+      var isBuyer = tags.some(function(t) {
+        return t === 'type:buyer' || t === 'tfs buyer' || t.startsWith('buy:');
       });
-    }
-  }
+      if (!isBuyer) return;
 
-  // Also find all "tfs buyer" tagged contacts (broad match for all deal alerts)
-  var broadUrl = 'https://services.leadconnectorhq.com/contacts/?locationId=' + locationId
-    + '&query=' + encodeURIComponent('tfs buyer')
-    + '&limit=100';
-
-  var broadResult = await httpRequest(broadUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + apiKey,
-      'Version': '2021-07-28',
-      'Content-Type': 'application/json'
-    }
-  });
-
-  if (broadResult.status === 200 && broadResult.body.contacts) {
-    broadResult.body.contacts.forEach(function(contact) {
-      var contactTags = (contact.tags || []).map(function(t) { return t.toLowerCase(); });
-      if (contactTags.indexOf('tfs buyer') > -1) {
-        if (!allMatches.find(function(m) { return m.id === contact.id; })) {
-          allMatches.push({
-            id: contact.id,
-            name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
-            email: contact.email || '',
-            phone: contact.phone || '',
-            tags: contact.tags || [],
-            matchedTag: 'tfs buyer',
-            matchReason: 'Broad match — subscribed to all deal alerts'
-          });
-        }
+      var result = matchesBuyBox(contact, deal);
+      if (result.match) {
+        allMatches.push({
+          id: contact.id,
+          name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
+          email: contact.email || '',
+          phone: contact.phone || '',
+          tags: contact.tags || [],
+          matchReasons: result.reasons,
+          matchReason: result.reasons.join(' | ')
+        });
       }
     });
+
+    // Check for more pages
+    if (result.body.meta && result.body.meta.nextPageUrl) {
+      var lastContact = contacts[contacts.length - 1];
+      startAfter = lastContact.startAfter ? lastContact.startAfter[0] : '';
+      startAfterId = lastContact.startAfter ? lastContact.startAfter[1] : lastContact.id;
+      if (!startAfter) hasMore = false;
+    } else {
+      hasMore = false;
+    }
+
+    // Safety: max 1000 contacts
+    if (allChecked >= 1000) hasMore = false;
   }
 
+  console.log('Checked ' + allChecked + ' contacts, ' + allMatches.length + ' matched');
   return allMatches;
 }
 
