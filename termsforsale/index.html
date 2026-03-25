@@ -357,6 +357,17 @@ footer{background:var(--navy);padding:52px 55px 0}
 .spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── STICKY ACTION BAR ──────────────────── */
+.sticky-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(13,31,60,.97);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.1);padding:12px 40px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:500;transform:translateY(100%);transition:transform .3s}
+.sticky-bar.show{transform:translateY(0)}
+.sticky-bar-text{font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
+.sticky-bar-text strong{color:#fff}
+.sticky-bar a{padding:10px 22px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:none;transition:all .15s;white-space:nowrap}
+.sticky-bar .sb-primary{background:var(--orange);color:#fff}
+.sticky-bar .sb-primary:hover{background:var(--orange-dark)}
+.sticky-bar .sb-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.sticky-bar .sb-secondary:hover{background:rgba(255,255,255,.2)}
+
 /* ── RESPONSIVE ─────────────────────────── */
 @media(max-width:1100px){
   .streamlined-inner{grid-template-columns:1fr 1fr;gap:40px}.st-stats{display:none}
@@ -390,6 +401,9 @@ footer{background:var(--navy);padding:52px 55px 0}
   .vip-form-row{grid-template-columns:1fr}
   .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
   .auth-overlay{align-items:flex-end}
+  .sticky-bar{padding:10px 16px;gap:8px;flex-wrap:wrap;justify-content:center}
+  .sticky-bar-text{font-size:12px;text-align:center;width:100%}
+  .sticky-bar a{padding:9px 16px;font-size:12px;flex:1;text-align:center}
 }
 </style>
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
@@ -786,6 +800,14 @@ footer{background:var(--navy);padding:52px 55px 0}
     </div>
   </div>
 </section>
+
+<!-- STICKY ACTION BAR -->
+<div class="sticky-bar" id="sticky-bar">
+  <span class="sticky-bar-text"><strong id="sb-count">32</strong> active deals available now</span>
+  <a href="#all-deals" class="sb-primary" onclick="scrollToDeals();return false">Browse Deals</a>
+  <a href="/buying-criteria.html" class="sb-secondary">Get Deal Alerts</a>
+  <a href="/blog/" class="sb-secondary">Blog</a>
+</div>
 
 <!-- FOOTER -->
 <footer>
@@ -1366,6 +1388,7 @@ function updateNavAuth(user){
       populateStates();
       updateHowSections();
       applyFilters();
+      const sbc=document.getElementById('sb-count');if(sbc)sbc.textContent=ALL_DEALS.length;
     }else{
       const statuses=[...new Set(rows.map(r=>r['Deal Status']).filter(Boolean))];
       document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">No active deals found.<br>Statuses in sheet: <strong>${statuses.join(', ')||'none'}</strong><br>Expected: <strong>Actively Marketing</strong></p></div>`;
@@ -1373,6 +1396,9 @@ function updateNavAuth(user){
   }catch(e){
     document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">Could not load deals: ${e.message}</p></div>`;
   }
+  // Show sticky bar after scrolling past hero
+  const sb=document.getElementById('sticky-bar');
+  if(sb){window.addEventListener('scroll',()=>{sb.classList.toggle('show',window.scrollY>400);},{passive:true});}
 })();
 </script>
 <script>

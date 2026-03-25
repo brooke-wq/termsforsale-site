@@ -644,9 +644,9 @@ footer{background:var(--navy);padding:52px 55px 0}
     <div class="explore-eyebrow">Find your next deal</div>
     <div class="explore-title">Explore Terms for Sale</div>
     <div class="explore-tabs">
-      <button class="explore-tab on" onclick="setExploreTab(this,'')">New Deals</button>
-      <button class="explore-tab" onclick="setExploreTab(this,'creative')">Most Viewed</button>
-      <button class="explore-tab" onclick="setExploreTab(this,'upcoming')">Upcoming Deals</button>
+      <button class="explore-tab on" onclick="setExploreTab(this,'')">All Deals</button>
+      <button class="explore-tab" onclick="setExploreTab(this,'creative')">Creative Finance</button>
+      <button class="explore-tab" onclick="setExploreTab(this,'cash')">Cash Deals</button>
     </div>
     <div class="filter-row">
       <input class="filter-input" id="f-search" placeholder="&#128269; Filter by city, state, zip, type&hellip;" oninput="applyFilters()">
@@ -881,7 +881,7 @@ function col(raw,...names){for(const n of names){if(raw[n]!==undefined&&raw[n]!=
 function parseRow(raw){return{
   // Column A "Deal Status" contains the unique hash ID — use as deal ID
   id:col(raw,'Deal ID','Deal Status__0'),
-  dealStatus:col(raw,'Deal Status'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoBalance:+col(raw,'SubTo Loan Balance')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:col(raw,'SubTo Rate','SubTo Rate (%)'),loanType:col(raw,'Loan Type','SubTo Loan Type','Mortgage Type'),sfAmount:+col(raw,'SF Loan Amount')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate','SF Rate (%)'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
+  dealType:col(raw,'Deal Type'),dealStatus:col(raw,'Deal Status'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoBalance:+col(raw,'SubTo Loan Balance')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:col(raw,'SubTo Rate','SubTo Rate (%)'),loanType:col(raw,'Loan Type','SubTo Loan Type','Mortgage Type'),sfAmount:+col(raw,'SF Loan Amount')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate','SF Rate (%)'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
   // Photo columns — Cover Photo is a single direct file share URL, Photos is folder or comma-list
   coverPhoto:col(raw,'Cover Photo','cover photo','Cover photo','Photo 1','photo1'),
   photos:col(raw,'Photos'),
