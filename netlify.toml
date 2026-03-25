@@ -18,6 +18,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/deals"
+  to = "/.netlify/functions/deals"
+  status = 200
+
+[[redirects]]
   from = "/api/create-post"
   to = "/.netlify/functions/create-post"
   status = 200

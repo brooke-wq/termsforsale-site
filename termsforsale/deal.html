@@ -885,6 +885,24 @@ async function submitRequest(dealId){
   setTimeout(()=>{btn.textContent='Submit Request';btn.style.background='';btn.disabled=false;},3000);
 }
 
+async function loadDealsFromNotion(){
+  const r=await fetch('/api/deals');
+  if(!r.ok)throw new Error('Notion API '+r.status);
+  const data=await r.json();
+  if(!data.deals||!data.deals.length)throw new Error('No deals from Notion');
+  return data.deals;
+}
+async function loadDealsFromSheet(){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB)}`;
+  const r=await fetch(url);const t=await r.text();
+  const json=JSON.parse(t.substring(47,t.length-2));
+  const cols=json.table.cols.map(c=>c.label);
+  const rows=json.table.rows.map(row=>{const o={};cols.forEach((c,i)=>{const cell=row.c[i];o[c]=cell?(cell.v!==null?cell.v:''):'';});return o;});
+  const parse=raw=>({id:raw['Deal ID'],dealType:raw['Deal Type'],streetAddress:raw['Street Address'],city:raw['City'],state:raw['State'],zip:raw['ZIP'],nearestMetro:raw['Nearest Metro Area'],propertyType:raw['Property Type'],askingPrice:+raw['Asking Price']||0,entryFee:+raw['Entry Fee']||0,compsArv:+raw['Comps ARV']||0,aiArvBase:+raw['AI ARV Base']||0,piti:+raw['PITI']||'',subtoLoanBalance:+raw['SubTo Loan Balance']||'',subtoRate:+raw['SubTo Rate (%)']||'',sfLoanAmount:+raw['SF Loan Amount']||'',sfRate:raw['SF Rate']||'',sfTerm:raw['SF Term']||'',sfPayment:+raw['SF Payment']||'',rentFinal:+raw['Rent Final']||'',rentLow:+raw['Rent Low']||'',rentMid:+raw['Rent Mid']||'',rentHigh:+raw['Rent High']||'',occupancy:raw['Occupancy']||'',hoa:raw['HOA']||'',solar:raw['Solar']||'',access:raw['Access']||'',coe:raw['COE']||'',deckLink:raw['Deck Link']||'',photos:raw['Photos']||'',coverPhoto:raw['Cover Photo']||'',highlight1:raw['Highlight 1']||'',highlight2:raw['Highlight 2']||'',highlight3:raw['Highlight 3']||'',entryBreakdown:raw['Entry Breakdown']||'',details:raw['Details']||'',beds:raw['Beds']||'',baths:raw['Baths']||'',sqft:raw['Sqft']||'',yearBuilt:raw['Year Built']||''});
+  const allDeals=rows.filter(r=>r['Deal Status']==='Actively Marketing').map(parse);
+  return {allDeals,parse,rows};
+}
+
 async function init(){
   const params=new URLSearchParams(window.location.search);
   const id=params.get('id');
@@ -893,24 +911,23 @@ async function init(){
   const cached=sessionStorage.getItem('deal');
   if(cached){try{const d=JSON.parse(cached);if(String(d.id)===String(id)){renderDeal(d,SAMPLE.filter(x=>x.id!==id));return}}catch(e){}}
 
-  if(!SHEET_ID){
-    const deal=SAMPLE.find(d=>String(d.id)===String(id));
-    if(deal)renderDeal(deal,SAMPLE);
-    else document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';
-    return;
-  }
-
   try{
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB)}`;
-    const r=await fetch(url);const t=await r.text();
-    const json=JSON.parse(t.substring(47,t.length-2));
-    const cols=json.table.cols.map(c=>c.label);
-    const rows=json.table.rows.map(row=>{const o={};cols.forEach((c,i)=>{const cell=row.c[i];o[c]=cell?(cell.v!==null?cell.v:''):'';});return o;});
-    const parse=raw=>({id:raw['Deal ID'],dealType:raw['Deal Type'],streetAddress:raw['Street Address'],city:raw['City'],state:raw['State'],zip:raw['ZIP'],nearestMetro:raw['Nearest Metro Area'],propertyType:raw['Property Type'],askingPrice:+raw['Asking Price']||0,entryFee:+raw['Entry Fee']||0,compsArv:+raw['Comps ARV']||0,aiArvBase:+raw['AI ARV Base']||0,piti:+raw['PITI']||'',subtoLoanBalance:+raw['SubTo Loan Balance']||'',subtoRate:+raw['SubTo Rate (%)']||'',sfLoanAmount:+raw['SF Loan Amount']||'',sfRate:raw['SF Rate']||'',sfTerm:raw['SF Term']||'',sfPayment:+raw['SF Payment']||'',rentFinal:+raw['Rent Final']||'',rentLow:+raw['Rent Low']||'',rentMid:+raw['Rent Mid']||'',rentHigh:+raw['Rent High']||'',occupancy:raw['Occupancy']||'',hoa:raw['HOA']||'',solar:raw['Solar']||'',access:raw['Access']||'',coe:raw['COE']||'',deckLink:raw['Deck Link']||'',photos:raw['Photos']||'',coverPhoto:raw['Cover Photo']||'',highlight1:raw['Highlight 1']||'',highlight2:raw['Highlight 2']||'',highlight3:raw['Highlight 3']||'',entryBreakdown:raw['Entry Breakdown']||'',details:raw['Details']||'',beds:raw['Beds']||'',baths:raw['Baths']||'',sqft:raw['Sqft']||'',yearBuilt:raw['Year Built']||''});
-    const allDeals=rows.filter(r=>r['Deal Status']==='Actively Marketing').map(parse);
-    const raw=rows.find(r=>String(r['Deal ID'])===String(id));
-    if(!raw){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
-    renderDeal(parse(raw),allDeals);
+    // Try Notion API first (real-time), fall back to Google Sheets
+    let allDeals,deal;
+    try{
+      allDeals=await loadDealsFromNotion();
+      deal=allDeals.find(d=>String(d.id)===String(id));
+      console.log('Loaded '+allDeals.length+' deals from Notion');
+    }catch(notionErr){
+      console.warn('Notion unavailable, falling back to Sheets:',notionErr.message);
+      const sheet=await loadDealsFromSheet();
+      allDeals=sheet.allDeals;
+      const raw=sheet.rows.find(r=>String(r['Deal ID'])===String(id));
+      deal=raw?sheet.parse(raw):null;
+      console.log('Loaded '+allDeals.length+' deals from Sheets');
+    }
+    if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
+    renderDeal(deal,allDeals);
   }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
 }
 const u=getUser();if(u)updateNavAuth(u);
