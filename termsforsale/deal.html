@@ -51,12 +51,12 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .bc-cur{color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
 
 /* MAIN LAYOUT */
-.main{max-width:1060px;margin:0 auto;padding:28px 32px 72px;display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
+.main{max-width:960px;margin:0 auto;padding:24px 24px 72px;display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
 .deal-main{}
 .deal-sidebar{position:sticky;top:88px}
 
 /* PHOTO GRID */
-.photo-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:180px 180px;gap:6px;border-radius:var(--r-lg);overflow:hidden;margin-bottom:24px;max-height:366px}
+.photo-grid{display:grid;grid-template-columns:3fr 1fr;grid-template-rows:150px 150px;gap:4px;border-radius:var(--r-lg);overflow:hidden;margin-bottom:20px}
 .photo-main{grid-row:1/3;position:relative;background:var(--border)}
 .photo-main img{width:100%;height:100%;object-fit:cover;display:block}
 .photo-main-empty{width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5 0%,#a8d4ea 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text-light)}
@@ -287,7 +287,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 
 /* RESPONSIVE */
 @media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px}.deal-sidebar{position:static}.similar-grid{gap:12px}}
-@media(max-width:768px){nav{padding:0 20px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 20px}.photo-grid{grid-template-rows:180px 90px;grid-template-columns:1fr 1fr;}.photo-main{grid-row:1/2;grid-column:1/3}.photo-thumb:nth-child(n+4){display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}
+@media(max-width:768px){nav{padding:0 20px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 20px}.photo-grid{grid-template-rows:200px;grid-template-columns:1fr;}.photo-main{grid-row:auto;grid-column:auto}.photo-thumb{display:none}.photo-thumb:nth-child(n+4){display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}
   .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
   .auth-overlay{align-items:flex-end}
   .calc-grid{grid-template-columns:1fr 1fr}
