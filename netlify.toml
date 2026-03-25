@@ -8,6 +8,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/drive-image"
+  to = "/.netlify/functions/drive-image"
+  status = 200
+
+[[redirects]]
   from = "/api/drive-thumb"
   to = "/.netlify/functions/drive-thumb"
   status = 200

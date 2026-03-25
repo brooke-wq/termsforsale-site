@@ -438,7 +438,7 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
       { id: 'nNMHvkPbjGYRbOB1v7vQ', value: deal.yearBuilt ? 'Built in ' + deal.yearBuilt : '' },
       { id: 'MgNeVZgMdTcdatcTTHue', value: deal.sqft ? deal.sqft.toLocaleString() + ' sqft' : '' },
       { id: 'eke6ZGnex77y5aUCNgly', value: highlights },
-      { id: 'FXp9oPT4T4xqA1HIJuSC', value: (function(){ var m = (deal.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/); return m ? 'https://lh3.googleusercontent.com/d/' + m[1] + '=s800' : ''; })() }
+      { id: 'FXp9oPT4T4xqA1HIJuSC', value: (function(){ var m = (deal.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/); return m ? 'https://deals.termsforsale.com/api/drive-image?id=' + m[1] + '&sz=800' : ''; })() }
     ]
   });
 

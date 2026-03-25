@@ -1,0 +1,77 @@
+// Netlify function: drive-image
+// Returns actual image bytes (not a redirect) for use in emails
+// Client calls: /api/drive-image?id=FILE_ID&sz=800
+
+const https = require('https');
+
+function fetchUrl(url) {
+  return new Promise(function(resolve, reject) {
+    https.get(url, { headers: { 'User-Agent': 'TermsForSale/1.0' } }, function(res) {
+      // Follow redirects (up to 5)
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return fetchUrl(res.headers.location).then(resolve).catch(reject);
+      }
+      var chunks = [];
+      res.on('data', function(c) { chunks.push(c); });
+      res.on('end', function() {
+        resolve({
+          statusCode: res.statusCode,
+          contentType: res.headers['content-type'] || 'image/jpeg',
+          body: Buffer.concat(chunks)
+        });
+      });
+    }).on('error', reject);
+  });
+}
+
+exports.handler = async function(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': '*' }, body: '' };
+  }
+
+  var params = event.queryStringParameters || {};
+  var fileId = params.id;
+  var sz = parseInt(params.sz) || 800;
+
+  if (!fileId) {
+    return { statusCode: 400, body: 'Missing id' };
+  }
+
+  var apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    return { statusCode: 500, body: 'No API key' };
+  }
+
+  try {
+    // Get thumbnail URL from Drive API
+    var metaUrl = 'https://www.googleapis.com/drive/v3/files/' + fileId
+      + '?fields=thumbnailLink'
+      + '&supportsAllDrives=true'
+      + '&key=' + apiKey;
+
+    var metaResult = await fetchUrl(metaUrl);
+    var meta = JSON.parse(metaResult.body.toString());
+
+    if (!meta.thumbnailLink) {
+      return { statusCode: 404, body: 'No thumbnail' };
+    }
+
+    var thumbUrl = meta.thumbnailLink.replace(/=s\d+/, '=s' + sz);
+
+    // Fetch the actual image bytes
+    var imgResult = await fetchUrl(thumbUrl);
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': imgResult.contentType,
+        'Cache-Control': 'public, max-age=86400',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: imgResult.body.toString('base64'),
+      isBase64Encoded: true
+    };
+  } catch (err) {
+    return { statusCode: 500, body: err.message };
+  }
+};
