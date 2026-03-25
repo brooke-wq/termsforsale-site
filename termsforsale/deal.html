@@ -427,7 +427,7 @@ footer{background:var(--navy);padding:44px 40px 0}
       <div class="footer-col">
         <h4>Contact</h4>
         <ul>
-          <li><a href="/cdn-cgi/l/email-protection#d6bfb8b0b996a2b3a4bba5b0b9a4a5b7bab3f8b5b9bb"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span class="__cf_email__" data-cfemail="fc95929a93bc88998e918f9a938e8f9d9099d29f9391">[email&#160;protected]</span></a></li>
+          <li><a href="mailto:info@termsforsale.com"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>info@termsforsale.com</a></li>
           <li><a href="tel:4806373117"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>(480) 637-3117</a></li>
         </ul>
       </div>
@@ -928,22 +928,24 @@ async function init(){
   const id=params.get('id');
   if(!id){document.getElementById('app').innerHTML='<div class="not-found"><h2>No Deal Selected</h2><p>Return to the deals board to select a property.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';return}
 
+  // Always fetch fresh deals from Notion for similar deals (don't use stale SAMPLE data)
   const cached=sessionStorage.getItem('deal');
-  if(cached){try{const d=JSON.parse(cached);if(String(d.id)===String(id)){renderDeal(d,SAMPLE.filter(x=>x.id!==id));return}}catch(e){}}
+  let cachedDeal=null;
+  if(cached){try{const d=JSON.parse(cached);if(String(d.id)===String(id))cachedDeal=d;}catch(e){}}
 
   try{
-    // Try Notion API first (real-time), fall back to Google Sheets
+    // Always fetch fresh deals from Notion/Sheets for accurate similar deals
     let allDeals,deal;
     try{
       allDeals=await loadDealsFromNotion();
-      deal=allDeals.find(d=>String(d.id)===String(id));
+      deal=cachedDeal||allDeals.find(d=>String(d.id)===String(id));
       console.log('Loaded '+allDeals.length+' deals from Notion');
     }catch(notionErr){
       console.warn('Notion unavailable, falling back to Sheets:',notionErr.message);
       const sheet=await loadDealsFromSheet();
       allDeals=sheet.allDeals;
-      const raw=sheet.rows.find(r=>String(r['Deal ID'])===String(id));
-      deal=raw?sheet.parse(raw):null;
+      if(!cachedDeal){const raw=sheet.rows.find(r=>String(r['Deal ID'])===String(id));cachedDeal=raw?sheet.parse(raw):null;}
+      deal=cachedDeal;
       console.log('Loaded '+allDeals.length+' deals from Sheets');
     }
     if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
