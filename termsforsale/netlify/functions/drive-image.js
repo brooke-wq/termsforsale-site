@@ -43,23 +43,29 @@ exports.handler = async function(event) {
   }
 
   try {
-    // Get thumbnail URL from Drive API
+    // Get thumbnail and content URLs from Drive API
     var metaUrl = 'https://www.googleapis.com/drive/v3/files/' + fileId
-      + '?fields=thumbnailLink'
+      + '?fields=thumbnailLink,webContentLink,mimeType'
       + '&supportsAllDrives=true'
       + '&key=' + apiKey;
 
     var metaResult = await fetchUrl(metaUrl);
     var meta = JSON.parse(metaResult.body.toString());
 
-    if (!meta.thumbnailLink) {
-      return { statusCode: 404, body: 'No thumbnail' };
+    // Try thumbnail first, then webContentLink, then direct download
+    var imageUrl = null;
+    if (meta.thumbnailLink) {
+      imageUrl = meta.thumbnailLink.replace(/=s\d+/, '=s' + sz);
+    } else if (meta.webContentLink) {
+      imageUrl = meta.webContentLink;
+    } else {
+      // Direct download via API
+      imageUrl = 'https://www.googleapis.com/drive/v3/files/' + fileId
+        + '?alt=media&supportsAllDrives=true&key=' + apiKey;
     }
 
-    var thumbUrl = meta.thumbnailLink.replace(/=s\d+/, '=s' + sz);
-
     // Fetch the actual image bytes
-    var imgResult = await fetchUrl(thumbUrl);
+    var imgResult = await fetchUrl(imageUrl);
 
     return {
       statusCode: 200,
