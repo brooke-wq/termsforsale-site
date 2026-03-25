@@ -421,24 +421,24 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
   }, {
     customFields: [
       // Location fields
-      { id: 'TerjqctukTW67rB21ugC', field_value: deal.streetAddress + ', ' + deal.city + ', ' + deal.state + ' ' + (deal.zip || '') },
-      { id: 'KuaUFXhbQB6kKvBSKfoI', field_value: deal.city },
-      { id: 'ltmVcWUpbwZ0S3dBid3U', field_value: deal.state },
-      { id: 'UqJl4Dq6T8wfNb70EMrL', field_value: deal.zip || '' },
+      { id: 'TerjqctukTW67rB21ugC', value: deal.streetAddress + ', ' + deal.city + ', ' + deal.state + ' ' + (deal.zip || '') },
+      { id: 'KuaUFXhbQB6kKvBSKfoI', value: deal.city },
+      { id: 'ltmVcWUpbwZ0S3dBid3U', value: deal.state },
+      { id: 'UqJl4Dq6T8wfNb70EMrL', value: deal.zip || '' },
       // Deal info
-      { id: '0thrOdoETTLlFA45oN8U', field_value: deal.dealType },
-      { id: '5eEVPcp8nERlR6GpjZUn', field_value: deal.dealUrl },
-      { id: 'YjoPoDPv7Joo1izePpDx', field_value: deal.dealType + ' | ' + deal.city + ', ' + deal.state + ' | ' + price + (entry ? ' | ' + entry : '') },
+      { id: '0thrOdoETTLlFA45oN8U', value: deal.dealType },
+      { id: '5eEVPcp8nERlR6GpjZUn', value: deal.dealUrl },
+      { id: 'YjoPoDPv7Joo1izePpDx', value: deal.dealType + ' | ' + deal.city + ', ' + deal.state + ' | ' + price + (entry ? ' | ' + entry : '') },
       // Alert fields for email template
-      { id: 'iur6TZsfKotwO3gZb8yk', field_value: price },                    // Alert Asking Price
-      { id: 'DH4Ekmyw2dvzrE74JSzs', field_value: entry },                    // Alert Entry Fee
-      { id: 'DJFMav5mPvWBzsPdhAqy', field_value: deal.propertyType || '' },   // Alert Property Type
-      { id: '2iVO7pRpi0f0ABb6nYka', field_value: deal.beds || '0' },          // Alert Beds
-      { id: 'rkzCcjHJMFJP3GcwnNx6', field_value: deal.baths || '0' },        // Alert Baths
-      { id: 'nNMHvkPbjGYRbOB1v7vQ', field_value: deal.yearBuilt || '' },      // Alert Year Built
-      { id: 'MgNeVZgMdTcdatcTTHue', field_value: deal.sqft ? deal.sqft.toLocaleString() : '' },  // Alert Sqft
-      { id: 'eke6ZGnex77y5aUCNgly', field_value: highlights },                // Alert Highlights
-      { id: 'FXp9oPT4T4xqA1HIJuSC', field_value: deal.coverPhoto ? 'https://deals.termsforsale.com/api/drive-thumb?id=' + (deal.coverPhoto.match(/\/d\/([a-zA-Z0-9_-]{20,})/) || [])[1] + '&sz=800' : '' }  // Alert Cover Photo
+      { id: 'iur6TZsfKotwO3gZb8yk', value: price },                    // Alert Asking Price
+      { id: 'DH4Ekmyw2dvzrE74JSzs', value: entry },                    // Alert Entry Fee
+      { id: 'DJFMav5mPvWBzsPdhAqy', value: deal.propertyType || '' },   // Alert Property Type
+      { id: '2iVO7pRpi0f0ABb6nYka', value: deal.beds || '0' },          // Alert Beds
+      { id: 'rkzCcjHJMFJP3GcwnNx6', value: deal.baths || '0' },        // Alert Baths
+      { id: 'nNMHvkPbjGYRbOB1v7vQ', value: deal.yearBuilt || '' },      // Alert Year Built
+      { id: 'MgNeVZgMdTcdatcTTHue', value: deal.sqft ? deal.sqft.toLocaleString() : '' },  // Alert Sqft
+      { id: 'eke6ZGnex77y5aUCNgly', value: highlights },                // Alert Highlights
+      { id: 'FXp9oPT4T4xqA1HIJuSC', value: deal.coverPhoto ? 'https://deals.termsforsale.com/api/drive-thumb?id=' + (deal.coverPhoto.match(/\/d\/([a-zA-Z0-9_-]{20,})/) || [])[1] + '&sz=800' : '' }  // Alert Cover Photo
     ]
   });
 
