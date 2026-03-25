@@ -30,6 +30,38 @@ function notionRequest(path, token, body) {
   });
 }
 
+// Get first image file ID from a Google Drive folder
+function getFirstFileFromFolder(folderId, apiKey) {
+  var query = "'" + folderId + "' in parents and trashed=false and mimeType contains 'image/'";
+  var url = 'https://www.googleapis.com/drive/v3/files'
+    + '?q=' + encodeURIComponent(query)
+    + '&fields=files(id)'
+    + '&orderBy=name'
+    + '&pageSize=1'
+    + '&supportsAllDrives=true'
+    + '&includeItemsFromAllDrives=true'
+    + '&key=' + apiKey;
+  return new Promise(function(resolve) {
+    https.get(url, { headers: { 'User-Agent': 'TermsForSale/1.0' } }, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try {
+          var parsed = JSON.parse(data);
+          var files = (parsed.files || []);
+          resolve(files.length ? files[0].id : null);
+        } catch(e) { resolve(null); }
+      });
+    }).on('error', function() { resolve(null); });
+  });
+}
+
+function extractFolderId(url) {
+  if (!url) return null;
+  var m = url.match(/folders\/([a-zA-Z0-9_-]{20,})/);
+  return m ? m[1] : null;
+}
+
 // Extract a plain text value from a Notion property
 function prop(page, name) {
   var p = page.properties[name];
@@ -200,6 +232,22 @@ exports.handler = async function(event) {
         lastEdited: page.last_edited_time
       };
     });
+
+    // Auto-populate coverPhoto from first image in Photos folder if not set
+    var googleApiKey = process.env.GOOGLE_API_KEY;
+    if (googleApiKey) {
+      var needsCover = deals.filter(function(d) { return !d.coverPhoto && d.photos; });
+      if (needsCover.length) {
+        var coverPromises = needsCover.map(function(d) {
+          var folderId = extractFolderId(d.photos);
+          if (!folderId) return Promise.resolve();
+          return getFirstFileFromFolder(folderId, googleApiKey).then(function(fileId) {
+            if (fileId) d.coverPhoto = 'https://drive.google.com/file/d/' + fileId + '/view';
+          });
+        });
+        await Promise.all(coverPromises);
+      }
+    }
 
     console.log('Notion API success: ' + deals.length + ' active deals');
 
