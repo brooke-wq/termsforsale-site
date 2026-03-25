@@ -23,6 +23,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/notify-buyers"
+  to = "/.netlify/functions/notify-buyers"
+  status = 200
+
+[[redirects]]
+  from = "/api/notify-test"
+  to = "/.netlify/functions/notify-buyers"
+  status = 200
+
+[[redirects]]
   from = "/api/create-post"
   to = "/.netlify/functions/create-post"
   status = 200
