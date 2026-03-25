@@ -255,6 +255,25 @@ footer{background:var(--navy);padding:44px 40px 0}
 .btn-full-blue{display:block;width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
 .btn-full-blue:hover{background:var(--blue-dark)}
 
+/* CALCULATORS */
+.calc-tab{padding:8px 16px;border-radius:50px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text-mid);transition:all .15s}
+.calc-tab:hover{border-color:var(--blue);color:var(--blue)}
+.calc-tab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.calc-panel{display:none}
+.calc-panel.on{display:block}
+.calc-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px}
+.calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.calc-field label{display:block;font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.calc-field input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
+.calc-field input:focus{border-color:var(--blue);background:#fff}
+.calc-results{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.calc-result{text-align:center}
+.calc-result-label{font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.calc-result-value{font-size:18px;font-weight:800;color:var(--text)}
+.calc-result-value.positive{color:#276749}
+.calc-result-value.negative{color:#E53E3E}
+.calc-result-value.neutral{color:var(--blue)}
+
 /* STICKY ACTION BAR */
 .sticky-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(13,31,60,.97);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.1);padding:12px 40px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:500;transform:translateY(100%);transition:transform .3s}
 .sticky-bar.show{transform:translateY(0)}
@@ -271,6 +290,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 @media(max-width:768px){nav{padding:0 20px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 20px}.photo-grid{grid-template-rows:180px 90px;grid-template-columns:1fr 1fr;}.photo-main{grid-row:1/2;grid-column:1/3}.photo-thumb:nth-child(n+4){display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}
   .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
   .auth-overlay{align-items:flex-end}
+  .calc-grid{grid-template-columns:1fr 1fr}
   .sticky-bar{padding:10px 16px;gap:6px;flex-wrap:nowrap}
   .sticky-bar-text{display:none}
   .sticky-bar .sb-primary{flex:2;text-align:center;padding:12px 16px;font-size:14px}
@@ -783,7 +803,63 @@ function renderDeal(d,allDeals){
 
       <div id="tab-highlights" class="tab-panel">${hlHtml||'<p style="color:var(--text-light);font-size:13px">No highlights added for this deal.</p>'}</div>
 
-      <div id="tab-analysis" class="tab-panel">${rentHtml||'<p style="color:var(--text-light);font-size:13px">Rental analysis not yet available for this deal.</p>'}</div>
+      <div id="tab-analysis" class="tab-panel">
+        ${rentHtml}
+        <div style="margin-top:${rentHtml?'20px':'0'}">
+          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+            <button class="calc-tab on" onclick="showCalc(this,'calc-hold')">Buy & Hold</button>
+            <button class="calc-tab" onclick="showCalc(this,'calc-flip')">Fix & Flip</button>
+            <button class="calc-tab" onclick="showCalc(this,'calc-brrrr')">BRRRR</button>
+          </div>
+
+          <div id="calc-hold" class="calc-panel on">
+            <div class="calc-title">Buy & Hold Cash Flow Analysis</div>
+            <div class="calc-grid">
+              <div class="calc-field"><label>Monthly Rent</label><input type="number" id="ch-rent" value="${+d.rentFinal||0}" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Total Entry (Cash In)</label><input type="number" id="ch-entry" value="${entry||+d.askingPrice}" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Monthly Loan Payment</label><input type="number" id="ch-loan" value="${+d.piti||+d.sfPayment||0}" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Insurance $/mo</label><input type="number" id="ch-ins" value="120" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Property Tax $/mo</label><input type="number" id="ch-tax" value="150" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Vacancy %</label><input type="number" id="ch-vac" value="5" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Repairs/CapEx $/mo</label><input type="number" id="ch-rep" value="100" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Property Mgmt %</label><input type="number" id="ch-pm" value="0" onchange="calcHold()"></div>
+              <div class="calc-field"><label>HOA $/mo</label><input type="number" id="ch-hoa" value="${(()=>{const h=String(d.hoa||'').replace(/[$,]/g,'');const n=parseFloat(h);return isNaN(n)?0:n;})()||0}" onchange="calcHold()"></div>
+            </div>
+            <div class="calc-results" id="ch-results"></div>
+          </div>
+
+          <div id="calc-flip" class="calc-panel">
+            <div class="calc-title">Fix & Flip Projection</div>
+            <div class="calc-grid">
+              <div class="calc-field"><label>Purchase Price</label><input type="number" id="cf-price" value="${+d.askingPrice||0}" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>Entry / Down Payment</label><input type="number" id="cf-entry" value="${entry||+d.askingPrice}" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cf-rehab" value="0" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>Holding Costs (total)</label><input type="number" id="cf-hold" value="3000" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>Closing Costs (buy+sell)</label><input type="number" id="cf-close" value="${Math.round((+d.askingPrice||0)*.03)}" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>After Repair Value (ARV)</label><input type="number" id="cf-arv" value="${arv||0}" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>Selling Agent Fee %</label><input type="number" id="cf-agent" value="5" step="0.5" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>Hold Time (months)</label><input type="number" id="cf-months" value="4" onchange="calcFlip()"></div>
+            </div>
+            <div class="calc-results" id="cf-results"></div>
+          </div>
+
+          <div id="calc-brrrr" class="calc-panel">
+            <div class="calc-title">BRRRR Refinance Scenario</div>
+            <div class="calc-grid">
+              <div class="calc-field"><label>Total Cash In</label><input type="number" id="cb-cashin" value="${entry||+d.askingPrice}" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cb-rehab" value="0" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>After Repair Value</label><input type="number" id="cb-arv" value="${arv||0}" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>Refi LTV %</label><input type="number" id="cb-ltv" value="75" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>Refi Interest Rate %</label><input type="number" id="cb-rate" value="7" step="0.125" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>Refi Term (years)</label><input type="number" id="cb-term" value="30" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>Monthly Rent</label><input type="number" id="cb-rent" value="${+d.rentFinal||0}" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>Monthly Expenses (tax+ins+repairs)</label><input type="number" id="cb-exp" value="370" onchange="calcBRRRR()"></div>
+            </div>
+            <div class="calc-results" id="cb-results"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:var(--text-light);line-height:1.5">All figures are estimates for educational purposes only. Verify all numbers with your own due diligence before making investment decisions.</div>
+      </div>
 
       ${d.deckLink?`<div id="tab-resources" class="tab-panel"><div style="padding:20px;background:var(--white);border-radius:var(--r);border:1px solid var(--border-light)"><a href="${d.deckLink}" target="_blank" class="btn btn-navy" style="max-width:260px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download Deal Package (PDF)</a></div></div>`:''}
 
@@ -881,6 +957,84 @@ function switchTab(btn,id){
   const panel=document.getElementById('tab-'+id);
   if(panel)panel.classList.add('on');
 }
+
+// ─── CALCULATOR TABS & FUNCTIONS ──────────────────────────────
+function showCalc(btn,id){
+  document.querySelectorAll('.calc-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.calc-panel').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  const panel=document.getElementById(id);
+  if(panel){panel.classList.add('on');
+    if(id==='calc-hold')calcHold();
+    if(id==='calc-flip')calcFlip();
+    if(id==='calc-brrrr')calcBRRRR();
+  }
+}
+function v(id){return parseFloat(document.getElementById(id).value)||0;}
+function r(el,label,value,cls){return`<div class="calc-result"><div class="calc-result-label">${label}</div><div class="calc-result-value ${cls||''}">${value}</div></div>`;}
+
+function calcHold(){
+  const rent=v('ch-rent'),entry=v('ch-entry'),loan=v('ch-loan'),ins=v('ch-ins'),tax=v('ch-tax'),vac=v('ch-vac'),rep=v('ch-rep'),pm=v('ch-pm'),hoa=v('ch-hoa');
+  const effRent=rent*(1-vac/100);
+  const mgmt=rent*(pm/100);
+  const totalExp=loan+ins+tax+rep+mgmt+hoa;
+  const cashFlow=effRent-totalExp;
+  const annualCF=cashFlow*12;
+  const cocReturn=entry>0?(annualCF/entry*100):0;
+  const capRate=entry>0?((effRent-totalExp+loan)*12/entry*100):0;
+  const el=document.getElementById('ch-results');
+  el.innerHTML=
+    r(el,'Effective Rent','$'+Math.round(effRent).toLocaleString()+'/mo','neutral')+
+    r(el,'Total Expenses','$'+Math.round(totalExp).toLocaleString()+'/mo','')+
+    r(el,'Monthly Cash Flow','$'+Math.round(cashFlow).toLocaleString()+'/mo',cashFlow>=0?'positive':'negative')+
+    r(el,'Annual Cash Flow','$'+Math.round(annualCF).toLocaleString(),annualCF>=0?'positive':'negative')+
+    r(el,'Cash-on-Cash Return',cocReturn.toFixed(1)+'%',cocReturn>=8?'positive':cocReturn>=0?'neutral':'negative')+
+    r(el,'Cap Rate (est.)',capRate.toFixed(1)+'%','neutral');
+}
+
+function calcFlip(){
+  const price=v('cf-price'),entry=v('cf-entry'),rehab=v('cf-rehab'),hold=v('cf-hold'),close=v('cf-close'),arv=v('cf-arv'),agent=v('cf-agent'),months=v('cf-months');
+  const totalIn=entry+rehab+hold+close;
+  const sellCosts=arv*(agent/100);
+  const netSale=arv-sellCosts;
+  const profit=netSale-price-rehab-hold-close;
+  const roi=totalIn>0?(profit/totalIn*100):0;
+  const annRoi=months>0?(roi/(months)*12):0;
+  const el=document.getElementById('cf-results');
+  el.innerHTML=
+    r(el,'Total Cash In','$'+Math.round(totalIn).toLocaleString(),'neutral')+
+    r(el,'Net Sale (after fees)','$'+Math.round(netSale).toLocaleString(),'neutral')+
+    r(el,'Estimated Profit','$'+Math.round(profit).toLocaleString(),profit>=0?'positive':'negative')+
+    r(el,'Return on Investment',roi.toFixed(1)+'%',roi>=20?'positive':roi>=0?'neutral':'negative')+
+    r(el,'Annualized ROI',annRoi.toFixed(1)+'%',annRoi>=20?'positive':annRoi>=0?'neutral':'negative')+
+    r(el,'Profit Margin',(arv>0?(profit/arv*100):0).toFixed(1)+'%','neutral');
+}
+
+function calcBRRRR(){
+  const cashIn=v('cb-cashin'),rehab=v('cb-rehab'),arv=v('cb-arv'),ltv=v('cb-ltv'),rate=v('cb-rate'),term=v('cb-term'),rent=v('cb-rent'),exp=v('cb-exp');
+  const totalIn=cashIn+rehab;
+  const refiAmount=arv*(ltv/100);
+  const cashBack=refiAmount-0; // refi pays off nothing if creative (they keep existing loan)
+  const moneyLeft=totalIn-refiAmount;
+  // Monthly mortgage payment on refi
+  const mr=rate/100/12;
+  const n=term*12;
+  const refiPayment=mr>0?refiAmount*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1):refiAmount/n;
+  const cashFlow=rent-refiPayment-exp;
+  const annualCF=cashFlow*12;
+  const cocReturn=moneyLeft>0?(annualCF/moneyLeft*100):annualCF>0?999:0;
+  const el=document.getElementById('cb-results');
+  el.innerHTML=
+    r(el,'Total Cash In','$'+Math.round(totalIn).toLocaleString(),'neutral')+
+    r(el,'Refi Amount ('+ltv+'% LTV)','$'+Math.round(refiAmount).toLocaleString(),'neutral')+
+    r(el,'Money Left in Deal',moneyLeft<=0?'$0 — Full recoup!':'$'+Math.round(moneyLeft).toLocaleString(),moneyLeft<=0?'positive':'neutral')+
+    r(el,'New Payment','$'+Math.round(refiPayment).toLocaleString()+'/mo','neutral')+
+    r(el,'Monthly Cash Flow','$'+Math.round(cashFlow).toLocaleString()+'/mo',cashFlow>=0?'positive':'negative')+
+    r(el,'Cash-on-Cash',cocReturn>=999?'∞ (no money in)':cocReturn.toFixed(1)+'%',cocReturn>=8?'positive':'neutral');
+}
+
+// Run initial calc when analysis tab opens
+setTimeout(()=>{if(document.getElementById('ch-rent'))calcHold();},500);
 
 async function submitRequest(dealId){
   const fname=document.getElementById('f-fname').value.trim();
