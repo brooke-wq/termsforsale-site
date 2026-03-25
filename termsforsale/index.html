@@ -521,12 +521,12 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
   <div class="hero-content hero-content-grid">
     <div class="hero-headline">
-      <h1>Cash and Creative Financing Deals Tailored for Every Investor</h1>
-      <p>While others search listings, we find you deals that never make it to market.</p>
+      <h1>Off-Market Deals You Won't Find on Zillow</h1>
+      <p>Subject-to, seller finance, and cash deals delivered weekly. Lock in rates under 3% on properties with built-in equity.</p>
     </div>
     <div class="hero-widget">
       <div class="hw-top">
-        <div class="hw-title">Find Your Next<br>Off-Market Deal</div>
+        <div class="hw-title">Search Active Deals</div>
         <div class="hw-badge">
           <div>
             <div class="hw-badge-num" id="hero-count">&mdash;</div>
@@ -553,13 +553,24 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </section>
 
+<!-- SOCIAL PROOF BAR -->
+<div style="background:var(--navy);padding:20px 40px">
+  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap">
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">32+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Deals</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">$2.1M+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deal Volume</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">250+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deals Closed</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">2,000+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Investors</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">12</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">States Served</div></div>
+  </div>
+</div>
+
 <section class="explore" id="all-deals">
   <div class="explore-inner">
     <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
       <div>
-        <div class="explore-eyebrow">Off-Market Deals</div>
-        <div class="explore-title">Active Inventory</div>
-        <div class="explore-subtitle">Updated weekly — no MLS, no bidding wars</div>
+        <div class="explore-eyebrow">Live Inventory</div>
+        <div class="explore-title">Browse Deals Now</div>
+        <div class="explore-subtitle">Updated daily. No MLS. No bidding wars. No agents.</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <a href="/map.html" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-weight:600;color:#4A5568;text-decoration:none;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .15s" onmouseover="this.style.borderColor='#29ABE2'" onmouseout="this.style.borderColor='#E2E8F0'">
@@ -736,8 +747,8 @@ footer{background:var(--navy);padding:52px 55px 0}
   <div class="vip-inner">
     <div>
       <div class="vip-eyebrow">Deals That Match Your Criteria</div>
-      <h2 class="vip-title">Get First-Access to Off-Market Deals</h2>
-      <p class="vip-sub">New Deals come in daily, but our private buyers list gets them before anyone else sees them. Join now and instantly unlock:</p>
+      <h2 class="vip-title">Never Miss a Deal Again</h2>
+      <p class="vip-sub">Our private buyers list sees deals 48 hours before they go public. Join 2,000+ investors who close faster.</p>
       <div class="vip-perks">
         <div class="vip-perk"><div class="vip-perk-icon">&#128680;</div><div><strong>Priority alerts via SMS + email</strong> &mdash; beat the crowd</div></div>
         <div class="vip-perk"><div class="vip-perk-icon">&#127919;</div><div><strong>Deals that match your exact buy box</strong> &mdash; no junk, no spam</div></div>
@@ -797,7 +808,7 @@ footer{background:var(--navy);padding:52px 55px 0}
         </select>
       </div>
       <label class="vf-agree"><input type="checkbox" id="vip-agree"> By continuing, I also agree to the <a href="/terms.html">Terms of Service</a> &amp; <a href="/privacy.html">Privacy Policy</a></label>
-      <button class="btn-orange-full" onclick="submitVIP()">Get Deal Alerts Now</button>
+      <button class="btn-orange-full" onclick="submitVIP()">Join the VIP List — Free</button>
     </div>
   </div>
 </section>
@@ -1303,7 +1314,7 @@ async function submitVIP(){
     btn.textContent='✓ You\'re on the list!';btn.style.background='#10B981';
     const user={name:fn,email,phone,initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()};
     setUser(user);updateNavAuth(user);
-  }catch(e){btn.disabled=false;btn.textContent='Get Deal Alerts Now';}
+  }catch(e){btn.disabled=false;btn.textContent='Join the VIP List \u2014 Free';}
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────
