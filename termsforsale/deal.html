@@ -66,7 +66,24 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .photo-thumb-lock svg{color:rgba(255,255,255,.6)}
 .photo-unlock-btn{margin-top:4px;padding:6px 14px;background:var(--orange);color:var(--white);border:none;border-radius:50px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;transition:background .15s}
 .photo-unlock-btn:hover{background:var(--orange-dark)}
-.photo-count-badge{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.65);color:var(--white);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px}
+.photo-count-badge{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.65);color:var(--white);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer}
+.photo-grid{cursor:pointer}
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:none;flex-direction:column;align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lb-close{position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer;z-index:2010;opacity:.7;transition:opacity .15s}
+.lb-close:hover{opacity:1}
+.lb-counter{position:absolute;top:20px;left:20px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;z-index:2010}
+.lb-main{flex:1;display:flex;align-items:center;justify-content:center;width:100%;position:relative;padding:60px 80px}
+.lb-main img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
+.lb-prev,.lb-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:20px;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center}
+.lb-prev:hover,.lb-next:hover{background:rgba(255,255,255,.25)}
+.lb-prev{left:16px}
+.lb-next{right:16px}
+.lb-strip{display:flex;gap:6px;padding:12px 20px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.lb-strip::-webkit-scrollbar{display:none}
+.lb-strip img{width:64px;height:48px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.5;transition:opacity .15s;flex-shrink:0;border:2px solid transparent}
+.lb-strip img.on{opacity:1;border-color:var(--blue)}
 
 /* DEAL HEADER */
 .deal-header{margin-bottom:20px}
@@ -256,6 +273,9 @@ footer{background:var(--navy);padding:44px 40px 0}
   .sticky-bar{padding:10px 16px;gap:8px;flex-wrap:wrap;justify-content:center}
   .sticky-bar-text{font-size:12px;text-align:center;width:100%}
   .sticky-bar a,.sticky-bar button{padding:9px 16px;font-size:12px;flex:1;text-align:center}
+  .lb-main{padding:50px 10px}
+  .lb-prev{left:4px;width:36px;height:36px;font-size:18px}
+  .lb-next{right:4px;width:36px;height:36px;font-size:18px}
 }
 </style>
 </head>
@@ -350,6 +370,18 @@ footer{background:var(--navy);padding:44px 40px 0}
 
 <div id="app" style="display:grid">
   <div class="loading-wrap"><div class="spinner"></div><span style="font-size:13px;font-weight:600;color:var(--text-light)">Loading deal…</span></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLB()">
+  <button class="lb-close" onclick="closeLB()">&times;</button>
+  <div class="lb-counter" id="lb-counter"></div>
+  <div class="lb-main">
+    <button class="lb-prev" onclick="stepLB(-1)">&#8249;</button>
+    <img id="lb-img" src="" alt="Property photo">
+    <button class="lb-next" onclick="stepLB(1)">&#8250;</button>
+  </div>
+  <div class="lb-strip" id="lb-strip"></div>
 </div>
 
 <!-- STICKY ACTION BAR -->
@@ -493,6 +525,114 @@ function fmtRate(r){if(!r&&r!==0)return'—';const v=+r;if(isNaN(v)||v===0)retur
 function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())/864e5)}
 function typeInfo(t){const m={Cash:{cls:'b-cash',label:'Cash Deal'},SubTo:{cls:'b-subto',label:'Subject To'},'Seller Finance':{cls:'b-sf',label:'Seller Finance'},Hybrid:{cls:'b-hybrid',label:'Hybrid'},'Morby Method':{cls:'b-hybrid',label:'Morby Method'},'Morby/Stack Method':{cls:'b-hybrid',label:'Stack Method'},Wrap:{cls:'b-wrap',label:'Wrap'}};return m[t]||{cls:'b-cash',label:t||'Cash Deal'}}
 
+// ─── DRIVE PHOTO HELPERS ──────────────────────────────────────
+function driveFileId(url){
+  if(!url)return null;
+  const m=url.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  return m?m[1]:null;
+}
+function driveFolderId(url){
+  if(!url)return null;
+  const m=url.match(/folders\/([a-zA-Z0-9_-]{20,})/);
+  return m?m[1]:null;
+}
+function thumbUrl(fileId,sz){return'/api/drive-thumb?id='+fileId+'&sz='+(sz||800);}
+
+// ─── LIGHTBOX ─────────────────────────────────────────────────
+let _lbPhotos=[],_lbIdx=0;
+function openLB(idx){
+  _lbIdx=idx||0;
+  const lb=document.getElementById('lightbox');
+  lb.classList.add('open');
+  document.body.style.overflow='hidden';
+  showLB();
+}
+function closeLB(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow='';
+}
+function stepLB(dir){
+  _lbIdx=(_lbIdx+dir+_lbPhotos.length)%_lbPhotos.length;
+  showLB();
+}
+function showLB(){
+  document.getElementById('lb-img').src=_lbPhotos[_lbIdx];
+  document.getElementById('lb-counter').textContent=(_lbIdx+1)+' / '+_lbPhotos.length;
+  document.querySelectorAll('#lb-strip img').forEach((img,i)=>img.classList.toggle('on',i===_lbIdx));
+  const active=document.querySelector('#lb-strip img.on');
+  if(active)active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('lightbox').classList.contains('open'))return;
+  if(e.key==='Escape')closeLB();
+  if(e.key==='ArrowLeft')stepLB(-1);
+  if(e.key==='ArrowRight')stepLB(1);
+});
+
+async function loadDealPhotos(d){
+  const grid=document.getElementById('photo-grid');
+  if(!grid)return;
+  const loggedIn=!!getUser();
+
+  // Get cover photo
+  const coverId=driveFileId(d.coverPhoto);
+  const coverSrc=coverId?thumbUrl(coverId,1200):null;
+
+  // Get folder photos
+  const folderId=driveFolderId(d.photos);
+  let photoIds=[];
+  if(folderId&&loggedIn){
+    try{
+      const r=await fetch('/api/drive-photos?folderId='+folderId);
+      if(r.ok){const data=await r.json();photoIds=data.fileIds||[];}
+    }catch(e){console.error('Photo load error:',e);}
+  }
+
+  // Build photo URLs
+  const allUrls=[];
+  if(coverSrc)allUrls.push(coverSrc);
+  photoIds.forEach(id=>{if(id!==(coverId||''))allUrls.push(thumbUrl(id,1200));});
+  _lbPhotos=allUrls;
+
+  // Build strip for lightbox
+  const strip=document.getElementById('lb-strip');
+  strip.innerHTML=allUrls.map((u,i)=>`<img src="${u}" onclick="openLB(${i})" alt="Photo ${i+1}">`).join('');
+
+  // Render grid (Zillow style: 1 large + up to 4 thumbs)
+  if(!coverSrc&&!photoIds.length){
+    // No photos at all
+    grid.innerHTML=`<div class="photo-main"><div class="photo-main-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:12px;font-weight:600;color:var(--text-light)">Photos Coming Soon</span></div></div>
+    <div class="photo-thumb" style="background:var(--border)"></div>
+    <div class="photo-thumb" style="background:var(--border)"></div>`;
+    return;
+  }
+
+  const mainSrc=coverSrc||thumbUrl(photoIds[0],1200);
+  const thumbIds=loggedIn?photoIds.slice(coverSrc?0:1,coverSrc?4:5):[];
+
+  let mainHtml=`<div class="photo-main" onclick="openLB(0)"><img src="${mainSrc}" alt="Property photo">`;
+  if(allUrls.length>1)mainHtml+=`<div class="photo-count-badge" onclick="openLB(0)">${allUrls.length} photos</div>`;
+  mainHtml+=`</div>`;
+
+  let thumbsHtml='';
+  if(loggedIn&&thumbIds.length){
+    thumbIds.slice(0,4).forEach((id,i)=>{
+      const idx=coverSrc?i+1:i+1;
+      const isLast=i===Math.min(thumbIds.length,4)-1&&allUrls.length>5;
+      thumbsHtml+=`<div class="photo-thumb" onclick="openLB(${idx})"><img src="${thumbUrl(id,400)}" alt="Photo">`;
+      if(isLast)thumbsHtml+=`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;cursor:pointer">+${allUrls.length-5} more</div>`;
+      thumbsHtml+=`</div>`;
+    });
+  }else if(!loggedIn&&(coverSrc||photoIds.length)){
+    thumbsHtml+=`<div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Log in for all photos</span><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div></div>`;
+    thumbsHtml+=`<div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div></div>`;
+  }
+  // Pad with empty thumbs if needed
+  while(thumbsHtml.split('photo-thumb').length-1<2)thumbsHtml+=`<div class="photo-thumb" style="background:var(--border)"></div>`;
+
+  grid.innerHTML=mainHtml+thumbsHtml;
+}
+
 function renderDeal(d,allDeals){
   document.title=`${d.city}, ${d.state} — ${d.dealType||'Deal'} | Terms For Sale`;
   document.getElementById('bc-addr').textContent=`${d.nearestMetro||d.city+', '+d.state} — ${d.dealType||'Deal Details'}`;
@@ -505,15 +645,10 @@ function renderDeal(d,allDeals){
   const isSF=d.dealType==='Seller Finance'||d.dealType==='Hybrid'||d.dealType==='Morby Method'||d.dealType==='Wrap';
   const loggedIn=!!getUser();
 
-  // PHOTO GRID
-  const lockOverlay=`<div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Log in to unlock</span><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div>`;
-  const photoHtml=d.photos
-    ?`<div class="photo-main"><img src="${d.photos}" alt="${d.streetAddress}"><div class="photo-count-badge">📷 Photos available</div></div>
-       <div class="photo-thumb">${loggedIn?'':lockOverlay}</div>
-       <div class="photo-thumb">${loggedIn?'':`<div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">20 images</span></div>`}`
-    :`<div class="photo-main"><div class="photo-main-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:12px;font-weight:600;color:var(--text-light)">Photos Available on Request</span><p style="font-size:11px;color:var(--text-light)">Text your deal ID to 480-637-3117</p></div></div>
-       <div class="photo-thumb">${loggedIn?'':lockOverlay}</div>
-       <div class="photo-thumb">${loggedIn?'':`<div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>`}`;
+  // PHOTO GRID — placeholder, filled by loadDealPhotos() after render
+  const photoHtml=`<div class="photo-main"><div class="photo-main-empty"><div class="spinner" style="border:3px solid var(--border);border-top-color:var(--blue);width:28px;height:28px;border-radius:50%;animation:spin .7s linear infinite"></div><span style="font-size:12px;font-weight:600;color:var(--text-light)">Loading photos...</span></div></div>
+    <div class="photo-thumb" style="background:var(--border)"></div>
+    <div class="photo-thumb" style="background:var(--border)"></div>`;
 
   // TAGS
   const tagItems=[
@@ -578,7 +713,7 @@ function renderDeal(d,allDeals){
   document.getElementById('app').innerHTML=`
   <div class="main">
     <div class="deal-main">
-      <div class="photo-grid">${photoHtml}</div>
+      <div class="photo-grid" id="photo-grid">${photoHtml}</div>
 
       <div class="deal-header">
         <div class="deal-price-row">
@@ -715,6 +850,8 @@ function renderDeal(d,allDeals){
       </div>
     </div>
   </div>`;
+  // Load photos async after DOM is ready
+  loadDealPhotos(d);
 }
 
 function switchTab(btn,id){
@@ -768,7 +905,7 @@ async function init(){
     const json=JSON.parse(t.substring(47,t.length-2));
     const cols=json.table.cols.map(c=>c.label);
     const rows=json.table.rows.map(row=>{const o={};cols.forEach((c,i)=>{const cell=row.c[i];o[c]=cell?(cell.v!==null?cell.v:''):'';});return o;});
-    const parse=raw=>({id:raw['Deal ID'],dealType:raw['Deal Type'],streetAddress:raw['Street Address'],city:raw['City'],state:raw['State'],zip:raw['ZIP'],nearestMetro:raw['Nearest Metro Area'],propertyType:raw['Property Type'],askingPrice:+raw['Asking Price']||0,entryFee:+raw['Entry Fee']||0,compsArv:+raw['Comps ARV']||0,aiArvBase:+raw['AI ARV Base']||0,piti:+raw['PITI']||'',subtoLoanBalance:+raw['SubTo Loan Balance']||'',subtoRate:+raw['SubTo Rate (%)']||'',sfLoanAmount:+raw['SF Loan Amount']||'',sfRate:raw['SF Rate']||'',sfTerm:raw['SF Term']||'',sfPayment:+raw['SF Payment']||'',rentFinal:+raw['Rent Final']||'',rentLow:+raw['Rent Low']||'',rentMid:+raw['Rent Mid']||'',rentHigh:+raw['Rent High']||'',occupancy:raw['Occupancy']||'',hoa:raw['HOA']||'',solar:raw['Solar']||'',access:raw['Access']||'',coe:raw['COE']||'',deckLink:raw['Deck Link']||'',photos:raw['Photos']||'',highlight1:raw['Highlight 1']||'',highlight2:raw['Highlight 2']||'',highlight3:raw['Highlight 3']||'',entryBreakdown:raw['Entry Breakdown']||'',details:raw['Details']||'',beds:raw['Beds']||'',baths:raw['Baths']||'',sqft:raw['Sqft']||'',yearBuilt:raw['Year Built']||''});
+    const parse=raw=>({id:raw['Deal ID'],dealType:raw['Deal Type'],streetAddress:raw['Street Address'],city:raw['City'],state:raw['State'],zip:raw['ZIP'],nearestMetro:raw['Nearest Metro Area'],propertyType:raw['Property Type'],askingPrice:+raw['Asking Price']||0,entryFee:+raw['Entry Fee']||0,compsArv:+raw['Comps ARV']||0,aiArvBase:+raw['AI ARV Base']||0,piti:+raw['PITI']||'',subtoLoanBalance:+raw['SubTo Loan Balance']||'',subtoRate:+raw['SubTo Rate (%)']||'',sfLoanAmount:+raw['SF Loan Amount']||'',sfRate:raw['SF Rate']||'',sfTerm:raw['SF Term']||'',sfPayment:+raw['SF Payment']||'',rentFinal:+raw['Rent Final']||'',rentLow:+raw['Rent Low']||'',rentMid:+raw['Rent Mid']||'',rentHigh:+raw['Rent High']||'',occupancy:raw['Occupancy']||'',hoa:raw['HOA']||'',solar:raw['Solar']||'',access:raw['Access']||'',coe:raw['COE']||'',deckLink:raw['Deck Link']||'',photos:raw['Photos']||'',coverPhoto:raw['Cover Photo']||'',highlight1:raw['Highlight 1']||'',highlight2:raw['Highlight 2']||'',highlight3:raw['Highlight 3']||'',entryBreakdown:raw['Entry Breakdown']||'',details:raw['Details']||'',beds:raw['Beds']||'',baths:raw['Baths']||'',sqft:raw['Sqft']||'',yearBuilt:raw['Year Built']||''});
     const allDeals=rows.filter(r=>r['Deal Status']==='Actively Marketing').map(parse);
     const raw=rows.find(r=>String(r['Deal ID'])===String(id));
     if(!raw){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
