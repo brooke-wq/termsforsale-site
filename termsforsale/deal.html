@@ -260,7 +260,8 @@ footer{background:var(--navy);padding:44px 40px 0}
 .calc-tab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
 .calc-panel{display:none}
 .calc-panel.on{display:block}
-.calc-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px}
+.calc-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+.calc-hint{font-size:11px;color:var(--text-light);margin-bottom:14px;line-height:1.5}
 .calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .calc-field label{display:block;font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
 .calc-field input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
@@ -805,56 +806,81 @@ function renderDeal(d,allDeals){
       <div id="tab-analysis" class="tab-panel">
         ${rentHtml}
         <div style="margin-top:${rentHtml?'20px':'0'}">
+          <div style="font-size:12px;color:var(--text-light);margin-bottom:12px">Enter your own numbers below. Only deal-specific data is pre-filled — all expense fields are yours to set.</div>
           <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
             <button class="calc-tab on" onclick="showCalc(this,'calc-hold')">Buy & Hold</button>
             <button class="calc-tab" onclick="showCalc(this,'calc-flip')">Fix & Flip</button>
             <button class="calc-tab" onclick="showCalc(this,'calc-brrrr')">BRRRR</button>
+            <button class="calc-tab" onclick="showCalc(this,'calc-colive')">Co-Living / PadSplit</button>
           </div>
 
           <div id="calc-hold" class="calc-panel on">
             <div class="calc-title">Buy & Hold Cash Flow Analysis</div>
+            <div class="calc-hint">Pre-filled: rent estimate and loan payment from deal data. Add your projected expenses.</div>
             <div class="calc-grid">
-              <div class="calc-field"><label>Monthly Rent</label><input type="number" id="ch-rent" value="${+d.rentFinal||0}" onchange="calcHold()"></div>
-              <div class="calc-field"><label>Total Entry (Cash In)</label><input type="number" id="ch-entry" value="${entry||+d.askingPrice}" onchange="calcHold()"></div>
-              <div class="calc-field"><label>Monthly Loan Payment</label><input type="number" id="ch-loan" value="${+d.piti||+d.sfPayment||0}" onchange="calcHold()"></div>
-              <div class="calc-field"><label>Insurance $/mo</label><input type="number" id="ch-ins" value="120" onchange="calcHold()"></div>
-              <div class="calc-field"><label>Property Tax $/mo</label><input type="number" id="ch-tax" value="150" onchange="calcHold()"></div>
-              <div class="calc-field"><label>Vacancy %</label><input type="number" id="ch-vac" value="5" onchange="calcHold()"></div>
-              <div class="calc-field"><label>Repairs/CapEx $/mo</label><input type="number" id="ch-rep" value="100" onchange="calcHold()"></div>
-              <div class="calc-field"><label>Property Mgmt %</label><input type="number" id="ch-pm" value="0" onchange="calcHold()"></div>
-              <div class="calc-field"><label>HOA $/mo</label><input type="number" id="ch-hoa" value="${(()=>{const h=String(d.hoa||'').replace(/[$,]/g,'');const n=parseFloat(h);return isNaN(n)?0:n;})()||0}" onchange="calcHold()"></div>
+              <div class="calc-field"><label>Monthly Rent</label><input type="number" id="ch-rent" value="${+d.rentFinal||''}" placeholder="Enter rent" oninput="calcHold()"></div>
+              <div class="calc-field"><label>Total Entry (Cash In)</label><input type="number" id="ch-entry" value="${entry||''}" placeholder="Your cash in" oninput="calcHold()"></div>
+              <div class="calc-field"><label>Monthly Loan/PITI</label><input type="number" id="ch-loan" value="${+d.piti||+d.sfPayment||''}" placeholder="Loan payment" oninput="calcHold()"></div>
+              <div class="calc-field"><label>Insurance $/mo</label><input type="number" id="ch-ins" value="" placeholder="Your estimate" oninput="calcHold()"></div>
+              <div class="calc-field"><label>Property Tax $/mo</label><input type="number" id="ch-tax" value="" placeholder="Your estimate" oninput="calcHold()"></div>
+              <div class="calc-field"><label>Vacancy %</label><input type="number" id="ch-vac" value="" placeholder="e.g. 5" oninput="calcHold()"></div>
+              <div class="calc-field"><label>Repairs/CapEx $/mo</label><input type="number" id="ch-rep" value="" placeholder="Your estimate" oninput="calcHold()"></div>
+              <div class="calc-field"><label>Property Mgmt %</label><input type="number" id="ch-pm" value="" placeholder="e.g. 8 or 0" oninput="calcHold()"></div>
+              <div class="calc-field"><label>HOA $/mo</label><input type="number" id="ch-hoa" value="${(()=>{const h=String(d.hoa||'').replace(/[$,]/g,'');const n=parseFloat(h);return isNaN(n)?'':n||'';})()}" placeholder="If applicable" oninput="calcHold()"></div>
             </div>
-            <div class="calc-results" id="ch-results"></div>
+            <div class="calc-results" id="ch-results"><div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your expenses above to see projected cash flow</div></div>
           </div>
 
           <div id="calc-flip" class="calc-panel">
             <div class="calc-title">Fix & Flip Projection</div>
+            <div class="calc-hint">Pre-filled: purchase price and ARV from deal data. Enter your rehab and cost estimates.</div>
             <div class="calc-grid">
-              <div class="calc-field"><label>Purchase Price</label><input type="number" id="cf-price" value="${+d.askingPrice||0}" onchange="calcFlip()"></div>
-              <div class="calc-field"><label>Entry / Down Payment</label><input type="number" id="cf-entry" value="${entry||+d.askingPrice}" onchange="calcFlip()"></div>
-              <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cf-rehab" value="0" onchange="calcFlip()"></div>
-              <div class="calc-field"><label>Holding Costs (total)</label><input type="number" id="cf-hold" value="3000" onchange="calcFlip()"></div>
-              <div class="calc-field"><label>Closing Costs (buy+sell)</label><input type="number" id="cf-close" value="${Math.round((+d.askingPrice||0)*.03)}" onchange="calcFlip()"></div>
-              <div class="calc-field"><label>After Repair Value (ARV)</label><input type="number" id="cf-arv" value="${arv||0}" onchange="calcFlip()"></div>
-              <div class="calc-field"><label>Selling Agent Fee %</label><input type="number" id="cf-agent" value="5" step="0.5" onchange="calcFlip()"></div>
-              <div class="calc-field"><label>Hold Time (months)</label><input type="number" id="cf-months" value="4" onchange="calcFlip()"></div>
+              <div class="calc-field"><label>Purchase Price</label><input type="number" id="cf-price" value="${+d.askingPrice||''}" placeholder="Purchase price" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Entry / Down Payment</label><input type="number" id="cf-entry" value="${entry||''}" placeholder="Your cash in" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cf-rehab" value="" placeholder="Your estimate" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Holding Costs (total)</label><input type="number" id="cf-hold" value="" placeholder="Ins + tax + utils" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Closing Costs (buy+sell)</label><input type="number" id="cf-close" value="" placeholder="Your estimate" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>After Repair Value (ARV)</label><input type="number" id="cf-arv" value="${arv||''}" placeholder="Comp-based ARV" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Selling Agent Fee %</label><input type="number" id="cf-agent" value="" placeholder="e.g. 5" step="0.5" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Hold Time (months)</label><input type="number" id="cf-months" value="" placeholder="e.g. 4" oninput="calcFlip()"></div>
             </div>
-            <div class="calc-results" id="cf-results"></div>
+            <div class="calc-results" id="cf-results"><div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your costs above to see flip projection</div></div>
           </div>
 
           <div id="calc-brrrr" class="calc-panel">
             <div class="calc-title">BRRRR Refinance Scenario</div>
+            <div class="calc-hint">Model your refinance exit. See how much capital you recover and your new cash flow position.</div>
             <div class="calc-grid">
-              <div class="calc-field"><label>Total Cash In</label><input type="number" id="cb-cashin" value="${entry||+d.askingPrice}" onchange="calcBRRRR()"></div>
-              <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cb-rehab" value="0" onchange="calcBRRRR()"></div>
-              <div class="calc-field"><label>After Repair Value</label><input type="number" id="cb-arv" value="${arv||0}" onchange="calcBRRRR()"></div>
-              <div class="calc-field"><label>Refi LTV %</label><input type="number" id="cb-ltv" value="75" onchange="calcBRRRR()"></div>
-              <div class="calc-field"><label>Refi Interest Rate %</label><input type="number" id="cb-rate" value="7" step="0.125" onchange="calcBRRRR()"></div>
-              <div class="calc-field"><label>Refi Term (years)</label><input type="number" id="cb-term" value="30" onchange="calcBRRRR()"></div>
-              <div class="calc-field"><label>Monthly Rent</label><input type="number" id="cb-rent" value="${+d.rentFinal||0}" onchange="calcBRRRR()"></div>
-              <div class="calc-field"><label>Monthly Expenses (tax+ins+repairs)</label><input type="number" id="cb-exp" value="370" onchange="calcBRRRR()"></div>
+              <div class="calc-field"><label>Total Cash In</label><input type="number" id="cb-cashin" value="${entry||''}" placeholder="Entry + rehab" oninput="calcBRRRR()"></div>
+              <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cb-rehab" value="" placeholder="If any" oninput="calcBRRRR()"></div>
+              <div class="calc-field"><label>After Repair Value</label><input type="number" id="cb-arv" value="${arv||''}" placeholder="Post-rehab value" oninput="calcBRRRR()"></div>
+              <div class="calc-field"><label>Refi LTV %</label><input type="number" id="cb-ltv" value="" placeholder="e.g. 75" oninput="calcBRRRR()"></div>
+              <div class="calc-field"><label>Refi Interest Rate %</label><input type="number" id="cb-rate" value="" placeholder="e.g. 7" step="0.125" oninput="calcBRRRR()"></div>
+              <div class="calc-field"><label>Refi Term (years)</label><input type="number" id="cb-term" value="" placeholder="e.g. 30" oninput="calcBRRRR()"></div>
+              <div class="calc-field"><label>Monthly Rent</label><input type="number" id="cb-rent" value="${+d.rentFinal||''}" placeholder="Market rent" oninput="calcBRRRR()"></div>
+              <div class="calc-field"><label>Monthly Expenses</label><input type="number" id="cb-exp" value="" placeholder="Tax+ins+repairs" oninput="calcBRRRR()"></div>
             </div>
-            <div class="calc-results" id="cb-results"></div>
+            <div class="calc-results" id="cb-results"><div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your refi terms to see capital recovery</div></div>
+          </div>
+
+          <div id="calc-colive" class="calc-panel">
+            <div class="calc-title">Co-Living / PadSplit Analysis</div>
+            <div class="calc-hint">Estimate revenue from renting by the room. ${d.beds?'This property has '+d.beds+' bedrooms.':''} PadSplit typically charges 10-12% platform fee.</div>
+            <div class="calc-grid">
+              <div class="calc-field"><label>Number of Rooms</label><input type="number" id="cc-rooms" value="${d.beds||''}" placeholder="Rentable rooms" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Avg Rent per Room $/mo</label><input type="number" id="cc-roomrent" value="" placeholder="e.g. 650" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Total Entry (Cash In)</label><input type="number" id="cc-entry" value="${entry||''}" placeholder="Your cash in" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Monthly Loan/PITI</label><input type="number" id="cc-loan" value="${+d.piti||+d.sfPayment||''}" placeholder="Loan payment" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Platform Fee %</label><input type="number" id="cc-platform" value="" placeholder="e.g. 12" step="0.5" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Utilities $/mo</label><input type="number" id="cc-utils" value="" placeholder="All utilities" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Insurance $/mo</label><input type="number" id="cc-ins" value="" placeholder="Your estimate" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Property Tax $/mo</label><input type="number" id="cc-tax" value="" placeholder="Your estimate" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Furnishing Budget (total)</label><input type="number" id="cc-furnish" value="" placeholder="One-time cost" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Vacancy %</label><input type="number" id="cc-vac" value="" placeholder="e.g. 10" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>Repairs $/mo</label><input type="number" id="cc-rep" value="" placeholder="Higher for co-living" oninput="calcCoLive()"></div>
+              <div class="calc-field"><label>HOA $/mo</label><input type="number" id="cc-hoa" value="${(()=>{const h=String(d.hoa||'').replace(/[$,]/g,'');const n=parseFloat(h);return isNaN(n)?'':n||'';})()}" placeholder="If applicable" oninput="calcCoLive()"></div>
+            </div>
+            <div class="calc-results" id="cc-results"><div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your room rent and costs to see co-living projection</div></div>
           </div>
         </div>
         <div style="margin-top:12px;font-size:10px;color:var(--text-light);line-height:1.5">All figures are estimates for educational purposes only. Verify all numbers with your own due diligence before making investment decisions.</div>
@@ -963,77 +989,100 @@ function showCalc(btn,id){
   document.querySelectorAll('.calc-panel').forEach(p=>p.classList.remove('on'));
   btn.classList.add('on');
   const panel=document.getElementById(id);
-  if(panel){panel.classList.add('on');
-    if(id==='calc-hold')calcHold();
-    if(id==='calc-flip')calcFlip();
-    if(id==='calc-brrrr')calcBRRRR();
-  }
+  if(panel)panel.classList.add('on');
 }
 function v(id){return parseFloat(document.getElementById(id).value)||0;}
-function r(el,label,value,cls){return`<div class="calc-result"><div class="calc-result-label">${label}</div><div class="calc-result-value ${cls||''}">${value}</div></div>`;}
+function $(amt){return'$'+Math.round(amt).toLocaleString();}
+function r(label,value,cls,note){return`<div class="calc-result"><div class="calc-result-label">${label}</div><div class="calc-result-value ${cls||''}">${value}</div>${note?'<div style="font-size:9px;color:var(--text-light);margin-top:2px">'+note+'</div>':''}</div>`;}
+function hasInputs(){return true;}
 
 function calcHold(){
   const rent=v('ch-rent'),entry=v('ch-entry'),loan=v('ch-loan'),ins=v('ch-ins'),tax=v('ch-tax'),vac=v('ch-vac'),rep=v('ch-rep'),pm=v('ch-pm'),hoa=v('ch-hoa');
+  if(!rent&&!entry){document.getElementById('ch-results').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your expenses above to see projected cash flow</div>';return;}
   const effRent=rent*(1-vac/100);
   const mgmt=rent*(pm/100);
   const totalExp=loan+ins+tax+rep+mgmt+hoa;
   const cashFlow=effRent-totalExp;
   const annualCF=cashFlow*12;
   const cocReturn=entry>0?(annualCF/entry*100):0;
-  const capRate=entry>0?((effRent-totalExp+loan)*12/entry*100):0;
   const el=document.getElementById('ch-results');
   el.innerHTML=
-    r(el,'Effective Rent','$'+Math.round(effRent).toLocaleString()+'/mo','neutral')+
-    r(el,'Total Expenses','$'+Math.round(totalExp).toLocaleString()+'/mo','')+
-    r(el,'Monthly Cash Flow','$'+Math.round(cashFlow).toLocaleString()+'/mo',cashFlow>=0?'positive':'negative')+
-    r(el,'Annual Cash Flow','$'+Math.round(annualCF).toLocaleString(),annualCF>=0?'positive':'negative')+
-    r(el,'Cash-on-Cash Return',cocReturn.toFixed(1)+'%',cocReturn>=8?'positive':cocReturn>=0?'neutral':'negative')+
-    r(el,'Cap Rate (est.)',capRate.toFixed(1)+'%','neutral');
+    r('Gross Rent',$(rent)+'/mo','neutral','')+
+    r('Effective Rent',$(effRent)+'/mo','neutral',vac?'After '+vac+'% vacancy':'')+
+    r('Total Expenses',$(totalExp)+'/mo','',loan?'Incl. '+$(loan)+' loan':'No loan payment entered')+
+    r('Monthly Cash Flow',$(cashFlow)+'/mo',cashFlow>0?'positive':cashFlow===0?'neutral':'negative','')+
+    r('Annual Cash Flow',$(annualCF),annualCF>0?'positive':annualCF===0?'neutral':'negative','')+
+    r('Cash-on-Cash',entry>0?cocReturn.toFixed(1)+'%':'Enter entry to calc',cocReturn>=8?'positive':cocReturn>0?'neutral':entry?'negative':'',cocReturn>=8?'Strong return':cocReturn>=5?'Moderate return':'');
 }
 
 function calcFlip(){
   const price=v('cf-price'),entry=v('cf-entry'),rehab=v('cf-rehab'),hold=v('cf-hold'),close=v('cf-close'),arv=v('cf-arv'),agent=v('cf-agent'),months=v('cf-months');
+  if(!price&&!arv){document.getElementById('cf-results').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your costs above to see flip projection</div>';return;}
   const totalIn=entry+rehab+hold+close;
   const sellCosts=arv*(agent/100);
   const netSale=arv-sellCosts;
   const profit=netSale-price-rehab-hold-close;
   const roi=totalIn>0?(profit/totalIn*100):0;
-  const annRoi=months>0?(roi/(months)*12):0;
+  const annRoi=months>0?(roi/months*12):0;
   const el=document.getElementById('cf-results');
   el.innerHTML=
-    r(el,'Total Cash In','$'+Math.round(totalIn).toLocaleString(),'neutral')+
-    r(el,'Net Sale (after fees)','$'+Math.round(netSale).toLocaleString(),'neutral')+
-    r(el,'Estimated Profit','$'+Math.round(profit).toLocaleString(),profit>=0?'positive':'negative')+
-    r(el,'Return on Investment',roi.toFixed(1)+'%',roi>=20?'positive':roi>=0?'neutral':'negative')+
-    r(el,'Annualized ROI',annRoi.toFixed(1)+'%',annRoi>=20?'positive':annRoi>=0?'neutral':'negative')+
-    r(el,'Profit Margin',(arv>0?(profit/arv*100):0).toFixed(1)+'%','neutral');
+    r('Total All-In',$(price+rehab+hold+close),'neutral','Purchase + rehab + costs')+
+    r('Total Cash In',$(totalIn),'neutral','Your out-of-pocket')+
+    r('Net Sale',$(netSale),'neutral',agent?'After '+agent+'% agent fee':'')+
+    r('Est. Profit',$(profit),profit>0?'positive':profit===0?'neutral':'negative',profit>0?'Spread: '+$(profit):'Negative — adjust inputs')+
+    r('ROI',totalIn>0?roi.toFixed(1)+'%':'Enter costs',roi>=20?'positive':roi>0?'neutral':totalIn?'negative':'',roi>=30?'Excellent':roi>=15?'Solid':'')+
+    r('Annualized ROI',months>0?annRoi.toFixed(1)+'%':'Enter hold time','neutral','Based on '+months+' month hold');
 }
 
 function calcBRRRR(){
   const cashIn=v('cb-cashin'),rehab=v('cb-rehab'),arv=v('cb-arv'),ltv=v('cb-ltv'),rate=v('cb-rate'),term=v('cb-term'),rent=v('cb-rent'),exp=v('cb-exp');
+  if(!arv&&!cashIn){document.getElementById('cb-results').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your refi terms to see capital recovery</div>';return;}
   const totalIn=cashIn+rehab;
   const refiAmount=arv*(ltv/100);
-  const cashBack=refiAmount-0; // refi pays off nothing if creative (they keep existing loan)
-  const moneyLeft=totalIn-refiAmount;
-  // Monthly mortgage payment on refi
+  const moneyLeft=Math.max(0,totalIn-refiAmount);
+  const capitalRecovered=Math.min(refiAmount,totalIn);
+  const recoverPct=totalIn>0?(capitalRecovered/totalIn*100):0;
   const mr=rate/100/12;
   const n=term*12;
-  const refiPayment=mr>0?refiAmount*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1):refiAmount/n;
+  const refiPayment=mr>0&&refiAmount>0?refiAmount*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1):0;
   const cashFlow=rent-refiPayment-exp;
   const annualCF=cashFlow*12;
-  const cocReturn=moneyLeft>0?(annualCF/moneyLeft*100):annualCF>0?999:0;
+  const cocReturn=moneyLeft>0?(annualCF/moneyLeft*100):cashFlow>0?999:0;
   const el=document.getElementById('cb-results');
   el.innerHTML=
-    r(el,'Total Cash In','$'+Math.round(totalIn).toLocaleString(),'neutral')+
-    r(el,'Refi Amount ('+ltv+'% LTV)','$'+Math.round(refiAmount).toLocaleString(),'neutral')+
-    r(el,'Money Left in Deal',moneyLeft<=0?'$0 — Full recoup!':'$'+Math.round(moneyLeft).toLocaleString(),moneyLeft<=0?'positive':'neutral')+
-    r(el,'New Payment','$'+Math.round(refiPayment).toLocaleString()+'/mo','neutral')+
-    r(el,'Monthly Cash Flow','$'+Math.round(cashFlow).toLocaleString()+'/mo',cashFlow>=0?'positive':'negative')+
-    r(el,'Cash-on-Cash',cocReturn>=999?'∞ (no money in)':cocReturn.toFixed(1)+'%',cocReturn>=8?'positive':'neutral');
+    r('Total Cash In',$(totalIn),'neutral','Entry'+(rehab?' + rehab':''))+
+    r('Refi Amount',refiAmount>0?$(refiAmount):'Enter LTV + ARV','neutral',ltv?ltv+'% of '+$(arv)+' ARV':'')+
+    r('Capital Recovered',recoverPct>0?$(capitalRecovered)+' ('+Math.round(recoverPct)+'%)':'—',recoverPct>=100?'positive':recoverPct>=75?'neutral':'',recoverPct>=100?'Full capital recoup!':recoverPct>=75?'Strong recovery':'')+
+    r('Money Left in Deal',moneyLeft<=0?'$0':'$('+Math.round(moneyLeft).toLocaleString()+')',moneyLeft<=0?'positive':'neutral',moneyLeft<=0?'Infinite leverage':'Still in for '+$(moneyLeft))+
+    r('New Payment',refiPayment>0?$(refiPayment)+'/mo':'Enter rate + term','neutral',rate?rate+'% over '+term+'yr':'')+
+    r('Cash Flow',rent?$(cashFlow)+'/mo':'Enter rent',cashFlow>0?'positive':cashFlow===0?'neutral':rent?'negative':'',cocReturn>=999?'∞ CoC — no money in deal':cocReturn>0?cocReturn.toFixed(1)+'% CoC':'');
 }
 
-// Run initial calc when analysis tab opens
-setTimeout(()=>{if(document.getElementById('ch-rent'))calcHold();},500);
+function calcCoLive(){
+  const rooms=v('cc-rooms'),roomRent=v('cc-roomrent'),entry=v('cc-entry'),loan=v('cc-loan'),platform=v('cc-platform'),utils=v('cc-utils'),ins=v('cc-ins'),tax=v('cc-tax'),furnish=v('cc-furnish'),vac=v('cc-vac'),rep=v('cc-rep'),hoa=v('cc-hoa');
+  if(!rooms&&!roomRent){document.getElementById('cc-results').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px">Fill in your room rent and costs to see co-living projection</div>';return;}
+  const grossRent=rooms*roomRent;
+  const platformFee=grossRent*(platform/100);
+  const effRent=grossRent*(1-vac/100)-platformFee;
+  const totalExp=loan+utils+ins+tax+rep+hoa;
+  const cashFlow=effRent-totalExp;
+  const annualCF=cashFlow*12;
+  const totalCashIn=entry+furnish;
+  const cocReturn=totalCashIn>0?(annualCF/totalCashIn*100):0;
+  const vsTraditional=v('ch-rent')||0;
+  const uplift=vsTraditional>0?grossRent-vsTraditional:0;
+  const el=document.getElementById('cc-results');
+  el.innerHTML=
+    r('Gross Room Revenue',$(grossRent)+'/mo','neutral',rooms+' rooms × '+$(roomRent)+'/room')+
+    r('Platform Fees',platformFee>0?'-'+$(platformFee)+'/mo':'None entered','',platform?platform+'% to platform':'')+
+    r('Net Revenue',$(effRent)+'/mo','neutral',vac?'After '+vac+'% vacancy + fees':'After platform fees')+
+    r('Total Expenses',$(totalExp)+'/mo','','Loan + utils + ins + tax + repairs')+
+    r('Monthly Cash Flow',$(cashFlow)+'/mo',cashFlow>0?'positive':cashFlow===0?'neutral':'negative','')+
+    r('Annual Cash Flow',$(annualCF),annualCF>0?'positive':annualCF===0?'neutral':'negative','')+
+    r('Total Cash In',$(totalCashIn),'neutral',furnish?'Entry '+$(entry)+' + furnishing '+$(furnish):'Entry only')+
+    r('Cash-on-Cash',totalCashIn>0?cocReturn.toFixed(1)+'%':'Enter costs',cocReturn>=12?'positive':cocReturn>0?'neutral':totalCashIn?'negative':'',cocReturn>=15?'Excellent — co-living premium':cocReturn>=8?'Solid return':'')+
+    (uplift>0?r('vs. Traditional Rent','+'+$(uplift)+'/mo','positive','Co-living premium over '+$(vsTraditional)+' traditional rent'):'');
+}
 
 async function submitRequest(dealId){
   const fname=document.getElementById('f-fname').value.trim();
