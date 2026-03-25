@@ -317,7 +317,7 @@ footer{background:var(--navy);padding:44px 40px 0}
         <div class="a-err" id="a-li-err"></div>
         <div class="a-ok" id="a-li-ok"></div>
         <div class="a-field"><input class="a-input" id="li-email" type="email" placeholder="Email address"></div>
-        <div class="a-field"><input class="a-input" id="li-phone" type="tel" placeholder="Phone number"></div>
+        <div class="a-field"><input class="a-input" id="li-pass" type="password" placeholder="Password"></div>
         <button class="btn-full-blue" onclick="doLogin()">Log In</button>
         <div class="a-note">No account? <a href="#" onclick="switchAuthTab('signup');return false">Sign up free &rarr;</a></div>
       </div>
@@ -336,6 +336,7 @@ footer{background:var(--navy);padding:44px 40px 0}
         </div>
         <div class="a-field"><input class="a-input" id="su-email" type="email" placeholder="Email address"></div>
         <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
+        <div class="a-field"><input class="a-input" id="su-pass" type="password" placeholder="Create password"></div>
         <div class="a-field">
           <select class="a-input" id="su-buy" style="appearance:none;cursor:pointer">
             <option value="">How do you buy?</option>
@@ -470,32 +471,34 @@ function switchAuthTab(tab){
 }
 async function doLogin(){
   const email=document.getElementById('li-email').value.trim();
-  const phone=document.getElementById('li-phone').value.trim();
+  const pass=document.getElementById('li-pass').value.trim();
   const err=document.getElementById('a-li-err'),ok=document.getElementById('a-li-ok');
   err.style.display='none';ok.style.display='none';
-  if(!email&&!phone){err.textContent='Please enter email or phone.';err.style.display='block';return;}
+  if(!email||!pass){err.textContent='Please enter email and password.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
-  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,phone,source:'TFS Website Login'})});}catch(e){}
-  const name=email?email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'Buyer';
-  const user={name,email,phone,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
+  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,source:'TFS Website Login'})});}catch(e){}
+  const name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
-  ok.textContent='Welcome back, '+user.name+'!';ok.style.display='block';
-  setTimeout(()=>closeAuth(),1200);
+  ok.innerHTML='Welcome back, '+user.name+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  setTimeout(()=>closeAuth(),2000);
   btn.disabled=false;btn.textContent='Log In';
 }
 async function doSignup(){
   const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
   const email=document.getElementById('su-email').value.trim(),phone=document.getElementById('su-phone').value.trim();
   const buy=document.getElementById('su-buy').value;
+  const pass=document.getElementById('su-pass').value.trim();
   const err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
   err.style.display='none';ok.style.display='none';
-  if(!fn||!email||!phone){err.textContent='Please fill in first name, email and phone.';err.style.display='block';return;}
+  if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']})});}catch(e){}
+  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']})});}catch(e){}
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
-  ok.textContent='Account created! Welcome, '+fn+' 🎉';ok.style.display='block';
+  ok.innerHTML='Account created! Welcome, '+fn+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
   setTimeout(()=>closeAuth(),1400);
   btn.disabled=false;btn.textContent='Create Free Account';
 }
@@ -508,6 +511,7 @@ function updateNavAuth(user){
     <div class="nav-avatar-wrap">
       <div class="nav-avatar">${user.initials}</div>
       <div class="nav-dropdown">
+        <a href="https://termsforsale.app.clientclub.net/" target="_blank">🔑 Buyer Portal</a>
         <a href="/dashboard.html">📊 My Dashboard</a>
         <a href="/buy-box.html">✏️ Update Buy Box</a>
         <a href="/">🏠 All Deals</a>
