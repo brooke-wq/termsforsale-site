@@ -503,15 +503,17 @@ function renderDeal(d,allDeals){
   const entry=+d.entryFee||0;
   const isSubTo=d.dealType==='SubTo'||d.dealType==='Hybrid'||d.dealType==='Morby Method'||d.dealType==='Morby/Stack Method'||d.dealType==='Wrap';
   const isSF=d.dealType==='Seller Finance'||d.dealType==='Hybrid'||d.dealType==='Morby Method'||d.dealType==='Wrap';
+  const loggedIn=!!getUser();
 
   // PHOTO GRID
+  const lockOverlay=`<div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Log in to unlock</span><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div>`;
   const photoHtml=d.photos
     ?`<div class="photo-main"><img src="${d.photos}" alt="${d.streetAddress}"><div class="photo-count-badge">📷 Photos available</div></div>
-       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Log in to unlock</span><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div></div>
-       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">20 images</span></div></div>`
+       <div class="photo-thumb">${loggedIn?'':lockOverlay}</div>
+       <div class="photo-thumb">${loggedIn?'':`<div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">20 images</span></div>`}`
     :`<div class="photo-main"><div class="photo-main-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:12px;font-weight:600;color:var(--text-light)">Photos Available on Request</span><p style="font-size:11px;color:var(--text-light)">Text your deal ID to 480-637-3117</p></div></div>
-       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div></div>
-       <div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div></div>`;
+       <div class="photo-thumb">${loggedIn?'':lockOverlay}</div>
+       <div class="photo-thumb">${loggedIn?'':`<div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>`}`;
 
   // TAGS
   const tagItems=[
@@ -612,7 +614,7 @@ function renderDeal(d,allDeals){
               <div class="map-placeholder">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <div style="font-size:11px;font-weight:600;margin-top:6px">${d.city}, ${d.state}</div>
-                <div style="font-size:10px;margin-top:3px;color:var(--text-light)">Sign up to view full map</div>
+                <div style="font-size:10px;margin-top:3px;color:var(--text-light)">${loggedIn?d.streetAddress+', '+d.city:'Sign up to view full map'}</div>
               </div>
             </div>
             ${d.entryBreakdown?`<div style="background:var(--blue-light);border-radius:var(--r);padding:14px;margin-top:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--blue-dark);margin-bottom:6px">Entry Breakdown</div><div style="font-size:13px;color:var(--text-mid);line-height:1.65">${d.entryBreakdown}</div></div>`:''}
@@ -638,7 +640,7 @@ function renderDeal(d,allDeals){
     </div>
 
     <!-- SIDEBAR -->
-    <div class="deal-sidebar">
+    <div class="deal-sidebar" id="request-form">
       <div class="sidebar-card">
         <div class="sidebar-head">
           <h3>Get Deal Details in Minutes</h3>
@@ -649,9 +651,11 @@ function renderDeal(d,allDeals){
           <div class="perk"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Simple next steps and support available</div>
         </div>
         <div class="sidebar-body">
-          <a href="https://buyingcriteria.com" target="_blank" class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px">Unlock the Address</a>
-          <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);margin-bottom:8px;font-size:13px" onclick="document.getElementById('req-form').style.display='block';this.style.display='none'">Request Address</button>
-          <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px" onclick="document.getElementById('req-form').style.display='block'">Send me the Address</button>
+          ${loggedIn
+            ?`<div style="background:var(--blue-light);border-radius:8px;padding:12px 16px;margin-bottom:8px;font-size:13px;color:var(--blue-dark);font-weight:600;text-align:center">✓ Address: ${d.streetAddress}, ${d.city}, ${d.state} ${d.zip||''}</div>
+              <button class="btn btn-blue" style="width:100%;justify-content:center;font-size:13px" onclick="document.getElementById('req-form').style.display='block'">I'm Interested — Request Info</button>`
+            :`<button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px" onclick="openAuth('signup')">Sign Up to Unlock Address</button>
+              <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px" onclick="openAuth('login')">Already have an account? Log In</button>`}
         </div>
         <div id="req-form" style="display:none;padding:0 20px 20px">
           <div class="sidebar-form">
