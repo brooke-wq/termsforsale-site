@@ -122,9 +122,8 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .term-value.empty{color:var(--border);font-style:italic;font-weight:400}
 
 /* MAP */
-.map-embed{border-radius:var(--r);overflow:hidden;height:220px;background:var(--border-light);display:flex;align-items:center;justify-content:center;margin-top:20px;border:1px solid var(--border)}
-.map-placeholder{text-align:center;color:var(--text-light)}
-.map-placeholder svg{margin-bottom:8px}
+.map-embed{border-radius:var(--r);overflow:hidden;height:220px;background:var(--border-light);margin-top:20px;border:1px solid var(--border)}
+.map-embed iframe{width:100%;height:100%;border:none}
 
 /* HIGHLIGHTS */
 .highlights{display:flex;flex-direction:column;gap:10px}
@@ -746,13 +745,10 @@ function renderDeal(d,allDeals){
           <div>${termsTableHtml}</div>
           <div>
             <div class="map-embed">
-              <div class="map-placeholder">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <div style="font-size:11px;font-weight:600;margin-top:6px">${d.city}, ${d.state}</div>
-                <div style="font-size:10px;margin-top:3px;color:var(--text-light)">${loggedIn?d.streetAddress+', '+d.city:'Sign up to view full map'}</div>
-              </div>
+              ${loggedIn
+                ?`<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(d.streetAddress+', '+d.city+', '+d.state+' '+(d.zip||''))}&t=&z=15&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Property location"></iframe>`
+                :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-light)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div style="font-size:11px;font-weight:600">${d.city}, ${d.state}</div><div style="font-size:10px;color:var(--text-light)">Sign up to view full map</div><button class="photo-unlock-btn" onclick="openAuth('signup')" style="margin-top:4px">Sign Up</button></div>`}
             </div>
-            ${d.entryBreakdown?`<div style="background:var(--blue-light);border-radius:var(--r);padding:14px;margin-top:12px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--blue-dark);margin-bottom:6px">Entry Breakdown</div><div style="font-size:13px;color:var(--text-mid);line-height:1.65">${d.entryBreakdown}</div></div>`:''}
           </div>
         </div>
       </div>
