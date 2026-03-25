@@ -51,12 +51,12 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .bc-cur{color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
 
 /* MAIN LAYOUT */
-.main{max-width:960px;margin:0 auto;padding:24px 24px 72px;display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
-.deal-main{}
+.main{max-width:900px;margin:0 auto;padding:20px 20px 60px;display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
+.deal-main{min-width:0}
 .deal-sidebar{position:sticky;top:88px}
 
 /* PHOTO GRID — Zillow-style: large hero + 2 small thumbs right */
-.photo-grid{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:3px;border-radius:12px;overflow:hidden;margin-bottom:20px;height:280px;cursor:pointer}
+.photo-grid{display:grid;grid-template-columns:5fr 2fr;grid-template-rows:1fr 1fr;gap:3px;border-radius:10px;overflow:hidden;margin-bottom:16px;height:240px;cursor:pointer}
 .photo-main{grid-row:1/3;position:relative;background:var(--border);overflow:hidden}
 .photo-main img{width:100%;height:100%;object-fit:cover;display:block}
 .photo-main-empty{width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5 0%,#a8d4ea 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text-light)}
