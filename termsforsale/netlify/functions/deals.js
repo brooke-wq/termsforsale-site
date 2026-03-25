@@ -149,7 +149,9 @@ exports.handler = async function(event) {
     }
 
     // Map Notion pages to deal objects matching the existing frontend schema
+    // Property names must match Notion exactly (case-sensitive, including trailing spaces)
     var deals = pages.map(function(page) {
+      var rent = prop(page, 'LTR Market Rent');
       return {
         id: page.id,
         dealType: prop(page, 'Deal Type'),
@@ -157,16 +159,16 @@ exports.handler = async function(event) {
         streetAddress: prop(page, 'Street Address'),
         city: prop(page, 'City'),
         state: prop(page, 'State'),
-        zip: prop(page, 'ZIP') || prop(page, 'Zip'),
-        nearestMetro: prop(page, 'Nearest Metro Area'),
+        zip: prop(page, 'ZIP'),
+        nearestMetro: prop(page, 'Nearest Metro') || prop(page, 'Nearest Metro Area'),
         propertyType: prop(page, 'Property Type'),
         askingPrice: +prop(page, 'Asking Price') || 0,
         entryFee: +prop(page, 'Entry Fee') || 0,
-        compsArv: +prop(page, 'Comps ARV') || 0,
+        compsArv: +prop(page, 'ARV') || +prop(page, 'Comps ARV') || 0,
         loanType: prop(page, 'Loan Type'),
         subtoLoanBalance: +prop(page, 'SubTo Loan Balance') || '',
-        subtoRate: prop(page, 'SubTo Rate'),
-        piti: +prop(page, 'PITI') || '',
+        subtoRate: +prop(page, 'SubTo Rate (%)') || '',
+        piti: +prop(page, 'PITI ') || +prop(page, 'PITI') || '',
         subtoLoanMaturity: prop(page, 'SubTo Loan Maturity'),
         subToBalloon: prop(page, 'SubTo Balloon'),
         sfLoanAmount: +prop(page, 'SF Loan Amount') || '',
@@ -174,26 +176,27 @@ exports.handler = async function(event) {
         sfTerm: prop(page, 'SF Term'),
         sfPayment: +prop(page, 'SF Payment') || '',
         sfBalloon: prop(page, 'SF Balloon'),
-        rentFinal: +prop(page, 'Rent Final') || '',
-        rentLow: +prop(page, 'Rent Low') || '',
-        rentMid: +prop(page, 'Rent Mid') || '',
-        rentHigh: +prop(page, 'Rent High') || '',
+        rentFinal: +rent || '',
+        rentLow: '',
+        rentMid: '',
+        rentHigh: '',
         occupancy: prop(page, 'Occupancy'),
         hoa: prop(page, 'HOA'),
         solar: prop(page, 'Solar'),
         beds: prop(page, 'Beds'),
         baths: prop(page, 'Baths'),
-        sqft: prop(page, 'Sqft'),
-        yearBuilt: prop(page, 'Year Build') || prop(page, 'Year Built'),
+        sqft: prop(page, 'Living Area') || prop(page, 'Sqft'),
+        yearBuilt: prop(page, 'Year Built') || prop(page, 'Year Build'),
         access: prop(page, 'Access'),
         coe: prop(page, 'COE'),
         photos: prop(page, 'Photos'),
-        coverPhoto: prop(page, 'Cover Photo'),
+        coverPhoto: prop(page, 'Cover photo') || prop(page, 'Cover Photo'),
         highlight1: prop(page, 'Highlight 1'),
         highlight2: prop(page, 'Highlight 2'),
         highlight3: prop(page, 'Highlight 3'),
-        details: prop(page, 'Details'),
+        details: prop(page, 'Details ') || prop(page, 'Details'),
         entryBreakdown: prop(page, 'Entry Breakdown'),
+        parking: prop(page, 'Parking'),
         lastEdited: page.last_edited_time
       };
     });
