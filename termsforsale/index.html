@@ -415,6 +415,19 @@ footer{background:var(--navy);padding:52px 55px 0}
   gtag('js', new Date());
   gtag('config', 'G-DRV6NWNY06');
 </script>
+<!-- Meta Pixel — replace YOUR_PIXEL_ID with your Facebook Pixel ID -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','YOUR_PIXEL_ID');fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/></noscript>
+<!-- Google Ads Remarketing — replace YOUR_CONVERSION_ID -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_CONVERSION_ID"></script>
+<script>window.gtag||function(){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','YOUR_CONVERSION_ID')}();</script>
   <!-- TFS Buy Box — native page button -->
   <script>
     function renderBuyBoxNavBtn() {
@@ -585,7 +598,7 @@ footer{background:var(--navy);padding:52px 55px 0}
       <button class="explore-tab" onclick="setExploreTab(this,'cash')">Cash Deals</button>
     </div>
     <div class="filter-row">
-      <input class="filter-input" id="f-search" placeholder="Search by city, state, zip, or deal type…" oninput="applyFilters()">
+      <input class="filter-input" id="f-search" placeholder="Search by city, state, zip, or deal type…" oninput="clearTimeout(window._ft);window._ft=setTimeout(applyFilters,200)">
       <select class="filter-select" id="f-type" onchange="applyFilters()">
         <option value="">All Types</option>
         <option value="cash">Cash</option>
@@ -1102,6 +1115,7 @@ function makeCard(d){
       ${isUC  ? `<div class="deal-badge-uc">🔒 Under Contract</div>`
               : isSold ? `<div class="deal-badge-sold">✓ Sold</div>`
               : `<div class="deal-card-type ${typeClass(d.dealType)}">${typeLabel(d.dealType)}</div>`}
+      ${dl!==null&&dl<=30&&!isUC&&!isSold?`<div style="position:absolute;top:8px;left:8px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;z-index:2;${dl<=7?'background:#FFF5F5;color:#E53E3E':dl<=14?'background:#FFFAF0;color:#DD6B20':'background:#EBF8FF;color:#1a8bbf'}">${dl<=0?'Closing today':dl===1?'Closes tomorrow':'Closes in '+dl+'d'}</div>`:''}
       ${(discount>=10||dl!==null&&dl<=7) ? `<div class="deal-card-discount">
         ${discount>=10 ? `<div class="deal-card-discount-pct">${discount}% below ARV</div>` : '<div></div>'}
         ${dl!==null&&dl<=7&&!isUC&&!isSold ? `<div class="deal-card-urgency-badge">⏰ ${dl}d left</div>` : ''}

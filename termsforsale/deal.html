@@ -271,14 +271,21 @@ footer{background:var(--navy);padding:44px 40px 0}
 @media(max-width:768px){nav{padding:0 20px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 20px}.photo-grid{grid-template-rows:180px 90px;grid-template-columns:1fr 1fr;}.photo-main{grid-row:1/2;grid-column:1/3}.photo-thumb:nth-child(n+4){display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}
   .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
   .auth-overlay{align-items:flex-end}
-  .sticky-bar{padding:10px 16px;gap:8px;flex-wrap:wrap;justify-content:center}
-  .sticky-bar-text{font-size:12px;text-align:center;width:100%}
-  .sticky-bar a,.sticky-bar button{padding:9px 16px;font-size:12px;flex:1;text-align:center}
+  .sticky-bar{padding:10px 16px;gap:6px;flex-wrap:nowrap}
+  .sticky-bar-text{display:none}
+  .sticky-bar .sb-primary{flex:2;text-align:center;padding:12px 16px;font-size:14px}
+  .sticky-bar .sb-secondary{flex:1;text-align:center;padding:10px 8px;font-size:11px}
   .lb-main{padding:50px 10px}
   .lb-prev{left:4px;width:36px;height:36px;font-size:18px}
   .lb-next{right:4px;width:36px;height:36px;font-size:18px}
 }
 </style>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DRV6NWNY06"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-DRV6NWNY06');</script>
+<!-- Meta Pixel — replace YOUR_PIXEL_ID -->
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','YOUR_PIXEL_ID');fbq('track','PageView');</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/></noscript>
 </head>
 <body>
 
