@@ -144,7 +144,11 @@ var CF = {
   EXIT_STRATEGIES:  '98i8EKc3OWYSqS4Qb1nP',  // Multi-select
   TARGET_MARKETS:   'XjXqGv6Y82iTP659pO4t',  // Large text
   BUYER_TYPE:       '95PgdlIYfXYcMymnjsIv',  // Single select
+  CONTACT_ROLE:     'agG4HMPB5wzsZXiRxfmR',  // Multi-select: ['Buyer']
 };
+
+// Minimum number of buy box criteria that must match to trigger an alert
+var MIN_MATCH_SCORE = 2;
 
 // Map deal types to structure values in GHL custom fields
 var DEAL_STRUCTURE_MAP = {
@@ -234,21 +238,13 @@ function matchesBuyBox(contact, deal) {
     else { fails.push('Not enough beds (' + deal.beds + ' < ' + minBeds + ')'); return { match: false, reasons: reasons, fails: fails }; }
   }
 
-  // Must have at least state match or be a broad "tfs buyer" subscriber
-  var tags = (contact.tags || []).map(function(t) { return t.toLowerCase(); });
-  var isTfsBuyer = tags.indexOf('tfs buyer') > -1;
-  var isBuyerType = tags.some(function(t) { return t.startsWith('type:buyer'); });
-
-  if (reasons.length === 0 && !isTfsBuyer) {
-    fails.push('No matching criteria and not a TFS buyer subscriber');
-    return { match: false, reasons: reasons, fails: fails };
+  // Must meet minimum match score — no broad/generic matches
+  if (reasons.length < MIN_MATCH_SCORE) {
+    fails.push('Only ' + reasons.length + ' criteria matched (need ' + MIN_MATCH_SCORE + '+)');
+    return { match: false, reasons: reasons, fails: fails, score: reasons.length };
   }
 
-  if (reasons.length === 0 && isTfsBuyer) {
-    reasons.push('TFS Buyer subscriber (broad match)');
-  }
-
-  return { match: true, reasons: reasons, fails: fails };
+  return { match: true, reasons: reasons, fails: fails, score: reasons.length };
 }
 
 async function findMatchingBuyers(apiKey, locationId, deal) {
@@ -283,11 +279,16 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
     allChecked += contacts.length;
 
     contacts.forEach(function(contact) {
-      var tags = (contact.tags || []).map(function(t) { return t.toLowerCase(); });
-      // Only check contacts tagged as buyers
-      var isBuyer = tags.some(function(t) {
-        return t === 'type:buyer' || t === 'tfs buyer' || t.startsWith('buy:');
-      });
+      // Only check contacts with Contact Role = Buyer
+      var contactRole = getCF(contact, CF.CONTACT_ROLE);
+      var isBuyer = false;
+      if (contactRole) {
+        if (Array.isArray(contactRole)) {
+          isBuyer = contactRole.some(function(r) { return r.toLowerCase() === 'buyer'; });
+        } else {
+          isBuyer = String(contactRole).toLowerCase() === 'buyer';
+        }
+      }
       if (!isBuyer) return;
 
       var result = matchesBuyBox(contact, deal);
@@ -297,12 +298,15 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
           name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
           email: contact.email || '',
           phone: contact.phone || '',
-          tags: contact.tags || [],
+          score: result.score,
           matchReasons: result.reasons,
           matchReason: result.reasons.join(' | ')
         });
       }
     });
+
+    // Sort by match score (best matches first)
+    allMatches.sort(function(a, b) { return b.score - a.score; });
 
     // Check for more pages
     if (result.body.meta && result.body.meta.nextPageUrl) {
@@ -422,6 +426,7 @@ exports.handler = async function(event) {
             name: b.name,
             email: b.email,
             phone: b.phone ? b.phone.replace(/\d{4}$/, '****') : '', // mask phone in logs
+            score: b.score,
             matchReason: b.matchReason
           };
         }),
