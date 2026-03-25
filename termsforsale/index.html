@@ -929,20 +929,17 @@ function parseRow(raw){return{
 function driveFileId(url){
   if(!url)return null;
   url=url.trim();
-  // /file/d/FILE_ID/
-  var m=url.match(/\/file\/d\/([a-zA-Z0-9_-]{25,})/);
+  // /d/FILE_ID (covers /file/d/, /open/d/, googleusercontent.com/d/, etc.)
+  var m=url.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
   if(m)return m[1];
   // ?id=FILE_ID or &id=FILE_ID
-  m=url.match(/[?&]id=([a-zA-Z0-9_-]{25,})/);
+  m=url.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);
   if(m)return m[1];
   // /open?id= or /uc?id=
-  m=url.match(/\/(?:open|uc)\?.*id=([a-zA-Z0-9_-]{25,})/);
+  m=url.match(/\/(?:open|uc)\?.*id=([a-zA-Z0-9_-]{20,})/);
   if(m)return m[1];
-  // lh3.googleusercontent.com/d/FILE_ID
-  m=url.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]{25,})/);
-  if(m)return m[1];
-  // bare 25+ char ID string
-  m=url.match(/^([a-zA-Z0-9_-]{25,})$/);
+  // bare 20+ char ID string (raw file ID)
+  m=url.match(/^([a-zA-Z0-9_-]{20,})$/);
   if(m)return m[1];
   return null;
 }
@@ -985,7 +982,7 @@ function getFolderUrl(d){
 function getFirstPhoto(d){
   // 1. Dedicated cover photo column
   if(d.coverPhoto){
-    const t=driveThumb(d.coverPhoto,'w800');
+    const t=driveThumb(d.coverPhoto,600);
     if(t)return t;
     // might be a direct image URL
     if(d.coverPhoto.match(/\.(jpg|jpeg|png|webp|gif)(\?|$)/i))return d.coverPhoto;
@@ -995,7 +992,7 @@ function getFirstPhoto(d){
   if(raw&&!raw.includes('/drive/folders/')){
     // might be comma-separated list
     const first=raw.split(',')[0].trim();
-    const t=driveThumb(first,'w800');
+    const t=driveThumb(first,600);
     if(t)return t;
     if(first.match(/^https?:\/\//))return first;
   }
