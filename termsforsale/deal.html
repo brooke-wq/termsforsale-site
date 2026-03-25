@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deal Details — Terms For Sale</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -16,7 +16,7 @@
   --text:#1A2E44;--text-mid:#4A5568;--text-light:#718096;
   --border:#E2E8F0;--border-light:#EDF2F7;
   --card-shadow:0 2px 12px rgba(0,0,0,0.08);
-  --r:10px;--r-lg:14px;--font:'Poppins',sans-serif;
+  --r:10px;--r-lg:14px;--font:'DM Sans',sans-serif;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
 
@@ -494,8 +494,8 @@ function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())
 function typeInfo(t){const m={Cash:{cls:'b-cash',label:'Cash Deal'},SubTo:{cls:'b-subto',label:'Subject To'},'Seller Finance':{cls:'b-sf',label:'Seller Finance'},Hybrid:{cls:'b-hybrid',label:'Hybrid'},'Morby Method':{cls:'b-hybrid',label:'Morby Method'},'Morby/Stack Method':{cls:'b-hybrid',label:'Stack Method'},Wrap:{cls:'b-wrap',label:'Wrap'}};return m[t]||{cls:'b-cash',label:t||'Cash Deal'}}
 
 function renderDeal(d,allDeals){
-  document.title=`${d.streetAddress} — Terms For Sale`;
-  document.getElementById('bc-addr').textContent=`${d.streetAddress} — ${d.nearestMetro||d.city+', '+d.state}`;
+  document.title=`${d.city}, ${d.state} — ${d.dealType||'Deal'} | Terms For Sale`;
+  document.getElementById('bc-addr').textContent=`${d.nearestMetro||d.city+', '+d.state} — ${d.dealType||'Deal Details'}`;
 
   const ti=typeInfo(d.dealType);
   const dl=daysLeft(d.coe);
@@ -522,7 +522,7 @@ function renderDeal(d,allDeals){
     d.sqft?{icon:'<path d="M21 3H3v7h18V3z"/><path d="M21 14H3v7h18v-7z"/>',label:`${Number(d.sqft).toLocaleString()} sqft`}:null,
     d.propertyType?{icon:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:d.propertyType}:null,
     d.occupancy?{icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>',label:d.occupancy,cls:'tag-orange'}:null,
-    d.hoa?{icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:`$${d.hoa}/mo HOA`}:null,
+    d.hoa?{icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:(()=>{let h=String(d.hoa).replace(/[$,]/g,'').replace(/\/mo.*/i,'').trim();return h?'$'+Number(h).toLocaleString()+'/mo HOA':d.hoa+' HOA';})()}:null,
   ].filter(Boolean);
 
   const tagsHtml=tagItems.map(t=>`<span class="tag ${t.cls||''}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg>${t.label}</span>`).join('');
