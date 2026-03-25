@@ -37,6 +37,11 @@
   to = "/blog/"
   status = 301
 
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
 [[headers]]
   for = "/admin/*"
   [headers.values]
