@@ -433,12 +433,12 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
       { id: 'iur6TZsfKotwO3gZb8yk', value: price },                    // Alert Asking Price
       { id: 'DH4Ekmyw2dvzrE74JSzs', value: entry },                    // Alert Entry Fee
       { id: 'DJFMav5mPvWBzsPdhAqy', value: deal.propertyType || '' },   // Alert Property Type
-      { id: '2iVO7pRpi0f0ABb6nYka', value: deal.beds || '0' },          // Alert Beds
-      { id: 'rkzCcjHJMFJP3GcwnNx6', value: deal.baths || '0' },        // Alert Baths
-      { id: 'nNMHvkPbjGYRbOB1v7vQ', value: deal.yearBuilt || '' },      // Alert Year Built
-      { id: 'MgNeVZgMdTcdatcTTHue', value: deal.sqft ? deal.sqft.toLocaleString() : '' },  // Alert Sqft
-      { id: 'eke6ZGnex77y5aUCNgly', value: highlights },                // Alert Highlights
-      { id: 'FXp9oPT4T4xqA1HIJuSC', value: deal.coverPhoto ? 'https://deals.termsforsale.com/api/drive-thumb?id=' + (deal.coverPhoto.match(/\/d\/([a-zA-Z0-9_-]{20,})/) || [])[1] + '&sz=800' : '' }  // Alert Cover Photo
+      { id: '2iVO7pRpi0f0ABb6nYka', value: deal.beds ? deal.beds + ' beds' : '' },
+      { id: 'rkzCcjHJMFJP3GcwnNx6', value: deal.baths ? deal.baths + ' baths' : '' },
+      { id: 'nNMHvkPbjGYRbOB1v7vQ', value: deal.yearBuilt ? 'Built in ' + deal.yearBuilt : '' },
+      { id: 'MgNeVZgMdTcdatcTTHue', value: deal.sqft ? deal.sqft.toLocaleString() + ' sqft' : '' },
+      { id: 'eke6ZGnex77y5aUCNgly', value: highlights },
+      { id: 'FXp9oPT4T4xqA1HIJuSC', value: (function(){ var m = (deal.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/); return m ? 'https://lh3.googleusercontent.com/d/' + m[1] + '=s800' : ''; })() }
     ]
   });
 
