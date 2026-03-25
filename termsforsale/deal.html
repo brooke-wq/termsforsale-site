@@ -742,7 +742,7 @@ function renderDeal(d,allDeals){
       <div class="photo-grid" id="photo-grid">${photoHtml}</div>
 
       <div class="deal-header">
-        ${dl!==null&&dl<=30?`<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;font-size:12px;font-weight:700;margin-bottom:10px;${dl<=7?'background:#FFF5F5;color:#E53E3E;border:1px solid #FEB2B2':'dl<=14?background:#FFFAF0;color:#DD6B20;border:1px solid #FBD38D':'background:var(--blue-light);color:var(--blue-dark);border:1px solid var(--blue-mid)'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${dl<=0?'Closing today!':dl===1?'Closes tomorrow':'Closes in '+dl+' days'}</div>`:''}
+        ${dl!==null&&dl<=30?`<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;font-size:12px;font-weight:700;margin-bottom:10px;${dl<=7?'background:#FFF5F5;color:#E53E3E;border:1px solid #FEB2B2':dl<=14?'background:#FFFAF0;color:#DD6B20;border:1px solid #FBD38D':'background:var(--blue-light);color:var(--blue-dark);border:1px solid var(--blue-mid)'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${dl<=0?'Closing today!':dl===1?'Closes tomorrow':'Closes in '+dl+' days'}</div>`:''}
         <div class="deal-price-row">
           <span class="deal-price">${fc(entry||+d.askingPrice)}</span>
           ${entry&&entry!==+d.askingPrice?`<span style="font-size:16px;font-weight:600;color:var(--orange)">${fc(d.askingPrice)} asking</span>`:''}
