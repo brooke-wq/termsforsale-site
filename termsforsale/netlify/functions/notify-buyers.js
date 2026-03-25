@@ -402,7 +402,9 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
     tags: ['new-deal-alert']
   });
 
-  // Also update custom fields with the deal info so the GHL workflow can use them
+  // Update existing GHL custom fields with deal info for the workflow template
+  var price = deal.askingPrice ? '$' + deal.askingPrice.toLocaleString() : '';
+  var entry = deal.entryFee ? '$' + deal.entryFee.toLocaleString() : '';
   var updateUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id;
   await httpRequest(updateUrl, {
     method: 'PUT',
@@ -413,8 +415,13 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
     }
   }, {
     customFields: [
-      { key: 'current_deal_interest', value: deal.dealType + ' — ' + deal.city + ', ' + deal.state },
-      { key: 'lead_source_detail', value: 'Auto Deal Alert: ' + deal.streetAddress }
+      { id: 'TerjqctukTW67rB21ugC', field_value: deal.streetAddress + ', ' + deal.city + ', ' + deal.state + ' ' + (deal.zip || '') },
+      { id: 'KuaUFXhbQB6kKvBSKfoI', field_value: deal.city },
+      { id: 'ltmVcWUpbwZ0S3dBid3U', field_value: deal.state },
+      { id: '0thrOdoETTLlFA45oN8U', field_value: deal.dealType },
+      { id: '5eEVPcp8nERlR6GpjZUn', field_value: deal.dealUrl },
+      { id: 'YjoPoDPv7Joo1izePpDx', field_value: deal.dealType + ' | ' + deal.city + ', ' + deal.state + ' | ' + price + (entry ? ' | ' + entry + ' entry' : '') },
+      { id: 'UqJl4Dq6T8wfNb70EMrL', field_value: deal.zip || '' }
     ]
   });
 
