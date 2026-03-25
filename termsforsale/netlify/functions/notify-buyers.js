@@ -147,8 +147,11 @@ var CF = {
   CONTACT_ROLE:     'agG4HMPB5wzsZXiRxfmR',  // Multi-select: ['Buyer']
 };
 
-// Minimum number of buy box criteria that must match to trigger an alert
-var MIN_MATCH_SCORE = 2;
+// Matching thresholds
+var MIN_BUYERS_TARGET = 50;  // If fewer than this, expand matching
+var TIER1_MIN_SCORE = 2;     // Strict: state + structure + more
+var TIER2_MIN_SCORE = 1;     // Relaxed: at least state OR structure match
+// Tier 3: Same state buyers with Contact Role=Buyer (no buy box required)
 
 // Map deal types to structure values in GHL custom fields
 var DEAL_STRUCTURE_MAP = {
@@ -169,9 +172,10 @@ function getCF(contact, fieldId) {
   return field.value;
 }
 
-function matchesBuyBox(contact, deal) {
+function matchesBuyBox(contact, deal, minScore) {
   var reasons = [];
   var fails = [];
+  var reqScore = minScore || TIER1_MIN_SCORE;
 
   // 1. Target States — must include deal state (if buyer has preferences)
   var targetStates = getCF(contact, CF.TARGET_STATES);
@@ -238,23 +242,21 @@ function matchesBuyBox(contact, deal) {
     else { fails.push('Not enough beds (' + deal.beds + ' < ' + minBeds + ')'); return { match: false, reasons: reasons, fails: fails }; }
   }
 
-  // Must meet minimum match score — no broad/generic matches
-  if (reasons.length < MIN_MATCH_SCORE) {
-    fails.push('Only ' + reasons.length + ' criteria matched (need ' + MIN_MATCH_SCORE + '+)');
+  // Must meet minimum match score for this tier
+  if (reasons.length < reqScore) {
+    fails.push('Only ' + reasons.length + ' criteria matched (need ' + reqScore + '+)');
     return { match: false, reasons: reasons, fails: fails, score: reasons.length };
   }
 
   return { match: true, reasons: reasons, fails: fails, score: reasons.length };
 }
 
-async function findMatchingBuyers(apiKey, locationId, deal) {
-  var allMatches = [];
-  var allChecked = 0;
-
-  // Fetch buyers in pages (GHL paginates at 100)
+async function fetchAllBuyers(apiKey, locationId) {
+  var allBuyers = [];
   var hasMore = true;
   var startAfter = '';
   var startAfterId = '';
+  var checked = 0;
 
   while (hasMore) {
     var searchUrl = 'https://services.leadconnectorhq.com/contacts/?locationId=' + locationId
@@ -270,16 +272,12 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
       }
     });
 
-    if (result.status !== 200 || !result.body.contacts || !result.body.contacts.length) {
-      hasMore = false;
-      break;
-    }
+    if (result.status !== 200 || !result.body.contacts || !result.body.contacts.length) break;
 
     var contacts = result.body.contacts;
-    allChecked += contacts.length;
+    checked += contacts.length;
 
     contacts.forEach(function(contact) {
-      // Only check contacts with Contact Role = Buyer
       var contactRole = getCF(contact, CF.CONTACT_ROLE);
       var isBuyer = false;
       if (contactRole) {
@@ -289,41 +287,103 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
           isBuyer = String(contactRole).toLowerCase() === 'buyer';
         }
       }
-      if (!isBuyer) return;
-
-      var result = matchesBuyBox(contact, deal);
-      if (result.match) {
-        allMatches.push({
-          id: contact.id,
-          name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
-          email: contact.email || '',
-          phone: contact.phone || '',
-          score: result.score,
-          matchReasons: result.reasons,
-          matchReason: result.reasons.join(' | ')
-        });
-      }
+      if (isBuyer) allBuyers.push(contact);
     });
 
-    // Sort by match score (best matches first)
-    allMatches.sort(function(a, b) { return b.score - a.score; });
-
-    // Check for more pages
     if (result.body.meta && result.body.meta.nextPageUrl) {
       var lastContact = contacts[contacts.length - 1];
       startAfter = lastContact.startAfter ? lastContact.startAfter[0] : '';
       startAfterId = lastContact.startAfter ? lastContact.startAfter[1] : lastContact.id;
       if (!startAfter) hasMore = false;
-    } else {
-      hasMore = false;
-    }
+    } else { hasMore = false; }
 
-    // Safety: max 1000 contacts
-    if (allChecked >= 1000) hasMore = false;
+    if (checked >= 2000) hasMore = false;
   }
 
-  console.log('Checked ' + allChecked + ' contacts, ' + allMatches.length + ' matched');
-  return allMatches;
+  console.log('Fetched ' + checked + ' contacts, ' + allBuyers.length + ' are buyers');
+  return allBuyers;
+}
+
+async function findMatchingBuyers(apiKey, locationId, deal) {
+  var buyers = await fetchAllBuyers(apiKey, locationId);
+  var tier1 = [], tier2 = [], tier3 = [];
+  var tier1Ids = {}, tier2Ids = {};
+
+  // TIER 1: Strict — minimum 2 buy box criteria match
+  buyers.forEach(function(contact) {
+    var r = matchesBuyBox(contact, deal, TIER1_MIN_SCORE);
+    if (r.match) {
+      tier1Ids[contact.id] = true;
+      tier1.push({
+        id: contact.id,
+        name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
+        email: contact.email || '',
+        phone: contact.phone || '',
+        score: r.score,
+        tier: 1,
+        matchReasons: r.reasons,
+        matchReason: r.reasons.join(' | ')
+      });
+    }
+  });
+
+  // TIER 2: Relaxed — only if tier 1 < 50. Requires 1 matching criterion.
+  if (tier1.length < MIN_BUYERS_TARGET) {
+    buyers.forEach(function(contact) {
+      if (tier1Ids[contact.id]) return;
+      var r = matchesBuyBox(contact, deal, TIER2_MIN_SCORE);
+      if (r.match) {
+        tier2Ids[contact.id] = true;
+        tier2.push({
+          id: contact.id,
+          name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
+          email: contact.email || '',
+          phone: contact.phone || '',
+          score: r.score,
+          tier: 2,
+          matchReasons: r.reasons,
+          matchReason: '(Expanded) ' + r.reasons.join(' | ')
+        });
+      }
+    });
+  }
+
+  // TIER 3: State-only — only if tier 1 + tier 2 < 50. Any buyer in the same state.
+  if (tier1.length + tier2.length < MIN_BUYERS_TARGET) {
+    var dealState = (deal.state || '').trim().toUpperCase();
+    buyers.forEach(function(contact) {
+      if (tier1Ids[contact.id] || tier2Ids[contact.id]) return;
+      // Check contact's own state field or target states
+      var contactState = (contact.state || '').trim().toUpperCase();
+      var targetStates = getCF(contact, CF.TARGET_STATES);
+      var stateMatch = contactState === dealState;
+      if (!stateMatch && targetStates && Array.isArray(targetStates)) {
+        stateMatch = targetStates.some(function(s) { return s.trim().toUpperCase() === dealState; });
+      }
+      if (stateMatch) {
+        tier3.push({
+          id: contact.id,
+          name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
+          email: contact.email || '',
+          phone: contact.phone || '',
+          score: 0,
+          tier: 3,
+          matchReasons: ['Same state: ' + dealState],
+          matchReason: '(State fallback) Same state: ' + dealState
+        });
+      }
+    });
+  }
+
+  // Combine: tier 1 first, then tier 2, then tier 3 (up to target)
+  var combined = tier1.concat(tier2).concat(tier3);
+  combined.sort(function(a, b) {
+    if (a.tier !== b.tier) return a.tier - b.tier;
+    return b.score - a.score;
+  });
+
+  console.log('Matching results — Tier 1: ' + tier1.length + ', Tier 2: ' + tier2.length + ', Tier 3: ' + tier3.length + ', Total: ' + combined.length);
+  return combined;
 }
 
 // ─── GHL: Trigger workflow for a buyer ───────────────────────
@@ -421,11 +481,17 @@ exports.handler = async function(event) {
           url: deal.dealUrl
         },
         matchedBuyers: buyers.length,
+        tiers: {
+          tier1_strict: buyers.filter(function(b){return b.tier===1;}).length,
+          tier2_relaxed: buyers.filter(function(b){return b.tier===2;}).length,
+          tier3_state: buyers.filter(function(b){return b.tier===3;}).length
+        },
         buyers: buyers.map(function(b) {
           return {
             name: b.name,
             email: b.email,
-            phone: b.phone ? b.phone.replace(/\d{4}$/, '****') : '', // mask phone in logs
+            phone: b.phone ? b.phone.replace(/\d{4}$/, '****') : '',
+            tier: b.tier,
             score: b.score,
             matchReason: b.matchReason
           };
