@@ -437,7 +437,8 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
       { id: 'rkzCcjHJMFJP3GcwnNx6', field_value: deal.baths || '0' },        // Alert Baths
       { id: 'nNMHvkPbjGYRbOB1v7vQ', field_value: deal.yearBuilt || '' },      // Alert Year Built
       { id: 'MgNeVZgMdTcdatcTTHue', field_value: deal.sqft ? deal.sqft.toLocaleString() : '' },  // Alert Sqft
-      { id: 'eke6ZGnex77y5aUCNgly', field_value: highlights }                 // Alert Highlights
+      { id: 'eke6ZGnex77y5aUCNgly', field_value: highlights },                // Alert Highlights
+      { id: 'FXp9oPT4T4xqA1HIJuSC', field_value: deal.coverPhoto ? 'https://deals.termsforsale.com/api/drive-thumb?id=' + (deal.coverPhoto.match(/\/d\/([a-zA-Z0-9_-]{20,})/) || [])[1] + '&sz=800' : '' }  // Alert Cover Photo
     ]
   });
 
