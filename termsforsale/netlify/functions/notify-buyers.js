@@ -124,6 +124,10 @@ function parseDeal(page) {
     beds: prop(page, 'Beds'),
     baths: prop(page, 'Baths'),
     sqft: prop(page, 'Living Area') || prop(page, 'Sqft'),
+    yearBuilt: prop(page, 'Year Built') || prop(page, 'Year Build'),
+    highlight1: prop(page, 'Highlight 1'),
+    highlight2: prop(page, 'Highlight 2'),
+    highlight3: prop(page, 'Highlight 3'),
     dealUrl: 'https://deals.termsforsale.com/deal.html?id=' + page.id,
     lastEdited: page.last_edited_time
   };
@@ -402,9 +406,10 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
     tags: ['new-deal-alert']
   });
 
-  // Update existing GHL custom fields with deal info for the workflow template
+  // Update GHL custom fields with deal info for the email/SMS template
   var price = deal.askingPrice ? '$' + deal.askingPrice.toLocaleString() : '';
-  var entry = deal.entryFee ? '$' + deal.entryFee.toLocaleString() : '';
+  var entry = deal.entryFee ? '$' + deal.entryFee.toLocaleString() + ' + CC/TC' : '';
+  var highlights = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean).join('\n');
   var updateUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id;
   await httpRequest(updateUrl, {
     method: 'PUT',
@@ -415,13 +420,24 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
     }
   }, {
     customFields: [
+      // Location fields
       { id: 'TerjqctukTW67rB21ugC', field_value: deal.streetAddress + ', ' + deal.city + ', ' + deal.state + ' ' + (deal.zip || '') },
       { id: 'KuaUFXhbQB6kKvBSKfoI', field_value: deal.city },
       { id: 'ltmVcWUpbwZ0S3dBid3U', field_value: deal.state },
+      { id: 'UqJl4Dq6T8wfNb70EMrL', field_value: deal.zip || '' },
+      // Deal info
       { id: '0thrOdoETTLlFA45oN8U', field_value: deal.dealType },
       { id: '5eEVPcp8nERlR6GpjZUn', field_value: deal.dealUrl },
-      { id: 'YjoPoDPv7Joo1izePpDx', field_value: deal.dealType + ' | ' + deal.city + ', ' + deal.state + ' | ' + price + (entry ? ' | ' + entry + ' entry' : '') },
-      { id: 'UqJl4Dq6T8wfNb70EMrL', field_value: deal.zip || '' }
+      { id: 'YjoPoDPv7Joo1izePpDx', field_value: deal.dealType + ' | ' + deal.city + ', ' + deal.state + ' | ' + price + (entry ? ' | ' + entry : '') },
+      // Alert fields for email template
+      { id: 'iur6TZsfKotwO3gZb8yk', field_value: price },                    // Alert Asking Price
+      { id: 'DH4Ekmyw2dvzrE74JSzs', field_value: entry },                    // Alert Entry Fee
+      { id: 'DJFMav5mPvWBzsPdhAqy', field_value: deal.propertyType || '' },   // Alert Property Type
+      { id: '2iVO7pRpi0f0ABb6nYka', field_value: deal.beds || '0' },          // Alert Beds
+      { id: 'rkzCcjHJMFJP3GcwnNx6', field_value: deal.baths || '0' },        // Alert Baths
+      { id: 'nNMHvkPbjGYRbOB1v7vQ', field_value: deal.yearBuilt || '' },      // Alert Year Built
+      { id: 'MgNeVZgMdTcdatcTTHue', field_value: deal.sqft ? deal.sqft.toLocaleString() : '' },  // Alert Sqft
+      { id: 'eke6ZGnex77y5aUCNgly', field_value: highlights }                 // Alert Highlights
     ]
   });
 
