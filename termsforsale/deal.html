@@ -660,7 +660,7 @@ function renderDeal(d,allDeals){
     d.sqft?{icon:'<path d="M21 3H3v7h18V3z"/><path d="M21 14H3v7h18v-7z"/>',label:`${Number(d.sqft).toLocaleString()} sqft`}:null,
     d.propertyType?{icon:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:d.propertyType}:null,
     d.occupancy?{icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>',label:d.occupancy,cls:'tag-orange'}:null,
-    d.hoa?{icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:(()=>{let h=String(d.hoa).replace(/[$,]/g,'').replace(/\/mo.*/i,'').trim();return h?'$'+Number(h).toLocaleString()+'/mo HOA':d.hoa+' HOA';})()}:null,
+    d.hoa?{icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:(()=>{let h=String(d.hoa).replace(/[$,]/g,'').replace(/\/mo.*/i,'').trim();const n=parseFloat(h);return!isNaN(n)?'$'+n.toLocaleString()+'/mo HOA':d.hoa+' HOA';})()}:null,
   ].filter(Boolean);
 
   const tagsHtml=tagItems.map(t=>`<span class="tag ${t.cls||''}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg>${t.label}</span>`).join('');
