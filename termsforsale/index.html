@@ -569,7 +569,7 @@ fbq('init','YOUR_PIXEL_ID');fbq('track','PageView');
 <!-- SOCIAL PROOF BAR -->
 <div style="background:var(--navy);padding:20px 40px">
   <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap">
-    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">32+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Deals</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff" id="sp-count">&mdash;</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Deals</div></div>
     <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">$2.1M+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deal Volume</div></div>
     <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">250+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deals Closed</div></div>
     <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">2,000+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Investors</div></div>
@@ -1115,7 +1115,7 @@ function makeCard(d){
       ${isUC  ? `<div class="deal-badge-uc">🔒 Under Contract</div>`
               : isSold ? `<div class="deal-badge-sold">✓ Sold</div>`
               : `<div class="deal-card-type ${typeClass(d.dealType)}">${typeLabel(d.dealType)}</div>`}
-      ${dl!==null&&dl<=30&&!isUC&&!isSold?`<div style="position:absolute;top:8px;left:8px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;z-index:2;${dl<=7?'background:#FFF5F5;color:#E53E3E':dl<=14?'background:#FFFAF0;color:#DD6B20':'background:#EBF8FF;color:#1a8bbf'}">${dl<=0?'Closing today':dl===1?'Closes tomorrow':'Closes in '+dl+'d'}</div>`:''}
+      ${dl!==null&&dl<=30&&!isUC&&!isSold?`<div style="position:absolute;bottom:8px;left:8px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;z-index:2;${dl<=7?'background:#FFF5F5;color:#E53E3E':dl<=14?'background:#FFFAF0;color:#DD6B20':'background:#EBF8FF;color:#1a8bbf'}">${dl<=0?'Closing today':dl===1?'Closes tomorrow':'Closes in '+dl+'d'}</div>`:''}
       ${(discount>=10||dl!==null&&dl<=7) ? `<div class="deal-card-discount">
         ${discount>=10 ? `<div class="deal-card-discount-pct">${discount}% below ARV</div>` : '<div></div>'}
         ${dl!==null&&dl<=7&&!isUC&&!isSold ? `<div class="deal-card-urgency-badge">⏰ ${dl}d left</div>` : ''}
@@ -1433,6 +1433,7 @@ async function loadDealsFromSheet(){
       updateHowSections();
       applyFilters();
       const sbc=document.getElementById('sb-count');if(sbc)sbc.textContent=ALL_DEALS.length;
+      const spc=document.getElementById('sp-count');if(spc)spc.textContent=ALL_DEALS.length+'+';
     }else{
       document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">No active deals found.</p></div>`;
     }
