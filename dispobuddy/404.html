@@ -3,474 +3,184 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Page Not Found — Dispo Buddy</title>
+<title>404 — Page Not Found | Dispo Buddy</title>
 <meta name="description" content="The page you're looking for doesn't exist. Head back to Dispo Buddy to submit a deal or browse our resources.">
 <link rel="canonical" href="https://dispobuddy.com/404">
-
-<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ========================================
-   CSS VARIABLES & RESET
-   ======================================== */
-:root {
-  --navy: #0D1F3C;
-  --navy2: #0a1828;
-  --navy3: #132848;
-  --blue: #29ABE2;
-  --blue-dark: #1a8bbf;
-  --blue-light: #EBF8FF;
-  --orange: #F7941D;
-  --orange-dark: #d97c0e;
-  --green: #22c55e;
-  --white: #fff;
-  --bg: #F4F6F9;
-  --text: #0D1F3C;
-  --text-mid: #4A6070;
-  --text-light: #718096;
-  --border: #E2E8F0;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --radius-lg: 14px;
-  --shadow: 0 1px 3px rgba(13,31,60,0.06), 0 4px 12px rgba(13,31,60,0.04);
-  --shadow-md: 0 2px 8px rgba(13,31,60,0.08), 0 8px 24px rgba(13,31,60,0.06);
-  --nav-height: 72px;
+:root{
+  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;
+  --orange:#F7941D;--orange-dark:#d97c0e;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;
+  --green:#22c55e;
+  --white:#fff;--bg:#F4F6F9;
+  --text:#0D1F3C;--text-mid:#4A6070;--text-light:#718096;
+  --border:#E2E8F0;
+  --r:12px;--r-sm:8px;
+  --font:'Poppins',sans-serif;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
 
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000;transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 2px 20px rgba(13,31,60,.08)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
+.nav-logo img{height:34px;width:auto}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
+.nav-links a:hover{color:var(--navy)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:var(--r-sm);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
+.btn-o{background:var(--orange);color:var(--white);border-color:var(--orange)}
+.btn-o:hover{background:var(--orange-dark);border-color:var(--orange-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,148,29,.35)}
+.btn-ghost{background:transparent;color:var(--text-mid);border-color:var(--border)}
+.btn-ghost:hover{border-color:var(--navy);color:var(--navy)}
+.btn-lg{padding:14px 32px;font-size:15px;border-radius:var(--r)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+.hamburger span{display:block;width:22px;height:2px;background:var(--navy);border-radius:2px;transition:all .3s}
+.hamburger.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.on span:nth-child(2){opacity:0}
+.hamburger.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
+.mob-menu.on{display:flex}
+.mob-menu a{padding:14px 0;font-size:15px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border)}
+.mob-menu .mob-btns{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.mob-menu .mob-btns .btn{width:100%;text-align:center}
+
+/* 404 */
+.error-section{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:120px 24px 80px;text-align:center}
+.error-content{max-width:520px}
+.error-code{font-size:clamp(5rem,15vw,9rem);font-weight:900;line-height:1;background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}
+.error-title{font-size:clamp(1.4rem,3vw,1.8rem);font-weight:700;color:var(--navy);margin-bottom:12px}
+.error-desc{font-size:15px;color:var(--text-mid);line-height:1.7;margin-bottom:36px}
+.error-btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:36px}
+.error-links{display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
+.error-links a{font-size:13px;font-weight:500;color:var(--blue);transition:color .2s}
+.error-links a:hover{color:var(--blue-dark)}
+
+/* FOOTER */
+.footer{padding:48px 0 28px;background:var(--navy2)}
+.footer-inner{max-width:1100px;margin:0 auto;padding:0 24px}
+.footer-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:24px;flex-wrap:wrap;gap:32px}
+.footer-brand img{height:28px;width:auto;filter:brightness(0) invert(1);margin-bottom:10px}
+.footer-brand p{font-size:13px;color:rgba(255,255,255,.35);max-width:260px;line-height:1.6}
+.footer-links{display:flex;gap:40px;flex-wrap:wrap}
+.footer-links a{font-size:13px;color:rgba(255,255,255,.4);transition:color .15s}
+.footer-links a:hover{color:var(--white)}
+.footer-bot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px;color:rgba(255,255,255,.25)}
+.footer-bot a{color:rgba(255,255,255,.35);transition:color .15s}
+.footer-bot a:hover{color:var(--white)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .nav-links,.nav-right{display:none}
+  .hamburger{display:flex}
 }
-
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--text);
-  background: var(--white);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-img { max-width: 100%; display: block; }
-a { text-decoration: none; color: inherit; }
-
-.container {
-  max-width: 1140px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-h1, h2, h3 {
-  line-height: 1.2;
-  font-weight: 700;
-}
-
-/* ========================================
-   BUTTONS
-   ======================================== */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 28px;
-  border-radius: var(--radius-sm);
-  font-family: 'Poppins', sans-serif;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background: var(--orange);
-  color: var(--white);
-  border-color: var(--orange);
-}
-.btn-primary:hover {
-  background: var(--orange-dark);
-  border-color: var(--orange-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(247,148,29,0.35);
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--navy);
-  border-color: var(--navy);
-}
-.btn-outline:hover {
-  background: var(--navy);
-  color: var(--white);
-  transform: translateY(-1px);
-}
-
-.btn-sm { padding: 9px 20px; font-size: 0.85rem; }
-
-/* ========================================
-   NAV
-   ======================================== */
-.nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--nav-height);
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  z-index: 1000;
-}
-
-.nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-  max-width: 1140px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.nav-logo img {
-  height: 36px;
-  width: auto;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
-
-.nav-links a {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-mid);
-  transition: color 0.2s;
-}
-
-.nav-links a:hover {
-  color: var(--navy);
-}
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.hamburger {
-  display: none;
-  flex-direction: column;
-  gap: 5px;
-  cursor: pointer;
-  padding: 4px;
-  background: none;
-  border: none;
-}
-
-.hamburger span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--navy);
-  border-radius: 2px;
-  transition: all 0.3s ease;
-}
-
-.hamburger.active span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
-}
-.hamburger.active span:nth-child(2) {
-  opacity: 0;
-}
-.hamburger.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(5px, -5px);
-}
-
-.mobile-menu {
-  display: none;
-  position: fixed;
-  top: var(--nav-height);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--white);
-  padding: 32px 24px;
-  z-index: 999;
-  overflow-y: auto;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.mobile-menu.open {
-  display: flex;
-}
-
-.mobile-menu a {
-  font-size: 1.1rem;
-  font-weight: 500;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-}
-
-.mobile-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-/* ========================================
-   404 CONTENT
-   ======================================== */
-.error-section {
-  min-height: calc(100vh - var(--nav-height));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 120px 24px 80px;
-  text-align: center;
-  background: var(--bg);
-}
-
-.error-content {
-  max-width: 560px;
-}
-
-.error-code {
-  font-size: clamp(5rem, 15vw, 9rem);
-  font-weight: 900;
-  line-height: 1;
-  background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 16px;
-}
-
-.error-title {
-  font-size: clamp(1.5rem, 3.5vw, 2rem);
-  font-weight: 700;
-  color: var(--navy);
-  margin-bottom: 16px;
-}
-
-.error-description {
-  font-size: 1.05rem;
-  color: var(--text-mid);
-  line-height: 1.7;
-  margin-bottom: 36px;
-}
-
-.error-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  justify-content: center;
-  margin-bottom: 40px;
-}
-
-.error-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  justify-content: center;
-}
-
-.error-links a {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--blue);
-  transition: color 0.2s;
-}
-
-.error-links a:hover {
-  color: var(--blue-dark);
-}
-
-/* ========================================
-   FOOTER
-   ======================================== */
-.footer {
-  background: var(--navy);
-  color: rgba(255,255,255,0.7);
-  padding: 40px 0 24px;
-}
-
-.footer-inner {
-  max-width: 1140px;
-  margin: 0 auto;
-  padding: 0 24px;
-  text-align: center;
-}
-
-.footer-logo img {
-  height: 28px;
-  width: auto;
-  margin: 0 auto 16px;
-  filter: brightness(0) invert(1);
-}
-
-.footer-text {
-  font-size: 0.85rem;
-  color: rgba(255,255,255,0.5);
-}
-
-.footer-text a {
-  color: rgba(255,255,255,0.7);
-  transition: color 0.2s;
-}
-
-.footer-text a:hover {
-  color: var(--white);
-}
-
-/* ========================================
-   RESPONSIVE
-   ======================================== */
-@media (max-width: 768px) {
-  .nav-links,
-  .nav-actions {
-    display: none;
-  }
-
-  .hamburger {
-    display: flex;
-  }
-
-  .error-code {
-    font-size: 6rem;
-  }
+@media(max-width:600px){
+  .error-code{font-size:6rem}
+  .error-btns{flex-direction:column;align-items:center}
+  .error-btns .btn{width:100%;max-width:280px}
+  .footer-links{flex-direction:column;gap:12px}
+  .footer-top{flex-direction:column}
+  .footer-bot{flex-direction:column;text-align:center}
 }
 </style>
 </head>
 <body>
 
-<!-- ========================================
-     NAV
-     ======================================== -->
-<nav class="nav" role="navigation" aria-label="Main navigation">
+<!-- NAV -->
+<nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-logo" aria-label="Dispo Buddy Home">
-      <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy" width="160" height="36">
-    </a>
-
+    <a href="/" class="nav-logo"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy"></a>
     <div class="nav-links">
       <a href="/process">How It Works</a>
       <a href="/what-we-look-for">What We Look For</a>
       <a href="/proof">Proof</a>
       <a href="/faq">FAQ</a>
     </div>
-
-    <div class="nav-actions">
-      <a href="/join" class="btn btn-outline btn-sm">Join Our Network</a>
-      <a href="/submit-deal" class="btn btn-primary btn-sm">Submit a Deal</a>
+    <div class="nav-right">
+      <a href="/join" class="btn btn-ghost">Join Network</a>
+      <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
     </div>
-
-    <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
+    <button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
-
-<!-- Mobile Menu -->
-<div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Mobile navigation">
+<div class="mob-menu" id="mobMenu">
   <a href="/process">How It Works</a>
   <a href="/what-we-look-for">What We Look For</a>
   <a href="/proof">Proof</a>
   <a href="/faq">FAQ</a>
-  <div class="mobile-actions">
-    <a href="/join" class="btn btn-outline">Join Our Network</a>
-    <a href="/submit-deal" class="btn btn-primary">Submit a Deal</a>
+  <a href="/contact">Contact</a>
+  <div class="mob-btns">
+    <a href="/join" class="btn btn-ghost">Join Network</a>
+    <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
   </div>
 </div>
 
-<!-- ========================================
-     404 CONTENT
-     ======================================== -->
+<!-- 404 -->
 <section class="error-section">
   <div class="error-content">
     <div class="error-code">404</div>
-    <h1 class="error-title">Page Not Found</h1>
-    <p class="error-description">
-      The page you're looking for doesn't exist or has been moved.
-      No worries — let's get you back on track.
-    </p>
+    <h1 class="error-title">Page not found</h1>
+    <p class="error-desc">Whatever you were looking for isn't here. Might have been moved, might never existed. Either way, let's get you somewhere useful.</p>
 
-    <div class="error-actions">
-      <a href="/" class="btn btn-primary">Back to Home</a>
-      <a href="/submit-deal" class="btn btn-outline">Submit a Deal</a>
+    <div class="error-btns">
+      <a href="/" class="btn btn-o btn-lg">Back to Home</a>
+      <a href="/submit-deal" class="btn btn-ghost btn-lg">Submit a Deal</a>
     </div>
 
     <div class="error-links">
       <a href="/process">How It Works</a>
       <a href="/faq">FAQ</a>
-      <a href="/join">Join Our Network</a>
-      <a href="/contact">Contact Us</a>
+      <a href="/join">Join Network</a>
+      <a href="/contact">Contact</a>
     </div>
   </div>
 </section>
 
-<!-- ========================================
-     FOOTER
-     ======================================== -->
-<footer class="footer" role="contentinfo">
+<!-- FOOTER -->
+<footer class="footer">
   <div class="footer-inner">
-    <a href="/" class="footer-logo" aria-label="Dispo Buddy Home">
-      <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy" width="120" height="28">
-    </a>
-    <p class="footer-text">
-      &copy; 2025 Deal Pros LLC. All rights reserved.
-      &nbsp;&middot;&nbsp;
-      <a href="https://termsforsale.com">Terms For Sale</a>
-    </p>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy">
+        <p>JV dispo partner for wholesalers, bird dogs, and agents. A Deal Pros LLC brand.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/process">How It Works</a>
+        <a href="/what-we-look-for">What We Look For</a>
+        <a href="/submit-deal">Submit a Deal</a>
+        <a href="/join">Join Network</a>
+        <a href="/proof">Proof</a>
+        <a href="/faq">FAQ</a>
+        <a href="/contact">Contact</a>
+        <a href="https://deals.termsforsale.com" target="_blank">Terms For Sale</a>
+      </div>
+    </div>
+    <div class="footer-bot">
+      <span>&copy; 2025 Deal Pros LLC</span>
+      <span><a href="mailto:info@dispobuddy.com">info@dispobuddy.com</a> &middot; <a href="tel:4808425332">(480) 842-5332</a></span>
+    </div>
   </div>
 </footer>
 
-<!-- ========================================
-     JS — Mobile Menu Toggle
-     ======================================== -->
 <script>
-(function() {
-  const hamburger = document.querySelector('.hamburger');
-  const mobileMenu = document.getElementById('mobileMenu');
+(function(){
+  // Nav scroll shadow
+  var nav=document.querySelector('.nav');
+  window.addEventListener('scroll',function(){nav.classList.toggle('scrolled',window.scrollY>10)},{passive:true});
 
-  if (hamburger && mobileMenu) {
-    hamburger.addEventListener('click', function() {
-      const isOpen = mobileMenu.classList.toggle('open');
-      hamburger.classList.toggle('active');
-      hamburger.setAttribute('aria-expanded', isOpen);
-      document.body.style.overflow = isOpen ? 'hidden' : '';
-    });
-
-    mobileMenu.querySelectorAll('a').forEach(function(link) {
-      link.addEventListener('click', function() {
-        mobileMenu.classList.remove('open');
-        hamburger.classList.remove('active');
-        hamburger.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-      });
-    });
-  }
+  // Mobile menu
+  var ham=document.querySelector('.hamburger'),mob=document.getElementById('mobMenu');
+  ham.addEventListener('click',function(){ham.classList.toggle('on');mob.classList.toggle('on');document.body.style.overflow=mob.classList.contains('on')?'hidden':''});
+  mob.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){ham.classList.remove('on');mob.classList.remove('on');document.body.style.overflow=''})});
 })();
 </script>
-
 </body>
 </html>
