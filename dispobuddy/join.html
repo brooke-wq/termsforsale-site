@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join the Partner Network — Dispo Buddy</title>
+<meta name="description" content="Join the Dispo Buddy partner network. Get priority deal review, direct access to our dispo team, and a reliable JV partner on standby when you need it.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://dispobuddy.com/join">
+<meta property="og:title" content="Join the Dispo Buddy Partner Network">
+<meta property="og:description" content="Get connected to our JV dispo network. When you have a deal ready, we're here to move it. 50/50 split, non-exclusive, no upfront fees.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dispobuddy.com/join">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--blue-mid:#d0eef9;
+  --orange:#F7941D;--orange-dark:#d97c0e;
+  --green:#22c55e;--green-dark:#16a34a;--green-light:#dcfce7;
+  --white:#fff;--bg:#F4F6F9;--bg-card:#fff;
+  --text:#0D1F3C;--text-mid:#4A6070;--text-light:#718096;
+  --border:#E2E8F0;--border-light:#EDF2F7;
+  --red:#ef4444;
+  --r:10px;--r-lg:14px;--font:'Poppins',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{text-decoration:none}
+
+/* NAV */
+nav{background:rgba(13,31,60,.98);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.08);height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:200}
+.nav-logo img{height:40px;width:auto}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-link{color:rgba(255,255,255,.65);font-size:13px;font-weight:500;transition:color .15s}
+.nav-link:hover{color:#fff}
+.nav-right{display:flex;align-items:center;gap:12px}
+.btn-nav{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.btn-nav-outline{background:transparent;color:var(--blue);border:1.5px solid rgba(41,171,226,.4)}
+.btn-nav-outline:hover{border-color:var(--blue);background:rgba(41,171,226,.08)}
+.btn-nav-primary{background:var(--orange);color:#fff}
+.btn-nav-primary:hover{background:var(--orange-dark)}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px}
+.hamburger svg{display:block}
+.mobile-menu{display:none;position:fixed;inset:0;top:68px;background:rgba(13,31,60,.98);backdrop-filter:blur(16px);z-index:190;flex-direction:column;padding:24px;gap:8px}
+.mobile-menu.open{display:flex}
+.mobile-menu a{color:rgba(255,255,255,.8);font-size:15px;font-weight:500;padding:12px 16px;border-radius:8px;transition:background .15s}
+.mobile-menu a:hover{background:rgba(255,255,255,.06)}
+.mobile-menu .btn-nav{justify-content:center;margin-top:4px;padding:12px 18px}
+
+/* HERO STRIP */
+.hero-strip{background:var(--navy);padding:48px 48px 52px;text-align:center;position:relative;overflow:hidden}
+.hero-strip::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(circle,rgba(41,171,226,.1) 0%,transparent 70%);pointer-events:none}
+.hero-strip h1{font-size:36px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-.8px;margin-bottom:10px;position:relative}
+.hero-strip h1 span{color:var(--blue)}
+.hero-strip p{font-size:15px;color:rgba(255,255,255,.6);max-width:500px;margin:0 auto;position:relative}
+
+/* MAIN LAYOUT */
+.main-wrap{max-width:1120px;margin:0 auto;padding:40px 48px 80px;display:grid;grid-template-columns:1fr 420px;gap:48px;align-items:start}
+
+/* LEFT COLUMN */
+.left-col{display:flex;flex-direction:column;gap:32px}
+.section-block h2{font-size:18px;font-weight:800;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.section-block h2 svg{flex-shrink:0}
+.benefit-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.benefit-list li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-mid);line-height:1.6}
+.benefit-list li svg{flex-shrink:0;margin-top:3px}
+.benefit-check{color:var(--blue)}
+.who-check{color:var(--orange)}
+.step-check{color:var(--green)}
+
+/* TRUST BAR */
+.trust-bar{display:flex;flex-wrap:wrap;gap:12px;margin-top:4px}
+.trust-pill{display:inline-flex;align-items:center;gap:6px;background:var(--blue-light);color:var(--blue-dark);font-size:12px;font-weight:700;padding:6px 14px;border-radius:50px;letter-spacing:.2px}
+
+/* FORM CARD */
+.form-card{background:var(--white);border-radius:16px;border:1px solid var(--border);box-shadow:0 4px 24px rgba(13,31,60,.06),0 1px 3px rgba(13,31,60,.04);padding:32px 28px;position:sticky;top:88px}
+.form-card-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px}
+.form-card-sub{font-size:13px;color:var(--text-light);margin-bottom:24px}
+
+/* FORM FIELDS */
+.field-group{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+.field-label{font-size:12px;font-weight:600;color:var(--text)}
+.field-label .req{color:var(--orange);margin-left:2px}
+.fi{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border .2s,box-shadow .2s;width:100%}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.1)}
+.fi::placeholder{color:#A0AEC0}
+.fi-select{padding-right:32px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-color:var(--white);cursor:pointer}
+.fi-textarea{resize:vertical;min-height:80px}
+.fi.error{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.08)}
+.field-err{font-size:11px;color:var(--red);margin-top:2px;display:none}
+.field-err.show{display:block}
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* CHECKBOX GROUP */
+.checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cb-opt{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;font-size:12px;font-weight:500;color:var(--text-mid);user-select:none}
+.cb-opt:hover{border-color:var(--blue);background:rgba(41,171,226,.03)}
+.cb-opt input{display:none}
+.cb-opt .cb-box{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.cb-opt.checked{border-color:var(--blue);background:rgba(41,171,226,.06);color:var(--text)}
+.cb-opt.checked .cb-box{background:var(--blue);border-color:var(--blue)}
+
+/* RADIO GROUP */
+.radio-group{display:flex;gap:8px}
+.radio-opt{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px solid var(--border);border-radius:50px;cursor:pointer;transition:all .15s;font-size:12px;font-weight:600;color:var(--text-mid);user-select:none}
+.radio-opt:hover{border-color:var(--blue);color:var(--text)}
+.radio-opt input{display:none}
+.radio-opt.checked{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* CONSENT */
+.consent-wrap{background:var(--blue-light);border:1.5px solid rgba(41,171,226,.2);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border .2s;margin-bottom:20px;margin-top:4px}
+.consent-wrap:has(input:checked){border-color:var(--blue)}
+.consent-inner{display:flex;gap:10px;align-items:flex-start}
+.consent-inner input[type="checkbox"]{width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:var(--blue);margin-top:2px}
+.consent-text{font-size:11px;color:var(--text-light);line-height:1.6}
+.consent-err{font-size:11px;color:var(--red);margin-top:-14px;margin-bottom:12px;display:none}
+.consent-err.show{display:block}
+
+/* SUBMIT BUTTON */
+.btn-submit{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 32px;border-radius:10px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;border:none;background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;letter-spacing:.2px}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(41,171,226,.3)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ERROR BANNER */
+.error-banner{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--red);display:none;align-items:center;gap:8px}
+.error-banner.show{display:flex}
+
+/* SUCCESS STATE */
+.success-card{display:none;text-align:center;padding:48px 28px}
+.success-card.show{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.success-icon{width:68px;height:68px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border:2px solid rgba(34,197,94,.3)}
+.success-card h2{font-size:24px;font-weight:900;color:var(--text);margin-bottom:6px}
+.success-card p{font-size:14px;color:var(--text-mid);max-width:360px;margin:0 auto 24px;line-height:1.7}
+.success-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-orange{display:inline-flex;align-items:center;gap:7px;padding:12px 28px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;border:none;background:var(--orange);color:#fff}
+.btn-orange:hover{background:var(--orange-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(247,148,29,.3)}
+.btn-outline{display:inline-flex;align-items:center;gap:7px;padding:12px 28px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:1.5px solid var(--border);background:transparent;color:var(--text-mid)}
+.btn-outline:hover{border-color:#CBD5E0;color:var(--text)}
+
+/* FORM DIVIDER */
+.form-divider{height:1px;background:var(--border);margin:20px 0}
+
+/* FOOTER */
+footer{background:var(--navy);border-top:1px solid rgba(255,255,255,.08);padding:28px 48px}
+.footer-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-brand{font-size:12px;color:rgba(255,255,255,.35)}
+.footer-links{display:flex;gap:16px}
+.footer-links a{font-size:12px;color:rgba(255,255,255,.4);transition:color .15s}
+.footer-links a:hover{color:rgba(255,255,255,.6)}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  .main-wrap{grid-template-columns:1fr;gap:32px;padding:32px 24px 60px}
+  .form-card{position:static}
+  .hero-strip{padding:36px 24px 40px}
+  .hero-strip h1{font-size:28px}
+}
+@media(max-width:768px){
+  nav{padding:0 16px}
+  .nav-links,.nav-right{display:none}
+  .hamburger{display:block}
+  .hero-strip{padding:28px 16px 32px}
+  .hero-strip h1{font-size:24px}
+  .main-wrap{padding:24px 16px 48px;gap:24px}
+  .form-card{padding:24px 20px}
+  .cols-2{grid-template-columns:1fr}
+  .checkbox-grid{grid-template-columns:1fr}
+  .trust-bar{justify-content:center}
+  footer{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="https://dispobuddy.com" class="nav-logo">
+    <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy">
+  </a>
+  <div class="nav-links">
+    <a href="https://dispobuddy.com/process" class="nav-link">How It Works</a>
+    <a href="https://dispobuddy.com/what-we-look-for" class="nav-link">What We Look For</a>
+    <a href="https://dispobuddy.com/proof" class="nav-link">Proof</a>
+    <a href="https://dispobuddy.com/faq" class="nav-link">FAQ</a>
+  </div>
+  <div class="nav-right">
+    <a href="https://dispobuddy.com/join" class="btn-nav btn-nav-outline">Join Our Network</a>
+    <a href="https://dispobuddy.com/submit-deal" class="btn-nav btn-nav-primary">Submit a Deal</a>
+  </div>
+  <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')" aria-label="Menu">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="https://dispobuddy.com/process" onclick="document.getElementById('mobileMenu').classList.remove('open')">How It Works</a>
+  <a href="https://dispobuddy.com/what-we-look-for" onclick="document.getElementById('mobileMenu').classList.remove('open')">What We Look For</a>
+  <a href="https://dispobuddy.com/proof" onclick="document.getElementById('mobileMenu').classList.remove('open')">Proof</a>
+  <a href="https://dispobuddy.com/faq" onclick="document.getElementById('mobileMenu').classList.remove('open')">FAQ</a>
+  <a href="https://dispobuddy.com/join" class="btn-nav btn-nav-outline" onclick="document.getElementById('mobileMenu').classList.remove('open')">Join Our Network</a>
+  <a href="https://dispobuddy.com/submit-deal" class="btn-nav btn-nav-primary" onclick="document.getElementById('mobileMenu').classList.remove('open')">Submit a Deal</a>
+</div>
+
+<!-- HERO STRIP -->
+<div class="hero-strip">
+  <h1>Join the Dispo Buddy <span>Partner Network</span></h1>
+  <p>Get connected. When you have a deal ready, we're here to move it.</p>
+</div>
+
+<!-- MAIN TWO-COLUMN -->
+<div class="main-wrap">
+
+  <!-- LEFT COLUMN -->
+  <div class="left-col">
+
+    <!-- WHAT YOU GET -->
+    <div class="section-block">
+      <h2>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        What You Get
+      </h2>
+      <ul class="benefit-list">
+        <li>
+          <svg class="benefit-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Priority communication when you submit deals
+        </li>
+        <li>
+          <svg class="benefit-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Access to our deal submission system
+        </li>
+        <li>
+          <svg class="benefit-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Market updates and what our buyers are looking for
+        </li>
+        <li>
+          <svg class="benefit-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Direct line to our dispo team
+        </li>
+        <li>
+          <svg class="benefit-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Non-exclusive &mdash; no commitment required
+        </li>
+      </ul>
+    </div>
+
+    <!-- WHO SHOULD JOIN -->
+    <div class="section-block">
+      <h2>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Who Should Join
+      </h2>
+      <ul class="benefit-list">
+        <li>
+          <svg class="who-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Wholesalers with regular deal flow
+        </li>
+        <li>
+          <svg class="who-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Bird dogs who find deals but need a dispo partner
+        </li>
+        <li>
+          <svg class="who-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Real estate agents with off-market opportunities
+        </li>
+        <li>
+          <svg class="who-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Anyone who wants a reliable JV dispo partner on standby
+        </li>
+      </ul>
+    </div>
+
+    <!-- WHAT HAPPENS AFTER -->
+    <div class="section-block">
+      <h2>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        What Happens After You Join
+      </h2>
+      <ul class="benefit-list">
+        <li>
+          <svg class="step-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          You'll receive a confirmation with your partner info saved
+        </li>
+        <li>
+          <svg class="step-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          When you're ready to submit a deal, your info will be pre-filled
+        </li>
+        <li>
+          <svg class="step-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          You'll receive occasional updates on what buyers are looking for
+        </li>
+        <li>
+          <svg class="step-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          No spam. No hard sells. Just a real partnership when you need it.
+        </li>
+      </ul>
+    </div>
+
+    <!-- TRUST BAR -->
+    <div class="trust-bar">
+      <span class="trust-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-dark)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        50/50 Split
+      </span>
+      <span class="trust-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-dark)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Non-Exclusive
+      </span>
+      <span class="trust-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-dark)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        No Upfront Fees
+      </span>
+      <span class="trust-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-dark)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        24&ndash;48hr Review
+      </span>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN: FORM -->
+  <div class="form-card" id="formCard">
+
+    <!-- FORM VIEW -->
+    <div id="formView">
+      <div class="form-card-title">Partner Information</div>
+      <div class="form-card-sub">Takes about 2 minutes.</div>
+
+      <!-- Error banner -->
+      <div class="error-banner" id="errorBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <span id="errorText">Please fix the errors below.</span>
+      </div>
+
+      <form id="partnerForm" novalidate>
+        <!-- Full Name -->
+        <div class="field-group">
+          <label class="field-label">Full Name <span class="req">*</span></label>
+          <input type="text" class="fi" id="fullName" name="fullName" placeholder="Your full name" required autocomplete="name">
+          <div class="field-err" id="err-fullName">Full name is required.</div>
+        </div>
+
+        <!-- Email + Phone -->
+        <div class="cols-2">
+          <div class="field-group">
+            <label class="field-label">Email Address <span class="req">*</span></label>
+            <input type="email" class="fi" id="email" name="email" placeholder="you@email.com" required autocomplete="email">
+            <div class="field-err" id="err-email">Valid email is required.</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Phone Number <span class="req">*</span></label>
+            <input type="tel" class="fi" id="phone" name="phone" placeholder="(555) 123-4567" required autocomplete="tel">
+            <div class="field-err" id="err-phone">Phone number is required.</div>
+          </div>
+        </div>
+
+        <!-- Company -->
+        <div class="field-group">
+          <label class="field-label">Company / Brand Name</label>
+          <input type="text" class="fi" id="company" name="company" placeholder="Optional" autocomplete="organization">
+        </div>
+
+        <!-- Role -->
+        <div class="field-group">
+          <label class="field-label">What best describes you? <span class="req">*</span></label>
+          <select class="fi fi-select" id="role" name="role" required>
+            <option value="" disabled selected>Select one</option>
+            <option value="Wholesaler">Wholesaler</option>
+            <option value="Bird Dog">Bird Dog</option>
+            <option value="Real Estate Agent">Real Estate Agent</option>
+            <option value="Investor">Investor</option>
+            <option value="Other">Other</option>
+          </select>
+          <div class="field-err" id="err-role">Please select your role.</div>
+        </div>
+
+        <!-- Primary Markets -->
+        <div class="field-group">
+          <label class="field-label">Primary Markets</label>
+          <input type="text" class="fi" id="markets" name="markets" placeholder="e.g. Phoenix AZ, Dallas TX">
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Deal Types -->
+        <div class="field-group">
+          <label class="field-label">Deal Types You Work With</label>
+          <div class="checkbox-grid" id="dealTypes">
+            <label class="cb-opt" onclick="toggleCb(this)">
+              <input type="checkbox" name="dealTypes" value="Cash">
+              <span class="cb-box"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Cash
+            </label>
+            <label class="cb-opt" onclick="toggleCb(this)">
+              <input type="checkbox" name="dealTypes" value="Subject-To">
+              <span class="cb-box"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Subject-To
+            </label>
+            <label class="cb-opt" onclick="toggleCb(this)">
+              <input type="checkbox" name="dealTypes" value="Seller Finance">
+              <span class="cb-box"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Seller Finance
+            </label>
+            <label class="cb-opt" onclick="toggleCb(this)">
+              <input type="checkbox" name="dealTypes" value="Hybrid/Creative">
+              <span class="cb-box"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Hybrid/Creative
+            </label>
+            <label class="cb-opt" onclick="toggleCb(this)">
+              <input type="checkbox" name="dealTypes" value="Novation">
+              <span class="cb-box"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Novation
+            </label>
+            <label class="cb-opt" onclick="toggleCb(this)">
+              <input type="checkbox" name="dealTypes" value="Other">
+              <span class="cb-box"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+              Other
+            </label>
+          </div>
+        </div>
+
+        <!-- Monthly Volume -->
+        <div class="field-group">
+          <label class="field-label">Estimated Monthly Deal Volume</label>
+          <select class="fi fi-select" id="volume" name="volume">
+            <option value="" disabled selected>Select one</option>
+            <option value="1-2 deals">1-2 deals</option>
+            <option value="3-5 deals">3-5 deals</option>
+            <option value="6-10 deals">6-10 deals</option>
+            <option value="10+ deals">10+ deals</option>
+            <option value="Just getting started">Just getting started</option>
+          </select>
+        </div>
+
+        <!-- Deal Ready -->
+        <div class="field-group">
+          <label class="field-label">Do you have a deal ready to submit now?</label>
+          <div class="radio-group" id="dealReady">
+            <label class="radio-opt" onclick="pickRadio(this,'dealReady')">
+              <input type="radio" name="dealReady" value="Yes"> Yes
+            </label>
+            <label class="radio-opt" onclick="pickRadio(this,'dealReady')">
+              <input type="radio" name="dealReady" value="Not yet"> Not yet
+            </label>
+          </div>
+        </div>
+
+        <!-- How Did You Hear -->
+        <div class="field-group">
+          <label class="field-label">How did you hear about us?</label>
+          <select class="fi fi-select" id="source" name="source">
+            <option value="" disabled selected>Select one</option>
+            <option value="Referral">Referral</option>
+            <option value="Facebook/Social">Facebook/Social</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Podcast">Podcast</option>
+            <option value="Google">Google</option>
+            <option value="Meetup/Event">Meetup/Event</option>
+            <option value="Terms For Sale">Terms For Sale</option>
+            <option value="Cold outreach">Cold outreach</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Anything Else -->
+        <div class="field-group">
+          <label class="field-label">Anything else we should know?</label>
+          <textarea class="fi fi-textarea" id="notes" name="notes" placeholder="Optional — share anything that helps us understand your business"></textarea>
+        </div>
+
+        <!-- Consent -->
+        <div class="consent-wrap" onclick="this.querySelector('input').click()">
+          <div class="consent-inner" onclick="event.stopPropagation()">
+            <input type="checkbox" id="consent" name="consent">
+            <span class="consent-text">I consent to receive SMS and email communications from Dispo Buddy / Deal Pros LLC about partnership opportunities and deal updates. Reply STOP to opt out.</span>
+          </div>
+        </div>
+        <div class="consent-err" id="err-consent">You must consent to communications to join the network.</div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Join the Network
+        </button>
+      </form>
+    </div>
+
+    <!-- SUCCESS VIEW -->
+    <div class="success-card" id="successView">
+      <div class="success-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>You're In. Welcome to the Network.</h2>
+      <p>We've saved your partner info. When you're ready to submit a deal, head to our deal form &mdash; your info will be waiting.</p>
+      <div class="success-btns">
+        <a href="https://dispobuddy.com/submit-deal" class="btn-orange">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+          Submit a Deal Now
+        </a>
+        <a href="https://dispobuddy.com" class="btn-outline">Back to Home</a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-brand">Dispo Buddy &mdash; A Deal Pros LLC Company</span>
+    <div class="footer-links">
+      <a href="https://dispobuddy.com/process">How It Works</a>
+      <a href="https://dispobuddy.com/what-we-look-for">What We Look For</a>
+      <a href="https://dispobuddy.com/proof">Proof</a>
+      <a href="https://dispobuddy.com/faq">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── CHECKBOX TOGGLE ──
+function toggleCb(label) {
+  const inp = label.querySelector('input');
+  // Let the native click handle the check state
+  setTimeout(() => {
+    label.classList.toggle('checked', inp.checked);
+  }, 0);
+}
+
+// ── RADIO TOGGLE ──
+function pickRadio(label, groupName) {
+  document.querySelectorAll('#' + groupName + ' .radio-opt').forEach(o => o.classList.remove('checked'));
+  label.classList.add('checked');
+  label.querySelector('input').checked = true;
+}
+
+// ── PHONE FORMAT ──
+document.getElementById('phone').addEventListener('input', function(e) {
+  let v = e.target.value.replace(/\D/g, '');
+  if (v.length > 10) v = v.slice(0, 10);
+  if (v.length >= 6) {
+    e.target.value = '(' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6);
+  } else if (v.length >= 3) {
+    e.target.value = '(' + v.slice(0,3) + ') ' + v.slice(3);
+  } else {
+    e.target.value = v;
+  }
+});
+
+// ── CLEAR FIELD ERRORS ON INPUT ──
+document.querySelectorAll('.fi').forEach(fi => {
+  fi.addEventListener('input', function() {
+    this.classList.remove('error');
+    const err = document.getElementById('err-' + this.id);
+    if (err) err.classList.remove('show');
+  });
+  fi.addEventListener('change', function() {
+    this.classList.remove('error');
+    const err = document.getElementById('err-' + this.id);
+    if (err) err.classList.remove('show');
+  });
+});
+
+// ── VALIDATION ──
+function validate() {
+  let valid = true;
+  const fields = [
+    { id: 'fullName', test: v => v.trim().length > 0 },
+    { id: 'email', test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+    { id: 'phone', test: v => v.replace(/\D/g, '').length >= 10 },
+    { id: 'role', test: v => v !== '' }
+  ];
+
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    const err = document.getElementById('err-' + f.id);
+    if (!f.test(el.value)) {
+      el.classList.add('error');
+      if (err) err.classList.add('show');
+      valid = false;
+    } else {
+      el.classList.remove('error');
+      if (err) err.classList.remove('show');
+    }
+  });
+
+  const consent = document.getElementById('consent');
+  const consentErr = document.getElementById('err-consent');
+  if (!consent.checked) {
+    consentErr.classList.add('show');
+    valid = false;
+  } else {
+    consentErr.classList.remove('show');
+  }
+
+  return valid;
+}
+
+// ── GATHER DATA ──
+function gatherData() {
+  const dealTypes = [];
+  document.querySelectorAll('#dealTypes input:checked').forEach(cb => dealTypes.push(cb.value));
+
+  const dealReadyEl = document.querySelector('input[name="dealReady"]:checked');
+
+  // UTM tracking from sessionStorage
+  let utm = {};
+  try {
+    const keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+    keys.forEach(k => {
+      const v = sessionStorage.getItem(k);
+      if (v) utm[k] = v;
+    });
+  } catch(e) {}
+
+  return {
+    fullName: document.getElementById('fullName').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    company: document.getElementById('company').value.trim(),
+    role: document.getElementById('role').value,
+    markets: document.getElementById('markets').value.trim(),
+    dealTypes: dealTypes,
+    volume: document.getElementById('volume').value,
+    dealReady: dealReadyEl ? dealReadyEl.value : '',
+    source: document.getElementById('source').value,
+    notes: document.getElementById('notes').value.trim(),
+    consent: document.getElementById('consent').checked,
+    utm: utm,
+    submittedAt: new Date().toISOString(),
+    page: 'partner-onboard'
+  };
+}
+
+// ── SUBMIT ──
+document.getElementById('partnerForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const banner = document.getElementById('errorBanner');
+  banner.classList.remove('show');
+
+  if (!validate()) {
+    banner.classList.add('show');
+    document.getElementById('errorText').textContent = 'Please fix the highlighted fields below.';
+    // Scroll to first error
+    const firstErr = document.querySelector('.fi.error');
+    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M19.07 4.93l-2.83 2.83M7.76 16.24l-2.83 2.83"/></svg> Joining...';
+
+  try {
+    const data = gatherData();
+    const res = await fetch('/.netlify/functions/partner-onboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Submission failed');
+    }
+
+    // Show success
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('successView').classList.add('show');
+    window.scrollTo({ top: document.getElementById('formCard').offsetTop - 100, behavior: 'smooth' });
+
+  } catch(err) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Join the Network';
+    banner.classList.add('show');
+    document.getElementById('errorText').textContent = 'Something went wrong: ' + err.message + '. Please try again or call (480) 842-5332.';
+  }
+});
+
+// ── UTM CAPTURE ──
+(function() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(k => {
+      const v = params.get(k);
+      if (v) sessionStorage.setItem(k, v);
+    });
+  } catch(e) {}
+})();
+</script>
+
+<style>
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+</style>
+
+</body>
+</html>
