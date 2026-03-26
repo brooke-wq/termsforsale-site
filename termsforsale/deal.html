@@ -417,7 +417,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 <!-- STICKY ACTION BAR -->
 <div class="sticky-bar" id="sticky-bar">
   <span class="sticky-bar-text">Interested in this deal?</span>
-  <button class="sb-primary" onclick="document.getElementById('request-form').scrollIntoView({behavior:'smooth'})">Request Info</button>
+  <button class="sb-primary" onclick="if(!getUser()){openAuth('signup');return;}const rf=document.getElementById('req-form');if(rf)rf.style.display='block';document.getElementById('request-form').scrollIntoView({behavior:'smooth'});">Request Info</button>
   <a href="/" class="sb-secondary">Browse All Deals</a>
   <a href="/blog/" class="sb-secondary">Blog</a>
 </div>
