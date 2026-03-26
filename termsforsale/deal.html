@@ -320,7 +320,7 @@ footer{background:var(--navy);padding:44px 40px 0}
     <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:44px;width:auto">
   </a>
   <div class="nav-right" id="nav-right">
-    <a href="https://buyingcriteria.com" target="_blank">Buying Criteria</a>
+    <a href="/buying-criteria.html">Buying Criteria</a>
     <a href="#" style="display:none">FAQ</a>
     <a href="https://dealproszoom.com" target="_blank">Help</a>
     <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
@@ -540,7 +540,7 @@ function updateNavAuth(user){
   const el=document.getElementById('nav-right');
   if(!el||!user)return;
   el.innerHTML=`
-    <a href="https://buyingcriteria.com" target="_blank">Buying Criteria</a>
+    <a href="/buying-criteria.html">Buying Criteria</a>
     <a href="https://dealproszoom.com" target="_blank">Help</a>
     <div class="nav-avatar-wrap">
       <div class="nav-avatar">${user.initials}</div>
