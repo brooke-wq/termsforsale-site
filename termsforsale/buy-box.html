@@ -629,15 +629,19 @@ function saveBuyBox(){
     cash_max_price:     data.maxPrice||'',
     cash_max_repair:    data.maxRepair||'',
     cash_min_arv:       data.minArv||'',
+    cash_min_equity:    data.minEquity||'',
+    min_beds:           data.beds||'',
     property_types:     assetLabel,
-    tags: ['tfs buyer', _profile==='lender'?'tfs lender':'tfs buyer', 'buy box complete'],
+    contact_role:       'Buyer',
+    close_timeline:     data.timeline||'',
+    tags: ['tfs buyer', _profile==='lender'?'tfs lender':(_profile==='creative'?'creative-buyer':'cash-buyer'), 'buy box complete'],
   }, getUTMs());
 
   fetch(GHL_WEBHOOK,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(ghlPayload)
-  }).catch(()=>{});
+  }).catch(e=>{console.error('Buy box GHL sync error:',e);});
 
   // UI feedback
   const btn=document.getElementById('btn-save');

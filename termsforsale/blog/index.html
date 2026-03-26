@@ -1265,7 +1265,7 @@ async function doLogin(){
   err.style.display='none';ok.style.display='none';
   if(!email||!pass){err.textContent='Please enter email and password.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
-  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,source:'TFS Website Login'})});}catch(e){}
+  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({email,password:pass,source:'TFS Website Login',tags:['TFS Buyer']},getUTMs()))});}catch(e){console.error('Login webhook error:',e);}
   const name=email?email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'Buyer';
   const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
@@ -1282,7 +1282,7 @@ async function doSignup(){
   err.style.display='none';ok.style.display='none';
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']})});}catch(e){}
+  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);

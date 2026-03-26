@@ -462,6 +462,7 @@ fbq('init','YOUR_PIXEL_ID');fbq('track','PageView');
   </div>
   <div class="nav-right" id="nav-right">
     <div id="tfs-buybox-container"></div>
+    <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -1348,12 +1349,12 @@ async function doLogin(){
   err.style.display='none';ok.style.display='none';
   if(!email||!pass){err.textContent='Please enter email and password.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
-  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,source:'TFS Website Login'})});}catch(e){}
+  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({email,password:pass,source:'TFS Website Login',tags:['TFS Buyer']},getUTMs()))});}catch(e){console.error('Login webhook error:',e);}
   const name=email?email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'Buyer';
   const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
-  ok.textContent='Welcome back, '+user.name+'!';ok.style.display='block';
-  setTimeout(()=>closeAuth(),1200);
+  ok.innerHTML='Welcome back, '+user.name+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  setTimeout(()=>closeAuth(),2000);
   btn.disabled=false;btn.textContent='Log In';
 }
 async function doSignup(){
@@ -1365,12 +1366,12 @@ async function doSignup(){
   err.style.display='none';ok.style.display='none';
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']})});}catch(e){}
+  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
-  ok.textContent='Account created! Welcome, '+fn+' 🎉';ok.style.display='block';
-  setTimeout(()=>closeAuth(),1400);
+  ok.innerHTML='Account created! Welcome, '+fn+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  setTimeout(()=>closeAuth(),2000);
   btn.disabled=false;btn.textContent='Create Free Account';
 }
 function updateNavAuth(user){

@@ -323,6 +323,7 @@ footer{background:var(--navy);padding:44px 40px 0}
     <a href="https://buyingcriteria.com" target="_blank">Buying Criteria</a>
     <a href="#" style="display:none">FAQ</a>
     <a href="https://dealproszoom.com" target="_blank">Help</a>
+    <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -482,6 +483,10 @@ const SAMPLE=[
   {id:'DP-005',dealType:'Seller Finance',streetAddress:'San Antonio (address on request)',city:'San Antonio',state:'TX',zip:'78254',nearestMetro:'San Antonio, TX',propertyType:'Single Family',askingPrice:212835,entryFee:22500,compsArv:300000,aiArvBase:295000,piti:'',subtoLoanBalance:'',subtoRate:'',sfLoanAmount:190335,sfRate:'4.5%',sfTerm:'30yr',sfPayment:965,rentFinal:1600,rentLow:1500,rentMid:1575,rentHigh:1650,occupancy:'Vacant',hoa:'21',solar:'',access:'Lockbox',coe:'2026-05-01',deckLink:'',photos:'',highlight1:'Free & clear — seller financing at 4.5%/30yr',highlight2:"$22.5K entry — $1,600/mo rent potential",highlight3:'HOA only $21/mo — 4bd/3ba family home',entryBreakdown:'$22,500 + closing costs. SF balance: $190,335 at 4.5%/30yr.',details:'4bd/3ba, 2,897 SF. Built 2004.',beds:4,baths:3,sqft:2897,yearBuilt:2004}
 ];
 
+// ─── UTM TRACKING ─────────────────────────────────────────────
+(function(){const p=new URLSearchParams(window.location.search);['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{if(p.get(k))sessionStorage.setItem(k,p.get(k));});})();
+function getUTMs(){const u={};['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{const v=sessionStorage.getItem(k);if(v)u[k]=v;});if(document.referrer&&!document.referrer.includes(location.hostname))u.referrer=document.referrer;return u;}
+
 // ─── AUTH ──────────────────────────────────────────────────────
 const AUTH_KEY = 'tfs_buyer';
 const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/88c6d9de-eb76-45ef-ac83-db284b7da5ac';
@@ -505,7 +510,7 @@ async function doLogin(){
   err.style.display='none';ok.style.display='none';
   if(!email||!pass){err.textContent='Please enter email and password.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
-  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,source:'TFS Website Login'})});}catch(e){}
+  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({email,password:pass,source:'TFS Website Login',tags:['TFS Buyer']},getUTMs()))});}catch(e){console.error('Login webhook error:',e);}
   const name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
@@ -523,7 +528,7 @@ async function doSignup(){
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']})});}catch(e){}
+  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
@@ -1095,11 +1100,11 @@ async function submitRequest(dealId){
   if(!fname||!phone){alert('Please enter your name and phone number.');return}
   const btn=event.target;
   btn.textContent='Sending…';btn.disabled=true;
-  const structureTagMap={'Cash':'buy:cash','Hard Money':'buy:hard-money','Sub-To / Creative':'buy:subto, buy:creative','Seller Finance':'buy:seller-finance, buy:creative','Wrap':'buy:creative','Hybrid':'buy:hybrid, buy:creative'};
-  const buyTag=structureTagMap[structure]||'';
-  const tags=['tfs buyer','type:buyer','status:new','consent:sms',buyTag].filter(Boolean).join(', ');
-  const urlParams=new URLSearchParams(window.location.search);
-  const payload={firstName:fname,lastName:lname||'',phone,email:email||'',tags,source:'TFS Deal Page',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:notes||'',lead_source_detail:urlParams.get('utm_source')||'TFS Deal Page'}};
+  const structureTagMap={'Cash':['buy:cash'],'Hard Money':['buy:hard-money'],'Sub-To / Creative':['buy:subto','buy:creative'],'Seller Finance':['buy:seller-finance','buy:creative'],'Wrap':['buy:creative'],'Hybrid':['buy:hybrid','buy:creative']};
+  const buyTags=structureTagMap[structure]||[];
+  const tags=['TFS Buyer','Website Inquiry','consent:sms',...buyTags];
+  const utms=getUTMs();
+  const payload=Object.assign({firstName:fname,lastName:lname||'',phone,email:email||'',tags,source:'TFS Deal Page',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',deal_structure:structure||'',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:notes||'',lead_source_detail:utms.utm_source||'TFS Deal Page'}},utms);
   try{
     await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   }catch(err){console.error('GHL webhook error:',err);}
@@ -1140,7 +1145,10 @@ async function init(){
     let allDeals,deal;
     try{
       allDeals=await loadDealsFromNotion();
-      deal=cachedDeal||allDeals.find(d=>String(d.id)===String(id));
+      const freshDeal=allDeals.find(d=>String(d.id)===String(id));
+      // Prefer fresh Notion data if it has a cover photo the cache is missing
+      if(cachedDeal&&freshDeal){deal=Object.assign({},cachedDeal,{coverPhoto:freshDeal.coverPhoto||cachedDeal.coverPhoto,photos:freshDeal.photos||cachedDeal.photos});}
+      else{deal=freshDeal||cachedDeal;}
       console.log('Loaded '+allDeals.length+' deals from Notion');
     }catch(notionErr){
       console.warn('Notion unavailable, falling back to Sheets:',notionErr.message);

@@ -1,9 +1,28 @@
 // Netlify function: drive-thumb
 // Proxies a single Google Drive file thumbnail through the server using API key
 // Client calls: /api/drive-thumb?id=FILE_ID&sz=800
-// This solves the browser-side auth issue with drive.google.com/thumbnail
+// Falls back through: thumbnailLink → webContentLink → direct download
 
 const https = require('https');
+
+function fetchUrl(url) {
+  return new Promise(function(resolve, reject) {
+    https.get(url, { headers: { 'User-Agent': 'TermsForSale/1.0' } }, function(res) {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return fetchUrl(res.headers.location).then(resolve).catch(reject);
+      }
+      var chunks = [];
+      res.on('data', function(c) { chunks.push(c); });
+      res.on('end', function() {
+        resolve({
+          statusCode: res.statusCode,
+          contentType: res.headers['content-type'] || 'image/jpeg',
+          body: Buffer.concat(chunks)
+        });
+      });
+    }).on('error', reject);
+  });
+}
 
 exports.handler = async function(event) {
   var headers = {
@@ -22,45 +41,43 @@ exports.handler = async function(event) {
   var apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) return { statusCode: 500, headers: {'Content-Type':'application/json'}, body: JSON.stringify({error:'No API key'}) };
 
-  // Use Drive API to get thumbnail link for the file
-  var metaUrl = 'https://www.googleapis.com/drive/v3/files/' + fileId
-    + '?fields=thumbnailLink,webContentLink,mimeType,name'
-    + '&supportsAllDrives=true'
-    + '&key=' + apiKey;
+  try {
+    // Get thumbnail and content URLs from Drive API
+    var metaUrl = 'https://www.googleapis.com/drive/v3/files/' + fileId
+      + '?fields=thumbnailLink,webContentLink,mimeType,name'
+      + '&supportsAllDrives=true'
+      + '&key=' + apiKey;
 
-  return new Promise(function(resolve) {
-    https.get(metaUrl, { headers: { 'User-Agent': 'TermsForSale/1.0' } }, function(res) {
-      var data = '';
-      res.on('data', function(c){ data += c; });
-      res.on('end', function() {
-        try {
-          var meta = JSON.parse(data);
-          // Use thumbnailLink from Drive API (already authenticated via API key)
-          var thumbUrl = meta.thumbnailLink
-            ? meta.thumbnailLink.replace(/=s\d+/, '=s' + sz)
-            : null;
+    var metaResult = await fetchUrl(metaUrl);
+    var meta = JSON.parse(metaResult.body.toString());
 
-          if (thumbUrl) {
-            // Redirect to the thumbnail URL — browser follows it
-            resolve({
-              statusCode: 302,
-              headers: Object.assign({}, headers, { 'Location': thumbUrl }),
-              body: ''
-            });
-          } else {
-            // Fallback: return file metadata so client knows it exists
-            resolve({
-              statusCode: 200,
-              headers: Object.assign({}, headers, {'Content-Type':'application/json'}),
-              body: JSON.stringify({ error: 'no thumbnail', name: meta.name })
-            });
-          }
-        } catch(e) {
-          resolve({ statusCode: 500, headers: {'Content-Type':'application/json'}, body: JSON.stringify({error: e.message}) });
-        }
-      });
-    }).on('error', function(err) {
-      resolve({ statusCode: 500, headers: {'Content-Type':'application/json'}, body: JSON.stringify({error: err.message}) });
-    });
-  });
+    // Build fallback chain: thumbnail → webContentLink → direct download
+    var imageUrl = null;
+    if (meta.thumbnailLink) {
+      imageUrl = meta.thumbnailLink.replace(/=s\d+/, '=s' + sz);
+    } else if (meta.webContentLink) {
+      imageUrl = meta.webContentLink;
+    } else {
+      imageUrl = 'https://www.googleapis.com/drive/v3/files/' + fileId
+        + '?alt=media&supportsAllDrives=true&key=' + apiKey;
+    }
+
+    // Fetch the actual image bytes and return them
+    var imgResult = await fetchUrl(imageUrl);
+
+    if (imgResult.statusCode !== 200 || !imgResult.body.length) {
+      return { statusCode: 404, headers: {'Content-Type':'application/json'}, body: JSON.stringify({error:'Image not found', name: meta.name}) };
+    }
+
+    return {
+      statusCode: 200,
+      headers: Object.assign({}, headers, {
+        'Content-Type': imgResult.contentType
+      }),
+      body: imgResult.body.toString('base64'),
+      isBase64Encoded: true
+    };
+  } catch(e) {
+    return { statusCode: 500, headers: {'Content-Type':'application/json'}, body: JSON.stringify({error: e.message}) };
+  }
 };
