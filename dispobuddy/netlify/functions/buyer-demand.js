@@ -98,13 +98,28 @@ async function fetchAllBuyers(apiKey, locationId) {
     checked += contacts.length;
 
     contacts.forEach(function(contact) {
+      // Include anyone with Contact Role = Buyer OR any buy box data filled in
       var contactRole = getCF(contact, CF.CONTACT_ROLE);
       var isBuyer = false;
       if (contactRole) {
         if (Array.isArray(contactRole)) {
           isBuyer = contactRole.some(function(r) { return r.toLowerCase() === 'buyer'; });
         } else {
-          isBuyer = String(contactRole).toLowerCase() === 'buyer';
+          isBuyer = String(contactRole).toLowerCase().includes('buyer');
+        }
+      }
+      // Also capture anyone with buy box fields filled in
+      if (!isBuyer) {
+        var hasStates = getCF(contact, CF.TARGET_STATES);
+        var hasCities = getCF(contact, CF.TARGET_CITIES);
+        var hasStructures = getCF(contact, CF.DEAL_STRUCTURES);
+        var hasPropertyType = getCF(contact, CF.PROPERTY_TYPE);
+        var hasMaxPrice = getCF(contact, CF.MAX_PRICE);
+        var hasExitStrat = getCF(contact, CF.EXIT_STRATEGIES);
+        var hasTargetMarkets = getCF(contact, CF.TARGET_MARKETS);
+        var hasBuyerType = getCF(contact, CF.BUYER_TYPE);
+        if (hasStates || hasCities || hasStructures || hasPropertyType || hasMaxPrice || hasExitStrat || hasTargetMarkets || hasBuyerType) {
+          isBuyer = true;
         }
       }
       if (isBuyer) allBuyers.push(contact);
@@ -166,8 +181,10 @@ function aggregateBuyerData(buyers) {
   var markets = {};
   // State-only buyers (no city specified)
   var stateOnlyBuyers = {};
-  // Global deal type counts
   var globalDealTypes = {};
+  var globalPropertyTypes = {};
+  var globalExitStrategies = {};
+  var globalBuyerTypes = {};
   var totalBuyers = buyers.length;
 
   buyers.forEach(function(contact) {
@@ -178,17 +195,50 @@ function aggregateBuyerData(buyers) {
     var exitStrategies = getCF(contact, CF.EXIT_STRATEGIES);
     var maxPrice = parseMonetary(getCF(contact, CF.MAX_PRICE));
     var maxEntry = parseMonetary(getCF(contact, CF.MAX_ENTRY));
+    var targetMarkets = getCF(contact, CF.TARGET_MARKETS);
+    var buyerType = getCF(contact, CF.BUYER_TYPE);
 
-    // Count global deal types
+    // Global aggregations
     if (dealStructures && Array.isArray(dealStructures)) {
       dealStructures.forEach(function(ds) { incrementMap(globalDealTypes, ds); });
     }
+    if (propertyTypes && Array.isArray(propertyTypes)) {
+      propertyTypes.forEach(function(pt) { incrementMap(globalPropertyTypes, pt); });
+    }
+    if (exitStrategies && Array.isArray(exitStrategies)) {
+      exitStrategies.forEach(function(es) { incrementMap(globalExitStrategies, es); });
+    }
+    if (buyerType) {
+      incrementMap(globalBuyerTypes, Array.isArray(buyerType) ? buyerType[0] : String(buyerType));
+    }
+
+    // Parse TARGET_MARKETS (free text) into additional cities if no TARGET_CITIES
+    var parsedMarketCities = [];
+    if (targetMarkets && typeof targetMarkets === 'string' && targetMarkets.trim()) {
+      // Try to parse comma/newline separated city-state pairs from free text
+      var chunks = targetMarkets.split(/[,\n;]+/);
+      chunks.forEach(function(chunk) {
+        var trimmed = chunk.trim();
+        // Try to match "City ST" or "City, ST" patterns
+        var match = trimmed.match(/^([A-Za-z\s.'-]+)\s*,?\s*([A-Z]{2})$/);
+        if (match) {
+          parsedMarketCities.push(match[1].trim() + ', ' + match[2].trim());
+        }
+      });
+    }
 
     var hasCities = targetCities && Array.isArray(targetCities) && targetCities.length > 0;
+    var allCities = hasCities ? targetCities.slice() : [];
+    // Merge in parsed free-text markets
+    parsedMarketCities.forEach(function(c) {
+      if (allCities.indexOf(c) === -1) allCities.push(c);
+    });
 
-    if (hasCities) {
+    var hasAnyCities = allCities.length > 0;
+
+    if (hasAnyCities) {
       // Add this buyer to each of their target city markets
-      targetCities.forEach(function(cityStr) {
+      allCities.forEach(function(cityStr) {
         var parsed = parseCityState(cityStr);
         if (!parsed) return;
 
@@ -288,6 +338,9 @@ function aggregateBuyerData(buyers) {
     markets: marketsArray,
     statesSummary: statesSummary,
     dealTypesSummary: globalDealTypes,
+    propertyTypesSummary: globalPropertyTypes,
+    exitStrategiesSummary: globalExitStrategies,
+    buyerTypesSummary: globalBuyerTypes,
     totalMarkets: marketsArray.length
   };
 }

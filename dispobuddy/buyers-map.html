@@ -38,7 +38,7 @@ a{text-decoration:none;color:inherit}
 /* ── NAV ─────────────────────────────── */
 .nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
-.nav-logo img{height:48px;width:auto;filter:contrast(2.5)}
+.nav-logo img{height:48px;width:auto;filter:saturate(1.5) contrast(3)}
 .nav-links{display:flex;gap:28px}
 .nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
 .nav-links a:hover{color:var(--blue)}
@@ -99,6 +99,7 @@ a{text-decoration:none;color:inherit}
 .mc-pill.cash{background:#FEF3C7;color:#92400E}
 .mc-pill.subto{background:#DBEAFE;color:#1E40AF}
 .mc-pill.sf{background:#D1FAE5;color:#065F46}
+.mc-pill-prop{background:rgba(41,171,226,.1);color:var(--blue)}
 .mc-price{font-size:11px;color:var(--text-light)}
 
 /* ── MAP ─────────────────────────────── */
@@ -434,6 +435,12 @@ function renderMarketList(markets) {
         }).join('')
       : '';
 
+    const propPills = m.propertyTypes
+      ? Object.entries(m.propertyTypes).map(([k, v]) =>
+          '<span class="mc-pill mc-pill-prop">' + k + ' (' + v + ')</span>'
+        ).join('')
+      : '';
+
     const priceStr = m.priceRange
       ? fmtK(m.priceRange.min) + ' - ' + fmtK(m.priceRange.max)
       : '';
@@ -444,6 +451,7 @@ function renderMarketList(markets) {
         '<span class="mc-count"><span class="mc-dot ' + dotClass(m.buyerCount) + '"></span>' + m.buyerCount + ' buyers</span>' +
       '</div>' +
       '<div class="mc-pills">' + pills + '</div>' +
+      (propPills ? '<div class="mc-pills" style="margin-top:4px">' + propPills + '</div>' : '') +
       (priceStr ? '<div class="mc-price">Price range: ' + priceStr + '</div>' : '');
 
     card.addEventListener('click', () => flyToMarket(m, card));
@@ -513,6 +521,20 @@ async function renderMarkers(markets) {
         '<div class="popup-section">' +
           '<div class="popup-section-label">Deal Types</div>' +
           '<div class="popup-deals">' + dealTags + '</div>' +
+        '</div>';
+    }
+
+    const propTags = m.propertyTypes
+      ? Object.entries(m.propertyTypes).map(([k, v]) =>
+          '<span class="popup-deal-tag" style="background:rgba(41,171,226,.1);color:#29ABE2">' + k + ': ' + v + '</span>'
+        ).join('')
+      : '';
+
+    if (propTags) {
+      popupHtml +=
+        '<div class="popup-section">' +
+          '<div class="popup-section-label">Property Types</div>' +
+          '<div class="popup-deals">' + propTags + '</div>' +
         '</div>';
     }
 
