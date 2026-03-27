@@ -23,6 +23,11 @@
   to = "/.netlify/functions/buyer-demand"
   status = 200
 
+[[redirects]]
+  from = "/api/debug-notifications"
+  to = "/.netlify/functions/debug-notifications"
+  status = 200
+
 # ── Clean URLs (no .html extensions) ──
 [[redirects]]
   from = "/process"

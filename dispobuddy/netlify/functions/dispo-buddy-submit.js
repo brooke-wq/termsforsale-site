@@ -76,7 +76,19 @@ exports.handler = async (event) => {
       console.warn('Opportunity creation failed (non-fatal):', JSON.stringify(oppData));
     }
 
-    // ── 4. AUTOMATED NOTIFICATIONS ──────────────────────────
+    // ── 4. Create Notion Page (New Submission) ────────────
+    const notionToken = process.env.NOTION_TOKEN;
+    const notionDbId  = process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
+    if (notionToken) {
+      try {
+        const notionRes = await createNotionDeal(notionToken, notionDbId, body);
+        console.log('Notion page created:', notionRes?.id || 'unknown');
+      } catch (err) {
+        console.warn('Notion creation failed (non-fatal):', err.message);
+      }
+    }
+
+    // ── 5. AUTOMATED NOTIFICATIONS ──────────────────────────
     // Fire-and-forget — don't block the response on these
     const notificationPromises = [];
 
@@ -480,6 +492,126 @@ function buildOpportunityPayload(d, contactId, locationId) {
       { key: 'arv_estimate', field_value: d.arv_estimate || '' },
     ],
   };
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTION — Create deal page as "New Submission"
+// Maps form fields to existing Notion database properties
+// ─────────────────────────────────────────────────────────────
+async function createNotionDeal(token, dbId, d) {
+  const props = {};
+
+  // Helper: set property by type
+  function title(name, val)    { if (val) props[name] = { title: [{ text: { content: String(val) } }] }; }
+  function text(name, val)     { if (val) props[name] = { rich_text: [{ text: { content: String(val) } }] }; }
+  function num(name, val)      { const n = parseFloat(val); if (!isNaN(n) && n > 0) props[name] = { number: n }; }
+  function sel(name, val)      { if (val) props[name] = { select: { name: String(val) } }; }
+  function stat(name, val)     { if (val) props[name] = { status: { name: String(val) } }; }
+  function url(name, val)      { if (val) props[name] = { url: String(val) }; }
+  function date(name, val)     { if (val) props[name] = { date: { start: String(val) } }; }
+
+  // Map deal type from form to Notion select values
+  const dealTypeMap = {
+    'Cash': 'Cash',
+    'Subto': 'SubTo',
+    'Seller Finance': 'Seller Finance',
+    'Hybrid': 'Hybrid',
+    'Morby/Stack Method': 'Morby Method',
+    'Lease Option': 'Lease Option',
+    'Novation': 'Novation',
+  };
+
+  const addr = [d.property_address, d.property_city, d.property_state, d.property_zip].filter(Boolean).join(', ');
+
+  // Title — use address as the page title (standard for deal databases)
+  title('Street Address', d.property_address || addr);
+
+  // Deal Status — "New Submission"
+  // Try status type first, fall back to select
+  try { stat('Deal Status', 'New Submission'); } catch(e) {}
+
+  // Location
+  text('City', d.property_city);
+  text('State', d.property_state);
+  text('ZIP', d.property_zip);
+
+  // Deal info
+  sel('Deal Type', dealTypeMap[d.deal_type] || d.deal_type);
+  num('Asking Price', d.desired_asking_price);
+  num('Entry Fee', d.what_is_the_buyer_entry_fee);
+  num('ARV', d.arv_estimate);
+  sel('Occupancy', d.property_occupancy);
+  text('Access', d.how_can_we_access_the_property);
+  date('COE', d.coe);
+  url('Photos', d.link_to_photos);
+
+  // SubTo fields
+  num('SubTo Loan Balance', d.subto_loan_balance);
+  text('SubTo Rate (%)', d.interest_rate);
+  num('PITI', d.monthly_payment);
+  text('SubTo Loan Maturity', d.loan_maturity);
+  text('SubTo Balloon', d.subto_balloon);
+
+  // Seller Finance fields
+  num('SF Loan Amount', d.seller_finance_loan_amount);
+  num('SF Payment', d.sf_loan_payment);
+  text('SF Rate', d.interest_rate_seller_finance);
+  text('SF Term', d.loan_term);
+  text('SF Balloon', d.sf_balloon);
+
+  // Details — combine partner info + notes
+  const detailLines = [
+    `JV Partner: ${d.jv_partner_name} | ${d.jv_phone_number}${d.jv_partner_email ? ' | ' + d.jv_partner_email : ''}`,
+    `Contract: ${d.contracted_price ? '$' + parseFloat(d.contracted_price).toLocaleString() : 'N/A'}`,
+    `Under Contract: ${d.do_you_have_the_property_under_contract || 'N/A'}`,
+    `First Deal: ${d.is_this_your_first_deal_with_dispo_buddy || 'N/A'}`,
+    `Source: ${d.how_did_you_hear_about_us || 'N/A'}`,
+  ];
+  if (d.important_details) detailLines.push(`Notes: ${d.important_details}`);
+  if (d.link_to_supporting_documents) detailLines.push(`Docs: ${d.link_to_supporting_documents}`);
+  text('Details', detailLines.join('\n'));
+
+  // Create page
+  const res = await fetch('https://api.notion.com/v1/pages', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Notion-Version': '2022-06-28',
+    },
+    body: JSON.stringify({
+      parent: { database_id: dbId },
+      properties: props,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.warn('Notion create failed:', JSON.stringify(data));
+    // If status field failed (wrong type), retry without it using select instead
+    if (data.message && data.message.includes('Deal Status')) {
+      delete props['Deal Status'];
+      sel('Deal Status', 'New Submission');
+      const retry = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28',
+        },
+        body: JSON.stringify({
+          parent: { database_id: dbId },
+          properties: props,
+        }),
+      });
+      const retryData = await retry.json();
+      if (!retry.ok) console.warn('Notion retry also failed:', JSON.stringify(retryData));
+      return retryData;
+    }
+  }
+
+  return data;
 }
 
 // ─────────────────────────────────────────────────────────────
