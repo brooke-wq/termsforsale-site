@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyers Map — Dispo Buddy</title>
+<meta name="description" content="See where active buyers are looking for deals. Real-time demand map from the Dispo Buddy network. No personal info shown.">
+<link rel="canonical" href="https://dispobuddy.com/buyers-map">
+<meta property="og:title" content="Buyers Map — Dispo Buddy">
+<meta property="og:description" content="See where active buyers are looking for deals across the US. Real-time demand map.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dispobuddy.com/buyers-map">
+<meta property="og:site_name" content="Dispo Buddy">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;
+  --orange:#F7941D;--orange-dark:#d97c0e;--orange-glow:rgba(247,148,29,.15);
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;
+  --green:#22c55e;
+  --white:#fff;--bg:#F4F6F9;--bg-section:#EEF2F6;
+  --text:#0D1F3C;--text-mid:#4A6070;--text-light:#718096;
+  --border:#E2E8F0;
+  --r:12px;--r-sm:8px;
+  --font:'Poppins',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
+
+/* ── NAV ─────────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
+.nav-logo img{height:34px;width:auto;filter:brightness(0.15)}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
+.nav-links a:hover{color:var(--navy)}
+.nav-links a.active{color:var(--navy);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:var(--r-sm);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
+.btn-o{background:var(--orange);color:var(--white);border-color:var(--orange)}
+.btn-o:hover{background:var(--orange-dark);border-color:var(--orange-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,148,29,.35)}
+.btn-ghost{background:transparent;color:var(--text-mid);border-color:var(--border)}
+.btn-ghost:hover{border-color:var(--navy);color:var(--navy)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+.hamburger span{display:block;width:22px;height:2px;background:var(--navy);border-radius:2px;transition:all .3s}
+.hamburger.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.on span:nth-child(2){opacity:0}
+.hamburger.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
+.mob-menu.on{display:flex}
+.mob-menu a{padding:14px 0;font-size:15px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border)}
+.mob-menu .mob-btns{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.mob-menu .mob-btns .btn{width:100%;text-align:center}
+
+/* ── MAIN LAYOUT ─────────────────────── */
+.page-wrap{position:fixed;top:64px;left:0;right:0;bottom:0;display:flex}
+
+/* ── SIDEBAR ─────────────────────────── */
+.sidebar{width:340px;min-width:340px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;overflow:hidden}
+.sidebar-header{padding:20px 20px 0;flex-shrink:0}
+.sidebar-title{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sidebar-title h2{font-size:18px;font-weight:700;color:var(--navy)}
+.buyer-badge{background:var(--orange);color:var(--white);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;line-height:1.3}
+.sidebar-sub{font-size:12px;color:var(--text-light);line-height:1.5;margin-bottom:16px}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:16px;padding:0 20px}
+.filter-select{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:12px;color:var(--text);background:var(--white);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23718096'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.filter-select:focus{outline:none;border-color:var(--blue)}
+
+/* Stats row */
+.stats-row{display:flex;gap:8px;padding:0 20px 16px;border-bottom:1px solid var(--border)}
+.stat-card{flex:1;background:var(--bg);border-radius:var(--r-sm);padding:10px;text-align:center}
+.stat-num{font-size:20px;font-weight:800;color:var(--navy)}
+.stat-label{font-size:10px;font-weight:500;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px}
+
+/* Market list */
+.market-list{flex:1;overflow-y:auto;padding:12px 20px 100px}
+.market-card{padding:14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;cursor:pointer;transition:all .15s}
+.market-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(41,171,226,.12);transform:translateY(-1px)}
+.market-card.active{border-color:var(--orange);background:var(--orange-glow)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mc-name{font-size:14px;font-weight:700;color:var(--navy)}
+.mc-count{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--text-mid)}
+.mc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.mc-dot.high{background:var(--orange)}
+.mc-dot.medium{background:var(--blue)}
+.mc-dot.low{background:#94A3B8}
+.mc-pills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.mc-pill{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--bg);color:var(--text-mid)}
+.mc-pill.cash{background:#FEF3C7;color:#92400E}
+.mc-pill.subto{background:#DBEAFE;color:#1E40AF}
+.mc-pill.sf{background:#D1FAE5;color:#065F46}
+.mc-price{font-size:11px;color:var(--text-light)}
+
+/* ── MAP ─────────────────────────────── */
+.map-wrap{flex:1;position:relative}
+#map{width:100%;height:100%}
+.leaflet-popup-content-wrapper{border-radius:var(--r)!important;box-shadow:0 4px 20px rgba(0,0,0,.15)!important;font-family:var(--font)}
+.leaflet-popup-content{margin:14px 16px!important;min-width:200px}
+.popup-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.popup-count{font-size:13px;font-weight:600;color:var(--orange);margin-bottom:10px}
+.popup-section{margin-bottom:8px}
+.popup-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-light);margin-bottom:3px}
+.popup-deals{display:flex;flex-wrap:wrap;gap:4px}
+.popup-deal-tag{font-size:11px;padding:2px 8px;border-radius:12px;background:var(--bg);color:var(--text-mid);font-weight:500}
+.popup-price{font-size:12px;color:var(--text-mid);font-weight:500}
+.popup-cta{display:block;margin-top:12px;padding:8px 16px;background:var(--orange);color:var(--white);border-radius:var(--r-sm);font-size:12px;font-weight:600;text-align:center;transition:background .15s}
+.popup-cta:hover{background:var(--orange-dark)}
+
+/* ── BOTTOM BANNER ───────────────────── */
+.bottom-banner{position:fixed;bottom:0;left:0;right:0;height:52px;background:var(--navy);display:flex;align-items:center;justify-content:center;gap:16px;z-index:20;padding:0 20px}
+.bottom-banner p{color:rgba(255,255,255,.7);font-size:13px;font-weight:500}
+.bottom-banner .btn-o{padding:7px 20px;font-size:12px}
+
+/* ── LOADING ─────────────────────────── */
+.loading-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(244,246,249,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:15;transition:opacity .3s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text-mid);font-weight:500}
+.error-msg{text-align:center;padding:40px 20px;color:var(--text-mid);font-size:14px;line-height:1.6}
+
+/* ── MOBILE TOGGLE ───────────────────── */
+.mobile-toggle{display:none;position:fixed;bottom:62px;left:50%;transform:translateX(-50%);z-index:25;background:var(--white);border:1px solid var(--border);border-radius:20px;padding:8px 18px;font-family:var(--font);font-size:12px;font-weight:600;color:var(--text);cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+
+/* ── RESPONSIVE ──────────────────────── */
+@media(max-width:768px){
+  .nav-links,.nav-right{display:none}
+  .hamburger{display:flex}
+  .sidebar{position:fixed;top:64px;left:0;right:0;bottom:52px;width:100%;min-width:0;height:45%;top:auto;border-right:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(0);transition:transform .3s ease;z-index:15}
+  .sidebar.collapsed{transform:translateY(calc(100% - 0px));pointer-events:none}
+  .mobile-toggle{display:block}
+  .page-wrap{flex-direction:column}
+  .map-wrap{flex:1;height:100%}
+  .bottom-banner{z-index:20}
+  .bottom-banner p{font-size:11px}
+  .filters{padding:0}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697c00fe7dec935c6e1e0197.svg" alt="Dispo Buddy"></a>
+    <div class="nav-links">
+      <a href="/process">How It Works</a>
+      <a href="/what-we-look-for">What We Look For</a>
+      <a href="/proof">Proof</a>
+      <a href="/faq">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <a href="/join" class="btn btn-ghost">Join Network</a>
+      <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+    </div>
+    <button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mob-menu" id="mobMenu">
+  <a href="/process">How It Works</a>
+  <a href="/what-we-look-for">What We Look For</a>
+  <a href="/proof">Proof</a>
+  <a href="/faq">FAQ</a>
+  <a href="/buyers-map">Buyers Map</a>
+  <a href="/contact">Contact</a>
+  <div class="mob-btns">
+    <a href="/join" class="btn btn-ghost">Join Network</a>
+    <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page-wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <h2>Active Buyers</h2>
+        <span class="buyer-badge" id="buyerBadge">--</span>
+      </div>
+      <p class="sidebar-sub">Real-time buyer demand from our network. No personal info shown.</p>
+    </div>
+    <div class="filters">
+      <select class="filter-select" id="filterState"><option value="">All States</option></select>
+      <select class="filter-select" id="filterDeal"><option value="">All Deal Types</option></select>
+    </div>
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-num" id="statBuyers">--</div>
+        <div class="stat-label">Buyers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statMarkets">--</div>
+        <div class="stat-label">Markets</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statTopDeal">--</div>
+        <div class="stat-label">Top Type</div>
+      </div>
+    </div>
+    <div class="market-list" id="marketList"></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-wrap">
+    <div id="map"></div>
+    <div class="loading-overlay" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading buyer data...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE TOGGLE -->
+<button class="mobile-toggle" id="mobileToggle">Show Markets</button>
+
+<!-- BOTTOM BANNER -->
+<div class="bottom-banner">
+  <p>Have a deal in one of these markets?</p>
+  <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+</div>
+
+<script>
+/* ── GEOCODING LOOKUP ────────────────── */
+const GEO = {
+  'Phoenix,AZ':[33.4484,-112.0740],'Mesa,AZ':[33.4152,-111.8315],'Tucson,AZ':[32.2226,-110.9747],
+  'Scottsdale,AZ':[33.4942,-111.9261],'Chandler,AZ':[33.3062,-111.8413],'Gilbert,AZ':[33.3528,-111.7890],
+  'Tempe,AZ':[33.4255,-111.9400],
+  'Dallas,TX':[32.7767,-96.7970],'Houston,TX':[29.7604,-95.3698],'San Antonio,TX':[29.4241,-98.4936],
+  'Austin,TX':[30.2672,-97.7431],'Fort Worth,TX':[32.7555,-97.3308],
+  'Tampa,FL':[27.9506,-82.4572],'Orlando,FL':[28.5383,-81.3792],'Jacksonville,FL':[30.3322,-81.6557],
+  'Miami,FL':[25.7617,-80.1918],'St Petersburg,FL':[27.7676,-82.6403],
+  'Louisville,KY':[38.2527,-85.7585],'Lexington,KY':[38.0406,-84.5037],
+  'Nashville,TN':[36.1627,-86.7816],'Memphis,TN':[35.1495,-90.0490],
+  'Knoxville,TN':[35.9606,-83.9207],'Chattanooga,TN':[35.0456,-85.3097],
+  'Atlanta,GA':[33.7490,-84.3880],'Savannah,GA':[32.0809,-81.0912],'Augusta,GA':[33.4735,-81.9748],
+  'Las Vegas,NV':[36.1699,-115.1398],'Denver,CO':[39.7392,-104.9903],
+  'Indianapolis,IN':[39.7684,-86.1581],'Columbus,OH':[39.9612,-82.9988],
+  'Charlotte,NC':[35.2271,-80.8431],'Raleigh,NC':[35.7796,-78.6382],
+  'Kansas City,MO':[39.0997,-94.5786],'St Louis,MO':[38.6270,-90.1994],
+  'Oklahoma City,OK':[35.4676,-97.5164],'Tulsa,OK':[36.1540,-95.9928],
+  'Albuquerque,NM':[35.0844,-106.6504],'Salt Lake City,UT':[40.7608,-111.8910],
+  'Boise,ID':[43.6150,-116.2023],'Portland,OR':[45.5155,-122.6789],
+  'Seattle,WA':[47.6062,-122.3321],'Sacramento,CA':[38.5816,-121.4944],
+  'Los Angeles,CA':[34.0522,-118.2437],'San Diego,CA':[32.7157,-117.1611]
+};
+
+/* Nominatim fallback queue */
+const geoQueue = [];
+let geoProcessing = false;
+
+function getCoords(city, state) {
+  const key = city + ',' + state;
+  if (GEO[key]) return Promise.resolve(GEO[key]);
+  return new Promise((resolve) => {
+    geoQueue.push({ city, state, resolve });
+    processGeoQueue();
+  });
+}
+
+function processGeoQueue() {
+  if (geoProcessing || geoQueue.length === 0) return;
+  geoProcessing = true;
+  const item = geoQueue.shift();
+  const url = 'https://nominatim.openstreetmap.org/search?q=' +
+    encodeURIComponent(item.city + ', ' + item.state + ', USA') +
+    '&format=json&limit=1';
+  fetch(url, { headers: { 'User-Agent': 'DispoBuddyBuyersMap/1.0' } })
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.length > 0) {
+        const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        GEO[item.city + ',' + item.state] = coords;
+        item.resolve(coords);
+      } else {
+        item.resolve(null);
+      }
+    })
+    .catch(() => item.resolve(null))
+    .finally(() => {
+      geoProcessing = false;
+      setTimeout(processGeoQueue, 1100); // respect Nominatim rate limit
+    });
+}
+
+/* ── FORMAT HELPERS ──────────────────── */
+function fmtK(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + Math.round(n / 1000) + 'K';
+  return '$' + n;
+}
+
+function pillClass(type) {
+  const t = type.toLowerCase();
+  if (t.includes('cash')) return 'cash';
+  if (t.includes('sub')) return 'subto';
+  if (t.includes('seller') || t.includes('finance')) return 'sf';
+  return '';
+}
+
+function dotClass(count) {
+  if (count >= 15) return 'high';
+  if (count >= 5) return 'medium';
+  return 'low';
+}
+
+function markerColor(count) {
+  if (count >= 15) return '#F7941D';
+  if (count >= 5) return '#29ABE2';
+  return '#94A3B8';
+}
+
+/* ── INIT MAP ────────────────────────── */
+const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([39.8, -98.5], 4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  maxZoom: 18
+}).addTo(map);
+
+/* ── STATE ───────────────────────────── */
+let allData = null;
+let markers = [];
+let activeCard = null;
+
+/* ── FETCH DATA ──────────────────────── */
+async function loadData() {
+  try {
+    const res = await fetch('/api/buyer-demand');
+    if (!res.ok) throw new Error('API error');
+    allData = await res.json();
+    if (!allData || !allData.markets || allData.markets.length === 0) throw new Error('Empty');
+    populateFilters();
+    renderAll();
+    document.getElementById('loading').classList.add('hidden');
+  } catch (e) {
+    document.getElementById('loading').innerHTML =
+      '<div class="error-msg">Buyer data is loading. Check back shortly.</div>';
+  }
+}
+
+function populateFilters() {
+  const stateSelect = document.getElementById('filterState');
+  const dealSelect = document.getElementById('filterDeal');
+  if (allData.statesSummary) {
+    allData.statesSummary
+      .sort((a, b) => b.buyerCount - a.buyerCount)
+      .forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.state;
+        o.textContent = s.state + ' (' + s.buyerCount + ' buyers)';
+        stateSelect.appendChild(o);
+      });
+  }
+  if (allData.dealTypesSummary) {
+    Object.entries(allData.dealTypesSummary)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([type, count]) => {
+        const o = document.createElement('option');
+        o.value = type;
+        o.textContent = type + ' (' + count + ')';
+        dealSelect.appendChild(o);
+      });
+  }
+}
+
+function getFilteredMarkets() {
+  if (!allData) return [];
+  let markets = allData.markets;
+  const stateVal = document.getElementById('filterState').value;
+  const dealVal = document.getElementById('filterDeal').value;
+  if (stateVal) {
+    markets = markets.filter(m => m.state === stateVal);
+  }
+  if (dealVal) {
+    markets = markets.filter(m => m.dealTypes && m.dealTypes[dealVal] > 0);
+  }
+  return markets.sort((a, b) => b.buyerCount - a.buyerCount);
+}
+
+function renderAll() {
+  const markets = getFilteredMarkets();
+  renderStats(markets);
+  renderMarketList(markets);
+  renderMarkers(markets);
+}
+
+function renderStats(markets) {
+  const totalBuyers = markets.reduce((s, m) => s + m.buyerCount, 0);
+  document.getElementById('buyerBadge').textContent = allData.totalBuyers;
+  document.getElementById('statBuyers').textContent = totalBuyers;
+  document.getElementById('statMarkets').textContent = markets.length;
+
+  // find top deal type from filtered markets
+  const dealCounts = {};
+  markets.forEach(m => {
+    if (m.dealTypes) {
+      Object.entries(m.dealTypes).forEach(([k, v]) => {
+        dealCounts[k] = (dealCounts[k] || 0) + v;
+      });
+    }
+  });
+  const topDeal = Object.entries(dealCounts).sort((a, b) => b[1] - a[1])[0];
+  document.getElementById('statTopDeal').textContent = topDeal ? topDeal[0].replace('Subject To', 'SubTo').replace('Seller Finance', 'SF') : '--';
+}
+
+function renderMarketList(markets) {
+  const list = document.getElementById('marketList');
+  list.innerHTML = '';
+  if (markets.length === 0) {
+    list.innerHTML = '<div class="error-msg">No markets match your filters.</div>';
+    return;
+  }
+  markets.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'market-card';
+    card.dataset.index = i;
+
+    const pills = m.dealTypes
+      ? Object.entries(m.dealTypes).map(([k, v]) => {
+          const label = k.replace('Subject To', 'SubTo').replace('Seller Finance', 'SF');
+          return '<span class="mc-pill ' + pillClass(k) + '">' + label + ' (' + v + ')</span>';
+        }).join('')
+      : '';
+
+    const priceStr = m.priceRange
+      ? fmtK(m.priceRange.min) + ' - ' + fmtK(m.priceRange.max)
+      : '';
+
+    card.innerHTML =
+      '<div class="mc-top">' +
+        '<span class="mc-name">' + m.label + '</span>' +
+        '<span class="mc-count"><span class="mc-dot ' + dotClass(m.buyerCount) + '"></span>' + m.buyerCount + ' buyers</span>' +
+      '</div>' +
+      '<div class="mc-pills">' + pills + '</div>' +
+      (priceStr ? '<div class="mc-price">Price range: ' + priceStr + '</div>' : '');
+
+    card.addEventListener('click', () => flyToMarket(m, card));
+    list.appendChild(card);
+  });
+}
+
+async function flyToMarket(market, card) {
+  if (activeCard) activeCard.classList.remove('active');
+  card.classList.add('active');
+  activeCard = card;
+
+  const coords = await getCoords(market.city, market.state);
+  if (coords) {
+    map.flyTo(coords, 10, { duration: 1 });
+    // open popup for matching marker
+    markers.forEach(obj => {
+      if (obj.label === market.label) {
+        obj.marker.openPopup();
+      }
+    });
+  }
+}
+
+async function renderMarkers(markets) {
+  // clear existing
+  markers.forEach(obj => map.removeLayer(obj.marker));
+  markers = [];
+
+  for (const m of markets) {
+    const coords = await getCoords(m.city, m.state);
+    if (!coords) continue;
+
+    const color = markerColor(m.buyerCount);
+    const radius = Math.max(8, Math.min(28, 6 + m.buyerCount * 0.7));
+
+    const marker = L.circleMarker(coords, {
+      radius: radius,
+      fillColor: color,
+      color: '#fff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.75
+    }).addTo(map);
+
+    // popup content
+    const dealTags = m.dealTypes
+      ? Object.entries(m.dealTypes).map(([k, v]) =>
+          '<span class="popup-deal-tag">' + k + ': ' + v + '</span>'
+        ).join('')
+      : '';
+
+    const priceStr = m.priceRange
+      ? fmtK(m.priceRange.min) + ' - ' + fmtK(m.priceRange.max)
+      : '';
+
+    const entryStr = m.entryRange
+      ? fmtK(m.entryRange.min) + ' - ' + fmtK(m.entryRange.max)
+      : '';
+
+    let popupHtml =
+      '<div class="popup-title">' + m.label + '</div>' +
+      '<div class="popup-count">' + m.buyerCount + ' Active Buyers</div>';
+
+    if (dealTags) {
+      popupHtml +=
+        '<div class="popup-section">' +
+          '<div class="popup-section-label">Deal Types</div>' +
+          '<div class="popup-deals">' + dealTags + '</div>' +
+        '</div>';
+    }
+
+    if (priceStr) {
+      popupHtml +=
+        '<div class="popup-section">' +
+          '<div class="popup-section-label">Price Range</div>' +
+          '<div class="popup-price">' + priceStr + '</div>' +
+        '</div>';
+    }
+
+    if (entryStr) {
+      popupHtml +=
+        '<div class="popup-section">' +
+          '<div class="popup-section-label">Entry Range</div>' +
+          '<div class="popup-price">' + entryStr + '</div>' +
+        '</div>';
+    }
+
+    popupHtml +=
+      '<a href="/submit-deal" class="popup-cta">Have a deal in ' + m.city + '? Submit it.</a>';
+
+    marker.bindPopup(popupHtml, { maxWidth: 280 });
+    markers.push({ marker, label: m.label });
+  }
+}
+
+/* ── FILTER LISTENERS ────────────────── */
+document.getElementById('filterState').addEventListener('change', renderAll);
+document.getElementById('filterDeal').addEventListener('change', renderAll);
+
+/* ── HAMBURGER ───────────────────────── */
+document.querySelector('.hamburger').addEventListener('click', function() {
+  this.classList.toggle('on');
+  document.getElementById('mobMenu').classList.toggle('on');
+});
+
+/* ── MOBILE TOGGLE ───────────────────── */
+const mobileToggle = document.getElementById('mobileToggle');
+const sidebar = document.getElementById('sidebar');
+let sidebarVisible = true;
+
+mobileToggle.addEventListener('click', () => {
+  sidebarVisible = !sidebarVisible;
+  sidebar.classList.toggle('collapsed', !sidebarVisible);
+  mobileToggle.textContent = sidebarVisible ? 'Show Map' : 'Show Markets';
+});
+
+/* ── INVALIDATE MAP SIZE ON LOAD ─────── */
+setTimeout(() => map.invalidateSize(), 200);
+window.addEventListener('resize', () => map.invalidateSize());
+
+/* ── GO ──────────────────────────────── */
+loadData();
+</script>
+</body>
+</html>

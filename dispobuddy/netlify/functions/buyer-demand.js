@@ -1,0 +1,363 @@
+// Netlify function: buyer-demand
+// Returns anonymized, aggregated buyer demand data for map visualization
+// GET /api/buyer-demand
+//
+// ENV VARS REQUIRED:
+//   GHL_API_KEY       — GoHighLevel API key
+//   GHL_LOCATION_ID   — GoHighLevel location/sub-account ID
+
+const https = require('https');
+
+// ─── HTTP HELPER ─────────────────────────────────────────────
+
+function httpRequest(url, options, body) {
+  return new Promise(function(resolve, reject) {
+    var parsed = new URL(url);
+    var opts = {
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
+      method: options.method || 'GET',
+      headers: options.headers || {}
+    };
+    var req = https.request(opts, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
+        catch(e) { resolve({ status: res.statusCode, body: data }); }
+      });
+    });
+    req.on('error', reject);
+    if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body));
+    req.end();
+  });
+}
+
+// ─── GHL CUSTOM FIELD IDS ────────────────────────────────────
+
+var CF = {
+  TARGET_STATES:    'aewzY7iEvZh12JhMVi7E',
+  TARGET_CITIES:    'DbY7dHIXk8YowpaWrxYj',
+  DEAL_STRUCTURES:  '0L0ycmmsEjy6OPDL0rgq',
+  PROPERTY_TYPE:    'HGC6xWLpSqoAQPZr0uwY',
+  MAX_PRICE:        'BcxuopmSK4wA3Z3NyanD',
+  MAX_ENTRY:        'SZmNHA3BQva2AZg00ZNP',
+  MIN_ARV:          'KKGEfgdaqu98yrZYkmoO',
+  EXIT_STRATEGIES:  '98i8EKc3OWYSqS4Qb1nP',
+  BUYER_TYPE:       '95PgdlIYfXYcMymnjsIv',
+  CONTACT_ROLE:     'agG4HMPB5wzsZXiRxfmR',
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────
+
+function getCF(contact, fieldId) {
+  var cfs = contact.customFields || [];
+  var field = cfs.find(function(f) { return f.id === fieldId; });
+  if (!field) return null;
+  return field.value;
+}
+
+// ─── IN-MEMORY CACHE (10 min TTL) ───────────────────────────
+
+var cache = {
+  data: null,
+  timestamp: 0,
+  TTL: 10 * 60 * 1000 // 10 minutes
+};
+
+function isCacheValid() {
+  return cache.data && (Date.now() - cache.timestamp < cache.TTL);
+}
+
+// ─── FETCH ALL BUYERS FROM GHL ──────────────────────────────
+
+async function fetchAllBuyers(apiKey, locationId) {
+  var allBuyers = [];
+  var hasMore = true;
+  var startAfter = '';
+  var startAfterId = '';
+  var checked = 0;
+
+  while (hasMore) {
+    var searchUrl = 'https://services.leadconnectorhq.com/contacts/?locationId=' + locationId
+      + '&limit=100'
+      + (startAfter ? '&startAfter=' + startAfter + '&startAfterId=' + startAfterId : '');
+
+    var result = await httpRequest(searchUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (result.status !== 200 || !result.body.contacts || !result.body.contacts.length) break;
+
+    var contacts = result.body.contacts;
+    checked += contacts.length;
+
+    contacts.forEach(function(contact) {
+      var contactRole = getCF(contact, CF.CONTACT_ROLE);
+      var isBuyer = false;
+      if (contactRole) {
+        if (Array.isArray(contactRole)) {
+          isBuyer = contactRole.some(function(r) { return r.toLowerCase() === 'buyer'; });
+        } else {
+          isBuyer = String(contactRole).toLowerCase() === 'buyer';
+        }
+      }
+      if (isBuyer) allBuyers.push(contact);
+    });
+
+    if (result.body.meta && result.body.meta.nextPageUrl) {
+      var lastContact = contacts[contacts.length - 1];
+      startAfter = lastContact.startAfter ? lastContact.startAfter[0] : '';
+      startAfterId = lastContact.startAfter ? lastContact.startAfter[1] : lastContact.id;
+      if (!startAfter) hasMore = false;
+    } else { hasMore = false; }
+
+    if (checked >= 2000) hasMore = false;
+  }
+
+  console.log('buyer-demand: Fetched ' + checked + ' contacts, ' + allBuyers.length + ' are buyers');
+  return allBuyers;
+}
+
+// ─── AGGREGATION ─────────────────────────────────────────────
+
+function parseMonetary(val) {
+  if (!val) return 0;
+  var n = parseFloat(String(val).replace(/[^0-9.\-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function incrementMap(map, key) {
+  if (!key) return;
+  var k = key.trim();
+  if (!k) return;
+  map[k] = (map[k] || 0) + 1;
+}
+
+function computeRange(values) {
+  var filtered = values.filter(function(v) { return v > 0; });
+  if (filtered.length === 0) return null;
+  filtered.sort(function(a, b) { return a - b; });
+  var sum = filtered.reduce(function(a, b) { return a + b; }, 0);
+  return {
+    min: filtered[0],
+    max: filtered[filtered.length - 1],
+    avg: Math.round(sum / filtered.length)
+  };
+}
+
+function parseCityState(cityStr) {
+  // Expected format: "Phoenix, AZ" or "Dallas, TX"
+  var parts = cityStr.split(',');
+  if (parts.length < 2) return null;
+  var city = parts[0].trim();
+  var state = parts[parts.length - 1].trim().toUpperCase();
+  if (!city || !state) return null;
+  return { city: city, state: state };
+}
+
+function aggregateBuyerData(buyers) {
+  // Markets keyed by "City, ST"
+  var markets = {};
+  // State-only buyers (no city specified)
+  var stateOnlyBuyers = {};
+  // Global deal type counts
+  var globalDealTypes = {};
+  var totalBuyers = buyers.length;
+
+  buyers.forEach(function(contact) {
+    var targetCities = getCF(contact, CF.TARGET_CITIES);
+    var targetStates = getCF(contact, CF.TARGET_STATES);
+    var dealStructures = getCF(contact, CF.DEAL_STRUCTURES);
+    var propertyTypes = getCF(contact, CF.PROPERTY_TYPE);
+    var exitStrategies = getCF(contact, CF.EXIT_STRATEGIES);
+    var maxPrice = parseMonetary(getCF(contact, CF.MAX_PRICE));
+    var maxEntry = parseMonetary(getCF(contact, CF.MAX_ENTRY));
+
+    // Count global deal types
+    if (dealStructures && Array.isArray(dealStructures)) {
+      dealStructures.forEach(function(ds) { incrementMap(globalDealTypes, ds); });
+    }
+
+    var hasCities = targetCities && Array.isArray(targetCities) && targetCities.length > 0;
+
+    if (hasCities) {
+      // Add this buyer to each of their target city markets
+      targetCities.forEach(function(cityStr) {
+        var parsed = parseCityState(cityStr);
+        if (!parsed) return;
+
+        var label = parsed.city + ', ' + parsed.state;
+        if (!markets[label]) {
+          markets[label] = {
+            city: parsed.city,
+            state: parsed.state,
+            label: label,
+            buyerCount: 0,
+            dealTypes: {},
+            propertyTypes: {},
+            exitStrategies: {},
+            prices: [],
+            entries: []
+          };
+        }
+
+        var m = markets[label];
+        m.buyerCount++;
+
+        if (dealStructures && Array.isArray(dealStructures)) {
+          dealStructures.forEach(function(ds) { incrementMap(m.dealTypes, ds); });
+        }
+        if (propertyTypes && Array.isArray(propertyTypes)) {
+          propertyTypes.forEach(function(pt) { incrementMap(m.propertyTypes, pt); });
+        }
+        if (exitStrategies && Array.isArray(exitStrategies)) {
+          exitStrategies.forEach(function(es) { incrementMap(m.exitStrategies, es); });
+        }
+        if (maxPrice > 0) m.prices.push(maxPrice);
+        if (maxEntry > 0) m.entries.push(maxEntry);
+      });
+    } else if (targetStates && Array.isArray(targetStates) && targetStates.length > 0) {
+      // Buyer has states but no cities -- count in state-only bucket
+      targetStates.forEach(function(st) {
+        var state = st.trim().toUpperCase();
+        if (!state) return;
+        if (!stateOnlyBuyers[state]) {
+          stateOnlyBuyers[state] = 0;
+        }
+        stateOnlyBuyers[state]++;
+      });
+    }
+  });
+
+  // Build markets array, filtering out markets with fewer than 2 buyers (privacy)
+  var MIN_BUYERS_PER_MARKET = 2;
+  var marketsArray = [];
+  Object.keys(markets).forEach(function(label) {
+    var m = markets[label];
+    if (m.buyerCount < MIN_BUYERS_PER_MARKET) return;
+    marketsArray.push({
+      city: m.city,
+      state: m.state,
+      label: m.label,
+      buyerCount: m.buyerCount,
+      dealTypes: m.dealTypes,
+      propertyTypes: m.propertyTypes,
+      exitStrategies: m.exitStrategies,
+      priceRange: computeRange(m.prices),
+      entryRange: computeRange(m.entries)
+    });
+  });
+
+  // Sort markets by buyer count descending
+  marketsArray.sort(function(a, b) { return b.buyerCount - a.buyerCount; });
+
+  // Build states summary: aggregate city-level + state-only buyers
+  var stateBuckets = {};
+  marketsArray.forEach(function(m) {
+    if (!stateBuckets[m.state]) {
+      stateBuckets[m.state] = { state: m.state, buyerCount: 0, cities: [] };
+    }
+    stateBuckets[m.state].buyerCount += m.buyerCount;
+    if (stateBuckets[m.state].cities.indexOf(m.city) === -1) {
+      stateBuckets[m.state].cities.push(m.city);
+    }
+  });
+
+  // Add state-only buyers to state summary
+  Object.keys(stateOnlyBuyers).forEach(function(state) {
+    if (!stateBuckets[state]) {
+      stateBuckets[state] = { state: state, buyerCount: 0, cities: [] };
+    }
+    stateBuckets[state].buyerCount += stateOnlyBuyers[state];
+  });
+
+  var statesSummary = Object.keys(stateBuckets).map(function(st) {
+    return stateBuckets[st];
+  });
+  statesSummary.sort(function(a, b) { return b.buyerCount - a.buyerCount; });
+
+  return {
+    totalBuyers: totalBuyers,
+    lastUpdated: new Date().toISOString(),
+    markets: marketsArray,
+    statesSummary: statesSummary,
+    dealTypesSummary: globalDealTypes,
+    totalMarkets: marketsArray.length
+  };
+}
+
+// ─── MAIN HANDLER ────────────────────────────────────────────
+
+exports.handler = async function(event) {
+  var headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Cache-Control': 'public, max-age=600'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: headers, body: '' };
+  }
+
+  if (event.httpMethod !== 'GET') {
+    return {
+      statusCode: 405,
+      headers: headers,
+      body: JSON.stringify({ error: 'Method not allowed. Use GET.' })
+    };
+  }
+
+  var apiKey = process.env.GHL_API_KEY;
+  var locationId = process.env.GHL_LOCATION_ID;
+
+  if (!apiKey || !locationId) {
+    return {
+      statusCode: 500,
+      headers: headers,
+      body: JSON.stringify({ error: 'Missing required environment variables' })
+    };
+  }
+
+  try {
+    // Return cached data if still valid
+    if (isCacheValid()) {
+      console.log('buyer-demand: Returning cached data (' + Math.round((Date.now() - cache.timestamp) / 1000) + 's old)');
+      return {
+        statusCode: 200,
+        headers: headers,
+        body: JSON.stringify(cache.data, null, 2)
+      };
+    }
+
+    // Fetch fresh data
+    console.log('buyer-demand: Cache miss, fetching fresh data from GHL');
+    var buyers = await fetchAllBuyers(apiKey, locationId);
+    var result = aggregateBuyerData(buyers);
+
+    // Update cache
+    cache.data = result;
+    cache.timestamp = Date.now();
+
+    return {
+      statusCode: 200,
+      headers: headers,
+      body: JSON.stringify(result, null, 2)
+    };
+
+  } catch (err) {
+    console.error('buyer-demand error:', err.message);
+    return {
+      statusCode: 500,
+      headers: headers,
+      body: JSON.stringify({ error: 'Failed to fetch buyer demand data', detail: err.message })
+    };
+  }
+};

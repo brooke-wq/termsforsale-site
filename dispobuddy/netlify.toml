@@ -18,6 +18,11 @@
   to = "/.netlify/functions/partner-onboard"
   status = 200
 
+[[redirects]]
+  from = "/api/buyer-demand"
+  to = "/.netlify/functions/buyer-demand"
+  status = 200
+
 # ── Clean URLs (no .html extensions) ──
 [[redirects]]
   from = "/process"
@@ -52,6 +57,11 @@
 [[redirects]]
   from = "/contact"
   to = "/contact.html"
+  status = 200
+
+[[redirects]]
+  from = "/buyers-map"
+  to = "/buyers-map.html"
   status = 200
 
 # ── 404 fallback ──

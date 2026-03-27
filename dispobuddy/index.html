@@ -20,13 +20,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;
+  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;--navy-card:#043e5c;
   --orange:#F7941D;--orange-dark:#d97c0e;--orange-glow:rgba(247,148,29,.15);
-  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;
-  --green:#22c55e;
-  --white:#fff;--bg:#F4F6F9;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--blue-mid:#d0eef9;
+  --green:#22c55e;--teal:#7296aa;
+  --white:#fff;--bg:#F4F6F9;--bg-section:#EEF2F6;
   --text:#0D1F3C;--text-mid:#4A6070;--text-light:#718096;
   --border:#E2E8F0;
+  --shadow-card:-5.45px 6.81px 19.08px 0px rgba(29,51,64,0.10),-21.8px 24.53px 34.06px 0px rgba(29,51,64,0.09),-50.41px 55.86px 44.96px 0px rgba(29,51,64,0.05);
   --r:12px;--r-sm:8px;
   --font:'Poppins',sans-serif;
 }
@@ -40,7 +41,7 @@ a{text-decoration:none;color:inherit}
 .nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000;transition:box-shadow .3s}
 .nav.scrolled{box-shadow:0 2px 20px rgba(13,31,60,.08)}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
-.nav-logo img{height:34px;width:auto}
+.nav-logo img{height:34px;width:auto;filter:brightness(0.15)}
 .nav-links{display:flex;gap:28px}
 .nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
 .nav-links a:hover{color:var(--navy)}
@@ -70,7 +71,7 @@ a{text-decoration:none;color:inherit}
 .hero::after{content:'';position:absolute;bottom:-200px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(41,171,226,.06) 0%,transparent 70%);pointer-events:none}
 .hero-inner{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 .hero-logo{margin-bottom:40px}
-.hero-logo img{height:64px;width:auto;filter:brightness(0) invert(1)}
+.hero-logo img{height:64px;width:auto;filter:brightness(1.8) contrast(1.1)}
 .hero-content{max-width:680px}
 .hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:900;color:var(--white);line-height:1.08;letter-spacing:-.03em;margin-bottom:24px}
 .hero h1 em{font-style:normal;color:var(--orange)}
@@ -155,7 +156,7 @@ a{text-decoration:none;color:inherit}
 .footer{padding:48px 0 28px;background:var(--navy2)}
 .footer-inner{max-width:1100px;margin:0 auto;padding:0 24px}
 .footer-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:24px;flex-wrap:wrap;gap:32px}
-.footer-brand img{height:28px;width:auto;filter:brightness(0) invert(1);margin-bottom:10px}
+.footer-brand img{height:28px;width:auto;filter:brightness(1.8) contrast(1.1);margin-bottom:10px}
 .footer-brand p{font-size:13px;color:rgba(255,255,255,.35);max-width:260px;line-height:1.6}
 .footer-links{display:flex;gap:40px;flex-wrap:wrap}
 .footer-links a{font-size:13px;color:rgba(255,255,255,.4);transition:color .15s}
