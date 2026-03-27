@@ -426,6 +426,14 @@ function buildContactPayload(d, locationId) {
   cf('dscr_loan_amount',              d.dscr_loan_amount);
   cf('important_details', d.important_details);
 
+  // Property details (if GHL custom fields exist for these)
+  cf('property_type', d.property_type);
+  cf('beds', d.beds);
+  cf('baths', d.baths);
+  cf('sqft', d.sqft);
+  cf('year_built', d.year_built);
+  cf('lot_size', d.lot_size);
+
   const nameParts = (d.jv_partner_name || '').trim().split(' ');
   const first = nameParts[0] || '';
   const last  = nameParts.slice(1).join(' ') || '';
@@ -501,75 +509,96 @@ function buildOpportunityPayload(d, contactId, locationId) {
 async function createNotionDeal(token, dbId, d) {
   const props = {};
 
-  // Helper: set property by type
+  // Helpers — matched to ACTUAL Notion property types from database schema
   function title(name, val)    { if (val) props[name] = { title: [{ text: { content: String(val) } }] }; }
-  function text(name, val)     { if (val) props[name] = { rich_text: [{ text: { content: String(val) } }] }; }
-  function num(name, val)      { const n = parseFloat(val); if (!isNaN(n) && n > 0) props[name] = { number: n }; }
+  function text(name, val)     { if (val) props[name] = { rich_text: [{ text: { content: String(val).substring(0, 2000) } }] }; }
+  function num(name, val)      { const n = parseFloat(val); if (!isNaN(n)) props[name] = { number: n }; }
   function sel(name, val)      { if (val) props[name] = { select: { name: String(val) } }; }
+  function msel(name, val)     { if (val) props[name] = { multi_select: [{ name: String(val) }] }; }
   function stat(name, val)     { if (val) props[name] = { status: { name: String(val) } }; }
   function url(name, val)      { if (val) props[name] = { url: String(val) }; }
   function date(name, val)     { if (val) props[name] = { date: { start: String(val) } }; }
 
-  // Map deal type from form to Notion select values
   const dealTypeMap = {
-    'Cash': 'Cash',
-    'Subto': 'SubTo',
-    'Seller Finance': 'Seller Finance',
-    'Hybrid': 'Hybrid',
-    'Morby/Stack Method': 'Morby Method',
-    'Lease Option': 'Lease Option',
-    'Novation': 'Novation',
+    'Cash': 'Cash', 'Subto': 'SubTo', 'Seller Finance': 'Seller Finance',
+    'Hybrid': 'Hybrid', 'Morby/Stack Method': 'Morby Method',
+    'Lease Option': 'Lease Option', 'Novation': 'Novation',
   };
 
-  const addr = [d.property_address, d.property_city, d.property_state, d.property_zip].filter(Boolean).join(', ');
+  // ── Map form → Notion properties (types verified from DB schema) ──
 
-  // Title — use address as the page title (standard for deal databases)
-  title('Street Address', d.property_address || addr);
+  // Street Address = title
+  title('Street Address', d.property_address || '');
 
-  // Deal Status — "New Submission"
-  // Try status type first, fall back to select
-  try { stat('Deal Status', 'New Submission'); } catch(e) {}
+  // Deal Status = status
+  stat('Deal Status', 'New Submission');
 
-  // Location
+  // Location — all rich_text
   text('City', d.property_city);
   text('State', d.property_state);
   text('ZIP', d.property_zip);
 
-  // Deal info
+  // Deal Type = select
   sel('Deal Type', dealTypeMap[d.deal_type] || d.deal_type);
+
+  // Asking Price = number, Entry Fee = number
   num('Asking Price', d.desired_asking_price);
   num('Entry Fee', d.what_is_the_buyer_entry_fee);
-  num('ARV', d.arv_estimate);
-  sel('Occupancy', d.property_occupancy);
-  text('Access', d.how_can_we_access_the_property);
-  date('COE', d.coe);
-  url('Photos', d.link_to_photos);
+  num('Contracted Price', d.contracted_price);
 
-  // SubTo fields
+  // ARV = rich_text (NOT number)
+  text('ARV', d.arv_estimate ? '$' + parseFloat(d.arv_estimate).toLocaleString('en-US') : '');
+
+  // Occupancy = multi_select (NOT select)
+  msel('Occupancy', d.property_occupancy);
+
+  // Access = rich_text
+  text('Access', d.how_can_we_access_the_property);
+
+  // COE = date
+  date('COE', d.coe);
+
+  // Property details
+  sel('Property Type', d.property_type);
+  text('Beds', d.beds);
+  text('Baths', d.baths);
+  text('Living Area', d.sqft);
+  num('Year Built', d.year_built);
+  text('Lot Size', d.lot_size);
+
+  // Photos = url, Documents = url
+  url('Photos', d.link_to_photos);
+  url('Documents', d.link_to_supporting_documents);
+
+  // SubTo fields — SubTo Loan Balance = number, SubTo Rate (%) = number, PITI = number
   num('SubTo Loan Balance', d.subto_loan_balance);
-  text('SubTo Rate (%)', d.interest_rate);
-  num('PITI', d.monthly_payment);
+  num('SubTo Rate (%)', d.interest_rate ? parseFloat(String(d.interest_rate).replace('%', '')) : '');
+  num('PITI ', d.monthly_payment);  // Note: trailing space in Notion property name
   text('SubTo Loan Maturity', d.loan_maturity);
   text('SubTo Balloon', d.subto_balloon);
 
-  // Seller Finance fields
+  // SF fields — SF Loan Amount = number, SF Payment = number, SF Rate/Term/Balloon = rich_text
   num('SF Loan Amount', d.seller_finance_loan_amount);
   num('SF Payment', d.sf_loan_payment);
   text('SF Rate', d.interest_rate_seller_finance);
   text('SF Term', d.loan_term);
   text('SF Balloon', d.sf_balloon);
 
-  // Details — combine partner info + notes
+  // JV Partner = rich_text
+  text('JV Partner', `${d.jv_partner_name} | ${d.jv_phone_number}${d.jv_partner_email ? ' | ' + d.jv_partner_email : ''}`);
+
+  // Lead Source = rich_text
+  text('Lead Source', d.how_did_you_hear_about_us || 'Dispo Buddy');
+
+  // Details = rich_text — combine all context
   const detailLines = [
-    `JV Partner: ${d.jv_partner_name} | ${d.jv_phone_number}${d.jv_partner_email ? ' | ' + d.jv_partner_email : ''}`,
-    `Contract: ${d.contracted_price ? '$' + parseFloat(d.contracted_price).toLocaleString() : 'N/A'}`,
     `Under Contract: ${d.do_you_have_the_property_under_contract || 'N/A'}`,
     `First Deal: ${d.is_this_your_first_deal_with_dispo_buddy || 'N/A'}`,
-    `Source: ${d.how_did_you_hear_about_us || 'N/A'}`,
+    `Entry Breakdown: Buyer entry ${d.what_is_the_buyer_entry_fee ? '$' + parseFloat(d.what_is_the_buyer_entry_fee).toLocaleString() : 'N/A'} | Contracted entry ${d.contracted_entry_fee ? '$' + parseFloat(d.contracted_entry_fee).toLocaleString() : 'N/A'}`,
+    `Est T&I: ${d.est_taxes__insurance ? '$' + d.est_taxes__insurance + '/mo' : 'N/A'}`,
   ];
   if (d.important_details) detailLines.push(`Notes: ${d.important_details}`);
-  if (d.link_to_supporting_documents) detailLines.push(`Docs: ${d.link_to_supporting_documents}`);
-  text('Details', detailLines.join('\n'));
+  text('Details ', detailLines.join('\n'));  // Note: trailing space in Notion property name
 
   // Create page
   const res = await fetch('https://api.notion.com/v1/pages', {

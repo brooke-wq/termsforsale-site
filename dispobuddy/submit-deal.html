@@ -736,6 +736,47 @@ img{max-width:100%;display:block}
           </div>
         </div>
 
+        <div class="sub-divider" style="margin-top:6px;margin-bottom:14px">Property Details</div>
+        <div class="field-grid cols-3" style="margin-bottom:14px">
+          <div class="field-group">
+            <label class="field-label">Property Type</label>
+            <select class="fi fi-select" id="propertyType">
+              <option value="">Select</option>
+              <option>Single Family</option>
+              <option>Duplex</option>
+              <option>Triplex</option>
+              <option>Quadplex</option>
+              <option>Condo / Townhome</option>
+              <option>Multi-Family (5+)</option>
+              <option>Manufactured / Mobile</option>
+              <option>Land</option>
+              <option>Commercial</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Beds</label>
+            <input class="fi" type="text" id="propBeds" placeholder="3">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Baths</label>
+            <input class="fi" type="text" id="propBaths" placeholder="2">
+          </div>
+        </div>
+        <div class="field-grid cols-3" style="margin-bottom:14px">
+          <div class="field-group">
+            <label class="field-label">Sqft</label>
+            <input class="fi" type="text" id="propSqft" placeholder="1,450">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Year Built</label>
+            <input class="fi" type="text" id="propYearBuilt" placeholder="1985">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Lot Size</label>
+            <input class="fi" type="text" id="propLotSize" placeholder="6,500 sqft">
+          </div>
+        </div>
+
         <div class="sub-divider" style="margin-top:6px;margin-bottom:14px">Documents & Photos</div>
         <div class="field-grid cols-2">
           <div class="field-group">
@@ -1269,7 +1310,10 @@ img{max-width:100%;display:block}
       rv('Address', 'propAddress') + rv('City', 'propCity') +
       rv('State', 'propState') + rv('ZIP', 'propZip') +
       rv('COE', 'coe') + rv('Occupancy', 'propOccupancy') +
-      rv('Access', 'propertyAccess') + rv('Photo Link', 'photoLink');
+      rv('Access', 'propertyAccess') + rv('Type', 'propertyType') +
+      rv('Beds', 'propBeds') + rv('Baths', 'propBaths') +
+      rv('Sqft', 'propSqft') + rv('Year Built', 'propYearBuilt') +
+      rv('Lot Size', 'propLotSize') + rv('Photo Link', 'photoLink');
 
     var dealHtml = '<div class="review-item"><div class="review-label">Deal Type</div><div class="review-value ' + (selectedDealType ? '' : 'empty') + '">' + (selectedDealType || '&mdash;') + '</div></div>';
     dealHtml += rv('Contract Price', 'contractedPrice', '$') + rv('Asking Price', 'desiredAskingPrice', '$');
@@ -1312,6 +1356,12 @@ img{max-width:100%;display:block}
       how_can_we_access_the_property: v('propertyAccess'),
       link_to_photos: v('photoLink'),
       link_to_supporting_documents: v('docsLink'),
+      property_type: v('propertyType'),
+      beds: v('propBeds'),
+      baths: v('propBaths'),
+      sqft: v('propSqft'),
+      year_built: v('propYearBuilt'),
+      lot_size: v('propLotSize'),
       // Deal
       deal_type: selectedDealType,
       contracted_price: v('contractedPrice'),
@@ -1405,7 +1455,8 @@ img{max-width:100%;display:block}
   var SAVEABLE_FIELDS = [
     'jvName','jvPhone','jvEmail','underContract','firstDeal','hearAboutUs',
     'propAddress','propCity','propState','propZip','coe','propOccupancy',
-    'propertyAccess','photoLink','docsLink','dealType',
+    'propertyAccess','propertyType','propBeds','propBaths','propSqft','propYearBuilt','propLotSize',
+    'photoLink','docsLink','dealType',
     'contractedPrice','desiredAskingPrice','arvEstimate','buyerEntryFee',
     'contractedEntryFee','estTaxesInsurance',
     'subtoBalance','subtoRate','subtoPayment','subtoMaturity','subtoBalloon',

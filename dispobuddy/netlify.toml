@@ -28,6 +28,11 @@
   to = "/.netlify/functions/debug-notifications"
   status = 200
 
+[[redirects]]
+  from = "/api/debug-notion"
+  to = "/.netlify/functions/debug-notion"
+  status = 200
+
 # ── Clean URLs (no .html extensions) ──
 [[redirects]]
   from = "/process"
