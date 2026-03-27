@@ -777,7 +777,7 @@ function renderDeal(d,allDeals){
           ${d.baths?`<div class="deal-spec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"/><path d="M3 7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><strong>${d.baths}</strong> baths</div>`:''}
           ${d.sqft?`<div class="deal-spec"><strong>${(()=>{const n=parseInt(String(d.sqft).replace(/[^0-9]/g,''));return isNaN(n)?d.sqft:n.toLocaleString();})()}</strong> sqft</div>`:''}
         </div>
-        <div class="deal-addr">${d.streetAddress}, ${d.city}, ${d.state} ${d.zip||''}</div>
+        <div class="deal-addr">${loggedIn ? d.streetAddress+', '+d.city+', '+d.state+' '+(d.zip||'') : d.city+', '+d.state+' — <a href="#" onclick="openAuth(\'signup\');return false" style="color:var(--blue);font-weight:600">Sign up to unlock address</a>'}</div>
         ${d.piti?`<div class="deal-refi-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Est. PITI payment: <strong>${fc(d.piti)}/mo</strong> (existing loan)</div>`:''}
       </div>
 
