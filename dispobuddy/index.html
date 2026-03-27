@@ -66,19 +66,19 @@ a{text-decoration:none;color:inherit}
 .mob-menu .mob-btns .btn{width:100%;text-align:center}
 
 /* ── HERO ──────────────────────────── */
-.hero{padding:140px 0 100px;background:var(--navy);position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-200px;right:-100px;width:700px;height:700px;background:radial-gradient(circle,rgba(247,148,29,.08) 0%,transparent 70%);pointer-events:none}
-.hero::after{content:'';position:absolute;bottom:-200px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(41,171,226,.06) 0%,transparent 70%);pointer-events:none}
+.hero{padding:140px 0 100px;background:linear-gradient(160deg,var(--white) 0%,#f0f4f8 40%,var(--blue-light) 100%);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;right:-100px;width:700px;height:700px;background:radial-gradient(circle,rgba(247,148,29,.06) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-200px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(41,171,226,.05) 0%,transparent 70%);pointer-events:none}
 .hero-inner{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 .hero-logo{margin-bottom:40px}
-.hero-logo img{height:64px;width:auto;filter:brightness(1.8) contrast(1.1)}
+.hero-logo img{height:64px;width:auto;filter:brightness(0.15)}
 .hero-content{max-width:680px}
-.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:900;color:var(--white);line-height:1.08;letter-spacing:-.03em;margin-bottom:24px}
+.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:900;color:var(--navy);line-height:1.08;letter-spacing:-.03em;margin-bottom:24px}
 .hero h1 em{font-style:normal;color:var(--orange)}
-.hero-p{font-size:clamp(1rem,2vw,1.15rem);color:rgba(255,255,255,.6);max-width:520px;line-height:1.7;margin-bottom:40px}
+.hero-p{font-size:clamp(1rem,2vw,1.15rem);color:var(--text-mid);max-width:520px;line-height:1.7;margin-bottom:40px}
 .hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:48px}
 .hero-pills{display:flex;gap:24px;flex-wrap:wrap}
-.hero-pill{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.45);font-size:13px;font-weight:500}
+.hero-pill{display:flex;align-items:center;gap:8px;color:var(--text-light);font-size:13px;font-weight:500}
 .hero-pill b{color:var(--orange);font-weight:700;font-size:15px}
 
 /* ── MARQUEE ───────────────────────── */
@@ -119,18 +119,29 @@ a{text-decoration:none;color:inherit}
 .type-tag:hover{border-color:var(--orange);background:var(--orange-glow);color:var(--orange)}
 .type-tag svg{width:16px;height:16px;color:var(--orange)}
 
+/* ── BUYERS MAP CALLOUT ────────────── */
+.map-callout{padding:80px 0;background:var(--white)}
+.map-inner{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.map-text h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+.map-text p{color:var(--text-mid);font-size:15px;line-height:1.7;margin-bottom:24px}
+.map-preview{background:var(--bg);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;aspect-ratio:16/10;position:relative;cursor:pointer;transition:all .2s}
+.map-preview:hover{box-shadow:0 8px 32px rgba(13,31,60,.1);transform:translateY(-2px)}
+.map-preview iframe{width:100%;height:100%;border:none;pointer-events:none}
+.map-overlay{position:absolute;inset:0;background:rgba(13,31,60,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.map-preview:hover .map-overlay{opacity:1}
+.map-overlay span{background:var(--orange);color:var(--white);padding:10px 24px;border-radius:var(--r-sm);font-size:14px;font-weight:700}
+
 /* ── SOCIAL PROOF (big quote) ──────── */
-.social{padding:80px 0;background:var(--navy);position:relative;overflow:hidden}
-.social::before{content:'';position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(247,148,29,.04));pointer-events:none}
+.social{padding:80px 0;background:var(--bg-section);position:relative;overflow:hidden}
 .social-inner{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 .social-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:24px}
-.social-quote{font-size:clamp(1.3rem,3vw,1.8rem);font-weight:600;color:var(--white);line-height:1.5;max-width:700px;margin-bottom:20px}
+.social-quote{font-size:clamp(1.3rem,3vw,1.8rem);font-weight:600;color:var(--navy);line-height:1.5;max-width:700px;margin-bottom:20px}
 .social-quote em{font-style:normal;color:var(--orange)}
-.social-attr{color:rgba(255,255,255,.4);font-size:14px}
-.social-attr b{color:rgba(255,255,255,.7)}
-.social-stats{display:flex;gap:48px;margin-top:56px;padding-top:40px;border-top:1px solid rgba(255,255,255,.08)}
+.social-attr{color:var(--text-light);font-size:14px}
+.social-attr b{color:var(--text)}
+.social-stats{display:flex;gap:48px;margin-top:56px;padding-top:40px;border-top:1px solid var(--border)}
 .social-stat b{display:block;font-size:28px;font-weight:900;color:var(--orange);margin-bottom:2px}
-.social-stat span{font-size:12px;color:rgba(255,255,255,.4);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.social-stat span{font-size:12px;color:var(--text-light);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
 
 /* ── WHY (split layout) ────────────── */
 .why{padding:100px 0;max-width:1100px;margin:0 auto;padding-left:24px;padding-right:24px}
@@ -185,6 +196,8 @@ a{text-decoration:none;color:inherit}
   .pitch-grid{grid-template-columns:1fr}
   .process-grid{grid-template-columns:1fr}
   .why-split{grid-template-columns:1fr;gap:32px}
+  .map-inner{grid-template-columns:1fr}
+  .map-preview{aspect-ratio:16/9}
   .social-stats{gap:24px;flex-wrap:wrap}
   body{padding-bottom:64px}
 }
@@ -215,6 +228,7 @@ a{text-decoration:none;color:inherit}
     <div class="nav-links">
       <a href="/process">How It Works</a>
       <a href="/what-we-look-for">What We Look For</a>
+      <a href="/buyers-map">Active Buyers</a>
       <a href="/proof">Proof</a>
       <a href="/faq">FAQ</a>
     </div>
@@ -228,6 +242,7 @@ a{text-decoration:none;color:inherit}
 <div class="mob-menu" id="mobMenu">
   <a href="/process">How It Works</a>
   <a href="/what-we-look-for">What We Look For</a>
+  <a href="/buyers-map">Active Buyers</a>
   <a href="/proof">Proof</a>
   <a href="/faq">FAQ</a>
   <a href="/contact">Contact</a>
@@ -246,7 +261,7 @@ a{text-decoration:none;color:inherit}
       <p class="hero-p reveal">Dispo Buddy is your JV dispo partner. Send us your deal, we package it, market it to real buyers, and split the fee 50/50 at close. No upfront cost. No exclusivity. No nonsense.</p>
       <div class="hero-ctas reveal">
         <a href="/submit-deal" class="btn btn-o btn-lg">Submit a Deal</a>
-        <a href="/join" class="btn btn-w btn-lg">Join the Network</a>
+        <a href="/join" class="btn btn-ghost btn-lg">Join the Network</a>
       </div>
       <div class="hero-pills reveal">
         <div class="hero-pill"><b>50/50</b> split at close</div>
@@ -349,6 +364,21 @@ a{text-decoration:none;color:inherit}
   </div>
 </section>
 
+<!-- BUYERS MAP CALLOUT -->
+<section class="map-callout">
+  <div class="map-inner">
+    <div class="map-text reveal">
+      <h2>See where our buyers are looking <em>right now.</em></h2>
+      <p>Our buyer network is active across multiple states. Check the live map to see real demand by market — then submit a deal in a hot zone.</p>
+      <a href="/buyers-map" class="btn btn-o">View Active Buyers Map</a>
+    </div>
+    <a href="/buyers-map" class="map-preview reveal">
+      <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-124.8,24.5,-66.9,49.4&layer=mapnik" loading="lazy"></iframe>
+      <div class="map-overlay"><span>Explore the Map</span></div>
+    </a>
+  </div>
+</section>
+
 <!-- SOCIAL PROOF -->
 <section class="social">
   <div class="social-inner">
@@ -436,6 +466,7 @@ a{text-decoration:none;color:inherit}
         <a href="/what-we-look-for">What We Look For</a>
         <a href="/submit-deal">Submit a Deal</a>
         <a href="/join">Join Network</a>
+        <a href="/buyers-map">Active Buyers</a>
         <a href="/proof">Proof</a>
         <a href="/faq">FAQ</a>
         <a href="/contact">Contact</a>
