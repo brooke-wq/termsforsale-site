@@ -77,10 +77,10 @@ html{scroll-behavior:smooth}
 body{font-family:var(--font);color:var(--text);overflow-x:hidden;background:var(--white);-webkit-font-smoothing:antialiased}
 
 /* ── NAV ────────────────────────────────── */
-nav{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;padding:0 55px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06);transition:box-shadow .3s}
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;padding:0 32px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06);transition:box-shadow .3s}
 nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .nav-logo img{height:46px;width:auto;display:block}
-.nav-links{display:flex;align-items:center;gap:32px;margin-left:52px}
+.nav-links{display:flex;align-items:center;gap:24px;margin-left:32px}
 .nav-links a{color:var(--text-mid);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
 .nav-links a:hover{color:var(--blue)}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
@@ -377,9 +377,21 @@ footer{background:var(--navy);padding:52px 55px 0}
   .footer-top{grid-template-columns:1fr 1fr;gap:28px}
   .deals-row{grid-template-columns:repeat(2,1fr);gap:14px}
 }
+@media(max-width:1024px){
+  nav{padding:0 20px}
+  .nav-links{gap:18px;margin-left:24px}
+  .nav-links a{font-size:13px}
+  .nav-right{gap:8px}
+  .btn-signup,.btn-login{padding:7px 14px;font-size:12px}
+}
 @media(max-width:768px){
-  nav{padding:0 16px;height:60px}.nav-links{display:none}
-  .hero{margin-top:60px}
+  nav{padding:0 12px;height:56px}
+  .nav-logo img{height:36px !important}
+  .nav-links{display:none}
+  .nav-right{gap:6px}
+  .btn-signup,.btn-login{padding:6px 12px;font-size:11px}
+  #tfs-buybox-container a{padding:6px 10px !important;font-size:11px !important}
+  .hero{margin-top:56px}
   .hero-content{padding:36px 20px 36px;grid-template-columns:1fr !important;gap:20px !important}
   .hero-widget{width:100%;padding:16px}
   .hero-headline h1{font-size:28px;line-height:1.15}
