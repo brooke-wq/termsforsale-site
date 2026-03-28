@@ -199,7 +199,7 @@ function buildPartnerConfirmationEmail(d) {
   return `
     <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1F3C">
       <div style="padding:32px 0;text-align:center;border-bottom:2px solid #29ABE2">
-        <img src="https://dispobuddy.netlify.app/logo-dark.svg" alt="Dispo Buddy" style="height:48px;margin:0 auto">
+        <img src="https://dispobuddy.com/logo-dark.svg" alt="Dispo Buddy" style="height:48px;margin:0 auto">
       </div>
       <div style="padding:32px 24px">
         <h1 style="font-size:24px;font-weight:800;margin-bottom:16px">Deal Received!</h1>
@@ -219,12 +219,12 @@ function buildPartnerConfirmationEmail(d) {
           If we need more info, we'll reach out by text or email. You don't need to do anything else right now.
         </p>
         <p style="color:#4A6070;line-height:1.7">
-          Got another deal? <a href="https://dispobuddy.netlify.app/submit-deal" style="color:#29ABE2;font-weight:600">Submit it here</a> — your info is saved.
+          Got another deal? <a href="https://dispobuddy.com/submit-deal" style="color:#29ABE2;font-weight:600">Submit it here</a> — your info is saved.
         </p>
       </div>
       <div style="padding:24px;border-top:1px solid #E2E8F0;text-align:center;color:#718096;font-size:12px">
         Dispo Buddy — A Deal Pros LLC Brand<br>
-        <a href="https://dispobuddy.netlify.app" style="color:#29ABE2">dispobuddy.com</a> · (480) 842-5332
+        <a href="https://dispobuddy.com" style="color:#29ABE2">dispobuddy.com</a> · (480) 842-5332
       </div>
     </div>`;
 }

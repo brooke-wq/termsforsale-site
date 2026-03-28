@@ -100,7 +100,7 @@ async function handlePartnerOnboarding(body, headers, locationId) {
     notifs.push(
       sendSMS(contactId, headers,
         `Hey ${first}! You're in the Dispo Buddy partner network. ` +
-        `When you have a deal ready, submit it here: dispobuddy.netlify.app/submit-deal\n\n` +
+        `When you have a deal ready, submit it here: dispobuddy.com/submit-deal\n\n` +
         `We'll keep you posted on what our buyers are looking for. — Dispo Buddy\n\nReply STOP to opt out.`
       ).catch(err => console.warn('Partner welcome SMS failed:', err.message))
     );
@@ -145,7 +145,7 @@ async function handlePartnerOnboarding(body, headers, locationId) {
       notifs.push(
         sendSMS(contactId, headers,
           `Sounds like you have a deal ready to go, ${first}! ` +
-          `Submit it now and we'll review within 24-48 hours: dispobuddy.netlify.app/submit-deal`
+          `Submit it now and we'll review within 24-48 hours: dispobuddy.com/submit-deal`
         ).catch(err => console.warn('Deal-ready nudge failed:', err.message))
       );
     }
@@ -216,15 +216,15 @@ async function handleContactForm(body, headers, locationId) {
         html: `
           <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:500px;color:#0D1F3C">
             <div style="padding:24px 0;border-bottom:2px solid #29ABE2;margin-bottom:24px">
-              <img src="https://dispobuddy.netlify.app/logo-dark.svg" alt="Dispo Buddy" style="height:40px">
+              <img src="https://dispobuddy.com/logo-dark.svg" alt="Dispo Buddy" style="height:40px">
             </div>
             <p>Hey ${first},</p>
             <p style="color:#4A6070;line-height:1.7">Thanks for reaching out. We got your message and will get back to you within 24 hours.</p>
             <p style="color:#4A6070;line-height:1.7">In the meantime:</p>
             <ul style="color:#4A6070;line-height:2;padding-left:20px">
-              <li><a href="https://dispobuddy.netlify.app/submit-deal" style="color:#29ABE2">Submit a deal</a></li>
-              <li><a href="https://dispobuddy.netlify.app/faq" style="color:#29ABE2">Check our FAQ</a></li>
-              <li><a href="https://dispobuddy.netlify.app/process" style="color:#29ABE2">See how it works</a></li>
+              <li><a href="https://dispobuddy.com/submit-deal" style="color:#29ABE2">Submit a deal</a></li>
+              <li><a href="https://dispobuddy.com/faq" style="color:#29ABE2">Check our FAQ</a></li>
+              <li><a href="https://dispobuddy.com/process" style="color:#29ABE2">See how it works</a></li>
             </ul>
             <p style="color:#4A6070">— The Dispo Buddy Team</p>
             <div style="margin-top:32px;padding-top:16px;border-top:1px solid #E2E8F0;color:#718096;font-size:12px">
@@ -295,7 +295,7 @@ function buildOnboardingWelcomeEmail(d) {
   return `
     <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1F3C">
       <div style="padding:32px 0;text-align:center;border-bottom:2px solid #29ABE2">
-        <img src="https://dispobuddy.netlify.app/logo-dark.svg" alt="Dispo Buddy" style="height:48px;margin:0 auto">
+        <img src="https://dispobuddy.com/logo-dark.svg" alt="Dispo Buddy" style="height:48px;margin:0 auto">
       </div>
       <div style="padding:32px 24px">
         <h1 style="font-size:24px;font-weight:800;margin-bottom:16px">Welcome to the Network, ${first}!</h1>
@@ -313,20 +313,20 @@ function buildOnboardingWelcomeEmail(d) {
           <div style="background:#FEF3C7;border-left:4px solid #F7941D;border-radius:0 8px 8px 0;padding:16px;margin-bottom:24px">
             <strong>You mentioned you have a deal ready.</strong><br>
             <span style="color:#4A6070">Submit it now and we'll review within 24-48 hours:</span><br>
-            <a href="https://dispobuddy.netlify.app/submit-deal" style="color:#F7941D;font-weight:700">Submit Your Deal →</a>
+            <a href="https://dispobuddy.com/submit-deal" style="color:#F7941D;font-weight:700">Submit Your Deal →</a>
           </div>` : ''}
         <p style="color:#4A6070;line-height:1.7;margin-bottom:24px">
           When you're ready to submit a deal, head here:<br>
-          <a href="https://dispobuddy.netlify.app/submit-deal" style="color:#29ABE2;font-weight:600">dispobuddy.com/submit-deal</a>
+          <a href="https://dispobuddy.com/submit-deal" style="color:#29ABE2;font-weight:600">dispobuddy.com/submit-deal</a>
         </p>
         <p style="color:#4A6070;line-height:1.7">
           Want to see where our buyers are active?<br>
-          <a href="https://dispobuddy.netlify.app/buyers-map" style="color:#29ABE2;font-weight:600">View the Active Buyers Map</a>
+          <a href="https://dispobuddy.com/buyers-map" style="color:#29ABE2;font-weight:600">View the Active Buyers Map</a>
         </p>
       </div>
       <div style="padding:24px;border-top:1px solid #E2E8F0;text-align:center;color:#718096;font-size:12px">
         Dispo Buddy — A Deal Pros LLC Brand<br>
-        <a href="https://dispobuddy.netlify.app" style="color:#29ABE2">dispobuddy.com</a> · (480) 842-5332
+        <a href="https://dispobuddy.com" style="color:#29ABE2">dispobuddy.com</a> · (480) 842-5332
       </div>
     </div>`;
 }
