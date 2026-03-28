@@ -32,10 +32,7 @@
   to = "/.netlify/functions/notify-buyers"
   status = 200
 
-[[redirects]]
-  from = "/api/notify-test"
-  to = "/.netlify/functions/notify-buyers"
-  status = 200
+# /api/notify-test removed — was publicly accessible test endpoint
 
 [[redirects]]
   from = "/api/create-post"
@@ -58,12 +55,20 @@
   status = 301
 
 [[redirects]]
+  from = "/webhook-test.html"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
   from = "/*"
   to = "/404.html"
   status = 404
 
 [[headers]]
-  for = "/admin/*"
+  for = "/*"
   [headers.values]
     X-Frame-Options = "SAMEORIGIN"
     X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
