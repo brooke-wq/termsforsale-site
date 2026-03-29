@@ -23,6 +23,11 @@
   to = "/.netlify/functions/buyer-demand"
   status = 200
 
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/.netlify/functions/sitemap"
+  status = 200
+
 # ── Clean URLs (no .html extensions) ──
 [[redirects]]
   from = "/process"
