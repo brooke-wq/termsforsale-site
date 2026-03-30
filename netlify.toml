@@ -43,6 +43,21 @@
   status = 200
 
 [[redirects]]
+  from = "/api/ceo-briefing"
+  to = "/.netlify/functions/ceo-briefing"
+  status = 200
+
+[[redirects]]
+  from = "/api/deal-package"
+  to = "/.netlify/functions/deal-package"
+  status = 200
+
+[[redirects]]
+  from = "/api/weekly-synthesis"
+  to = "/.netlify/functions/weekly-synthesis"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
