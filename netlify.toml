@@ -32,11 +32,14 @@
   to = "/.netlify/functions/notify-buyers"
   status = 200
 
-# /api/notify-test removed — was publicly accessible test endpoint
-
 [[redirects]]
   from = "/api/create-post"
   to = "/.netlify/functions/create-post"
+  status = 200
+
+[[redirects]]
+  from = "/api/underwriting"
+  to = "/.netlify/functions/underwriting"
   status = 200
 
 [[redirects]]
@@ -72,8 +75,3 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-
-[[redirects]]
-from = "/api/underwriting"
-to = "/.netlify/functions/underwriting"
-status = 200
