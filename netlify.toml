@@ -83,6 +83,41 @@
   status = 200
 
 [[redirects]]
+  from = "/api/vip-buyer-submit"
+  to = "/.netlify/functions/vip-buyer-submit"
+  status = 200
+
+[[redirects]]
+  from = "/api/dispo-buddy-submit"
+  to = "/.netlify/functions/dispo-buddy-submit"
+  status = 200
+
+[[redirects]]
+  from = "/api/acquisition-assist"
+  to = "/.netlify/functions/acquisition-assist"
+  status = 200
+
+[[redirects]]
+  from = "/api/notify-test"
+  to = "/.netlify/functions/notify-buyers"
+  status = 200
+
+[[redirects]]
+  from = "/api/alert-test-one"
+  to = "/.netlify/functions/alert-test-one"
+  status = 200
+
+[[redirects]]
+  from = "/api/auth-login"
+  to = "/.netlify/functions/auth-login"
+  status = 200
+
+[[redirects]]
+  from = "/api/auth-signup"
+  to = "/.netlify/functions/auth-signup"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
