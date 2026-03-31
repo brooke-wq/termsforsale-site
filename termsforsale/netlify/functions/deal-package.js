@@ -112,12 +112,13 @@ Output valid JSON with exactly these keys:
 SMS rules: Each version must be under 160 characters, include deal type + location + key number + deal URL (shortened to just the path like /deal/ID if needed to fit). Three distinct angles: one price-focused, one cash-flow-focused, one structure-focused.`;
 
     console.log('deal-package: calling Claude for ' + address + ', ' + city + ', ' + state);
-    var result = await complete(anthropicKey, {
+    var claudeRes = await complete(anthropicKey, {
       system: PACKAGE_SYSTEM,
       user: userPrompt,
       maxTokens: 1200,
       json: true
     });
+    var result = claudeRes.text;
 
     // Validate SMS lengths
     if (Array.isArray(result.sms)) {

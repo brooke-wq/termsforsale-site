@@ -58,6 +58,31 @@
   status = 200
 
 [[redirects]]
+  from = "/api/lead-intake"
+  to = "/.netlify/functions/lead-intake"
+  status = 200
+
+[[redirects]]
+  from = "/api/seller-call-prep"
+  to = "/.netlify/functions/seller-call-prep"
+  status = 200
+
+[[redirects]]
+  from = "/api/buyer-relations"
+  to = "/.netlify/functions/buyer-relations"
+  status = 200
+
+[[redirects]]
+  from = "/api/dispo-buddy-triage"
+  to = "/.netlify/functions/dispo-buddy-triage"
+  status = 200
+
+[[redirects]]
+  from = "/api/equity-exit-intake"
+  to = "/.netlify/functions/equity-exit-intake"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200

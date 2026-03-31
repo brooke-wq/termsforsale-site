@@ -198,11 +198,12 @@ Format the report as:
 [Top 2-3 actions Brooke should take]`;
 
     console.log('weekly-synthesis: calling Claude...');
-    var report = await complete(anthropicKey, {
+    var claudeRes = await complete(anthropicKey, {
       system: systemPrompt,
       user: userPrompt,
       maxTokens: 700
     });
+    var report = claudeRes.text;
 
     console.log('weekly-synthesis: report generated (' + report.length + ' chars)');
 

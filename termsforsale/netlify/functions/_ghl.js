@@ -29,8 +29,21 @@ async function ghlRequest(apiKey, method, path, body) {
   return { status: res.status, body: parsed };
 }
 
+// Flatten a contact's customFields array into { key: value } object
+function cfMap(contact) {
+  var fields = contact.customFields || contact.customField || [];
+  var map = {};
+  if (Array.isArray(fields)) {
+    fields.forEach(function(f) {
+      if (f.id)  map[f.id] = f.value;
+      if (f.key) map[f.key] = f.field_value || f.value;
+    });
+  }
+  return map;
+}
+
 // Known custom field IDs (Terms For Sale location)
-const cfMap = {
+const CF_IDS = {
   // Buy box fields
   TARGET_STATES:       'aewzY7iEvZh12JhMVi7E',
   TARGET_CITIES:       'DbY7dHIXk8YowpaWrxYj',
@@ -146,6 +159,7 @@ async function upsertContact(apiKey, locationId, data) {
 
 module.exports = {
   cfMap,
+  CF_IDS,
   findByTag,
   searchContacts,
   getContact,

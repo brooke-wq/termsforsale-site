@@ -148,11 +148,12 @@ exports.handler = async function(event) {
       '📥 FUNNEL: [X active | X closed | X total in pipeline]';
 
     console.log('ceo-briefing: calling Claude...');
-    var briefing = await complete(anthropicKey, {
+    var claudeRes = await complete(anthropicKey, {
       system: systemPrompt,
       user: userPrompt,
       maxTokens: 600
     });
+    var briefing = claudeRes.text;
 
     console.log('ceo-briefing: briefing generated (' + briefing.length + ' chars)');
 
