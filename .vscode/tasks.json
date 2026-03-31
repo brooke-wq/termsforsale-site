@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Deploy to Netlify",
+      "type": "shell",
+      "command": "git add -A && git commit -m '${input:commitMessage}' && git push origin main",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Test Function Locally",
+      "type": "shell",
+      "command": "curl -s -X POST http://localhost:8888/.netlify/functions/${input:functionName} -H 'Content-Type: application/json' -d '{}' | python3 -m json.tool",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check Netlify Status",
+      "type": "shell",
+      "command": "open https://app.netlify.com/sites/termsforsale/deploys",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "commitMessage",
+      "type": "promptString",
+      "description": "Commit message",
+      "default": "Update site"
+    },
+    {
+      "id": "functionName",
+      "type": "promptString",
+      "description": "Function name to test (e.g. deals, underwriting)",
+      "default": "deals"
+    }
+  ]
+}

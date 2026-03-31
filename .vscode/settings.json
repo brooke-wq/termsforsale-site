@@ -1,0 +1,14 @@
+{
+  "files.autoSave": "onFocusChange",
+  "editor.formatOnSave": true,
+  "explorer.sortOrder": "type",
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.git": true
+  },
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "editor.fontSize": 14,
+  "editor.minimap.enabled": false,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.wordWrap": "on"
+}

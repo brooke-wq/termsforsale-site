@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "formulahendry.auto-close-tag",
+    "formulahendry.auto-rename-tag",
+    "ritwickdey.liveserver",
+    "ms-vscode.vscode-json",
+    "github.vscode-pull-request-github",
+    "naumovs.color-highlight"
+  ]
+}
