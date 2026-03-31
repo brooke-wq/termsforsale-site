@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIP Buyer List — Terms For Sale</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta name="description" content="Get first access to off-market real estate deals in AZ, TX, FL and more. Join the VIP buyer list from Deal Pros LLC.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;
+  --blue:#29ABE2;
+  --blue-dark:#1a8bbf;
+  --orange:#F7941D;
+  --orange-dark:#d97c0e;
+  --white:#fff;
+  --bg:#F4F6F9;
+  --text:#0D1F3C;
+  --text-mid:#4A6070;
+  --text-light:#718096;
+  --border:#E2E8F0;
+  --font:'Poppins',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+
+/* ── HEADER ── */
+.top-bar{width:100%;background:var(--navy);padding:14px 20px;text-align:center}
+.top-bar img{height:36px;width:auto}
+.top-bar span{color:var(--white);font-size:14px;font-weight:600;letter-spacing:.5px}
+
+/* ── HERO ── */
+.hero{width:100%;max-width:520px;padding:32px 20px 0;text-align:center}
+.hero h1{font-size:26px;font-weight:800;line-height:1.25;color:var(--navy);margin-bottom:12px}
+.hero h1 span{color:var(--blue)}
+.hero p{font-size:15px;color:var(--text-mid);line-height:1.5;margin-bottom:24px}
+
+/* ── BULLETS ── */
+.bullets{display:flex;flex-direction:column;gap:10px;text-align:left;max-width:420px;margin:0 auto 28px}
+.bullet{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-mid);line-height:1.45}
+.bullet svg{flex-shrink:0;margin-top:2px}
+
+/* ── FORM ── */
+.form-card{background:var(--white);border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:28px 24px 32px;width:100%;max-width:520px;margin:0 20px 40px}
+.form-card h2{font-size:18px;font-weight:700;margin-bottom:4px;text-align:center}
+.form-card .sub{font-size:13px;color:var(--text-light);text-align:center;margin-bottom:20px}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--text)}
+.field label .opt{font-weight:400;color:var(--text-light);font-size:12px}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:14px;color:var(--text);background:var(--white);transition:border .15s;outline:none;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}
+.field textarea{resize:vertical;min-height:60px}
+
+/* Multi-select chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;padding:8px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.chip.active{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.chip input{display:none}
+
+/* SMS consent */
+.consent{display:flex;align-items:flex-start;gap:10px;margin:18px 0 20px}
+.consent input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--blue);flex-shrink:0}
+.consent label{font-size:12px;color:var(--text-light);line-height:1.4;cursor:pointer}
+
+/* Submit */
+.btn-submit{width:100%;padding:14px;border:none;border-radius:12px;background:var(--orange);color:var(--white);font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer;transition:background .15s;letter-spacing:.3px}
+.btn-submit:hover{background:var(--orange-dark)}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed}
+
+/* Error */
+.error-msg{color:#e53e3e;font-size:12px;margin-top:4px;display:none}
+.field.error input,.field.error select{border-color:#e53e3e}
+.field.error .error-msg{display:block}
+
+/* Spinner */
+.btn-submit .spinner{display:none;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto}
+.btn-submit.loading .spinner{display:block}
+.btn-submit.loading .btn-text{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TRUST ── */
+.trust{text-align:center;padding:0 20px 40px;font-size:12px;color:var(--text-light);max-width:420px}
+.trust a{color:var(--blue);text-decoration:none}
+
+/* ── RESPONSIVE ── */
+@media(min-width:600px){
+  .hero h1{font-size:32px}
+  .form-card{padding:36px 32px 40px}
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <span>TERMS FOR SALE</span>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>Get First Shot at Our Best <span>Off-Market Deals</span> in AZ, TX, FL &amp; More</h1>
+  <p>Tell us what you buy and we'll text/email you only the deals that match.</p>
+  <div class="bullets">
+    <div class="bullet">
+      <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#29ABE2" opacity=".12"/><path d="M6 10.5l2.5 2.5L14 8" stroke="#29ABE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Pre-vetted contracts from local wholesalers &amp; operators
+    </div>
+    <div class="bullet">
+      <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#29ABE2" opacity=".12"/><path d="M6 10.5l2.5 2.5L14 8" stroke="#29ABE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Creative &amp; cash deals you won't see on the MLS
+    </div>
+    <div class="bullet">
+      <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#29ABE2" opacity=".12"/><path d="M6 10.5l2.5 2.5L14 8" stroke="#29ABE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      No spam, no fees &mdash; you only pay if you close a deal
+    </div>
+  </div>
+</div>
+
+<!-- Form -->
+<div class="form-card">
+  <h2>Join the VIP Buyer List</h2>
+  <p class="sub">Takes 60 seconds. We send deals, not spam.</p>
+
+  <form id="vipForm" novalidate>
+    <div class="field" data-req>
+      <label>First Name</label>
+      <input type="text" name="firstName" autocomplete="given-name" placeholder="First name">
+      <div class="error-msg">Required</div>
+    </div>
+
+    <div class="field" data-req>
+      <label>Email</label>
+      <input type="email" name="email" autocomplete="email" placeholder="you@email.com">
+      <div class="error-msg">Valid email required</div>
+    </div>
+
+    <div class="field" data-req>
+      <label>Mobile Number</label>
+      <input type="tel" name="phone" autocomplete="tel" placeholder="(480) 555-1234">
+      <div class="error-msg">Required</div>
+    </div>
+
+    <div class="field" data-req>
+      <label>What do you buy?</label>
+      <div class="chips" id="buyType">
+        <label class="chip"><input type="checkbox" name="buyType" value="Fix & Flip">Fix &amp; Flip</label>
+        <label class="chip"><input type="checkbox" name="buyType" value="Rentals">Rentals</label>
+        <label class="chip"><input type="checkbox" name="buyType" value="Creative Finance">Creative Finance</label>
+        <label class="chip"><input type="checkbox" name="buyType" value="Wholetail">Wholetail</label>
+      </div>
+      <div class="error-msg">Select at least one</div>
+    </div>
+
+    <div class="field" data-req>
+      <label>Typical Price Range</label>
+      <select name="priceRange">
+        <option value="" disabled selected>Select a range</option>
+        <option value="Under $100K">Under $100K</option>
+        <option value="$100K - $200K">$100K &ndash; $200K</option>
+        <option value="$200K - $350K">$200K &ndash; $350K</option>
+        <option value="$350K - $500K">$350K &ndash; $500K</option>
+        <option value="$500K+">$500K+</option>
+      </select>
+      <div class="error-msg">Required</div>
+    </div>
+
+    <div class="field">
+      <label>City / Metro <span class="opt">(optional)</span></label>
+      <input type="text" name="market" placeholder="e.g. Phoenix, San Antonio, Atlanta">
+    </div>
+
+    <div class="field">
+      <label>Proof of Funds or How You Fund Deals <span class="opt">(optional)</span></label>
+      <textarea name="funding" placeholder="Link to POF letter, or describe (cash, DSCR, hard money, etc.)"></textarea>
+    </div>
+
+    <div class="consent">
+      <input type="checkbox" id="smsConsent" name="smsConsent" required>
+      <label for="smsConsent">I agree to receive SMS deal alerts from Terms For Sale. Msg &amp; data rates may apply. Reply STOP to opt out anytime.</label>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">
+      <span class="btn-text">Join VIP Buyer List</span>
+      <div class="spinner"></div>
+    </button>
+  </form>
+</div>
+
+<div class="trust">
+  Deal Pros LLC &bull; Mesa, AZ<br>
+  <a href="/privacy.html">Privacy</a> &bull; <a href="/terms.html">Terms</a>
+</div>
+
+<script>
+// Chip toggle
+document.querySelectorAll('.chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    var cb = chip.querySelector('input');
+    cb.checked = !cb.checked;
+    chip.classList.toggle('active', cb.checked);
+  });
+});
+
+// Validate
+function validate(form) {
+  var ok = true;
+  // Text / email / tel / select
+  form.querySelectorAll('.field[data-req]').forEach(function(f) {
+    var inp = f.querySelector('input[type=text],input[type=email],input[type=tel],select');
+    if (inp) {
+      var valid = inp.value.trim() !== '';
+      if (inp.type === 'email') valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inp.value);
+      f.classList.toggle('error', !valid);
+      if (!valid) ok = false;
+    }
+    // Chips
+    var chips = f.querySelectorAll('.chip input');
+    if (chips.length) {
+      var any = Array.from(chips).some(function(c){ return c.checked; });
+      f.classList.toggle('error', !any);
+      if (!any) ok = false;
+    }
+  });
+  // SMS consent
+  if (!form.smsConsent.checked) {
+    ok = false;
+    // Highlight consent
+  }
+  return ok;
+}
+
+// Submit
+document.getElementById('vipForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var form = this;
+  if (!validate(form)) return;
+
+  var btn = document.getElementById('submitBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  var buyTypes = Array.from(form.querySelectorAll('input[name=buyType]:checked')).map(function(c){ return c.value; });
+
+  var payload = {
+    firstName: form.firstName.value.trim(),
+    email: form.email.value.trim(),
+    phone: form.phone.value.trim(),
+    buyType: buyTypes,
+    priceRange: form.priceRange.value,
+    market: form.market.value.trim(),
+    funding: form.funding.value.trim(),
+    smsConsent: true,
+    source: 'Cowork QR Buyer'
+  };
+
+  fetch('/api/vip-buyer-submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    window.location.href = '/vip-thanks.html?name=' + encodeURIComponent(payload.firstName);
+  })
+  .catch(function(err) {
+    console.error(err);
+    // Still redirect — GHL workflow will catch up
+    window.location.href = '/vip-thanks.html?name=' + encodeURIComponent(payload.firstName);
+  });
+});
+</script>
+</body>
+</html>

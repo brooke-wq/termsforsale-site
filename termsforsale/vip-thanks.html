@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're In — Terms For Sale VIP</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C;
+  --blue:#29ABE2;
+  --blue-dark:#1a8bbf;
+  --orange:#F7941D;
+  --orange-dark:#d97c0e;
+  --green:#10B981;
+  --white:#fff;
+  --bg:#F4F6F9;
+  --text:#0D1F3C;
+  --text-mid:#4A6070;
+  --text-light:#718096;
+  --border:#E2E8F0;
+  --font:'Poppins',sans-serif;
+}
+body{font-family:var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+
+.card{background:var(--white);border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:40px 28px 36px;max-width:480px;width:100%;text-align:center}
+
+.check-circle{width:64px;height:64px;border-radius:50%;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.check-circle svg{width:32px;height:32px}
+
+.card h1{font-size:24px;font-weight:800;margin-bottom:6px}
+.card h1 span{color:var(--blue)}
+.card .subtitle{font-size:15px;color:var(--text-mid);margin-bottom:28px}
+
+.steps{text-align:left;margin-bottom:28px}
+.step{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--blue);color:var(--white);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-text{font-size:14px;line-height:1.5;color:var(--text-mid)}
+.step-text strong{color:var(--text)}
+
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+.cta-section p{font-size:14px;color:var(--text-mid);margin-bottom:14px}
+.btn-book{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:12px;background:var(--orange);color:var(--white);font-family:var(--font);font-size:15px;font-weight:700;text-decoration:none;transition:background .15s;letter-spacing:.3px}
+.btn-book:hover{background:var(--orange-dark)}
+.btn-book svg{width:18px;height:18px}
+
+.footer{margin-top:32px;font-size:12px;color:var(--text-light)}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="check-circle">
+    <svg fill="none" viewBox="0 0 32 32"><path d="M8 17l5 5L24 11" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+
+  <h1>You're in, <span id="userName">there</span>.</h1>
+  <p class="subtitle">Here's what happens next:</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Within <strong>5-10 minutes</strong> you'll get a text with 1-2 current deals that fit your criteria.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">When a new deal matches your buy box, we'll send it to you <strong>before public blasts</strong>.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Want us <strong>actively hunting</strong> for you? Book a quick buyer intake call below.</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="cta-section">
+    <p>Lock in your buy box with a 10-minute call so we know exactly what to send you.</p>
+    <a href="https://api.leadconnectorhq.com/widget/booking/buyer-intake-call" class="btn-book" target="_blank" rel="noopener">
+      <svg fill="none" viewBox="0 0 18 18"><rect x="1" y="3" width="16" height="14" rx="2" stroke="#fff" stroke-width="1.5"/><path d="M1 7h16M5 1v4M13 1v4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Book a 10-Minute Buyer Intake Call
+    </a>
+  </div>
+</div>
+
+<div class="footer">Terms For Sale &bull; Deal Pros LLC &bull; Mesa, AZ</div>
+
+<script>
+var params = new URLSearchParams(window.location.search);
+var name = params.get('name');
+if (name) document.getElementById('userName').textContent = name;
+</script>
+</body>
+</html>

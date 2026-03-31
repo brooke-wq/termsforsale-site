@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cowork QR Sign — Print 8.5x11</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+@page{size:letter;margin:0}
+
+body{
+  font-family:'Poppins',sans-serif;
+  width:8.5in;height:11in;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:.6in .75in;
+  background:#fff;color:#0D1F3C;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+
+/* Top accent bar */
+.accent-bar{
+  width:100%;height:6px;
+  background:linear-gradient(90deg,#29ABE2 0%,#0D1F3C 100%);
+  border-radius:3px;margin-bottom:28px;
+}
+
+/* Logo area */
+.logo{font-size:14px;font-weight:700;letter-spacing:2px;color:#29ABE2;text-transform:uppercase;margin-bottom:32px}
+
+/* Headline */
+h1{
+  font-size:38px;font-weight:900;line-height:1.15;
+  text-align:center;margin-bottom:14px;
+  max-width:6.5in;
+}
+h1 span{color:#29ABE2}
+
+/* Subhead */
+.subhead{
+  font-size:17px;font-weight:500;color:#4A6070;
+  text-align:center;line-height:1.45;margin-bottom:32px;
+  max-width:5.5in;
+}
+
+/* Bullets */
+.bullets{
+  display:flex;flex-direction:column;gap:12px;
+  margin-bottom:36px;width:100%;max-width:5.5in;
+}
+.bullet{
+  display:flex;align-items:center;gap:12px;
+  font-size:15px;font-weight:500;color:#0D1F3C;
+}
+.bullet-icon{
+  width:28px;height:28px;border-radius:50%;
+  background:#29ABE2;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;flex-shrink:0;
+}
+
+/* QR placeholder */
+.qr-area{
+  width:220px;height:220px;
+  border:3px solid #0D1F3C;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:18px;
+  background:#F4F6F9;
+}
+.qr-area span{font-size:13px;color:#718096;text-align:center;padding:12px}
+
+/* CTA under QR */
+.cta{
+  font-size:15px;font-weight:700;color:#0D1F3C;
+  text-align:center;margin-bottom:8px;
+}
+.cta-sub{
+  font-size:12px;color:#718096;text-align:center;margin-bottom:28px;
+}
+
+/* Footer */
+.footer{
+  font-size:11px;color:#718096;text-align:center;
+  border-top:1px solid #E2E8F0;padding-top:16px;width:100%;
+}
+.footer strong{color:#0D1F3C}
+
+/* Print-specific */
+@media print{
+  body{padding:.5in .65in}
+  .no-print{display:none!important}
+}
+
+/* Screen helper */
+.print-btn{
+  position:fixed;bottom:20px;right:20px;
+  padding:12px 24px;border-radius:10px;
+  background:#F7941D;color:#fff;border:none;
+  font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.15);
+  z-index:100;
+}
+.print-btn:hover{background:#d97c0e}
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">Print Sign</button>
+
+<div class="accent-bar"></div>
+<div class="logo">TERMS FOR SALE</div>
+
+<h1>Want Off-Market Deals <span>Before They Hit Facebook?</span></h1>
+
+<p class="subhead">Scan to join the VIP buyer list we send our best contracts to first.</p>
+
+<div class="bullets">
+  <div class="bullet">
+    <div class="bullet-icon">&#10003;</div>
+    Off-market &amp; creative finance opportunities
+  </div>
+  <div class="bullet">
+    <div class="bullet-icon">&#10003;</div>
+    Priority alerts before public blasts
+  </div>
+  <div class="bullet">
+    <div class="bullet-icon">&#10003;</div>
+    Only serious, ready buyers accepted
+  </div>
+</div>
+
+<div class="qr-area">
+  <img src="/qr-vip-buyers.png" alt="Scan to join VIP buyer list" style="width:200px;height:200px;border-radius:8px">
+</div>
+
+<p class="cta">Scan &bull; Tell Us Your Buy Box &bull; Get This Week's Top Deals</p>
+<p class="cta-sub">Takes 60 seconds on your phone</p>
+
+<div class="footer">
+  <strong>Deal Pros LLC</strong> &bull; Mesa, AZ &bull; deals.termsforsale.com
+</div>
+
+</body>
+</html>
