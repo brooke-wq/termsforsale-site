@@ -114,7 +114,7 @@ exports.handler = async function(event) {
       }).join('\n\n') + '\n\n' +
       'CLOSING QUESTION: ' + (result.closing_question || '') + '\n\n' +
       'KEY RISK: ' + (result.key_risk || 'None identified') + '\n\n' +
-      '--- Acquisitions Call Prep / Paperclip ---';
+      '--- Acquisitions Call Prep / Deal Pros LLC ---';
 
     await postNote(ghlKey, contactId, noteBody);
 

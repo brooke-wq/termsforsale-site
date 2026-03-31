@@ -25,7 +25,7 @@ exports.config = {
 
 // ─── SYSTEM PROMPT (same as underwriting.js) ─────────────────
 
-const SYSTEM_PROMPT = `You are the Underwriting Analyst for Deal Pros LLC, part of the Paperclip AI operating system.
+const SYSTEM_PROMPT = `You are the Underwriting Analyst for Deal Pros LLC, part of the Deal Pros LLC AI operating system.
 
 Your job is to produce a complete, accurate underwriting report for every deal submitted. Follow the protocol exactly.
 
@@ -73,7 +73,7 @@ OUTPUT FORMAT — use this exact structure every time:
 
 **Property**: [Full address]
 **Date**: [YYYY-MM-DD]
-**Requested by**: Paperclip Auto-Underwriting
+**Requested by**: Deal Pros Auto-Underwriting
 **Report #**: UW-[YYYY]-[###]
 
 ### CRITICAL FLAGS
@@ -145,7 +145,7 @@ OUTPUT FORMAT — use this exact structure every time:
 [Seller-facing framing and objections to expect]
 
 ---
-*Underwriting Analyst · Deal Pros LLC Paperclip · Auto-run*`;
+*Underwriting Analyst · Deal Pros LLC · Auto-run*`;
 
 // ─────────────────────────────────────────────────────────────
 // MAIN HANDLER
@@ -419,7 +419,7 @@ COMPARABLE SALES: Not provided via automation — use Phoenix/AZ market knowledg
 
 ADDITIONAL NOTES: ${deal.notes || 'None'}
 
-REQUESTED BY: Paperclip Auto-Underwriting (scheduled poller)
+REQUESTED BY: Deal Pros Auto-Underwriting (scheduled poller)
 DATE: ${new Date().toISOString().split('T')[0]}
 
 Output the full underwriting report now.`;
@@ -439,7 +439,7 @@ async function postGHLNote(apiKey, contactId, noteBody) {
         'Version': '2021-07-28',
       },
       body: JSON.stringify({
-        userId: 'paperclip-underwriting',
+        userId: 'dealpros-underwriting',
         body: noteBody,
       }),
     });

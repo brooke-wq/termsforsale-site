@@ -1536,7 +1536,7 @@ async function submitForm() {
 
   try {
     const data = gatherData();
-    const res = await fetch('/.netlify/functions/acquisition-assist', {
+    const res = await fetch('/api/acquisition-assist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)

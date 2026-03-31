@@ -109,7 +109,7 @@ exports.handler = async function(event) {
         (result.equity_note ? 'Equity Analysis: ' + result.equity_note + '\n\n' : '') +
         'Next Step: ' + (result.recommended_next_step || '') + '\n\n' +
         (result.contact_note || '') + '\n\n' +
-        '--- Equity Exit Intake / Paperclip ---';
+        '--- Equity Exit Intake / Deal Pros LLC ---';
       await postNote(ghlKey, contactId, noteBody);
 
       // Tag routing

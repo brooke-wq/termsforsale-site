@@ -111,7 +111,7 @@ exports.handler = async function(event) {
     if (contactId && ghlKey) {
       var noteBody = '--- BUYER PROFILE ---\n' + profile + '\n\n' +
         'Tags Applied: ' + tags.join(', ') + '\n\n' +
-        '--- Buyer Relations Agent / Paperclip ---';
+        '--- Buyer Relations Agent / Deal Pros LLC ---';
       await postNote(ghlKey, contactId, noteBody);
       await swapTags(ghlKey, contactId, ['buyer-signup', 'buyer-new'], ['buyer-active'].concat(tags));
     }

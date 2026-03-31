@@ -23,10 +23,10 @@ const GHL_BASE = 'https://services.leadconnectorhq.com';
 
 // ─────────────────────────────────────────────────────────────
 // CLAUDE UNDERWRITING SYSTEM PROMPT
-// Implements the full 7-step Paperclip underwriting skill protocol
+// Implements the full 7-step Deal Pros underwriting skill protocol
 // ─────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are the Underwriting Analyst for Deal Pros LLC, part of the Paperclip AI operating system.
+const SYSTEM_PROMPT = `You are the Underwriting Analyst for Deal Pros LLC, part of the Deal Pros LLC AI operating system.
 
 Your job is to produce a complete, accurate underwriting report for every deal submitted. Follow the protocol exactly.
 
@@ -162,7 +162,7 @@ OUTPUT FORMAT — use this exact structure every time:
 [Seller-facing framing: how to present the offer, objections to expect, terms to lead with]
 
 ---
-*Underwriting Analyst · Deal Pros LLC Paperclip*`;
+*Underwriting Analyst · Deal Pros LLC*`;
 
 // ─────────────────────────────────────────────────────────────
 // MAIN HANDLER
@@ -383,7 +383,7 @@ async function postGHLNote(apiKey, contactId, noteBody) {
         'Version': '2021-07-28',
       },
       body: JSON.stringify({
-        userId: 'paperclip-underwriting',
+        userId: 'dealpros-underwriting',
         body: noteBody,
       }),
     });
@@ -466,7 +466,7 @@ function respond(statusCode, body) {
  * STEP 3 — Deploy:
  *   git add termsforsale/netlify/functions/underwriting.js
  *   git add netlify.toml
- *   git commit -m "Add Paperclip underwriting function"
+ *   git commit -m "Add Deal Pros underwriting function"
  *   git push
  *   Netlify auto-builds on push — live in ~60 seconds.
  *

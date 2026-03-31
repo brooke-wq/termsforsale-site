@@ -127,7 +127,7 @@ exports.handler = async function(event) {
         'Recommended Structure: ' + (result.recommended_structure || 'TBD') + '\n' +
         'Summary: ' + (result.summary || '') + '\n' +
         (result.flags && result.flags.length ? '\nFLAGS: ' + result.flags.join(', ') : '') +
-        '\n\n--- Lead Intake Agent / Paperclip ---';
+        '\n\n--- Lead Intake Agent / Deal Pros LLC ---';
       await postNote(ghlKey, contactId, noteBody);
 
       // Apply tier tag

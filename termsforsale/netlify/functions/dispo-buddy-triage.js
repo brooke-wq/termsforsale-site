@@ -105,7 +105,7 @@ exports.handler = async function(event) {
       'Reason: ' + (result.reason || '') + '\n' +
       'Action: ' + (result.recommended_action || '') + '\n\n' +
       (result.internal_note || '') + '\n\n' +
-      '--- Dispo Buddy Triage / Paperclip ---';
+      '--- Dispo Buddy Triage / Deal Pros LLC ---';
     await postNote(ghlKey, contactId, noteBody);
 
     // Route based on viability
