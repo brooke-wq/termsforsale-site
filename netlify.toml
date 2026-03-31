@@ -108,6 +108,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/buyer-import"
+  to = "/.netlify/functions/buyer-import"
+  status = 200
+
+[[redirects]]
+  from = "/api/buyer-inquiry"
+  to = "/.netlify/functions/buyer-inquiry"
+  status = 200
+
+[[redirects]]
   from = "/api/auth-login"
   to = "/.netlify/functions/auth-login"
   status = 200
