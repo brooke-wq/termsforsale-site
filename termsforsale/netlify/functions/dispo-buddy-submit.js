@@ -167,7 +167,7 @@ function buildContactPayload(d, locationId) {
 // BUILD TAGS
 // ─────────────────────────────────────────────────────────────
 function buildTags(d) {
-  const tags = ['dispo-buddy', 'jv-partner'];
+  const tags = ['dispo-buddy', 'jv-partner', 'jv-submitted'];
 
   const type = (d.deal_type || '').toLowerCase();
   if (type.includes('cash'))           tags.push('db-cash');

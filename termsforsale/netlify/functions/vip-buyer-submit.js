@@ -56,7 +56,7 @@ exports.handler = async function(event) {
   }
 
   // 2. Add tags (ensure they stick even if upsert didn't apply them)
-  const tags = ['Source: Cowork QR Buyer', 'VIP Buyer List', 'use:buyer'];
+  const tags = ['Source: Cowork QR Buyer', 'VIP Buyer List', 'use:buyer', 'buyer-signup'];
   if (buyType && buyType.length) {
     buyType.forEach(function(t) {
       if (t === 'Fix & Flip') tags.push('use:fix-flip');

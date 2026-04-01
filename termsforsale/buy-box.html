@@ -634,7 +634,7 @@ function saveBuyBox(){
     property_types:     assetLabel,
     contact_role:       'Buyer',
     close_timeline:     data.timeline||'',
-    tags: ['tfs buyer', _profile==='lender'?'tfs lender':(_profile==='creative'?'creative-buyer':'cash-buyer'), 'buy box complete'],
+    tags: ['tfs buyer', _profile==='lender'?'tfs lender':(_profile==='creative'?'creative-buyer':'cash-buyer'), 'buy box complete', 'buyer-signup'],
   }, getUTMs());
 
   fetch(GHL_WEBHOOK,{

@@ -1325,7 +1325,7 @@ async function submitVIP(){
   if(!agreed){alert('Please agree to the Terms of Service & Privacy Policy.');return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Sending…';
   try{
-    await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,target_zips:market,deal_structure:type,exits:exit,source:'TFS Website - VIP Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['Buying Criteria Form Submitted','TFS Buyer']},getUTMs()))});
+    await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,target_zips:market,deal_structure:type,exits:exit,source:'TFS Website - VIP Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['Buying Criteria Form Submitted','TFS Buyer','buyer-signup']},getUTMs()))});
     btn.textContent='✓ You\'re on the list!';btn.style.background='#10B981';
     const user={name:fn,email,phone,initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()};
     setUser(user);updateNavAuth(user);
@@ -1369,7 +1369,7 @@ async function doSignup(){
   err.style.display='none';ok.style.display='none';
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
+  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup','buyer-signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
