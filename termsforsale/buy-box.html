@@ -313,6 +313,30 @@ function renderForm(){
       <div class="bb-field"><label class="bb-label">Min Bedrooms</label><input class="bb-input" type="number" id="bb-min-beds" placeholder="e.g. 3" value="${s.minBeds||''}" oninput="setDirty(true)"></div>
       <div class="bb-field"><label class="bb-label">Min Bathrooms</label><input class="bb-input" type="number" step="0.5" id="bb-min-baths" placeholder="e.g. 2" value="${s.minBaths||''}" oninput="setDirty(true)"></div>
     </div>
+    <div class="bb-row" style="margin-top:14px">
+      <div class="bb-field"><label class="bb-label">Min Sqft</label><input class="bb-input" type="number" id="bb-min-sqft" placeholder="e.g. 1000" value="${s.minSqft||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Min Year Built</label><input class="bb-input" type="number" id="bb-min-year" placeholder="e.g. 1990" value="${s.minYear||''}" oninput="setDirty(true)"></div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="bb-label" style="margin-bottom:8px;display:block">Condition (select all you'll consider)</label>
+      <div class="chips" id="grp-condition" style="gap:8px">
+        ${['Turnkey','Light Remodel','Medium','Heavy','Teardown','Fire Damage','Flood Damage','Foundation/Structural Issues'].map(v=>chipHtml(v,v,'grp-condition',false,s.condition||[])).join('')}
+      </div>
+    </div>
+    <div class="bb-row" style="margin-top:16px">
+      <div class="bb-field">
+        <label class="bb-label" style="margin-bottom:8px">HOA OK?</label>
+        <div class="chips" id="grp-hoa">
+          ${['Yes','No'].map(v=>chipHtml(v,v,'grp-hoa',true,s.hoa||'')).join('')}
+        </div>
+      </div>
+      <div class="bb-field">
+        <label class="bb-label" style="margin-bottom:8px">Pool OK?</label>
+        <div class="chips" id="grp-pool">
+          ${['Yes','No'].map(v=>chipHtml(v,v,'grp-pool',true,s.pool||'')).join('')}
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="bb-card">
@@ -361,16 +385,16 @@ function renderPage(){
 function collectData(){
   const data = { updatedAt:new Date().toISOString() };
   ['max-price','max-entry','max-pmt','min-cf','max-rate','min-arv',
-   'min-beds','min-baths','markets','notes'].forEach(k=>{
+   'min-beds','min-baths','min-sqft','min-year','markets','notes'].forEach(k=>{
     const el=document.getElementById('bb-'+k);
     if(el&&el.value.trim()) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=el.value.trim();
   });
-  ['structures','property-types','exits'].forEach(k=>{
+  ['structures','property-types','exits','condition'].forEach(k=>{
     const id='grp-'+k;
     const chips=Array.from(document.querySelectorAll('#'+id+' .chip.on')).map(c=>c.dataset.val);
     if(chips.length) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=chips;
   });
-  ['timeline'].forEach(k=>{
+  ['timeline','hoa','pool'].forEach(k=>{
     const el=document.querySelector('#grp-'+k+' .chip.on');
     if(el) data[k]=el.dataset.val;
   });
@@ -394,6 +418,9 @@ function saveBuyBox(){
     max_pmt: data.maxPmt||'', min_cf: data.minCf||'',
     max_rate: data.maxRate||'', min_arv: data.minArv||'',
     min_beds: data.minBeds||'', min_baths: data.minBaths||'',
+    min_sqft: data.minSqft||'', min_year_built: data.minYear||'',
+    condition_preference: (data.condition||[]).join(', ')||'',
+    hoa_ok: data.hoa||'', pool_ok: data.pool||'',
     close_timeline: data.timeline||'',
     buy_box: data.notes||'',
     contact_role:'Buyer', source:'TFS Buy Box',
