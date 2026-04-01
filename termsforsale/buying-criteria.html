@@ -97,7 +97,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
 .chip.sm{padding:6px 12px;font-size:11px}
 
 /* PROFILE TYPE SELECTOR (Step 1) */
-.profile-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.profile-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
 .profile-card{padding:20px 16px;border-radius:var(--r);border:2px solid var(--border);background:var(--white);cursor:pointer;text-align:center;transition:all .2s}
 .profile-card:hover{border-color:var(--blue)}
 .profile-card.on{border-color:var(--navy);background:#F8FAFF}
@@ -313,11 +313,6 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
         <div class="pc-label">Creative Finance</div>
         <div class="pc-sub">I buy SubTo, Seller Finance, Hybrid, or Wrap</div>
       </div>
-      <div class="profile-card" data-val="Lender" onclick="toggleProfile(this)">
-        <div class="pc-icon">🏦</div>
-        <div class="pc-label">Lender / Capital</div>
-        <div class="pc-sub">I fund deals — hard money, DSCR, private lending</div>
-      </div>
     </div>
 
     <div class="card">
@@ -335,15 +330,20 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
       <div class="card-title">Exit strategies you use</div>
       <div class="chips" id="grp-exits">
         <button type="button" class="chip" data-val="Buy & Hold" onclick="toggleChip(this)">Buy &amp; Hold</button>
-        <button type="button" class="chip" data-val="BRRRR" onclick="toggleChip(this)">BRRRR</button>
         <button type="button" class="chip" data-val="Fix & Flip" onclick="toggleChip(this)">Fix &amp; Flip</button>
-        <button type="button" class="chip" data-val="STR / Airbnb" onclick="toggleChip(this)">STR / Airbnb</button>
-        <button type="button" class="chip" data-val="Mid-Term Rental" onclick="toggleChip(this)">Mid-Term Rental</button>
-        <button type="button" class="chip" data-val="PadSplit" onclick="toggleChip(this)">PadSplit</button>
-        <button type="button" class="chip" data-val="Wrap & Resell" onclick="toggleChip(this)">Wrap &amp; Resell</button>
+        <button type="button" class="chip" data-val="Long Term Rental" onclick="toggleChip(this)">Long Term Rental</button>
+        <button type="button" class="chip" data-val="Short Term Rental" onclick="toggleChip(this)">Short Term Rental</button>
+        <button type="button" class="chip" data-val="Mid Term Rental" onclick="toggleChip(this)">Mid Term Rental</button>
+        <button type="button" class="chip" data-val="Co-Living/PadSplit" onclick="toggleChip(this)">Co-Living / PadSplit</button>
+        <button type="button" class="chip" data-val="Wholesale" onclick="toggleChip(this)">Wholesale</button>
+        <button type="button" class="chip" data-val="Lease Option" onclick="toggleChip(this)">Lease Option</button>
+        <button type="button" class="chip" data-val="BRRR" onclick="toggleChip(this)">BRRR</button>
+        <button type="button" class="chip" data-val="Wrap Around" onclick="toggleChip(this)">Wrap Around</button>
+        <button type="button" class="chip" data-val="Group Homes/Assisted Living" onclick="toggleChip(this)">Group Homes / Assisted Living</button>
         <button type="button" class="chip" data-val="Section 8" onclick="toggleChip(this)">Section 8</button>
+        <button type="button" class="chip" data-val="Note Trading" onclick="toggleChip(this)">Note Trading</button>
         <button type="button" class="chip" data-val="Development" onclick="toggleChip(this)">Development</button>
-        <button type="button" class="chip" data-val="Wholesale" onclick="toggleChip(this)">Wholesale / Assign</button>
+        <button type="button" class="chip" data-val="Primary Residence" onclick="toggleChip(this)">Primary Residence</button>
       </div>
     </div>
 
@@ -418,14 +418,14 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
           <input class="f-input" id="bc-min-sqft" type="number" placeholder="e.g. 1000">
         </div>
         <div class="field-group">
-          <label class="field-label">Max Sqft</label>
-          <input class="f-input" id="bc-max-sqft" type="number" placeholder="e.g. 3000">
+          <label class="field-label">Min Bedrooms</label>
+          <input class="f-input" id="bc-min-beds" type="number" min="0" max="10" placeholder="e.g. 3">
         </div>
       </div>
       <div class="row-2" style="margin-top:14px">
         <div class="field-group">
-          <label class="field-label">Min Bedrooms</label>
-          <input class="f-input" id="bc-min-beds" type="number" min="0" max="10" placeholder="e.g. 3">
+          <label class="field-label">Min Bathrooms</label>
+          <input class="f-input" id="bc-min-baths" type="number" min="0" max="10" placeholder="e.g. 2">
         </div>
         <div class="field-group">
           <label class="field-label">Min Year Built</label>
@@ -627,23 +627,7 @@ function cashForm(){
       field('Max Purchase Price ($)', numInput('bc-max-price','e.g. 250000')),
       field('Max Repair Budget ($)', numInput('bc-max-repair','e.g. 50000'))
     ) +
-    field('Min ARV ($)', numInput('bc-min-arv','e.g. 200000'))
-  );
-  html += card('Return Requirements',
-    '<div class="row-2">' +
-    field('Min Equity at Entry (%)', numInput('bc-min-equity','e.g. 20')) +
-    field('Target ARV Spread (%)', sub('% below ARV you need') + numInput('bc-arv-spread','e.g. 30')) +
-    '</div>' +
-    '<div class="row-2" style="margin-top:14px">' +
-    field('Min Cash-on-Cash (%)', numInput('bc-min-coc','e.g. 8')) +
-    field('Financing Method',
-      '<select class="f-select" id="bc-financing">' +
-      '<option value="">Select...</option>' +
-      '<option>All Cash</option><option>Hard Money</option><option>DSCR Loan</option>' +
-      '<option>Conventional</option><option>Private Money</option><option>Equity Partner</option>' +
-      '</select>'
-    ) +
-    '</div>'
+    field('ARV Target ($)', numInput('bc-arv-target','e.g. 200000'))
   );
   return '<div id="cash-section">'+html+'</div>';
 }
@@ -671,10 +655,6 @@ function creativeForm(){
     field('Min Monthly Cash Flow ($)', numInput('bc-min-cf','e.g. 200')) +
     field('Max Interest Rate (%)', numInput('bc-max-rate','e.g. 6.5')) +
     '</div>' +
-    '<div class="row-2" style="margin-top:14px">' +
-    field('Min Cash-on-Cash (%)', numInput('bc-coc-creative','e.g. 8')) +
-    field('Target ARV Spread (%)', numInput('bc-arv-spread-creative','e.g. 20')) +
-    '</div>' +
     labelRow('Balloon Tolerance',
       chipRow('grp-balloon',
         chipBtn('No balloon','No balloon','grp-balloon',true,true) +
@@ -687,47 +667,6 @@ function creativeForm(){
   return '<div id="creative-section">'+html+'</div>';
 }
 
-function lenderForm(){
-  var multi = getSelectedProfiles().length > 1;
-  var html = '';
-  if(multi) html += profileBanner('🏦','Lender / Capital Partner Criteria','#FFF3E0');
-  html += card('Loan Types You Offer',
-    chipRow('grp-loan-types',
-      chipBtn('Hard Money','Hard Money','grp-loan-types',false,false) +
-      chipBtn('Private Money','Private Money','grp-loan-types',false,false) +
-      chipBtn('DSCR','DSCR','grp-loan-types',false,false) +
-      chipBtn('Bridge Loan','Bridge Loan','grp-loan-types',false,false) +
-      chipBtn('Fix &amp; Flip','Fix & Flip','grp-loan-types',false,false) +
-      chipBtn('Gap Funding','Gap Funding','grp-loan-types',false,false) +
-      chipBtn('Equity Partner','Equity Partner','grp-loan-types',false,false) +
-      chipBtn('Transactional','Transactional','grp-loan-types',false,false)
-    )
-  );
-  html += card('Lending Parameters',
-    row2(
-      field('Min Loan Amount ($)', numInput('bc-loan-min','e.g. 50000')),
-      field('Max Loan Amount ($)', numInput('bc-loan-max','e.g. 2000000'))
-    ) +
-    '<div class="row-2" style="margin-top:14px">' +
-    field('Max LTV (%)', numInput('bc-max-ltv','e.g. 75')) +
-    field('Typical Rate Range', txtInput('bc-rate-range','e.g. 9-12%')) +
-    '</div>' +
-    '<div class="row-2" style="margin-top:14px">' +
-    field('Min Credit Score', numInput('bc-min-credit','e.g. 620')) +
-    field('Points Charged', txtInput('bc-points','e.g. 2')) +
-    '</div>' +
-    labelRow('Close Speed',
-      chipRow('grp-close-speed',
-        chipBtn('3-5 days','3-5 days','grp-close-speed',false,true) +
-        chipBtn('7 days','7 days','grp-close-speed',true,true) +
-        chipBtn('10-14 days','10-14 days','grp-close-speed',false,true) +
-        chipBtn('2-3 weeks','2-3 weeks','grp-close-speed',false,true)
-      )
-    )
-  );
-  return '<div id="lender-section">'+html+'</div>';
-}
-
 // ── RENDER STEP 3 ────────────────────────────────────────────────
 function renderStep3(){
   var container = document.getElementById('s3-form');
@@ -736,8 +675,8 @@ function renderStep3(){
 
   if(profiles.length === 1){
     _profile = profiles[0];
-    var titles = {'Cash Buyer':'Cash Buyer Criteria','Creative Finance Buyer':'Creative Finance Criteria','Lender':'Lending Parameters'};
-    var subs = {'Cash Buyer':'Set your financial parameters — we only send deals that fit.','Creative Finance Buyer':'Tell us your payment and cash flow thresholds.','Lender':'Tell us what you fund so we can match you to buyers.'};
+    var titles = {'Cash Buyer':'Cash Buyer Criteria','Creative Finance Buyer':'Creative Finance Criteria'};
+    var subs = {'Cash Buyer':'Set your financial parameters — we only send deals that fit.','Creative Finance Buyer':'Tell us your payment and cash flow thresholds.'};
     document.getElementById('s3-title').textContent = titles[_profile] || 'Your Criteria';
     document.getElementById('s3-sub').textContent = subs[_profile] || '';
   } else {
@@ -749,7 +688,6 @@ function renderStep3(){
   var html = '';
   if(profiles.indexOf('Cash Buyer') > -1) html += cashForm();
   if(profiles.indexOf('Creative Finance Buyer') > -1) html += creativeForm();
-  if(profiles.indexOf('Lender') > -1) html += lenderForm();
   container.innerHTML = html;
 }
 
@@ -813,20 +751,19 @@ function buildReview(){
   ];
 
   function v(id){ var el=document.getElementById(id); return el&&el.value.trim()?el.value.trim():''; }
+  if(v('bc-min-beds')) rows.push(['Min Beds', v('bc-min-beds')]);
+  if(v('bc-min-baths')) rows.push(['Min Baths', v('bc-min-baths')]);
+  if(v('bc-min-sqft')) rows.push(['Min Sqft', Number(v('bc-min-sqft')).toLocaleString()]);
   if(profiles.indexOf('Cash Buyer') > -1){
     if(v('bc-max-price')) rows.push(['Max Price', '$'+Number(v('bc-max-price')).toLocaleString()]);
-    if(v('bc-min-coc')) rows.push(['Min CoC', v('bc-min-coc')+'%']);
-    if(v('bc-arv-spread')) rows.push(['ARV Spread', v('bc-arv-spread')+'% below ARV']);
+    if(v('bc-max-repair')) rows.push(['Max Repair', '$'+Number(v('bc-max-repair')).toLocaleString()]);
+    if(v('bc-arv-target')) rows.push(['ARV Target', '$'+Number(v('bc-arv-target')).toLocaleString()]);
   }
   if(profiles.indexOf('Creative Finance Buyer') > -1){
     rows.push(['Structures', getChips('grp-structures').join(', ')||'—']);
     if(v('bc-max-entry')) rows.push(['Max Entry', '$'+Number(v('bc-max-entry')).toLocaleString()]);
     if(v('bc-max-pmt')) rows.push(['Max PITI', '$'+Number(v('bc-max-pmt')).toLocaleString()+'/mo']);
     if(v('bc-min-cf')) rows.push(['Min CF', '$'+Number(v('bc-min-cf')).toLocaleString()+'/mo']);
-  }
-  if(profiles.indexOf('Lender') > -1){
-    rows.push(['Loan Types', getChips('grp-loan-types').join(', ')||'—']);
-    if(v('bc-loan-max')) rows.push(['Max Loan', '$'+Number(v('bc-loan-max')).toLocaleString()]);
   }
 
   card.innerHTML = '<div class="card-title">Your Buying Criteria Summary</div>'
@@ -835,6 +772,22 @@ function buildReview(){
           +'<span style="color:#718096;font-weight:500">'+r[0]+'</span>'
           +'<span style="color:#0D1F3C;font-weight:600;text-align:right;max-width:60%">'+r[1]+'</span></div>';
       }).join('');
+}
+
+// ── SUMMARY HELPER ──────────────────────────────────────────────
+function buildSummaryText(p) {
+  var lines = [];
+  lines.push('Profile: ' + (p.buyer_profile_type || ''));
+  lines.push('Structures: ' + (p.deal_structure || ''));
+  lines.push('Property Types: ' + (p.property_types || ''));
+  lines.push('Exit Strategies: ' + (p.exits || ''));
+  lines.push('Markets: ' + (p.target_zips || ''));
+  if(p.cash_max_price) lines.push('Max Price: $' + Number(p.cash_max_price).toLocaleString());
+  if(p.creative_max_entry) lines.push('Max Entry: $' + Number(p.creative_max_entry).toLocaleString());
+  if(p.creative_max_pmt) lines.push('Max PITI: $' + Number(p.creative_max_pmt).toLocaleString());
+  if(p.close_timeline) lines.push('Timeline: ' + p.close_timeline);
+  if(p.notes) lines.push('Notes: ' + p.notes);
+  return lines.filter(Boolean).join('\n');
 }
 
 // ── SUBMIT ───────────────────────────────────────────────────────
@@ -859,12 +812,10 @@ async function submitForm(){
   var profileTags = ['tfs buyer','vip signup','buy box complete','website lead'];
   if(profiles.indexOf('Cash Buyer') > -1)             profileTags.push('cash buyer');
   if(profiles.indexOf('Creative Finance Buyer') > -1) profileTags.push('creative buyer');
-  if(profiles.indexOf('Lender') > -1)                 profileTags.push('tfs lender');
 
   var structures = [];
   if(profiles.indexOf('Cash Buyer') > -1)             structures.push('Cash');
   if(profiles.indexOf('Creative Finance Buyer') > -1){ var s=getChips('grp-structures'); structures.push(s.length?s.join(', '):'Creative Finance'); }
-  if(profiles.indexOf('Lender') > -1)                 structures.push('Lender');
 
   var payload = Object.assign({
     firstName: fn, lastName: ln, email: email, phone: phone,
@@ -877,8 +828,8 @@ async function submitForm(){
     deal_structure:     structures.join(', '),
     target_zips:        v('bc-markets'),
     bb_min_sqft:        v('bc-min-sqft'),
-    bb_max_sqft:        v('bc-max-sqft'),
     bb_min_beds:        v('bc-min-beds'),
+    bb_min_baths:       v('bc-min-baths'),
     bb_year_built_min:  v('bc-year-built'),
     bb_max_hoa:         getExcl('grp-hoa'),
     close_timeline:     v('bc-timeline'),
@@ -902,11 +853,7 @@ async function submitForm(){
     Object.assign(payload,{
       cash_max_price:    v('bc-max-price'),
       cash_max_repair:   v('bc-max-repair'),
-      cash_min_arv:      v('bc-min-arv'),
-      cash_min_equity_pct: v('bc-min-equity'),
-      bb_target_arv_spread: v('bc-arv-spread'),
-      bb_min_coc:        v('bc-min-coc'),
-      financing_method:  v('bc-financing'),
+      arv_target:        v('bc-arv-target'),
     });
   }
   if(profiles.indexOf('Creative Finance Buyer') > -1){
@@ -917,21 +864,6 @@ async function submitForm(){
       creative_min_cf:      v('bc-min-cf'),
       creative_max_rate:    v('bc-max-rate'),
       creative_balloon_tolerance: getExcl('grp-balloon'),
-      bb_target_arv_spread: v('bc-arv-spread-creative') || v('bc-arv-spread'),
-      bb_min_coc:           v('bc-coc-creative') || v('bc-min-coc'),
-    });
-  }
-  if(profiles.indexOf('Lender') > -1){
-    Object.assign(payload,{
-      lender_loan_types:  getChips('grp-loan-types').join(', '),
-      lender_loan_min:    v('bc-loan-min'),
-      lender_loan_max:    v('bc-loan-max'),
-      lender_max_ltv:     v('bc-max-ltv'),
-      lender_rate_range:  v('bc-rate-range'),
-      lender_min_credit:  v('bc-min-credit'),
-      lender_points:      v('bc-points'),
-      lender_close_speed: getExcl('grp-close-speed'),
-      lender_markets:     v('bc-markets'),
     });
   }
 
@@ -951,6 +883,21 @@ async function submitForm(){
     console.error('GHL webhook failed:', e);
   }
 
+  // Send confirmation via our API
+  try {
+    await fetch('/api/buyer-inquiry', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        action: 'buying-criteria-confirm',
+        firstName: fn,
+        email: email,
+        phone: phone,
+        summary: buildSummaryText(payload)
+      })
+    });
+  } catch(e){ console.error('Confirmation send failed:', e); }
+
   var params = new URLSearchParams(window.location.search);
   if(params.get('deal_id')){
     try {
@@ -965,7 +912,7 @@ async function submitForm(){
   try{
     localStorage.setItem('tfs_buyer', JSON.stringify({name:fn, email:email, phone:phone, initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()}));
     profiles.forEach(function(p){
-      var key = 'tfs_bb__'+(p==='Cash Buyer'?'cash':p==='Lender'?'lender':'creative')+'__sf';
+      var key = 'tfs_bb__'+(p==='Cash Buyer'?'cash':'creative')+'__sf';
       localStorage.setItem(key, JSON.stringify(Object.assign({profile:p, updatedAt:new Date().toISOString()}, payload)));
     });
   } catch(e){}
