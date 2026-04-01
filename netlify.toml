@@ -2,6 +2,19 @@
   publish = "termsforsale"
   functions = "termsforsale/netlify/functions"
 
+# buyingcriteria.com → redirect to buying criteria page
+[[redirects]]
+  from = "https://buyingcriteria.com/*"
+  to = "https://termsforsale.com/buying-criteria.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.buyingcriteria.com/*"
+  to = "https://termsforsale.com/buying-criteria.html"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/api/hud-fmr"
   to = "/.netlify/functions/hud-fmr"
