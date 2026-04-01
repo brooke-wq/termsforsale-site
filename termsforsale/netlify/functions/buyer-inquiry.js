@@ -14,9 +14,11 @@ const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
 // Pipeline / stage IDs — Brooke sets these in Netlify env vars.
 // Fallback strings are placeholders that will cause a clear GHL error
 // if the real IDs have not been configured yet.
-const PIPELINE_ID_INQUIRY  = process.env.GHL_PIPELINE_ID_INQUIRY  || null;
-const STAGE_NEW_INQUIRY    = process.env.GHL_STAGE_NEW_INQUIRY     || null;
-const STAGE_OFFER_RECEIVED = process.env.GHL_STAGE_OFFER_RECEIVED  || null; // optional separate stage
+const PIPELINE_ID_INQUIRY    = process.env.GHL_PIPELINE_ID_INQUIRY    || null; // 1. Inquiry Setter
+const PIPELINE_ID_BUYER      = process.env.GHL_PIPELINE_ID_BUYER      || null; // 2. Buyer Inquiries
+const STAGE_NEW_INQUIRY      = process.env.GHL_STAGE_NEW_INQUIRY       || null; // New Lead - Inquiry
+const STAGE_BUYING_CRITERIA  = process.env.GHL_STAGE_BUYING_CRITERIA    || null; // New Buying Criteria Form
+const STAGE_OFFER_RECEIVED   = process.env.GHL_STAGE_OFFER_RECEIVED    || null; // Offer Submitted (Buyer Inquiries)
 
 const GHL_BASE    = 'https://services.leadconnectorhq.com';
 const GHL_VERSION = '2021-07-28';
@@ -83,6 +85,28 @@ exports.handler = async (event) => {
         if (uRes.status < 400) {
           confirmContactId = (uRes.body.contact && uRes.body.contact.id) || uRes.body.id;
         }
+      }
+
+      // Create opportunity in Inquiry Setter → New Buying Criteria Form
+      if (confirmContactId && PIPELINE_ID_INQUIRY && STAGE_BUYING_CRITERIA) {
+        try {
+          var bcOpp = await createOpportunity({
+            pipelineId: PIPELINE_ID_INQUIRY,
+            pipelineStageId: STAGE_BUYING_CRITERIA,
+            locationId: GHL_LOCATION_ID,
+            contactId: confirmContactId,
+            name: 'Buying Criteria — ' + (payload.firstName || '') + ' ' + (payload.email || ''),
+            status: 'open'
+          });
+          console.log('[buyer-inquiry] Buying criteria opportunity created:', bcOpp.body?.id || bcOpp.body?.opportunity?.id);
+        } catch(e) { console.warn('[buyer-inquiry] BC opportunity failed:', e.message); }
+      }
+
+      // Post criteria as contact note
+      if (confirmContactId && payload.summary) {
+        try {
+          await postNote(GHL_API_KEY, confirmContactId, '=== BUYING CRITERIA SUBMITTED ===\n' + payload.summary);
+        } catch(e) {}
       }
 
       var smsOk = false, emailOk = false;
@@ -193,12 +217,13 @@ exports.handler = async (event) => {
         'Raw notes: ' + (payload.message || payload.notes || '')
       ].join('\n');
 
-      // Stage: use STAGE_OFFER_RECEIVED if configured, else STAGE_NEW_INQUIRY
-      const stageId = STAGE_OFFER_RECEIVED || STAGE_NEW_INQUIRY;
+      // Offers go to Buyer Inquiries pipeline → Offer Submitted stage
+      const offerPipeline = PIPELINE_ID_BUYER || PIPELINE_ID_INQUIRY;
+      const offerStage = STAGE_OFFER_RECEIVED || STAGE_NEW_INQUIRY;
 
       const oppBody = {
-        pipelineId:      PIPELINE_ID_INQUIRY,
-        pipelineStageId: stageId,
+        pipelineId:      offerPipeline,
+        pipelineStageId: offerStage,
         locationId:      GHL_LOCATION_ID,
         name:            streetAddress || 'Offer from ' + contactName,
         status:          'open'
