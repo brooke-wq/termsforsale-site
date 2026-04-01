@@ -936,6 +936,31 @@ function renderDeal(d,allDeals){
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
               Submit Request
             </button>
+          </div>
+
+          <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">
+            <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px">Submit an Offer</div>
+            <div class="sidebar-form">
+              <input class="sf-input" placeholder="Your Name" id="o-name">
+              <input class="sf-input" placeholder="Phone" id="o-phone" type="tel">
+              <input class="sf-input" placeholder="Email" id="o-email" type="email">
+              <input class="sf-input" placeholder="Offer Amount ($)" id="o-amount" type="number">
+              <select class="sf-select" id="o-structure">
+                <option value="">Deal Structure</option>
+                <option>Cash</option>
+                <option>Subject To</option>
+                <option>Seller Finance</option>
+                <option>Hybrid</option>
+                <option>Morby/Stack</option>
+                <option>Wrap</option>
+                <option>Lease Option</option>
+                <option>Novation</option>
+              </select>
+              <input class="sf-input" placeholder="Target Close Date" id="o-close" type="date">
+              <textarea class="sf-input" placeholder="Offer notes / contingencies" rows="2" id="o-notes" style="resize:vertical"></textarea>
+              <button class="btn" style="width:100%;justify-content:center;background:var(--orange);color:#fff;border:none" onclick="submitOffer('${d.id}','${d.streetAddress||''}','${d.city||''}','${d.state||''}')">
+                Submit Offer
+            </button>
             <div class="sf-note">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>
           </div>
         </div>
@@ -1076,22 +1101,50 @@ async function submitRequest(dealId){
   const lname=document.getElementById('f-lname').value.trim();
   const phone=document.getElementById('f-phone').value.trim();
   const email=document.getElementById('f-email').value.trim();
-  const structure=document.getElementById('f-structure').value.trim();
-  const timeline=document.getElementById('f-timeline').value.trim();
   const notes=document.getElementById('f-notes').value.trim();
   if(!fname||!phone){alert('Please enter your name and phone number.');return}
-  const btn=event.target;
-  btn.textContent='Sending…';btn.disabled=true;
-  const structureTagMap={'Cash':['buy:cash'],'Hard Money':['buy:hard-money'],'Sub-To / Creative':['buy:subto','buy:creative'],'Seller Finance':['buy:seller-finance','buy:creative'],'Wrap':['buy:creative'],'Hybrid':['buy:hybrid','buy:creative']};
-  const buyTags=structureTagMap[structure]||[];
-  const tags=['TFS Buyer','Website Inquiry','consent:sms',...buyTags];
-  const utms=getUTMs();
-  const payload=Object.assign({firstName:fname,lastName:lname||'',phone,email:email||'',tags,source:'TFS Deal Page',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',deal_structure:structure||'',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:notes||'',lead_source_detail:utms.utm_source||'TFS Deal Page'}},utms);
+  const btn=event.target;btn.textContent='Sending…';btn.disabled=true;
   try{
-    await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  }catch(err){console.error('GHL webhook error:',err);}
+    await fetch('/api/buyer-inquiry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      firstName:fname,lastName:lname,phone,email,
+      message:notes,propertyStreetAddress:dealId,
+      source:'TFS Deal Page — Request Info',
+      tags:['TFS Buyer','Website Inquiry','consent:sms']
+    })});
+  }catch(err){console.error('Inquiry error:',err);}
   btn.textContent='✓ Request Sent!';btn.style.background='#276749';
   setTimeout(()=>{btn.textContent='Submit Request';btn.style.background='';btn.disabled=false;},3000);
+}
+
+async function submitOffer(dealId,address,city,state){
+  const name=document.getElementById('o-name').value.trim();
+  const phone=document.getElementById('o-phone').value.trim();
+  const email=document.getElementById('o-email').value.trim();
+  const amount=document.getElementById('o-amount').value.trim();
+  const structure=document.getElementById('o-structure').value;
+  const closeDate=document.getElementById('o-close').value;
+  const notes=document.getElementById('o-notes').value.trim();
+  if(!name||!phone||!amount){alert('Please enter your name, phone, and offer amount.');return}
+  const btn=event.target;btn.textContent='Submitting…';btn.disabled=true;
+  try{
+    await fetch('/api/buyer-inquiry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      type:'OFFER',
+      customerFirstName:name.split(' ')[0],
+      customerLastName:name.split(' ').slice(1).join(' '),
+      customerPhoneNumber:phone,
+      email,
+      price:amount,
+      propertyStreetAddress:address||dealId,
+      propertyCity:city,
+      propertyStateCode:state,
+      deal_structure:structure,
+      close_date:closeDate,
+      message:notes,
+      source:'TFS Deal Page — Offer'
+    })});
+  }catch(err){console.error('Offer error:',err);}
+  btn.textContent='✓ Offer Submitted!';btn.style.background='#276749';
+  setTimeout(()=>{btn.textContent='Submit Offer';btn.style.background='';btn.disabled=false;},3000);
 }
 
 async function loadDealsFromNotion(){
