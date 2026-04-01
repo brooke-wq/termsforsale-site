@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paperclip AI OS — VA Process Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;color:#0D1F3C;background:#F4F6F9;line-height:1.7;font-size:14px}
+.page{max-width:900px;margin:0 auto;padding:40px 32px 80px}
+h1{font-size:32px;font-weight:900;color:#0D1F3C;margin-bottom:4px}
+.subtitle{font-size:14px;color:#718096;margin-bottom:40px}
+h2{font-size:20px;font-weight:800;color:#0D1F3C;margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid #29ABE2}
+h3{font-size:16px;font-weight:700;color:#0D1F3C;margin:24px 0 10px}
+p{margin-bottom:12px;color:#4A5568}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+th{background:#0D1F3C;color:#fff;text-align:left;padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+td{padding:10px 14px;border-bottom:1px solid #EDF2F7;font-size:13px;color:#4A5568}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin:1px 2px}
+.tag-green{background:#E6F9F0;color:#276749}
+.tag-blue{background:#EBF8FF;color:#1a8bbf}
+.tag-orange{background:#FFF3E0;color:#c05621}
+.tag-red{background:#FEE2E2;color:#C53030}
+.tag-gray{background:#EDF2F7;color:#4A5568}
+.card{background:#fff;border-radius:10px;padding:20px;margin:16px 0;border:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-title{font-size:14px;font-weight:700;color:#0D1F3C;margin-bottom:8px}
+code{background:#EDF2F7;padding:2px 6px;border-radius:4px;font-size:12px;color:#c05621}
+ul{margin:8px 0 16px 20px}
+li{margin-bottom:6px;color:#4A5568}
+.important{background:#FEF3C7;border-left:4px solid #F59E0B;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+.important strong{color:#92400E}
+.success{background:#E6F9F0;border-left:4px solid #10B981;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+@media print{body{background:#fff}.page{padding:20px}h2{break-before:auto}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Paperclip AI OS — VA Process Sheet</h1>
+<p class="subtitle">Deal Pros LLC / Terms For Sale — Last updated April 1, 2026</p>
+
+<!-- ============================================ -->
+<h2>1. System Overview</h2>
+
+<p><strong>Paperclip</strong> is the AI operating system that automates Deal Pros' back-office. It scores leads, underwrites deals, matches buyers, sends alerts, and generates daily reports — all automatically.</p>
+
+<div class="card">
+<div class="card-title">What's Automated (Don't Touch)</div>
+<ul>
+<li>Buyer signup → auto-profiled + tagged within 30 min</li>
+<li>New deal set to "Actively Marketing" → buyers notified within 30 min (SMS + email)</li>
+<li>Deal alert → 3-day follow-up sprint (Day 0/1/2 SMS + email)</li>
+<li>CEO briefing → daily 7am AZ to Brooke's phone</li>
+<li>Weekly synthesis → Monday 8am AZ</li>
+<li>Seller leads scored within 15 min (Claude AI)</li>
+<li>Hot leads (35+) auto-underwritten within 30 min</li>
+<li>Underwriting complete → call prep generated for Eddie</li>
+<li>Deal package generated on <code>pkg-requested</code> tag</li>
+<li>Stale lead follow-up after 7 days</li>
+<li>Partner scorecard every Friday</li>
+<li>Revenue tracker monthly</li>
+</ul>
+</div>
+
+<div class="card">
+<div class="card-title">Monthly Cost</div>
+<table>
+<tr><td>DigitalOcean Droplet</td><td>$6/mo</td></tr>
+<tr><td>Claude API</td><td>~$4/mo</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>~$10/mo</strong></td></tr>
+</table>
+</div>
+
+<!-- ============================================ -->
+<h2>2. Notion Deal Pipeline — Required Fields</h2>
+
+<div class="important">
+<strong>IMPORTANT:</strong> If these fields are empty, the deal won't show on the website or trigger automations correctly. Fill in ALL required fields before setting status to "Actively Marketing".
+</div>
+
+<table>
+<tr><th>Field</th><th>Required?</th><th>Notes</th></tr>
+<tr><td>Street Address</td><td><span class="tag tag-red">REQUIRED</span></td><td>Title field — the deal name</td></tr>
+<tr><td>City</td><td><span class="tag tag-red">REQUIRED</span></td><td>Used for buyer matching + map</td></tr>
+<tr><td>State</td><td><span class="tag tag-red">REQUIRED</span></td><td>Used for buyer matching</td></tr>
+<tr><td>ZIP</td><td><span class="tag tag-red">REQUIRED</span></td><td>Used for map + matching</td></tr>
+<tr><td>Deal Type</td><td><span class="tag tag-red">REQUIRED</span></td><td>Cash / SubTo / Seller Finance / Hybrid / Morby / Wrap</td></tr>
+<tr><td>Asking Price</td><td><span class="tag tag-red">REQUIRED</span></td><td>Shows on website + used for matching</td></tr>
+<tr><td>Entry Fee</td><td><span class="tag tag-red">REQUIRED</span></td><td>Shows on deal page + deal alerts</td></tr>
+<tr><td>Beds</td><td><span class="tag tag-red">REQUIRED</span></td><td>Used for buyer matching</td></tr>
+<tr><td>Baths</td><td><span class="tag tag-red">REQUIRED</span></td><td>Shows on deal page</td></tr>
+<tr><td>Living Area (Sqft)</td><td><span class="tag tag-red">REQUIRED</span></td><td>Shows on deal page</td></tr>
+<tr><td>Year Built</td><td><span class="tag tag-red">REQUIRED</span></td><td>Shows on deal page</td></tr>
+<tr><td>Deal Status</td><td><span class="tag tag-red">REQUIRED</span></td><td>"Actively Marketing" = shows on website</td></tr>
+<tr><td>Photos</td><td><span class="tag tag-red">REQUIRED</span></td><td>Google Drive folder URL — photos show on deal page</td></tr>
+<tr><td>Highlight 1, 2, 3</td><td><span class="tag tag-orange">Recommended</span></td><td>Shows on deal page + deal alert emails</td></tr>
+<tr><td>Description / Details</td><td><span class="tag tag-orange">Recommended</span></td><td>Shows on deal page</td></tr>
+<tr><td>Property Type</td><td><span class="tag tag-orange">Recommended</span></td><td>Single Family, Multifamily, etc.</td></tr>
+<tr><td>COE</td><td><span class="tag tag-orange">Recommended</span></td><td>Close of Escrow date</td></tr>
+<tr><td>Date Funded</td><td><span class="tag tag-red">REQUIRED on close</span></td><td>Set when deal closes — used for revenue reports</td></tr>
+<tr><td>Amount Funded</td><td><span class="tag tag-red">REQUIRED on close</span></td><td>Revenue amount — used for CEO briefing + P&L</td></tr>
+</table>
+
+<h3>SubTo Deals — Additional Fields</h3>
+<table>
+<tr><th>Field</th><th>Notes</th></tr>
+<tr><td>SubTo Loan Balance</td><td>Existing mortgage balance</td></tr>
+<tr><td>SubTo Rate (%)</td><td>Interest rate on existing loan</td></tr>
+<tr><td>PITI</td><td>Monthly payment (principal + interest + tax + insurance)</td></tr>
+</table>
+
+<h3>Seller Finance Deals — Additional Fields</h3>
+<table>
+<tr><th>Field</th><th>Notes</th></tr>
+<tr><td>SF Loan Amount</td><td>Seller finance loan amount</td></tr>
+<tr><td>SF Rate</td><td>Interest rate</td></tr>
+<tr><td>SF Term</td><td>Loan term (e.g. "30 years")</td></tr>
+<tr><td>SF Payment</td><td>Monthly payment amount</td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>3. Deal Status Flow</h2>
+
+<div class="card">
+<p style="text-align:center;font-size:13px;font-weight:600;color:#0D1F3C">
+New Submission → Pending Items → Ready for Review → Accepted → <span style="color:#29ABE2;font-weight:800">Actively Marketing</span> → Assignment Sent → Assigned with EMD → <span style="color:#10B981;font-weight:800">Closed</span>
+</p>
+</div>
+
+<ul>
+<li><strong>"Actively Marketing"</strong> = deal shows on website + triggers buyer notifications within 30 min</li>
+<li><strong>"Closed" + Date Funded</strong> = shows in CEO briefing + revenue reports</li>
+<li>Changing status to anything other than "Actively Marketing" removes it from the website</li>
+</ul>
+
+<!-- ============================================ -->
+<h2>4. VA Responsibilities (Manual Processes)</h2>
+
+<div class="card">
+<div class="card-title">Daily Tasks</div>
+<ul>
+<li>Enter all new deal data in Notion with ALL required fields</li>
+<li>Upload property photos to Google Drive folder, link URL in Notion "Photos" field</li>
+<li>First photo uploaded = cover photo (sort by upload time)</li>
+<li>Set deal status to "Actively Marketing" when ready to list</li>
+<li>Review CEO briefing notes in GHL for action items</li>
+<li>Monitor GHL for flagged leads (<code>flag-escalate</code> tag)</li>
+</ul>
+</div>
+
+<div class="card">
+<div class="card-title">When a Deal Closes</div>
+<ul>
+<li>Set <strong>Date Funded</strong> in Notion (the date funds were received)</li>
+<li>Set <strong>Amount Funded</strong> in Notion (total revenue from this deal)</li>
+<li>Change Deal Status to <strong>"Closed"</strong></li>
+<li>These 3 fields trigger the revenue tracker and CEO briefing automatically</li>
+</ul>
+</div>
+
+<div class="card">
+<div class="card-title">Blog Posts (Deal Spotlights)</div>
+<ul>
+<li>Use the VA Post Builder at <code>/api/create-post</code> to create deal spotlight blog posts</li>
+<li>Posts are added to <code>/blog/posts-index.json</code> and appear on the blog page automatically</li>
+</ul>
+</div>
+
+<!-- ============================================ -->
+<h2>5. GHL Tags Reference</h2>
+
+<table>
+<tr><th>Tag</th><th>What It Means</th><th>Triggers</th></tr>
+<tr><td><code>lead-new</code></td><td>New seller lead</td><td>→ AI scores within 15 min</td></tr>
+<tr><td><code>lead-hot</code></td><td>Score 35+</td><td>→ Auto-underwriting</td></tr>
+<tr><td><code>lead-warm</code></td><td>Score 20-34</td><td>→ Nurture sequence</td></tr>
+<tr><td><code>lead-cool</code></td><td>Score 1-19</td><td>→ Filed</td></tr>
+<tr><td><code>uw-requested</code></td><td>Underwriting needed</td><td>→ Claude underwriting within 15 min</td></tr>
+<tr><td><code>uw-complete</code></td><td>Underwriting done</td><td>→ Call prep generated for Eddie</td></tr>
+<tr><td><code>call-prepped</code></td><td>Call brief ready</td><td>Eddie can call</td></tr>
+<tr><td><code>pkg-requested</code></td><td>Marketing package needed</td><td>→ Deal package within 15 min</td></tr>
+<tr><td><code>pkg-complete</code></td><td>Package ready</td><td>SMS versions + email + social hook</td></tr>
+<tr><td><code>buyer-signup</code></td><td>New buyer registered</td><td>→ Auto-profiled within 30 min</td></tr>
+<tr><td><code>buyer-active</code></td><td>Buyer profiled</td><td>Ready for deal matching</td></tr>
+<tr><td><code>new-deal-alert</code></td><td>Deal alert sent</td><td>Buyer was notified of a matching deal</td></tr>
+<tr><td><code>alerted-XXXXXXXX</code></td><td>Specific deal alert</td><td>Dedup — prevents double notifications</td></tr>
+<tr><td><code>flag-escalate</code></td><td>Legal flag detected</td><td>→ SMS to Brooke immediately</td></tr>
+<tr><td><code>follow-up-sent</code></td><td>Auto follow-up sent</td><td>7-day stale lead nudge</td></tr>
+<tr><td><code>buy box complete</code></td><td>Buyer saved buy box</td><td>Ready for matching</td></tr>
+<tr><td><code>tfs buyer</code></td><td>Terms For Sale buyer</td><td>General buyer tag</td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>6. Troubleshooting</h2>
+
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>Deals don't show on website</td><td>Check Notion → Deal Status must be exactly <strong>"Actively Marketing"</strong></td></tr>
+<tr><td>Photos don't load</td><td>Check Notion → Photos field must be a Google Drive <strong>folder</strong> URL (not a file URL)</td></tr>
+<tr><td>Wrong cover photo</td><td>First photo uploaded to the Drive folder = cover. Rename or re-upload the main exterior photo first.</td></tr>
+<tr><td>CEO briefing didn't fire</td><td>Check Droplet logs: <code>ssh root@64.23.204.220</code> then <code>tail -50 /var/log/paperclip.log</code></td></tr>
+<tr><td>Buyer didn't get deal alert</td><td>Check if they have matching buy box criteria (state, deal type, price range) in GHL</td></tr>
+<tr><td>Form didn't sync to GHL</td><td>Check Netlify function logs at <code>app.netlify.com/projects/jolly-marzipan-8fc443</code> → Functions</td></tr>
+<tr><td>Deals not matching to map</td><td>City, State, and ZIP must all be filled in Notion</td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>7. Important Links</h2>
+
+<table>
+<tr><th>What</th><th>URL</th></tr>
+<tr><td>Live Website</td><td><a href="https://deals.termsforsale.com">deals.termsforsale.com</a></td></tr>
+<tr><td>GHL CRM</td><td><a href="https://app.reibuilt.com">app.reibuilt.com</a></td></tr>
+<tr><td>Notion Deal Pipeline</td><td>Search "Deal Pipeline" in Notion</td></tr>
+<tr><td>Netlify Dashboard</td><td><a href="https://app.netlify.com/projects/jolly-marzipan-8fc443">app.netlify.com</a></td></tr>
+<tr><td>GitHub Repo</td><td><a href="https://github.com/brooke-wq/termsforsale-site">github.com/brooke-wq/termsforsale-site</a></td></tr>
+<tr><td>DigitalOcean Droplet</td><td><code>ssh root@64.23.204.220</code> / pw: <code>Paperclip2026!</code></td></tr>
+<tr><td>Droplet Logs</td><td><code>tail -100 /var/log/paperclip.log</code></td></tr>
+<tr><td>Book a Call Widget</td><td><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4">reibuilt.com booking</a></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>8. Domain Switch Checklist</h2>
+
+<div class="card">
+<div class="card-title">Switching from GHL Website to Netlify</div>
+<ol style="margin-left:20px">
+<li>In Netlify: Add <code>termsforsale.com</code> as custom domain</li>
+<li>In DNS provider: Update A record <code>@</code> → <code>75.2.60.5</code></li>
+<li>In DNS provider: Update CNAME <code>www</code> → <code>jolly-marzipan-8fc443.netlify.app</code></li>
+<li>Remove old A/CNAME records pointing to GHL</li>
+<li>Wait 5-10 min for propagation</li>
+<li>Verify: visit termsforsale.com → should show new site</li>
+<li>Netlify auto-provisions SSL certificate</li>
+</ol>
+</div>
+
+<div class="success">
+<strong>After switch:</strong> Both <code>termsforsale.com</code> and <code>deals.termsforsale.com</code> will serve the same Netlify site. All automations, forms, and functions continue working.
+</div>
+
+</div>
+</body>
+</html>
