@@ -547,9 +547,20 @@ exports.handler = async function(event) {
         alerts: []
       };
 
+      // TEST_ONLY_PHONE: if set, only send to this phone number (for safe testing)
+      var testOnlyPhone = process.env.TEST_ONLY_PHONE || '';
+
       if (isLive) {
         // LIVE MODE: Actually trigger GHL alerts + send SMS
         for (var j = 0; j < buyers.length; j++) {
+          if (testOnlyPhone && buyers[j].phone !== testOnlyPhone) {
+            dealResult.alerts.push({
+              buyer: buyers[j].name,
+              status: 'SKIPPED — test mode, not target phone',
+              sent: false
+            });
+            continue;
+          }
           var status = await triggerBuyerAlert(apiKey, locationId, buyers[j], deal);
           dealResult.alerts.push({
             buyer: buyers[j].name,
@@ -557,7 +568,7 @@ exports.handler = async function(event) {
             sent: true
           });
         }
-        console.log('LIVE: Sent ' + buyers.length + ' alerts for deal ' + deal.streetAddress);
+        console.log('LIVE: Sent alerts for deal ' + deal.streetAddress + (testOnlyPhone ? ' (TEST_ONLY_PHONE=' + testOnlyPhone + ')' : ''));
       } else {
         // TEST MODE: Log what would happen
         dealResult.alerts = buyers.map(function(b) {
