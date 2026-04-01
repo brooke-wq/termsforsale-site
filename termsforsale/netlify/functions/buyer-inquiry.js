@@ -6,7 +6,7 @@
 //
 // POST /api/buyer-inquiry
 
-const { upsertContact, addTags, postNote } = require('./_ghl');
+const { upsertContact, addTags, postNote, sendSMS, sendEmail } = require('./_ghl');
 
 const GHL_API_KEY     = process.env.GHL_API_KEY;
 const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
@@ -65,6 +65,71 @@ exports.handler = async (event) => {
     }
     if (event.queryStringParameters) {
       Object.assign(payload, event.queryStringParameters);
+    }
+
+    // ── BUYING CRITERIA CONFIRMATION ────────────────────────────────────────
+    if (payload.action === 'buying-criteria-confirm') {
+      console.log('[buyer-inquiry] Buying criteria confirmation for ' + payload.email);
+
+      // Find contact by email/phone
+      var confirmContactId = null;
+      if (payload.email || payload.phone) {
+        var uRes = await upsertContact(GHL_API_KEY, GHL_LOCATION_ID, {
+          firstName: payload.firstName || '',
+          email: payload.email || '',
+          phone: payload.phone || '',
+          source: 'Buying Criteria Form'
+        });
+        if (uRes.status < 400) {
+          confirmContactId = (uRes.body.contact && uRes.body.contact.id) || uRes.body.id;
+        }
+      }
+
+      var smsOk = false, emailOk = false;
+
+      // Send confirmation SMS
+      if (confirmContactId && payload.phone) {
+        try {
+          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, payload.phone,
+            'Thanks ' + (payload.firstName || '') + '! Your buying criteria is saved. We\'ll match you to deals automatically. Browse: https://deals.termsforsale.com');
+          smsOk = true;
+        } catch(e) { console.warn('[buyer-inquiry] SMS failed:', e.message); }
+      }
+
+      // Send recap email
+      if (confirmContactId && payload.email) {
+        try {
+          var summary = (payload.summary || '').replace(/\n/g, '<br>');
+          await sendEmail(GHL_API_KEY, confirmContactId,
+            'Your Buying Criteria — Terms For Sale',
+            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+            + '<div style="background:#0D1F3C;padding:24px 32px;border-radius:12px 12px 0 0"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:36px"></div>'
+            + '<div style="padding:32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
+            + '<h2 style="color:#0D1F3C;margin:0 0 12px">Your Buying Criteria is Saved!</h2>'
+            + '<p style="color:#4A5568;line-height:1.6;margin:0 0 20px">Here\'s a recap of what you submitted:</p>'
+            + '<div style="background:#F4F6F9;border-radius:8px;padding:16px 20px;margin:0 0 24px;font-size:13px;line-height:1.8;color:#4A5568">' + summary + '</div>'
+            + '<p style="color:#4A5568;line-height:1.6;margin:0 0 20px">We\'ll start matching you to deals that fit your criteria. You can update your buy box anytime at:</p>'
+            + '<a href="https://deals.termsforsale.com/buy-box.html" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Update My Buy Box</a>'
+            + '<p style="color:#718096;font-size:13px;margin-top:24px">Questions? Reply to this email anytime.</p>'
+            + '</div></div>'
+          );
+          emailOk = true;
+        } catch(e) { console.warn('[buyer-inquiry] Email failed:', e.message); }
+      }
+
+      // Internal notification to Brooke
+      var brookePhone = process.env.BROOKE_PHONE;
+      if (brookePhone) {
+        try {
+          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone,
+            'NEW BUYER CRITERIA: ' + (payload.firstName || '') + ' ' + (payload.email || '') + ' — ' + (payload.summary || '').split('\n').slice(0, 3).join(' | ').slice(0, 120));
+        } catch(e) {}
+      }
+
+      return {
+        statusCode: 200, headers,
+        body: JSON.stringify({ success: true, type: 'buying-criteria-confirm', sms: smsOk, email: emailOk })
+      };
     }
 
     // ── Detect payload type ──────────────────────────────────────────────────
