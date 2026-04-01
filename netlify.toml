@@ -143,6 +143,26 @@
   status = 301
 
 [[redirects]]
+  from = "/api/comp-pull"
+  to = "/.netlify/functions/comp-pull"
+  status = 200
+
+[[redirects]]
+  from = "/api/follow-up-nudge"
+  to = "/.netlify/functions/follow-up-nudge"
+  status = 200
+
+[[redirects]]
+  from = "/api/partner-scorecard"
+  to = "/.netlify/functions/partner-scorecard"
+  status = 200
+
+[[redirects]]
+  from = "/api/revenue-tracker"
+  to = "/.netlify/functions/revenue-tracker"
+  status = 200
+
+[[redirects]]
   from = "/blog"
   to = "/blog/"
   status = 301

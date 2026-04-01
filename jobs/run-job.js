@@ -38,6 +38,9 @@ const JOB_CONFIG = {
   'buyer-relations':        { type: 'tag-scan', file: 'buyer-relations', tag: 'buyer-signup', locationEnv: 'GHL_LOCATION_ID' },
   'dispo-buddy-triage':     { type: 'tag-scan', file: 'dispo-buddy-triage', tag: 'jv-submitted', locationEnv: 'GHL_LOCATION_ID_DISPO' },
   'equity-exit-intake':     { type: 'tag-scan', file: 'equity-exit-intake', tag: 'equity-exit-inquiry', locationEnv: 'GHL_LOCATION_ID' },
+  'follow-up-nudge':        { type: 'self-contained', file: 'follow-up-nudge' },
+  'partner-scorecard':      { type: 'self-contained', file: 'partner-scorecard' },
+  'revenue-tracker':        { type: 'self-contained', file: 'revenue-tracker' },
 };
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
