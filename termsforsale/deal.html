@@ -512,7 +512,7 @@ async function doLogin(){
   const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
   ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
-  setTimeout(()=>closeAuth(),2000);
+  setTimeout(()=>{closeAuth();location.reload();},1500);
   btn.disabled=false;btn.textContent='Log In';
 }
 async function doSignup(){
@@ -530,7 +530,7 @@ async function doSignup(){
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
   ok.innerHTML='Account created! Welcome, '+fn+'! Check your phone and email for confirmation.';ok.style.display='block';
-  setTimeout(()=>closeAuth(),1400);
+  setTimeout(()=>{closeAuth();location.reload();},1500);
   btn.disabled=false;btn.textContent='Create Free Account';
 }
 function updateNavAuth(user){
