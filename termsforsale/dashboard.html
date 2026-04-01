@@ -187,43 +187,26 @@ function typeClass(t){
   return'type-cash';
 }
 
-// ── FETCH ACTIVE DEALS ─────────────────────────────────
+// ── FETCH ACTIVE DEALS (from Notion via /api/deals) ────
 function fetchDeals(){
-  return fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0&headers=1')
-    .then(function(r){if(!r.ok)throw new Error('Sheet error');return r.text();})
-    .then(function(text){
-      var m=text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
-      if(!m)return[];
-      var json=JSON.parse(m[1]);
-      var cols=json.table.cols.map(function(c){return c.label.trim();});
-      var rows=json.table.rows||[];
-      var ACTIVE=['actively marketing','active marketing','active'];
-      var seen={};
-      return rows.map(function(row){
-        var o={};var dupe={};
-        cols.forEach(function(c,i){
-          var cell=row.c[i];var val=cell?(cell.v!==null?String(cell.v).trim():''):'';
-          if(dupe[c]===undefined){dupe[c]=0;o[c]=val;o[c+'__0']=val;}
-          else{dupe[c]++;o[c+'__'+dupe[c]]=val;o[c]=val;}
-        });
-        return o;
-      }).filter(function(r){
-        return ACTIVE.indexOf((r['Deal Status']||'').toLowerCase().trim())>-1;
-      }).map(function(r){
+  return fetch('/api/deals')
+    .then(function(r){if(!r.ok)throw new Error('Deals API error');return r.json();})
+    .then(function(data){
+      return (data.deals||[]).map(function(d){
         return {
-          id:r['Deal ID']||r['Deal Status__0'],
-          dealType:r['Deal Type'],
-          streetAddress:r['Street Address'],
-          city:r['City'],state:r['State'],
-          nearestMetro:r['Nearest Metro Area'],
-          askingPrice:+r['Asking Price']||0,
-          entryFee:+r['Entry Fee']||0,
-          beds:r['Beds'],baths:r['Baths'],sqft:r['Sqft'],
-          coe:r['COE'],
-          coverPhoto:r['Cover Photo'],
-          highlight1:r['Highlight 1']
+          id:d.id,
+          dealType:d.dealType,
+          streetAddress:d.streetAddress||d.street_address,
+          city:d.city,state:d.state,
+          nearestMetro:d.nearestMetro||d.nearest_metro||(d.city+', '+d.state),
+          askingPrice:+d.askingPrice||+d.asking_price||0,
+          entryFee:+d.entryFee||+d.entry_fee||0,
+          beds:d.beds,baths:d.baths,sqft:d.sqft||d.living_area,
+          coe:d.coe,
+          coverPhoto:d.photos||d.coverPhoto,
+          highlight1:d.highlight1||d.highlight_1
         };
-      }).filter(function(d){return !!d.id;});
+      });
     });
 }
 
