@@ -1,8 +1,8 @@
-# Deal Pros LLC — Codebase Guide
+# Deal Pros LLC — Codebase Guide + Paperclip AI OS
 
 ## Project Overview
 
-Deal Pros LLC is a real estate wholesale company that operates two public-facing sites and an AI-powered back-office stack:
+Deal Pros LLC is a real estate wholesale company that operates two public-facing sites and an AI-powered back-office stack called **Paperclip**:
 
 - **Terms For Sale** (`termsforsale/`) — buyer-facing deal marketplace. Sellers submit leads, buyers browse and claim deals, VIP buyers get early access.
 - **Dispo Buddy** (`dispobuddy/`) — JV partner-facing site where wholesalers submit off-market deals to Deal Pros' buyer network.
@@ -159,3 +159,89 @@ The VS Code "Deploy to Netlify" task (Cmd+Shift+B) automates this.
 - Notion deal status `"Actively Marketing"` is the filter used by `deals.js` to show live deals
 - GHL is the source of truth for contacts/leads; Notion is the source of truth for deal inventory
 - The `termsforsale-site/lead-engine/` subdirectory is a separate Next.js app — do not modify unless specifically working on it
+
+---
+
+## Paperclip AI OS — Infrastructure
+
+Paperclip is the automated AI operating system that runs Deal Pros' back-office operations.
+
+### DigitalOcean Droplet
+
+- **Name:** paperclip
+- **IP:** 64.23.204.220
+- **Login:** `ssh root@64.23.204.220` / password: `Paperclip2026!`
+- **OS:** Ubuntu 22.04 LTS, Node.js 18+
+- **Repo:** `/root/termsforsale-site` (auto-pulls on push via GitHub webhook on port 9000)
+- **Logs:** `/var/log/paperclip.log`
+- **Cost:** $6/month
+
+### Cron Jobs (crontab on Droplet)
+
+All jobs run via `jobs/run-job.js` which wraps Netlify functions for standalone execution.
+
+| Job | Schedule | Trigger Tag | What It Does |
+|---|---|---|---|
+| underwriting-poller | */15 * * * * | `uw-requested` | Claude underwriting → GHL note |
+| deal-package-poller | */15 * * * * | `pkg-requested` | Claude marketing package → GHL note |
+| lead-intake | */15 * * * * | `lead-new` | Score seller leads 1-50, route hot to UW |
+| seller-call-prep | */15 * * * * | `uw-complete` | Generate Eddie's call brief |
+| buyer-relations | */30 * * * * | `buyer-signup` | Tag + profile new buyer signups |
+| dispo-buddy-triage | */15 * * * * | `jv-submitted` | Claude viability screen (DEFERRED) |
+| notify-buyers | */30 * * * * | (scans Notion) | Match deals to buyers, send SMS + email |
+| deal-dog-poller | 0 * * * * | `birddog-submitted` | Review bird dog student leads |
+| equity-exit-intake | */30 * * * * | `equity-exit-inquiry` | Process co-ownership inquiries |
+| follow-up-nudge | */30 * * * * | `lead-warm`/`lead-hot` | Auto-SMS stale leads after 7 days |
+| ceo-briefing | 0 14 * * * | (scheduled) | Daily 7am AZ briefing → SMS to Brooke |
+| weekly-synthesis | 0 15 * * 1 | (scheduled) | Monday 8am AZ weekly report |
+| partner-scorecard | 0 15 * * 5 | (scheduled) | Friday partner performance report |
+| revenue-tracker | 0 14 1 * * | (scheduled) | Monthly P&L summary |
+| watchdog | 0 */6 * * * | (scheduled) | Health check, alerts Brooke if down |
+
+### Auto-Deploy
+
+GitHub webhook fires on push to main → Droplet's `deploy-hook.js` (port 9000) pulls latest code automatically.
+
+### GHL Configuration (Single Location)
+
+- **Location ID:** `7IyUgu1zpi38MDYpSDTs` (Terms For Sale — used for all sub-accounts)
+- **API Key:** stored in `GHL_API_KEY` env var
+- **CEO Briefing Contact ID:** `qO4YuZHrhGTTBaFKPDYD`
+- **Brooke Contact ID:** `1HMBtAv9EuTlJa5EekAL`
+- **Brooke Phone:** `+15167120113`
+
+### Tag-Based Automation Flow
+
+```
+Seller submits form → lead-new tag → lead-intake scores it
+  → if hot (35+): uw-requested tag → underwriting-poller
+  → uw-complete tag → seller-call-prep → call-prepped tag
+
+Buyer signs up → buyer-signup tag → buyer-relations profiles them
+  → buyer-active tag → notify-buyers matches to deals → SMS + email
+
+JV partner submits → jv-submitted tag → dispo-buddy-triage (DEFERRED)
+  → if viable: uw-requested → underwriting → partner SMS
+
+Contact tagged pkg-requested → deal-package-poller → pkg-complete
+```
+
+### SMS & Email Confirmations
+
+All form submissions send confirmation SMS + email:
+- **Signup** → welcome SMS + branded email (via auth-signup.js)
+- **VIP Signup** → VIP welcome SMS + email (via vip-buyer-submit.js)
+- **Buying Criteria** → recap email + internal SMS to Brooke (via buyer-inquiry.js)
+- **Deal Match** → SMS + branded deal alert email with photo (via notify-buyers.js)
+
+### Notion Database
+
+- **DB ID:** `a3c0a38fd9294d758dedabab2548ff29`
+- **Key fields:** Street Address, City, State, Deal Type, Asking Price, Entry Fee, Deal Status, Date Funded, Amount Funded, Date Assigned
+- **"Closed" detection:** Uses `Date Funded` field (not last_edited_time)
+
+### Monthly Cost
+
+- DigitalOcean Droplet: $6/mo
+- Claude API (Sonnet): ~$4/mo at current volume
+- **Total: ~$10/mo**
