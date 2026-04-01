@@ -475,7 +475,7 @@ footer{background:var(--navy);padding:52px 55px 0}
     <div class="auth-head">
       <button class="auth-x" onclick="closeAuth()">&#215;</button>
       <h2>Welcome to Terms For Sale</h2>
-      <p>Unlock addresses, photos and your buyer dashboard</p>
+      <p>Unlock full addresses, photos, terms, and your buyer dashboard.</p>
     </div>
     <div class="auth-body">
       <div class="auth-tabs">
@@ -494,9 +494,9 @@ footer{background:var(--navy);padding:52px 55px 0}
       <!-- SIGNUP -->
       <div id="ap-signup" style="display:none">
         <div class="a-perks">
-          <div class="a-perk">&#10003; Full address + photos unlocked</div>
-          <div class="a-perk">&#10003; Early access before public</div>
-          <div class="a-perk">&#10003; Buyer dashboard</div>
+          <div class="a-perk">&#10003; Full address, photos, and deal terms unlocked</div>
+          <div class="a-perk">&#10003; 48-hour early access before broad blasts</div>
+          <div class="a-perk">&#10003; Save your buy box so we can match deals to you</div>
         </div>
         <div class="a-err" id="a-su-err"></div>
         <div class="a-ok" id="a-su-ok"></div>
@@ -536,8 +536,14 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
   <div class="hero-content hero-content-grid">
     <div class="hero-headline">
-      <h1>Off-Market Deals You Won't Find on Zillow</h1>
-      <p>Subject-to, seller finance, and cash deals delivered weekly. Lock in rates under 3% on properties with built-in equity.</p>
+      <h1>Creative-Finance Deals With 2–4% Rates You Can Actually Close</h1>
+      <p>Subject-to, seller finance, and cash deals, including properties you might see on Zillow, but with private terms, pricing, and access you won't get from the public listing.</p>
+      <ul style="list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:6px">
+        <li style="font-size:14px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Lock in loans under 3% with built-in equity</li>
+        <li style="font-size:14px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>See full terms, photos, and numbers up front</li>
+        <li style="font-size:14px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Get 48-hour early access before the wider list</li>
+      </ul>
+      <a href="#" onclick="openAuth('signup');return false" style="display:inline-block;margin-top:18px;padding:12px 28px;background:var(--orange);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;border-radius:10px;text-decoration:none;transition:background .15s" onmouseover="this.style.background='var(--orange-dark)'" onmouseout="this.style.background='var(--orange)'">Create Free Investor Account</a>
     </div>
     <div class="hero-widget">
       <div class="hw-top">
@@ -585,7 +591,7 @@ footer{background:var(--navy);padding:52px 55px 0}
       <div>
         <div class="explore-eyebrow">Live Inventory</div>
         <div class="explore-title">Browse Deals Now</div>
-        <div class="explore-subtitle">Updated daily. No MLS. No bidding wars. No agents.</div>
+        <div class="explore-subtitle">Updated daily. No bidding wars. Direct-to-investor deal access and creative terms you won't get from the public listing.</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <a href="/map.html" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-weight:600;color:#4A5568;text-decoration:none;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .15s" onmouseover="this.style.borderColor='#29ABE2'" onmouseout="this.style.borderColor='#E2E8F0'">
@@ -636,7 +642,7 @@ footer{background:var(--navy);padding:52px 55px 0}
         </div>
         <div style="font-size:11px;font-weight:700;color:#29ABE2;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 1</div>
         <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Browse Active Deals</div>
-        <div style="font-size:13px;color:#718096;line-height:1.65">Filter by city, state, price, or deal type. Every listing is off-market with full terms, numbers, and photos.</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Filter by city, state, price, or deal type. Every listing is set up for investors with clear terms, numbers, and photos. Some properties may appear on sites like Zillow or the MLS, but the investor terms and access live here.</div>
       </div>
       <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
         <div style="width:52px;height:52px;border-radius:14px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
@@ -652,13 +658,13 @@ footer{background:var(--navy);padding:52px 55px 0}
         </div>
         <div style="font-size:11px;font-weight:700;color:#10B981;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 3</div>
         <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Close with Confidence</div>
-        <div style="font-size:13px;color:#718096;line-height:1.65">Your deal coordinator walks you through close. No agents. No MLS. Just you, the seller, and a clean contract.</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Your deal coordinator walks you through close in 7–30 days. Fewer middlemen, clear expectations, and creative structures built for investors.</div>
       </div>
     </div>
     <div style="display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        No agent needed
+        Designed for investors, not retail buyers
       </div>
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -683,7 +689,7 @@ footer{background:var(--navy);padding:52px 55px 0}
     <div class="st-text">
       <div class="eyebrow" style="font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Streamlined Matched Deals</div>
       <h2>Streamlined Matched Deals <span class="daily-pill">Daily</span></h2>
-      <p style="margin-top:14px">From cash offers to creative financing, discover the perfect match for your next investment.</p>
+      <p style="margin-top:14px">From cash offers to creative finance, get deals pre-packaged with investor-friendly terms so you can move quickly on the ones that fit your strategy.</p>
     </div>
     <div class="st-stats">
       <div class="st-stat">
@@ -708,7 +714,7 @@ footer{background:var(--navy);padding:52px 55px 0}
       <div class="map-head-left">
         <div class="map-eyebrow">Browse by Location</div>
         <h2>See Deals Near You</h2>
-        <p>Every active deal plotted on a live map. Click any pin to view full details, terms, and contact info.</p>
+        <p>Every active deal plotted on a live map. Click any pin to view full details, terms, and how to raise your hand for access.</p>
       </div>
       <div class="map-head-right">
         <a href="/map.html" target="_blank" class="map-open-btn">
@@ -730,8 +736,8 @@ footer{background:var(--navy);padding:52px 55px 0}
 <!-- TESTIMONIALS -->
 <section class="testi">
   <div class="testi-inner">
-    <div class="testi-eyebrow">Want some proof?</div>
-    <div class="testi-title">Hear From Happy Buyers</div>
+    <div class="testi-eyebrow">Want Proof It Works?</div>
+    <div class="testi-title">Hear from investors who've closed creative and cash deals through Terms For Sale.</div>
     <div class="testi-grid">
       <div class="testi-card">
         <div class="testi-quote">&ldquo;</div>
@@ -762,12 +768,12 @@ footer{background:var(--navy);padding:52px 55px 0}
   <div class="vip-inner">
     <div>
       <div class="vip-eyebrow">Deals That Match Your Criteria</div>
-      <h2 class="vip-title">Never Miss a Deal Again</h2>
-      <p class="vip-sub">Our private buyers list sees deals 48 hours before they go public. Join 2,000+ investors who close faster.</p>
+      <h2 class="vip-title">Never Miss Another Investor-Ready Deal In Your Buy Box</h2>
+      <p class="vip-sub">Our private buyers list sees our best sub-to, seller finance, and cash deals up to 48 hours before broad blasts.</p>
       <div class="vip-perks">
-        <div class="vip-perk"><div class="vip-perk-icon">&#128680;</div><div><strong>Priority alerts via SMS + email</strong> &mdash; beat the crowd</div></div>
-        <div class="vip-perk"><div class="vip-perk-icon">&#127919;</div><div><strong>Deals that match your exact buy box</strong> &mdash; no junk, no spam</div></div>
-        <div class="vip-perk"><div class="vip-perk-icon">&#9889;</div><div><strong>Zero bidding wars</strong> &mdash; move fast, buy fast, done.</div></div>
+        <div class="vip-perk"><div class="vip-perk-icon">&#128680;</div><div><strong>Priority SMS + email alerts</strong> so you beat the crowd</div></div>
+        <div class="vip-perk"><div class="vip-perk-icon">&#127919;</div><div><strong>Deals matched to your exact buy box</strong> (no junk blasts)</div></div>
+        <div class="vip-perk"><div class="vip-perk-icon">&#9889;</div><div><strong>Creative terms and structures</strong> you won't find in the public listing</div></div>
       </div>
     </div>
     <div class="vip-form-card">
@@ -823,7 +829,7 @@ footer{background:var(--navy);padding:52px 55px 0}
         </select>
       </div>
       <label class="vf-agree"><input type="checkbox" id="vip-agree"> By continuing, I also agree to the <a href="/terms.html">Terms of Service</a> &amp; <a href="/privacy.html">Privacy Policy</a></label>
-      <button class="btn-orange-full" onclick="submitVIP()">Join the VIP List — Free</button>
+      <button class="btn-orange-full" onclick="submitVIP()">Join the VIP Buyers List – Free</button>
     </div>
   </div>
 </section>
@@ -1327,7 +1333,7 @@ async function submitVIP(){
     btn.textContent='✓ You\'re on the list!';btn.style.background='#10B981';
     const user={name:fn,email,phone,initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()};
     setUser(user);updateNavAuth(user);
-  }catch(e){btn.disabled=false;btn.textContent='Join the VIP List \u2014 Free';}
+  }catch(e){btn.disabled=false;btn.textContent='Join the VIP Buyers List \u2013 Free';}
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────
