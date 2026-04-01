@@ -337,6 +337,7 @@ footer{background:var(--navy);padding:52px 55px 0}
 .auth-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
 .a-field{margin-bottom:10px}
 .a-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
+.su-chip{display:inline-flex;cursor:pointer}.su-chip input{display:none}.su-chip span{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text-mid);background:#fff;transition:all .15s;user-select:none}.su-chip input:checked+span{background:var(--blue);color:#fff;border-color:var(--blue)}
 .a-input:focus{border-color:var(--blue);background:#fff}
 .a-input::placeholder{color:var(--text-light)}
 .a-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
@@ -510,19 +511,19 @@ footer{background:var(--navy);padding:52px 55px 0}
         <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
         <div class="a-field"><input class="a-input" id="su-pass" type="password" placeholder="Create password"></div>
         <div class="a-field">
-          <select class="a-input" id="su-buy" style="appearance:none;cursor:pointer">
-            <option value="">How do you buy?</option>
-            <option>Cash</option>
-            <option>Subject To</option>
-            <option>Seller Finance</option>
-            <option>Lease Option</option>
-            <option>Novation</option>
-            <option>Morby Method</option>
-            <option>Assumable Loans</option>
-            <option>Partnerships/JV</option>
-            <option>Traditional Financing</option>
-            <option>DSCR</option>
-          </select>
+          <div style="font-size:12px;color:var(--text-light);margin-bottom:6px;font-weight:500">How do you buy? (select all that apply)</div>
+          <div id="su-buy-wrap" style="display:flex;flex-wrap:wrap;gap:6px">
+            <label class="su-chip"><input type="checkbox" value="Cash"><span>Cash</span></label>
+            <label class="su-chip"><input type="checkbox" value="Subject To"><span>Subject To</span></label>
+            <label class="su-chip"><input type="checkbox" value="Seller Finance"><span>Seller Finance</span></label>
+            <label class="su-chip"><input type="checkbox" value="Lease Option"><span>Lease Option</span></label>
+            <label class="su-chip"><input type="checkbox" value="Novation"><span>Novation</span></label>
+            <label class="su-chip"><input type="checkbox" value="Morby Method"><span>Morby Method</span></label>
+            <label class="su-chip"><input type="checkbox" value="Assumable Loans"><span>Assumable Loans</span></label>
+            <label class="su-chip"><input type="checkbox" value="Partnerships/JV"><span>Partnerships/JV</span></label>
+            <label class="su-chip"><input type="checkbox" value="Traditional Financing"><span>Traditional Financing</span></label>
+            <label class="su-chip"><input type="checkbox" value="DSCR"><span>DSCR</span></label>
+          </div>
         </div>
         <button class="btn-full-blue" onclick="doSignup()">Create Free Account</button>
         <div class="a-note">By signing up you agree to receive SMS &amp; email alerts. Reply STOP to opt out.</div>
@@ -1363,7 +1364,7 @@ async function doLogin(){
 async function doSignup(){
   const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
   const email=document.getElementById('su-email').value.trim(),phone=document.getElementById('su-phone').value.trim();
-  const buy=document.getElementById('su-buy').value;
+  const buy=Array.from(document.querySelectorAll('#su-buy-wrap input:checked')).map(function(c){return c.value;}).join(', ');
   const pass=document.getElementById('su-pass').value.trim();
   const err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
   err.style.display='none';ok.style.display='none';
