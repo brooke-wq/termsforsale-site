@@ -252,6 +252,35 @@ exports.handler = async (event) => {
         await postNote(GHL_API_KEY, contactId, offerNotes);
       }
 
+      // Send internal notification email to offers@termsforsale.com
+      try {
+        var notifyContactId = contactId || 'qO4YuZHrhGTTBaFKPDYD'; // fallback to CEO Briefing contact
+        await sendEmail(GHL_API_KEY, notifyContactId,
+          'NEW OFFER: $' + (payload.price || '?') + ' — ' + (fullAddress || 'Unknown Property'),
+          '<div style="font-family:Arial,sans-serif;max-width:600px">'
+          + '<h2 style="color:#0D1F3C;margin:0 0 16px">New Offer Received</h2>'
+          + '<table style="width:100%;border-collapse:collapse">'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Buyer</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-weight:700">' + contactName + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Phone</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C">' + (phone || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Offer Amount</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-weight:800;font-size:18px">$' + Number(payload.price||0).toLocaleString() + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Property</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C">' + (fullAddress || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Structure</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C">' + (payload.deal_structure || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Close</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C">' + (payload.close_date || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;color:#718096;font-weight:600">Notes</td><td style="padding:8px 0;color:#0D1F3C">' + (payload.message || 'None') + '</td></tr>'
+          + '</table></div>'
+        );
+        console.log('[buyer-inquiry] Internal offer notification sent');
+      } catch(e) { console.warn('[buyer-inquiry] Internal notification failed:', e.message); }
+
+      // SMS alert to Brooke
+      var brookePhone = process.env.BROOKE_PHONE;
+      if (brookePhone) {
+        try {
+          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone,
+            'NEW OFFER: $' + Number(payload.price||0).toLocaleString() + ' on ' + (fullAddress || 'property') + ' from ' + contactName);
+        } catch(e) {}
+      }
+
       return {
         statusCode: 200,
         headers,
