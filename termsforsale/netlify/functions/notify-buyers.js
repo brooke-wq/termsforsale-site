@@ -466,6 +466,61 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     }
   }
 
+  // Send deal alert email to the buyer
+  if (contact.email || contact.id) {
+    var coverImg = '';
+    var photoMatch = (deal.coverPhoto || '').match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+    if (photoMatch) coverImg = 'https://deals.termsforsale.com/api/drive-image?id=' + photoMatch[1] + '&sz=800';
+
+    var specs = [
+      deal.beds ? deal.beds + ' Beds' : '',
+      deal.baths ? deal.baths + ' Baths' : '',
+      deal.sqft ? deal.sqft.toLocaleString() + ' Sqft' : '',
+      deal.yearBuilt ? 'Built ' + deal.yearBuilt : ''
+    ].filter(Boolean).join(' · ');
+
+    var emailHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff">'
+      + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
+      + '<img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:32px">'
+      + '</div>'
+      + (coverImg ? '<div style="width:100%;max-height:300px;overflow:hidden"><img src="' + coverImg + '" alt="Property" style="width:100%;display:block"></div>' : '')
+      + '<div style="padding:28px 32px">'
+      + '<div style="display:inline-block;padding:4px 12px;border-radius:20px;background:#EBF8FF;color:#1a8bbf;font-size:12px;font-weight:700;margin-bottom:12px">' + (deal.dealType || 'Deal') + '</div>'
+      + '<h2 style="color:#0D1F3C;font-size:22px;margin:0 0 6px">' + deal.city + ', ' + deal.state + '</h2>'
+      + '<p style="color:#718096;font-size:13px;margin:0 0 20px">' + (deal.streetAddress || '') + (specs ? ' · ' + specs : '') + '</p>'
+      + '<table style="width:100%;border-collapse:collapse;margin:0 0 24px">'
+      + (price ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Asking Price</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:15px;font-weight:800;text-align:right">' + price + '</td></tr>' : '')
+      + (entry ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Entry Fee</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:15px;font-weight:800;text-align:right">' + entry + '</td></tr>' : '')
+      + '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Deal Type</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:14px;font-weight:600;text-align:right">' + (deal.dealType || 'N/A') + '</td></tr>'
+      + '</table>'
+      + '<a href="' + deal.dealUrl + '" style="display:inline-block;padding:14px 32px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">View Full Deal Details</a>'
+      + '<p style="color:#718096;font-size:12px;margin-top:24px">This deal matched your buying criteria. <a href="https://deals.termsforsale.com/buy-box.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
+      + '</div>'
+      + '<div style="background:#F4F6F9;padding:16px 32px;border-radius:0 0 12px 12px;text-align:center">'
+      + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale · Deal Pros LLC · <a href="https://deals.termsforsale.com" style="color:#29ABE2">deals.termsforsale.com</a></p>'
+      + '</div></div>';
+
+    try {
+      await httpRequest('https://services.leadconnectorhq.com/conversations/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + apiKey,
+          'Version': '2021-07-28',
+          'Content-Type': 'application/json'
+        }
+      }, {
+        type: 'Email',
+        contactId: contact.id,
+        subject: 'New ' + (deal.dealType || 'Deal') + ' in ' + deal.city + ', ' + deal.state + (price ? ' — ' + price : ''),
+        html: emailHtml,
+        emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+      });
+      console.log('notify-buyers: Email sent to ' + contact.name);
+    } catch (emailErr) {
+      console.warn('notify-buyers: Email failed for ' + contact.name + ': ' + emailErr.message);
+    }
+  }
+
   return result.status;
 }
 
