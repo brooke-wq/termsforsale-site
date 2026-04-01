@@ -277,7 +277,7 @@ function toggleExclusive(el,groupId){
 
 // ── ASSET SAVED DOTS ──────────────────────────────────────────
 function refreshAssetDots(profile){
-  ['sf','mf','commercial','land'].forEach(a=>{
+  ['sf','mf-small','mf-large','land','mobile','mobile-park','condo','commercial','storage','teardown','hotel','industrial','new-construction'].forEach(a=>{
     const dot=document.getElementById('dot-'+a);
     if(dot)dot.style.display=hasSavedBB(profile,a)?'inline-block':'none';
   });
@@ -309,9 +309,9 @@ function chipHtml(val,label,group,exclusive,saved){
 
 function formCash(saved){
   const s=saved||{};
-  const assetLabel={sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_asset];
-  const showBeds=_asset==='sf'||_asset==='mf';
-  const showUnits=_asset==='mf';
+  const assetLabel={'sf':'Single Family','mf-small':'Multi-Family (2-4)','mf-large':'Multi-Family 5+','land':'Land','mobile':'Mobile Homes','mobile-park':'Mobile Home/RV Parks','condo':'Condo/Townhouse','commercial':'Commercial','storage':'Storage','teardown':'Tear Down/Dev Lots','hotel':'Hotels/Motels','industrial':'Industrial','new-construction':'New Construction'}[_asset]||_asset;
+  const showBeds=_asset==='sf'||_asset==='mf-small'||_asset==='mf-large'||_asset==='condo'||_asset==='mobile';
+  const showUnits=_asset==='mf-large';
   return `
   <div class="profile-banner cash">💵 Cash Buyer — ${assetLabel}</div>
 
@@ -327,9 +327,9 @@ function formCash(saved){
     </div>
     ${showBeds?`
     <div class="bb-divider"></div>
-    <div class="bb-card-title" style="margin-bottom:10px">Min Bedrooms</div>
-    <div class="chips" id="grp-beds">
-      ${['Any','2+','3+','4+'].map(v=>chipHtml(v,v,'grp-beds',true,s.beds||'Any')).join('')}
+    <div class="bb-row">
+      <div class="bb-field"><label class="bb-label">Min Bedrooms</label><input class="bb-input" type="number" id="bb-min-beds" placeholder="e.g. 3" value="${s.minBeds||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Min Bathrooms</label><input class="bb-input" type="number" id="bb-min-baths" placeholder="e.g. 2" value="${s.minBaths||''}" oninput="setDirty(true)"></div>
     </div>`:''}
     ${showUnits?`
     <div class="bb-divider"></div>
@@ -358,8 +358,8 @@ function formCash(saved){
 
   <div class="bb-card">
     <div class="bb-card-title">Exit Strategies</div>
-    <div class="chips" id="grp-exits">
-      ${['Buy & Hold','BRRRR','Fix & Flip','STR / Airbnb','Mid-Term Rental','PadSplit','Wholesaler Resell'].map(v=>chipHtml(v,v,'grp-exits',false,s.exits||[])).join('')}
+    <div class="chips" id="grp-exits" style="gap:8px">
+      ${['Buy & Hold','Fix & Flip','Long Term Rental','Short Term Rental','Mid Term Rental','Co-Living/PadSplit','Wholesale','Lease Option','BRRR','Wrap Around','Group Homes/Assisted Living','Section 8','Note Trading','Development','Primary Residence'].map(v=>chipHtml(v,v,'grp-exits',false,s.exits||[])).join('')}
     </div>
   </div>
 
@@ -376,15 +376,15 @@ function formCash(saved){
   </div>
 
   <div class="bb-card">
-    <div class="bb-card-title">Additional Notes / Hard Criteria</div>
-    <textarea class="bb-textarea" id="bb-notes" placeholder="Any absolute dealbreakers or specific requirements not covered above?" oninput="setDirty(true)">${s.notes||''}</textarea>
+    <div class="bb-card-title">Additional Notes / Criteria</div>
+    <textarea class="bb-textarea" id="bb-notes" placeholder="Any additional buy box criteria, dealbreakers, or specific requirements?" oninput="setDirty(true)">${s.notes||''}</textarea>
   </div>`;
 }
 
 function formCreative(saved){
   const s=saved||{};
-  const assetLabel={sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_asset];
-  const showBeds=_asset==='sf'||_asset==='mf';
+  const assetLabel={'sf':'Single Family','mf-small':'Multi-Family (2-4)','mf-large':'Multi-Family 5+','land':'Land','mobile':'Mobile Homes','mobile-park':'Mobile Home/RV Parks','condo':'Condo/Townhouse','commercial':'Commercial','storage':'Storage','teardown':'Tear Down/Dev Lots','hotel':'Hotels/Motels','industrial':'Industrial','new-construction':'New Construction'}[_asset]||_asset;
+  const showBeds=_asset==='sf'||_asset==='mf-small'||_asset==='mf-large'||_asset==='condo'||_asset==='mobile';
   return `
   <div class="profile-banner creative">🔑 Creative Finance Buyer — ${assetLabel}</div>
 
@@ -417,16 +417,12 @@ function formCreative(saved){
         <input class="bb-input" id="bb-max-rate" placeholder="e.g. 6.5" value="${s.maxRate||''}" oninput="setDirty(true)">
       </div>
     </div>
-    <div class="bb-divider"></div>
-    <div class="bb-card-title" style="margin-bottom:10px">Rate Sensitivity</div>
-    <div class="chips" id="grp-rate-pref">
-      ${['Only below 4%','Up to 5%','Up to 6.5%','Any rate if CF positive'].map(v=>chipHtml(v,v,'grp-rate-pref',true,s.ratePref||'')).join('')}
-    </div>
     ${showBeds?`
     <div class="bb-divider"></div>
-    <div class="bb-card-title" style="margin-bottom:10px">Min Bedrooms</div>
-    <div class="chips" id="grp-beds">
-      ${['Any','2+','3+','4+'].map(v=>chipHtml(v,v,'grp-beds',true,s.beds||'Any')).join('')}
+    <div class="bb-row">
+      <div class="bb-field"><label class="bb-label">Min Bedrooms</label><input class="bb-input" type="number" id="bb-min-beds" placeholder="e.g. 3" value="${s.minBeds||''}" oninput="setDirty(true)"></div>
+      <div class="bb-field"><label class="bb-label">Min Bathrooms</label><input class="bb-input" type="number" id="bb-min-baths" placeholder="e.g. 2" value="${s.minBaths||''}" oninput="setDirty(true)"></div>
+    </div>
     </div>`:''}
     ${_asset==='commercial'?`
     <div class="bb-divider"></div>
@@ -440,8 +436,8 @@ function formCreative(saved){
 
   <div class="bb-card">
     <div class="bb-card-title">Exit Strategies</div>
-    <div class="chips" id="grp-exits">
-      ${['Buy & Hold','BRRRR (refi out)','Wrap & Resell','Mid-Term Rental','STR / Airbnb','PadSplit'].map(v=>chipHtml(v,v,'grp-exits',false,s.exits||[])).join('')}
+    <div class="chips" id="grp-exits" style="gap:8px">
+      ${['Buy & Hold','Fix & Flip','Long Term Rental','Short Term Rental','Mid Term Rental','Co-Living/PadSplit','Wholesale','Lease Option','BRRR','Wrap Around','Group Homes/Assisted Living','Section 8','Note Trading','Development','Primary Residence'].map(v=>chipHtml(v,v,'grp-exits',false,s.exits||[])).join('')}
     </div>
   </div>
 
@@ -451,14 +447,14 @@ function formCreative(saved){
   </div>
 
   <div class="bb-card">
-    <div class="bb-card-title">Additional Notes / Hard Criteria</div>
-    <textarea class="bb-textarea" id="bb-notes" placeholder="Any absolute dealbreakers or specific requirements not covered above?" oninput="setDirty(true)">${s.notes||''}</textarea>
+    <div class="bb-card-title">Additional Notes / Criteria</div>
+    <textarea class="bb-textarea" id="bb-notes" placeholder="Any additional buy box criteria, dealbreakers, or specific requirements?" oninput="setDirty(true)">${s.notes||''}</textarea>
   </div>`;
 }
 
 function formLender(saved){
   const s=saved||{};
-  const assetLabel={sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_asset];
+  const assetLabel={'sf':'Single Family','mf-small':'Multi-Family (2-4)','mf-large':'Multi-Family 5+','land':'Land','mobile':'Mobile Homes','mobile-park':'Mobile Home/RV Parks','condo':'Condo/Townhouse','commercial':'Commercial','storage':'Storage','teardown':'Tear Down/Dev Lots','hotel':'Hotels/Motels','industrial':'Industrial','new-construction':'New Construction'}[_asset]||_asset;
   return `
   <div class="profile-banner lender">🏦 Lender / Capital Partner — ${assetLabel}</div>
 
@@ -512,8 +508,7 @@ function renderForm(){
   const formEl = document.getElementById('bb-form');
   if(!formEl) return;
   if(_profile==='cash')         formEl.innerHTML = formCash(saved);
-  else if(_profile==='creative') formEl.innerHTML = formCreative(saved);
-  else                           formEl.innerHTML = formLender(saved);
+  else                           formEl.innerHTML = formCreative(saved);
   setDirty(false);
 }
 
@@ -542,15 +537,24 @@ function renderPage(){
     <div class="profile-tabs">
       <button class="profile-tab${_profile==='cash'?' on':''}" onclick="setProfile('cash',this)"><span class="tab-icon">💵</span> Cash Buyer</button>
       <button class="profile-tab${_profile==='creative'?' on':''}" onclick="setProfile('creative',this)"><span class="tab-icon">🔑</span> Creative Finance</button>
-      <button class="profile-tab${_profile==='lender'?' on':''}" onclick="setProfile('lender',this)"><span class="tab-icon">🏦</span> Lender / Capital</button>
     </div>
 
     <!-- Asset type tabs -->
-    <div class="asset-tabs-wrap">
-      <button class="asset-tab${_asset==='sf'?' on':''}" onclick="setAsset('sf',this)">Single Family<span id="dot-sf" class="asset-saved-dot" style="display:none"></span></button>
-      <button class="asset-tab${_asset==='mf'?' on':''}" onclick="setAsset('mf',this)">Multifamily<span id="dot-mf" class="asset-saved-dot" style="display:none"></span></button>
-      <button class="asset-tab${_asset==='commercial'?' on':''}" onclick="setAsset('commercial',this)">Commercial<span id="dot-commercial" class="asset-saved-dot" style="display:none"></span></button>
-      <button class="asset-tab${_asset==='land'?' on':''}" onclick="setAsset('land',this)">Land<span id="dot-land" class="asset-saved-dot" style="display:none"></span></button>
+    <div style="margin-bottom:8px"><span style="font-size:13px;font-weight:700;color:var(--text-mid)">What property types are you looking for?</span></div>
+    <div class="asset-tabs-wrap" style="flex-wrap:wrap;gap:6px">
+      <button class="asset-tab${_asset==='sf'?' on':''}" onclick="setAsset('sf',this)">Single Family</button>
+      <button class="asset-tab${_asset==='mf-small'?' on':''}" onclick="setAsset('mf-small',this)">Multi-Family (2-4)</button>
+      <button class="asset-tab${_asset==='mf-large'?' on':''}" onclick="setAsset('mf-large',this)">Multi-Family 5+</button>
+      <button class="asset-tab${_asset==='land'?' on':''}" onclick="setAsset('land',this)">Land</button>
+      <button class="asset-tab${_asset==='mobile'?' on':''}" onclick="setAsset('mobile',this)">Mobile Homes</button>
+      <button class="asset-tab${_asset==='mobile-park'?' on':''}" onclick="setAsset('mobile-park',this)">Mobile Home/RV Parks</button>
+      <button class="asset-tab${_asset==='condo'?' on':''}" onclick="setAsset('condo',this)">Condo/Townhouse</button>
+      <button class="asset-tab${_asset==='commercial'?' on':''}" onclick="setAsset('commercial',this)">Commercial</button>
+      <button class="asset-tab${_asset==='storage'?' on':''}" onclick="setAsset('storage',this)">Storage</button>
+      <button class="asset-tab${_asset==='teardown'?' on':''}" onclick="setAsset('teardown',this)">Tear Down/Dev Lots</button>
+      <button class="asset-tab${_asset==='hotel'?' on':''}" onclick="setAsset('hotel',this)">Hotels/Motels</button>
+      <button class="asset-tab${_asset==='industrial'?' on':''}" onclick="setAsset('industrial',this)">Industrial</button>
+      <button class="asset-tab${_asset==='new-construction'?' on':''}" onclick="setAsset('new-construction',this)">New Construction</button>
     </div>
 
     <!-- Dynamic form -->
@@ -569,7 +573,7 @@ function collectData(){
   const data = { profile:_profile, asset:_asset, updatedAt:new Date().toISOString() };
   // Text inputs
   ['max-price','max-repair','min-arv','min-equity','max-entry','max-pmt','min-cf','max-rate',
-   'loan-min','loan-max','max-ltv','rate-range','min-credit','points','markets','notes',
+   'min-beds','min-baths','markets','notes',
    'min-acres','zoning'].forEach(k=>{
     const el=document.getElementById('bb-'+k);
     if(el&&el.value.trim()) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=el.value.trim();
@@ -581,7 +585,7 @@ function collectData(){
     if(chips.length) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=chips;
   });
   // Exclusive chips
-  ['beds','units','rate-pref','timeline','close-speed','recourse'].forEach(k=>{
+  ['units','timeline','close-speed','recourse'].forEach(k=>{
     const el=document.querySelector('#grp-'+k+' .chip.on');
     if(el) data[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=el.dataset.val;
   });
@@ -618,23 +622,21 @@ function saveBuyBox(){
     source: `TFS Buy Box — ${profileLabel} — ${assetLabel}`,
     buy_box_updated: new Date().toISOString().split('T')[0],
     buy_box_complete: 'true',
-    lender_loan_types: (data.loanTypes||[]).join(', ')||'',
-    lender_max_ltv:    data.maxLtv||'',
-    lender_rate_range: data.rateRange||'',
     creative_max_entry: data.maxEntry||'',
     creative_max_pmt:   data.maxPmt||'',
     creative_min_cf:    data.minCf||'',
     creative_max_rate:  data.maxRate||'',
-    creative_rate_pref: data.ratePref||'',
     cash_max_price:     data.maxPrice||'',
     cash_max_repair:    data.maxRepair||'',
     cash_min_arv:       data.minArv||'',
     cash_min_equity:    data.minEquity||'',
-    min_beds:           data.beds||'',
+    min_beds:           data.minBeds||'',
+    min_baths:          data.minBaths||'',
     property_types:     assetLabel,
+    buy_box:            data.notes||'',
     contact_role:       'Buyer',
     close_timeline:     data.timeline||'',
-    tags: ['tfs buyer', _profile==='lender'?'tfs lender':(_profile==='creative'?'creative-buyer':'cash-buyer'), 'buy box complete', 'buyer-signup'],
+    tags: ['tfs buyer', _profile==='creative'?'creative-buyer':'cash-buyer', 'buy box complete', 'buyer-signup'],
   }, getUTMs());
 
   fetch(GHL_WEBHOOK,{
@@ -657,8 +659,8 @@ function saveBuyBox(){
 // ── ADD NEW BOX ───────────────────────────────────────────────
 function addNewBuyBox(){
   // Cycle to next uncompleted profile/asset combo
-  const profiles=['cash','creative','lender'];
-  const assets=['sf','mf','commercial','land'];
+  const profiles=['cash','creative'];
+  const assets=['sf','mf-small','mf-large','land','mobile','mobile-park','condo','commercial','storage','teardown','hotel','industrial','new-construction'];
   for(const p of profiles){
     for(const a of assets){
       if(!hasSavedBB(p,a)){
