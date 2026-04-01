@@ -430,6 +430,15 @@ function saveBuyBox(){
     purchase_timeline: data.timeline||'',
     buy_box: data.notes||'',
     buyer_type:'Buyer', source:'TFS Buy Box',
+    buyer_profile_type: (function(){
+      var s=(data.structures||[]).join(',').toLowerCase();
+      var hasCash=s.includes('cash')||s.includes('traditional')||s.includes('dscr');
+      var hasCreative=s.includes('sub')||s.includes('seller')||s.includes('hybrid')||s.includes('morby')||s.includes('wrap')||s.includes('lease')||s.includes('novation')||s.includes('assumable');
+      if(hasCash&&hasCreative)return'Both';
+      if(hasCash)return'Cash';
+      if(hasCreative)return'Creative';
+      return'Both';
+    })(),
     criteria_last_update: new Date().toISOString().split('T')[0],
     tags:['tfs buyer','buy box complete','buyer-signup'],
   }, getUTMs());

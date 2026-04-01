@@ -45,29 +45,31 @@ exports.handler = async function(event) {
 
     console.log('[buy-box-save] Contact: ' + contactId);
 
-    // 2. Update custom fields using field keys
+    // 2. Update custom fields using field keys (with contact. prefix for GHL API)
     var customFields = [
-      { key: 'deal_structure', field_value: body.deal_structure || '' },
-      { key: 'exits', field_value: body.exits || '' },
-      { key: 'property_type_preference', field_value: body.property_type_preference || '' },
-      { key: 'target_zips', field_value: body.target_zips || '' },
-      { key: 'max_price', field_value: body.max_price || '' },
-      { key: 'max_down', field_value: body.max_down || '' },
-      { key: 'max_monthly', field_value: body.max_monthly || '' },
-      { key: 'target_monthly_cashflow', field_value: body.target_monthly_cashflow || '' },
-      { key: 'max_rate_', field_value: body.max_rate_ || '' },
-      { key: 'arv', field_value: body.arv || '' },
-      { key: 'bedrooms_min', field_value: body.bedrooms_min || '' },
-      { key: 'baths_min', field_value: body.baths_min || '' },
-      { key: 'min_sqft', field_value: body.min_sqft || '' },
-      { key: 'min_year_build', field_value: body.min_year_build || '' },
-      { key: 'remodel_level', field_value: body.remodel_level || '' },
-      { key: 'hoa_tolerance', field_value: body.hoa_tolerance || '' },
-      { key: 'pool', field_value: body.pool || '' },
-      { key: 'purchase_timeline', field_value: body.purchase_timeline || '' },
-      { key: 'buy_box', field_value: body.buy_box || '' },
-      { key: 'buyer_type', field_value: body.buyer_type || 'Buyer' },
-      { key: 'criteria_last_update', field_value: body.criteria_last_update || new Date().toISOString().split('T')[0] },
+      { key: 'contact.deal_structure', field_value: body.deal_structure || '' },
+      { key: 'contact.deal_type', field_value: body.deal_structure || '' },
+      { key: 'contact.exits', field_value: body.exits || '' },
+      { key: 'contact.property_type_preference', field_value: body.property_type_preference || '' },
+      { key: 'contact.target_zips', field_value: body.target_zips || '' },
+      { key: 'contact.max_price', field_value: body.max_price || '' },
+      { key: 'contact.max_down', field_value: body.max_down || '' },
+      { key: 'contact.max_monthly', field_value: body.max_monthly || '' },
+      { key: 'contact.target_monthly_cashflow', field_value: body.target_monthly_cashflow || '' },
+      { key: 'contact.max_rate_', field_value: body.max_rate_ || '' },
+      { key: 'contact.arv', field_value: body.arv || '' },
+      { key: 'contact.bedrooms_min', field_value: body.bedrooms_min || '' },
+      { key: 'contact.baths_min', field_value: body.baths_min || '' },
+      { key: 'contact.min_sqft', field_value: body.min_sqft || '' },
+      { key: 'contact.min_year_build', field_value: body.min_year_build || '' },
+      { key: 'contact.remodel_level', field_value: body.remodel_level || '' },
+      { key: 'contact.hoa_tolerance', field_value: body.hoa_tolerance || '' },
+      { key: 'contact.pool', field_value: body.pool || '' },
+      { key: 'contact.purchase_timeline', field_value: body.purchase_timeline || '' },
+      { key: 'contact.buy_box', field_value: body.buy_box || '' },
+      { key: 'contact.buyer_type', field_value: body.buyer_type || 'Buyer' },
+      { key: 'contact.buyer_profile_type', field_value: body.buyer_profile_type || '' },
+      { key: 'contact.criteria_last_update', field_value: body.criteria_last_update || new Date().toISOString().split('T')[0] },
     ].filter(function(f) { return f.field_value; });
 
     var cfRes = await updateCustomFields(ghlKey, contactId, customFields);
