@@ -201,8 +201,7 @@ exports.handler = async (event) => {
         pipelineStageId: stageId,
         locationId:      GHL_LOCATION_ID,
         name:            streetAddress || 'Offer from ' + contactName,
-        status:          'open',
-        notes:           offerNotes
+        status:          'open'
       };
       if (contactId) oppBody.contactId = contactId;
 
@@ -273,7 +272,6 @@ exports.handler = async (event) => {
         locationId:      GHL_LOCATION_ID,
         name:            streetAddress || 'Inquiry from ' + contactName,
         status:          'open',
-        notes:           inquiryNotes,
         customFields:    [
           { key: 'property_address', field_value: streetAddress },
           { key: 'deal_city',        field_value: city },
