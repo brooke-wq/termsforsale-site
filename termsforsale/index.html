@@ -416,7 +416,6 @@ footer{background:var(--navy);padding:52px 55px 0}
   .sticky-bar a{padding:9px 16px;font-size:12px;flex:1;text-align:center}
 }
 </style>
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <!-- Google Analytics GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-DRV6NWNY06"></script>
 <script>
@@ -459,10 +458,9 @@ footer{background:var(--navy);padding:52px 55px 0}
 <nav id="main-nav">
   <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:46px"></a>
   <div class="nav-links">
-    <a href="https://dispobuddy.com" target="_blank">Sell Your Deal</a>
-    <a href="/buying-criteria.html">Get Deal Alerts</a>
-    <a href="/map.html" target="_blank" style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Deal Map</a>
-    <a href="mailto:support@termsforsale.com">Help</a>
+    <a href="/">Browse Deals</a>
+    <a href="/blog/">Blog</a>
+    <a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Book a Call</a>
   </div>
   <div class="nav-right" id="nav-right">
     <div id="tfs-buybox-container"></div>
@@ -850,7 +848,7 @@ footer{background:var(--navy);padding:52px 55px 0}
         </div>
         <div class="footer-brand-sub">By subscribing, you agree to receive marketing emails and accept our Privacy Policy.</div>
       </div>
-      <div class="footer-col"><h4>Company</h4><ul><li><a href="/">About Us</a></li><li><a href="/">Active Deals</a></li><li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li><li><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Book a Call</a></li></ul></div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="/">About Us</a></li><li><a href="/">Active Deals</a></li><li><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Contact Us</a></li><li><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Book a Call</a></li></ul></div>
       <div class="footer-col"><h4>Contact</h4><ul><li><a href="mailto:info@termsforsale.com">info@termsforsale.com</a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
       <div class="footer-col"><h4>Social Media</h4><ul><li><a href="https://www.instagram.com/termsforsale" target="_blank">Instagram</a></li><li><a href="https://www.facebook.com/termsforsale" target="_blank">Facebook</a></li><li><a href="https://x.com/termsforsale" target="_blank">X / Twitter</a></li></ul></div>
     </div>
@@ -863,7 +861,7 @@ footer{background:var(--navy);padding:52px 55px 0}
 const SHEET_ID  = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
 const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/88c6d9de-eb76-45ef-ac83-db284b7da5ac';
 const GHL_LOGIN_WEBHOOK  = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/caa1f812-8957-48af-ae00-45322992102b';
-const GHL_PORTAL_URL     = 'https://termsforsale.app.clientclub.net/';
+const GHL_PORTAL_URL     = '/dashboard.html';
 
 // ── UTM TRACKING ──────────────────────────────────────────────
 (function(){
@@ -1452,17 +1450,6 @@ async function loadDealsFromSheet(){
   const sb=document.getElementById('sticky-bar');
   if(sb){window.addEventListener('scroll',()=>{sb.classList.toggle('show',window.scrollY>400);},{passive:true});}
 })();
-</script>
-<script>
-if (window.netlifyIdentity) {
-  window.netlifyIdentity.on('init', function(user) {
-    if (!user) {
-      window.netlifyIdentity.on('login', function() {
-        document.location.href = '/admin/';
-      });
-    }
-  });
-}
 </script>
 <!-- BUY BOX MODAL v2 — Multi-profile, multi-asset, conditional logic -->
 <div id="buybox-overlay" style="display:none;position:fixed;inset:0;background:rgba(13,31,60,.6);z-index:800;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">

@@ -312,18 +312,15 @@ footer{background:var(--navy);padding:44px 40px 0}
 
 <!-- NAV -->
 <nav>
-  <div class="nav-left d-links" style="display:flex;gap:24px">
-    <a href="/">Buy</a>
-    <a href="https://dispobuddy.com" target="_blank">Sell</a>
-    <a href="https://dispobuddy.com" target="_blank">Dispo My Deal</a>
-  </div>
   <a href="/" class="nav-logo">
     <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:44px;width:auto">
   </a>
+  <div class="nav-left d-links" style="display:flex;gap:24px">
+    <a href="/">Browse Deals</a>
+    <a href="/blog/">Blog</a>
+    <a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Book a Call</a>
+  </div>
   <div class="nav-right" id="nav-right">
-    <a href="/buying-criteria.html">Buying Criteria</a>
-    <a href="#" style="display:none">FAQ</a>
-    <a href="https://dealproszoom.com" target="_blank">Help</a>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -441,7 +438,7 @@ footer{background:var(--navy);padding:44px 40px 0}
         <ul>
           <li><a href="/">About Us</a></li>
           <li><a href="/">Deals</a></li>
-          <li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li>
+          <li><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Contact Us</a></li>
           <li><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Book a Call</a></li>
         </ul>
       </div>
@@ -540,15 +537,13 @@ function updateNavAuth(user){
   const el=document.getElementById('nav-right');
   if(!el||!user)return;
   el.innerHTML=`
-    <a href="/buying-criteria.html">Buying Criteria</a>
-    <a href="https://dealproszoom.com" target="_blank">Help</a>
     <div class="nav-avatar-wrap">
       <div class="nav-avatar">${user.initials}</div>
       <div class="nav-dropdown">
-        <a href="https://termsforsale.app.clientclub.net/" target="_blank">🔑 Buyer Portal</a>
-        <a href="/dashboard.html">📊 My Dashboard</a>
-        <a href="/buy-box.html">✏️ Update Buy Box</a>
-        <a href="/">🏠 All Deals</a>
+        <a href="/dashboard.html">My Dashboard</a>
+        <a href="/buy-box.html">Update Buy Box</a>
+        <a href="/">All Deals</a>
+        <a href="/blog/">Blog</a>
         <hr>
         <button onclick="clearUser();location.reload()">Log Out</button>
       </div>
