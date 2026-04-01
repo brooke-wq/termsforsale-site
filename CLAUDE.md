@@ -259,3 +259,11 @@ These items are deferred and MUST be completed in the next session:
 3. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
 
 4. **GHL Booking Notification** — Set up in GHL Calendars → Notifications for calendar PoyDG0tNCK8wb9oi6zZ4 → notify Brooke + Eddie on new bookings.
+
+5. **Auto-Tag Buyer Responses** — Create GHL workflow to auto-tag when buyer replies to deal follow-up:
+   - Trigger: Customer Reply (SMS)
+   - Reply "1" or "IN" → add tag `deal-hot`
+   - Reply "2" or "MAYBE" → add tag `deal-warm`
+   - Reply "3" or "PASS" → add tag `deal-paused`
+   - Same for email replies with IN/MAYBE/PASS
+   - These tags stop the 3-day follow-up sprint from sending further messages
