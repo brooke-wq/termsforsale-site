@@ -53,6 +53,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/deal-dog-poller"
+  to = "/.netlify/functions/deal-dog-poller"
+  status = 200
+
+[[redirects]]
   from = "/api/weekly-synthesis"
   to = "/.netlify/functions/weekly-synthesis"
   status = 200
