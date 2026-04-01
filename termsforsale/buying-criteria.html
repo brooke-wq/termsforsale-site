@@ -434,11 +434,6 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
       </div>
       <div class="row-2" style="margin-top:14px">
         <div class="field-group">
-          <label class="field-label">Max HOA ($/mo)</label>
-          <div class="field-sublabel">0 = no HOA preferred</div>
-          <input class="f-input" id="bc-max-hoa" type="number" placeholder="e.g. 100">
-        </div>
-        <div class="field-group">
           <label class="field-label">Close Timeline</label>
           <select class="f-select" id="bc-timeline">
             <option value="">Any</option>
@@ -831,7 +826,6 @@ async function submitForm(){
     bb_min_beds:        v('bc-min-beds'),
     bb_min_baths:       v('bc-min-baths'),
     bb_year_built_min:  v('bc-year-built'),
-    bb_max_hoa:         getExcl('grp-hoa'),
     close_timeline:     v('bc-timeline'),
     bb_occupancy_pref:  getExcl('grp-occupancy'),
     sms_opt_in:         getExcl('grp-sms-opt'),
