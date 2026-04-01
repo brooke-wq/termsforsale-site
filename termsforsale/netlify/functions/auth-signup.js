@@ -72,7 +72,7 @@ exports.handler = async (event) => {
       email,
       phone,
       source: source || 'TFS Website - Signup',
-      tags: ['TFS Buyer', 'Website Signup'],
+      tags: ['TFS Buyer', 'Website Signup', 'buyer-signup'],
       customFields: [],
     };
 

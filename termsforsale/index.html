@@ -1370,11 +1370,15 @@ async function doSignup(){
   err.style.display='none';ok.style.display='none';
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup','buyer-signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
+  try{
+    var res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup'})});
+    var data=await res.json();
+    if(!res.ok){err.textContent=data.error||'Signup failed. Please try again.';err.style.display='block';btn.disabled=false;btn.textContent='Create Free Account';return;}
+  }catch(e){console.error('Signup error:',e);}
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
-  ok.innerHTML='Account created! Welcome, '+fn+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  ok.innerHTML='Account created! Welcome, '+fn+'! Check your phone and email for confirmation.';ok.style.display='block';
   setTimeout(()=>closeAuth(),2000);
   btn.disabled=false;btn.textContent='Create Free Account';
 }
