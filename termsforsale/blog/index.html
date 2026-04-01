@@ -1313,26 +1313,7 @@ function updateNavAuth(user){
 // ─── INIT ─────────────────────────────────────────────────────
 (async function(){
   const u=getUser();if(u)updateNavAuth(u);
-  try{
-    const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=0&headers=1`);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const t=await r.text();
-    const {rows}=parseSheet(t);
-    const ACTIVE_STATUSES=['actively marketing','active marketing','active','actively listed','marketing'];
-    const SHOW_STATUSES=[...ACTIVE_STATUSES,'under contract','sold'];
-    ALL_DEALS=rows.filter(r=>ACTIVE_STATUSES.includes((r['Deal Status']||'').trim().toLowerCase())).map(parseRow).filter(d=>d.id);
-    if(ALL_DEALS.length){
-      updateStats();
-      populateStates();
-      updateHowSections();
-      applyFilters();
-    }else{
-      const statuses=[...new Set(rows.map(r=>r['Deal Status']).filter(Boolean))];
-      document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">No active deals found.<br>Statuses in sheet: <strong>${statuses.join(', ')||'none'}</strong><br>Expected: <strong>Actively Marketing</strong></p></div>`;
-    }
-  }catch(e){
-    document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">Could not load deals: ${e.message}</p></div>`;
-  }
+  // Deals section hidden on blog page — skip loading
   // Load blog posts
   try{
     const br=await fetch('/blog/posts-index.json');

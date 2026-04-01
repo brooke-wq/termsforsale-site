@@ -1429,9 +1429,9 @@ async function loadDealsFromSheet(){
       ALL_DEALS=await loadDealsFromNotion();
       console.log('Loaded '+ALL_DEALS.length+' deals from Notion');
     }catch(notionErr){
-      console.warn('Notion unavailable, falling back to Sheets:',notionErr.message);
-      ALL_DEALS=await loadDealsFromSheet();
-      console.log('Loaded '+ALL_DEALS.length+' deals from Sheets');
+      console.error('Failed to load deals:',notionErr.message);
+      document.getElementById('deals-row').innerHTML='<div class="empty-deals"><p>Could not load deals. Please try again.</p></div>';
+      return;
     }
     if(ALL_DEALS.length){
       updateStats();

@@ -1184,17 +1184,13 @@ async function init(){
     try{
       allDeals=await loadDealsFromNotion();
       const freshDeal=allDeals.find(d=>String(d.id)===String(id));
-      // Prefer fresh Notion data if it has a cover photo the cache is missing
       if(cachedDeal&&freshDeal){deal=Object.assign({},cachedDeal,{coverPhoto:freshDeal.coverPhoto||cachedDeal.coverPhoto,photos:freshDeal.photos||cachedDeal.photos});}
       else{deal=freshDeal||cachedDeal;}
       console.log('Loaded '+allDeals.length+' deals from Notion');
     }catch(notionErr){
-      console.warn('Notion unavailable, falling back to Sheets:',notionErr.message);
-      const sheet=await loadDealsFromSheet();
-      allDeals=sheet.allDeals;
-      if(!cachedDeal){const raw=sheet.rows.find(r=>String(r['Deal ID'])===String(id));cachedDeal=raw?sheet.parse(raw):null;}
+      console.error('Failed to load deals:',notionErr.message);
       deal=cachedDeal;
-      console.log('Loaded '+allDeals.length+' deals from Sheets');
+      allDeals=[];
     }
     if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
     renderDeal(deal,allDeals);
