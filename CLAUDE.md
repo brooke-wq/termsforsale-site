@@ -245,3 +245,17 @@ All form submissions send confirmation SMS + email:
 - DigitalOcean Droplet: $6/mo
 - Claude API (Sonnet): ~$4/mo at current volume
 - **Total: ~$10/mo**
+
+---
+
+## TODO — Next Session
+
+These items are deferred and MUST be completed in the next session:
+
+1. **Split-Screen Map Homepage** — Zillow/Redfin style: left panel scrollable deal cards with filters, right panel interactive map with pins. Click pin → highlight deal card. Click deal → highlight pin. Responsive: stacks on mobile.
+
+2. **Client Portal** — Authenticated buyer dashboard with saved deals, offer tracking, buy box management, deal alerts history. Separate project, done correctly.
+
+3. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
+
+4. **GHL Booking Notification** — Set up in GHL Calendars → Notifications for calendar PoyDG0tNCK8wb9oi6zZ4 → notify Brooke + Eddie on new bookings.
