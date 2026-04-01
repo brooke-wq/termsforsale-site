@@ -865,20 +865,19 @@ async function submitForm(){
     });
   }
 
-  // Match exact pattern used by working webhooks on index.html
-  var payloadStr = JSON.stringify(payload);
-  console.log('Firing GHL webhook to:', GHL_SIGNUP_WEBHOOK);
+  // Save via API (writes to GHL with proper custom field mapping)
+  console.log('Saving buy box via API...');
   console.log('Payload:', payload);
 
   try {
-    var res = await fetch(GHL_SIGNUP_WEBHOOK, {
+    var res = await fetch('/api/buy-box-save', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: payloadStr
+      body: JSON.stringify(payload)
     });
-    console.log('GHL response status:', res.status, res.statusText);
+    console.log('Buy box save response:', res.status, res.statusText);
   } catch(e){
-    console.error('GHL webhook failed:', e);
+    console.error('Buy box save failed:', e);
   }
 
   // Send confirmation via our API

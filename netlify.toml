@@ -118,6 +118,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/buy-box-save"
+  to = "/.netlify/functions/buy-box-save"
+  status = 200
+
+[[redirects]]
   from = "/api/buyer-inquiry"
   to = "/.netlify/functions/buyer-inquiry"
   status = 200

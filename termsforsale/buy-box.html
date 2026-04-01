@@ -433,7 +433,7 @@ function saveBuyBox(){
     criteria_last_update: new Date().toISOString().split('T')[0],
     tags:['tfs buyer','buy box complete','buyer-signup'],
   }, getUTMs());
-  fetch(GHL_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ghlPayload)}).catch(e=>{console.error('Buy box GHL sync error:',e);});
+  fetch('/api/buy-box-save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ghlPayload)}).catch(e=>{console.error('Buy box save error:',e);});
   const btn=document.getElementById('btn-save');
   if(btn){btn.textContent='✓ Saved!';btn.classList.add('saved');}
   setDirty(false);
