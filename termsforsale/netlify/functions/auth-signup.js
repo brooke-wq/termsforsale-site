@@ -113,59 +113,55 @@ exports.handler = async (event) => {
       console.warn('Webhook fire failed (non-critical):', e.message);
     }
 
-    // Send welcome SMS
+    // Send welcome SMS + email in parallel
+    var smsStatus = 'skipped', emailStatus = 'skipped';
+
+    var welcomeHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+      + '<div style="background:#0D1F3C;padding:24px 32px;border-radius:12px 12px 0 0"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:36px"></div>'
+      + '<div style="padding:32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
+      + '<h2 style="color:#0D1F3C;margin:0 0 12px">Welcome, ' + firstName + '!</h2>'
+      + '<p style="color:#4A5568;line-height:1.6;margin:0 0 20px">You now have access to our exclusive off-market deal inventory.</p>'
+      + '<ul style="color:#4A5568;line-height:1.8;margin:0 0 24px;padding-left:20px">'
+      + '<li><strong>Browse deals</strong> updated daily</li>'
+      + '<li><strong>Set your buy box</strong> for automatic matching</li>'
+      + '<li><strong>Get SMS/email alerts</strong> when deals fit your criteria</li>'
+      + '</ul>'
+      + '<a href="https://deals.termsforsale.com" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Browse Deals Now</a>'
+      + '<p style="color:#718096;font-size:13px;margin-top:24px">Questions? Reply to this email anytime.</p>'
+      + '</div></div>';
+
+    var sends = [];
+
     if (phone && contactId) {
-      try {
-        await fetch(GHL_BASE + '/conversations/messages', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            type: 'SMS',
-            contactId,
-            message: 'Welcome to Terms For Sale, ' + firstName + '! Browse off-market deals: https://deals.termsforsale.com — Reply STOP to opt out.'
-          })
-        });
-        console.log('[auth-signup] welcome SMS sent to ' + phone);
-      } catch (e) {
-        console.warn('[auth-signup] SMS failed:', e.message);
-      }
+      sends.push(
+        ghlFetch(GHL_BASE + '/conversations/messages', 'POST', {
+          type: 'SMS', contactId,
+          message: 'Welcome to Terms For Sale, ' + firstName + '! Browse off-market deals: https://deals.termsforsale.com'
+        }, headers).then(function(r) { smsStatus = r.ok ? 'sent' : 'failed:' + r.status; return r; })
+        .catch(function(e) { smsStatus = 'error:' + e.message; })
+      );
     }
 
-    // Send welcome email
     if (email && contactId) {
-      try {
-        await fetch(GHL_BASE + '/conversations/messages', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            type: 'Email',
-            contactId,
-            subject: 'Welcome to Terms For Sale, ' + firstName + '!',
-            html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
-              + '<div style="background:#0D1F3C;padding:24px 32px;border-radius:12px 12px 0 0"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:36px"></div>'
-              + '<div style="padding:32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
-              + '<h2 style="color:#0D1F3C;margin:0 0 12px">Welcome, ' + firstName + '!</h2>'
-              + '<p style="color:#4A5568;line-height:1.6;margin:0 0 20px">You now have access to our exclusive off-market deal inventory. Here\'s what you can do:</p>'
-              + '<ul style="color:#4A5568;line-height:1.8;margin:0 0 24px;padding-left:20px">'
-              + '<li><strong>Browse deals</strong> updated daily from our acquisition pipeline</li>'
-              + '<li><strong>Set your buy box</strong> so we match you to the right deals automatically</li>'
-              + '<li><strong>Get SMS/email alerts</strong> the moment a deal fits your criteria</li>'
-              + '</ul>'
-              + '<a href="https://deals.termsforsale.com" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">Browse Deals Now →</a>'
-              + '<p style="color:#718096;font-size:13px;margin-top:24px">Questions? Reply to this email or text us anytime.</p>'
-              + '</div></div>',
-            emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
-          })
-        });
-        console.log('[auth-signup] welcome email sent to ' + email);
-      } catch (e) {
-        console.warn('[auth-signup] email failed:', e.message);
-      }
+      sends.push(
+        ghlFetch(GHL_BASE + '/conversations/messages', 'POST', {
+          type: 'Email', contactId,
+          subject: 'Welcome to Terms For Sale, ' + firstName + '!',
+          html: welcomeHtml,
+          emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+        }, headers).then(function(r) { emailStatus = r.ok ? 'sent' : 'failed:' + r.status; return r; })
+        .catch(function(e) { emailStatus = 'error:' + e.message; })
+      );
     }
+
+    await Promise.all(sends);
+    console.log('[auth-signup] SMS=' + smsStatus + ' Email=' + emailStatus + ' contact=' + contactId);
 
     return respond(200, {
       success: true,
       exists: false,
+      smsStatus,
+      emailStatus,
       user: {
         id: contactId,
         name: firstName,
