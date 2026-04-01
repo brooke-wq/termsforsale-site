@@ -7,6 +7,26 @@
 
 const { upsertContact, addTags, updateCustomFields, postNote, sendSMS } = require('./_ghl');
 
+// Fetch all custom field IDs for a location, return { fieldKey: fieldId } map
+async function getFieldIds(apiKey, locationId) {
+  var res = await fetch('https://services.leadconnectorhq.com/locations/' + locationId + '/customFields', {
+    headers: {
+      'Authorization': 'Bearer ' + apiKey,
+      'Version': '2021-07-28'
+    }
+  });
+  if (!res.ok) {
+    console.error('[buy-box-save] Failed to fetch custom fields:', res.status);
+    return {};
+  }
+  var data = await res.json();
+  var map = {};
+  (data.customFields || []).forEach(function(f) {
+    if (f.fieldKey && f.id) map[f.fieldKey] = f.id;
+  });
+  return map;
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return respond(200, {});
   if (event.httpMethod !== 'POST') return respond(405, { error: 'POST only' });
@@ -45,32 +65,47 @@ exports.handler = async function(event) {
 
     console.log('[buy-box-save] Contact: ' + contactId);
 
-    // 2. Update custom fields using field keys (with contact. prefix for GHL API)
-    var customFields = [
-      { key: 'contact.deal_structure', field_value: body.deal_structure || '' },
-      { key: 'contact.deal_type', field_value: body.deal_structure || '' },
-      { key: 'contact.exits', field_value: body.exits || '' },
-      { key: 'contact.property_type_preference', field_value: body.property_type_preference || '' },
-      { key: 'contact.target_zips', field_value: body.target_zips || '' },
-      { key: 'contact.max_price', field_value: body.max_price || '' },
-      { key: 'contact.max_down', field_value: body.max_down || '' },
-      { key: 'contact.max_monthly', field_value: body.max_monthly || '' },
-      { key: 'contact.target_monthly_cashflow', field_value: body.target_monthly_cashflow || '' },
-      { key: 'contact.max_rate_', field_value: body.max_rate_ || '' },
-      { key: 'contact.arv', field_value: body.arv || '' },
-      { key: 'contact.bedrooms_min', field_value: body.bedrooms_min || '' },
-      { key: 'contact.baths_min', field_value: body.baths_min || '' },
-      { key: 'contact.min_sqft', field_value: body.min_sqft || '' },
-      { key: 'contact.min_year_build', field_value: body.min_year_build || '' },
-      { key: 'contact.remodel_level', field_value: body.remodel_level || '' },
-      { key: 'contact.hoa_tolerance', field_value: body.hoa_tolerance || '' },
-      { key: 'contact.pool', field_value: body.pool || '' },
-      { key: 'contact.purchase_timeline', field_value: body.purchase_timeline || '' },
-      { key: 'contact.buy_box', field_value: body.buy_box || '' },
-      { key: 'contact.buyer_type', field_value: body.buyer_type || 'Buyer' },
-      { key: 'contact.buyer_profile_type', field_value: body.buyer_profile_type || '' },
-      { key: 'contact.criteria_last_update', field_value: body.criteria_last_update || new Date().toISOString().split('T')[0] },
-    ].filter(function(f) { return f.field_value; });
+    // 2. First, fetch custom field IDs for this location
+    var fieldIds = await getFieldIds(ghlKey, locationId);
+    console.log('[buy-box-save] Found ' + Object.keys(fieldIds).length + ' custom fields');
+
+    // Map form data to GHL field IDs
+    var fieldMap = {
+      'contact.deal_structure': body.deal_structure || '',
+      'contact.deal_type': body.deal_structure || '',
+      'contact.exits': body.exits || '',
+      'contact.property_type_preference': body.property_type_preference || '',
+      'contact.target_zips': body.target_zips || '',
+      'contact.max_price': body.max_price || '',
+      'contact.max_down': body.max_down || '',
+      'contact.max_monthly': body.max_monthly || '',
+      'contact.target_monthly_cashflow': body.target_monthly_cashflow || '',
+      'contact.max_rate_': body.max_rate_ || '',
+      'contact.arv': body.arv || '',
+      'contact.bedrooms_min': body.bedrooms_min || '',
+      'contact.baths_min': body.baths_min || '',
+      'contact.min_sqft': body.min_sqft || '',
+      'contact.min_year_build': body.min_year_build || '',
+      'contact.remodel_level': body.remodel_level || '',
+      'contact.hoa_tolerance': body.hoa_tolerance || '',
+      'contact.pool': body.pool || '',
+      'contact.purchase_timeline': body.purchase_timeline || '',
+      'contact.buy_box': body.buy_box || '',
+      'contact.buyer_type': body.buyer_type || 'Buyer',
+      'contact.buyer_profile_type': body.buyer_profile_type || '',
+      'contact.criteria_last_update': body.criteria_last_update || new Date().toISOString().split('T')[0],
+      'contact.max_repair_budget': body.max_repair_budget || '',
+      'contact.occupancy_preference': body.occupancy_preference || '',
+    };
+
+    var customFields = [];
+    Object.keys(fieldMap).forEach(function(key) {
+      if (fieldMap[key] && fieldIds[key]) {
+        customFields.push({ id: fieldIds[key], value: fieldMap[key] });
+      }
+    });
+
+    console.log('[buy-box-save] Mapped ' + customFields.length + ' fields with IDs');
 
     var cfRes = await updateCustomFields(ghlKey, contactId, customFields);
     console.log('[buy-box-save] Custom fields updated: ' + cfRes.status);
