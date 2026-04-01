@@ -324,7 +324,6 @@ footer{background:var(--navy);padding:44px 40px 0}
     <a href="/buying-criteria.html">Buying Criteria</a>
     <a href="#" style="display:none">FAQ</a>
     <a href="https://dealproszoom.com" target="_blank">Help</a>
-    <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -515,7 +514,7 @@ async function doLogin(){
   const name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
-  ok.innerHTML='Welcome back, '+user.name+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
   setTimeout(()=>closeAuth(),2000);
   btn.disabled=false;btn.textContent='Log In';
 }
@@ -533,7 +532,7 @@ async function doSignup(){
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
-  ok.innerHTML='Account created! Welcome, '+fn+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  ok.innerHTML='Account created! Welcome, '+fn+'! Check your phone and email for confirmation.';ok.style.display='block';
   setTimeout(()=>closeAuth(),1400);
   btn.disabled=false;btn.textContent='Create Free Account';
 }
@@ -956,7 +955,16 @@ function renderDeal(d,allDeals){
                 <option>Lease Option</option>
                 <option>Novation</option>
               </select>
-              <input class="sf-input" placeholder="Target Close Date" id="o-close" type="date">
+              <select class="sf-select" id="o-close">
+                <option value="">How soon can you close?</option>
+                <option>ASAP / 7 days</option>
+                <option>10-14 days</option>
+                <option>14-21 days</option>
+                <option>21-30 days</option>
+                <option>30-45 days</option>
+                <option>45-60 days</option>
+                <option>Flexible</option>
+              </select>
               <textarea class="sf-input" placeholder="Offer notes / contingencies" rows="2" id="o-notes" style="resize:vertical"></textarea>
               <button class="btn" style="width:100%;justify-content:center;background:var(--orange);color:#fff;border:none" onclick="submitOffer('${d.id}','${d.streetAddress||''}','${d.city||''}','${d.state||''}')">
                 Submit Offer

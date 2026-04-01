@@ -466,7 +466,6 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
   <div class="nav-right" id="nav-right">
     <div id="tfs-buybox-container"></div>
-    <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -1357,7 +1356,7 @@ async function doLogin(){
   const name=email?email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'Buyer';
   const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
-  ok.innerHTML='Welcome back, '+user.name+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
   setTimeout(()=>closeAuth(),2000);
   btn.disabled=false;btn.textContent='Log In';
 }
@@ -1399,7 +1398,7 @@ function updateNavAuth(user){
         <a href="/buy-box.html">✏️ Update Buy Box</a>
         <a href="/">🏠 All Deals</a>
         <a href="/blog/">📝 Blog</a>
-        <a href="https://termsforsale.app.clientclub.net/" target="_blank">🔑 Buyer Portal</a>
+        <a href="/buy-box.html">🔑 My Buy Box</a>
         <hr>
         <button onclick="clearUser();location.reload()">Log Out</button>
       </div>
