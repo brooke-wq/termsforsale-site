@@ -931,26 +931,7 @@ function renderDeal(d,allDeals){
             </div>
             <input class="sf-input" placeholder="Phone Number" id="f-phone" type="tel">
             <input class="sf-input" placeholder="Email Address" id="f-email" type="email">
-            <div class="sf-row">
-              <select class="sf-select" id="f-structure">
-                <option value="">Buying how?</option>
-                <option>Cash</option>
-                <option>Hard Money</option>
-                <option>Sub-To / Creative</option>
-                <option>Seller Finance</option>
-                <option>Wrap</option>
-                <option>Hybrid</option>
-              </select>
-              <select class="sf-select" id="f-timeline">
-                <option value="">Close when?</option>
-                <option>ASAP / 7 days</option>
-                <option>10–14 days</option>
-                <option>14–21 days</option>
-                <option>21–30 days</option>
-                <option>30–45 days</option>
-              </select>
-            </div>
-            <textarea class="sf-input" placeholder="Notes (optional)" rows="2" id="f-notes" style="resize:vertical"></textarea>
+            <textarea class="sf-input" placeholder="What is your request?" rows="2" id="f-notes" style="resize:vertical"></textarea>
             <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="submitRequest('${d.id}')">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
               Submit Request
