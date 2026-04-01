@@ -475,45 +475,26 @@ function placeMarker(deal,latlng){
 
 // ─── MAIN LOAD ─────────────────────────────────────────────────
 function loadDeals(){
-  fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid=0&headers=1')
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
-    .then(function(text){
-      var json=parseGviz(text);
-      var cols=json.table.cols.map(function(c){return c.label.trim();});
-      var rows=json.table.rows.map(function(row){
-        var o={};
-        var seen={};
-        cols.forEach(function(c,i){
-          var cell=row.c[i];
-          var val=cell?(cell.v!==null?String(cell.v).trim():''):'';
-          if(seen[c]===undefined){seen[c]=0;o[c]=val;o[c+'__0']=val;}
-          else{seen[c]++;o[c+'__'+seen[c]]=val;o[c]=val;}
-        });
-        return o;
+  fetch('/api/deals')
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(data){
+      var deals=data.deals||[];
+      ALL_DEALS=deals.map(function(d){
+        return {
+          id:d.id,
+          dealType:d.dealType,
+          streetAddress:d.streetAddress||d.street_address||'',
+          city:d.city||'',state:d.state||'',zip:d.zip||'',
+          nearestMetro:d.nearestMetro||d.nearest_metro||(d.city+', '+d.state),
+          askingPrice:parseFloat(d.askingPrice||d.asking_price)||0,
+          entryFee:parseFloat(d.entryFee||d.entry_fee)||0,
+          beds:d.beds||'',baths:d.baths||'',sqft:d.sqft||d.living_area||'',yearBuilt:d.yearBuilt||d.year_built||'',
+          coe:d.coe||'',
+          highlight1:d.highlight1||d.highlight_1||'',
+          photos:d.photos||'',
+          folderUrl:(d.photos||'').indexOf('/drive/folders/')>-1?(d.photos||'').split('?')[0]:''
+        };
       });
-
-      var ACTIVE_STATUSES=['actively marketing','active marketing','active','actively listed','marketing'];
-      ALL_DEALS=rows
-        .filter(function(r){return ACTIVE_STATUSES.indexOf((r['Deal Status']||'').trim().toLowerCase())>-1;})
-        .map(function(r){
-          var photos=r['Photos']||'';
-          var folderUrl=photos.indexOf('/drive/folders/')>-1?photos.split('?')[0]:'';
-          return {
-            id:r['Deal ID']||r['Deal Status__0'],
-            dealType:r['Deal Type'],
-            streetAddress:r['Street Address'],
-            city:r['City'],state:r['State'],zip:r['ZIP'],
-            nearestMetro:r['Nearest Metro Area'],
-            askingPrice:parseFloat(r['Asking Price'])||0,
-            entryFee:parseFloat(r['Entry Fee'])||0,
-            beds:r['Beds'],baths:r['Baths'],sqft:r['Sqft'],yearBuilt:r['Year Built']||r['Year Build'],
-            coe:r['COE'],
-            highlight1:r['Highlight 1'],
-            photos:photos,
-            folderUrl:folderUrl
-          };
-        })
-        .filter(function(d){return !!d.id;});
 
       populateStateFilter();
       applyFilters();
