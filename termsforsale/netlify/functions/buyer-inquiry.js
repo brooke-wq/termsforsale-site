@@ -347,6 +347,32 @@ exports.handler = async (event) => {
         await postNote(GHL_API_KEY, contactId, inquiryNotes);
       }
 
+      // Internal notification email
+      try {
+        var notifyId = contactId || 'qO4YuZHrhGTTBaFKPDYD';
+        await sendEmail(GHL_API_KEY, notifyId,
+          'NEW INQUIRY: ' + contactName + ' — ' + (fullAddress || 'Deal Page'),
+          '<div style="font-family:Arial,sans-serif;max-width:600px">'
+          + '<h2 style="color:#0D1F3C;margin:0 0 16px">New Buyer Inquiry</h2>'
+          + '<table style="width:100%;border-collapse:collapse">'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Buyer</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-weight:700">' + contactName + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Phone</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C">' + (payload.phone || payload.buyerPhone || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Email</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C">' + (payload.email || payload.buyerEmail || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-weight:600">Property</td><td style="padding:8px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C">' + (fullAddress || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;color:#718096;font-weight:600">Message</td><td style="padding:8px 0;color:#0D1F3C">' + (message || 'None') + '</td></tr>'
+          + '</table></div>'
+        );
+      } catch(e) { console.warn('[buyer-inquiry] Internal inquiry notification failed:', e.message); }
+
+      // SMS alert to Brooke
+      var brookePhone2 = process.env.BROOKE_PHONE;
+      if (brookePhone2) {
+        try {
+          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone2,
+            'NEW INQUIRY: ' + contactName + ' asking about ' + (fullAddress || 'a deal') + '. ' + (message ? '"' + message.slice(0,60) + '"' : ''));
+        } catch(e) {}
+      }
+
       return {
         statusCode: 200,
         headers,
