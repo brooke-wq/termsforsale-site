@@ -390,10 +390,10 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
   return combined;
 }
 
-// ─── GHL: Trigger workflow for a buyer ───────────────────────
+// ─── GHL: Trigger alert for a buyer ──────────────────────────
 
-async function triggerBuyerAlert(apiKey, contact, deal) {
-  // Add a tag to the contact that triggers a GHL workflow
+async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
+  // Add tag to the contact
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';
   var result = await httpRequest(tagUrl, {
     method: 'POST',
@@ -406,7 +406,7 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
     tags: ['new-deal-alert']
   });
 
-  // Update GHL custom fields with deal info for the email/SMS template
+  // Update GHL custom fields with deal info
   var price = deal.askingPrice ? '$' + deal.askingPrice.toLocaleString() : '';
   var entry = deal.entryFee ? '$' + deal.entryFee.toLocaleString() + ' + CC/TC' : '';
   var highlights = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean).join('\n');
@@ -420,19 +420,16 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
     }
   }, {
     customFields: [
-      // Location fields
       { id: 'TerjqctukTW67rB21ugC', value: deal.streetAddress + ', ' + deal.city + ', ' + deal.state + ' ' + (deal.zip || '') },
       { id: 'KuaUFXhbQB6kKvBSKfoI', value: deal.city },
       { id: 'ltmVcWUpbwZ0S3dBid3U', value: deal.state },
       { id: 'UqJl4Dq6T8wfNb70EMrL', value: deal.zip || '' },
-      // Deal info
       { id: '0thrOdoETTLlFA45oN8U', value: deal.dealType },
       { id: '5eEVPcp8nERlR6GpjZUn', value: deal.dealUrl },
       { id: 'YjoPoDPv7Joo1izePpDx', value: deal.dealType + ' | ' + deal.city + ', ' + deal.state + ' | ' + price + (entry ? ' | ' + entry : '') },
-      // Alert fields for email template
-      { id: 'iur6TZsfKotwO3gZb8yk', value: price },                    // Alert Asking Price
-      { id: 'DH4Ekmyw2dvzrE74JSzs', value: entry },                    // Alert Entry Fee
-      { id: 'DJFMav5mPvWBzsPdhAqy', value: deal.propertyType || '' },   // Alert Property Type
+      { id: 'iur6TZsfKotwO3gZb8yk', value: price },
+      { id: 'DH4Ekmyw2dvzrE74JSzs', value: entry },
+      { id: 'DJFMav5mPvWBzsPdhAqy', value: deal.propertyType || '' },
       { id: '2iVO7pRpi0f0ABb6nYka', value: deal.beds ? deal.beds + ' beds' : '' },
       { id: 'rkzCcjHJMFJP3GcwnNx6', value: deal.baths ? deal.baths + ' baths' : '' },
       { id: 'nNMHvkPbjGYRbOB1v7vQ', value: deal.yearBuilt ? 'Built in ' + deal.yearBuilt : '' },
@@ -441,6 +438,33 @@ async function triggerBuyerAlert(apiKey, contact, deal) {
       { id: 'FXp9oPT4T4xqA1HIJuSC', value: (function(){ var m = (deal.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/); return m ? 'https://deals.termsforsale.com/api/drive-image?id=' + m[1] + '&sz=800' : ''; })() }
     ]
   });
+
+  // Send direct SMS notification to the buyer
+  if (contact.phone && locationId) {
+    var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
+    if (price) smsMsg += ' — ' + price;
+    if (entry) smsMsg += ' entry ' + entry;
+    smsMsg += '. View: ' + deal.dealUrl;
+    if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
+
+    try {
+      await httpRequest('https://services.leadconnectorhq.com/conversations/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + apiKey,
+          'Version': '2021-07-28',
+          'Content-Type': 'application/json'
+        }
+      }, {
+        type: 'SMS',
+        contactId: contact.id,
+        message: smsMsg
+      });
+      console.log('notify-buyers: SMS sent to ' + contact.name);
+    } catch (smsErr) {
+      console.warn('notify-buyers: SMS failed for ' + contact.name + ': ' + smsErr.message);
+    }
+  }
 
   return result.status;
 }
@@ -523,10 +547,10 @@ exports.handler = async function(event) {
         alerts: []
       };
 
-      if (isLive && !isTest) {
-        // LIVE MODE: Actually trigger GHL alerts
+      if (isLive) {
+        // LIVE MODE: Actually trigger GHL alerts + send SMS
         for (var j = 0; j < buyers.length; j++) {
-          var status = await triggerBuyerAlert(apiKey, buyers[j], deal);
+          var status = await triggerBuyerAlert(apiKey, locationId, buyers[j], deal);
           dealResult.alerts.push({
             buyer: buyers[j].name,
             status: status,
