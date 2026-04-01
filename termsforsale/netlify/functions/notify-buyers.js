@@ -439,7 +439,9 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     ]
   });
 
-  // Send direct SMS notification to the buyer
+  // SMS disabled — GHL workflow handles buyer notifications
+  // Only tag + update custom fields + send email
+  /*
   if (contact.phone && locationId) {
     var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
     if (price) smsMsg += ' — ' + price;
@@ -465,6 +467,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       console.warn('notify-buyers: SMS failed for ' + contact.name + ': ' + smsErr.message);
     }
   }
+  */
 
   // Send deal alert email to the buyer
   if (contact.email || contact.id) {
