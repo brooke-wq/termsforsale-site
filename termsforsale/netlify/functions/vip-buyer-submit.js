@@ -1,7 +1,7 @@
 // VIP Buyer QR funnel — creates/upserts contact in GHL with tags + custom fields
 // POST /api/vip-buyer-submit
 
-const { upsertContact, addTags, updateCustomFields, sendSMS, CF_IDS } = require('./_ghl');
+const { upsertContact, addTags, updateCustomFields, sendSMS, sendEmail, CF_IDS } = require('./_ghl');
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') {
@@ -86,7 +86,7 @@ exports.handler = async function(event) {
     await updateCustomFields(apiKey, contactId, customFields);
   }
 
-  // Send confirmation SMS to the new buyer
+  // Send confirmation SMS
   if (phone && contactId) {
     try {
       await sendSMS(apiKey, locationId, phone,
@@ -94,6 +94,31 @@ exports.handler = async function(event) {
       console.log('[vip-buyer-submit] confirmation SMS sent to ' + phone);
     } catch (e) {
       console.warn('[vip-buyer-submit] SMS failed:', e.message);
+    }
+  }
+
+  // Send welcome email
+  if (email && contactId) {
+    try {
+      await sendEmail(apiKey, contactId,
+        'You\'re on the VIP list, ' + firstName + '!',
+        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+        + '<div style="background:#0D1F3C;padding:24px 32px;border-radius:12px 12px 0 0"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:36px"></div>'
+        + '<div style="padding:32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
+        + '<h2 style="color:#0D1F3C;margin:0 0 12px">Welcome to the VIP List, ' + firstName + '!</h2>'
+        + '<p style="color:#4A5568;line-height:1.6;margin:0 0 20px">You\'re now on our priority list for off-market deals. As a VIP buyer, you get:</p>'
+        + '<ul style="color:#4A5568;line-height:1.8;margin:0 0 24px;padding-left:20px">'
+        + '<li><strong>First access</strong> to new deals before the general list</li>'
+        + '<li><strong>Deal alerts</strong> matched to your buy box via SMS + email</li>'
+        + '<li><strong>Direct access</strong> to our acquisitions team</li>'
+        + '</ul>'
+        + '<a href="https://deals.termsforsale.com" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">Browse Deals Now →</a>'
+        + '<p style="color:#718096;font-size:13px;margin-top:24px">Reply to this email anytime — we\'re real people.</p>'
+        + '</div></div>'
+      );
+      console.log('[vip-buyer-submit] welcome email sent to ' + email);
+    } catch (e) {
+      console.warn('[vip-buyer-submit] email failed:', e.message);
     }
   }
 

@@ -152,6 +152,17 @@ async function sendSMS(apiKey, locationId, toPhone, message) {
   });
 }
 
+// Send Email via GHL conversations API
+async function sendEmail(apiKey, contactId, subject, htmlBody) {
+  return ghlRequest(apiKey, 'POST', '/conversations/messages', {
+    type: 'Email',
+    contactId: contactId,
+    subject: subject,
+    html: htmlBody,
+    emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+  });
+}
+
 async function upsertContact(apiKey, locationId, data) {
   return ghlRequest(apiKey, 'POST', '/contacts/upsert',
     Object.assign({ locationId: locationId }, data));
@@ -170,5 +181,6 @@ module.exports = {
   updateContact,
   updateCustomFields,
   sendSMS,
+  sendEmail,
   upsertContact
 };
