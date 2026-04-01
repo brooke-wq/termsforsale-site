@@ -390,10 +390,18 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
   return combined;
 }
 
-// ─── GHL: Trigger alert for a buyer ──────────────────────────
+// ─── GHL: Trigger alert for a buyer (with dedup) ────────────
 
 async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
-  // Add tag to the contact
+  // DEDUP CHECK: create a unique tag per deal so we never alert twice
+  var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
+  var existingTags = contact.tags || [];
+  if (existingTags.indexOf(dealTag) > -1) {
+    console.log('notify-buyers: SKIP ' + contact.name + ' — already alerted for deal ' + deal.id);
+    return 'skipped-duplicate';
+  }
+
+  // Add dedup tag + new-deal-alert tag
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';
   var result = await httpRequest(tagUrl, {
     method: 'POST',
@@ -403,7 +411,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       'Content-Type': 'application/json'
     }
   }, {
-    tags: ['new-deal-alert']
+    tags: ['new-deal-alert', dealTag]
   });
 
   // Update GHL custom fields with deal info
@@ -439,9 +447,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     ]
   });
 
-  // SMS disabled — GHL workflow handles buyer notifications
-  // Only tag + update custom fields + send email
-  /*
+  // Send SMS (dedup tag prevents duplicates)
   if (contact.phone && locationId) {
     var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
     if (price) smsMsg += ' — ' + price;
@@ -467,7 +473,6 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       console.warn('notify-buyers: SMS failed for ' + contact.name + ': ' + smsErr.message);
     }
   }
-  */
 
   // Send deal alert email to the buyer
   if (contact.email || contact.id) {
