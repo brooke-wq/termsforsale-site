@@ -316,13 +316,21 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
     </div>
 
     <div class="card">
-      <div class="card-title">Asset classes you invest in</div>
+      <div class="card-title">Property types you invest in</div>
       <div class="chips" id="grp-asset-types">
-        <button type="button" class="chip on" data-val="Single Family" onclick="toggleChip(this)">🏠 Single Family</button>
-        <button type="button" class="chip" data-val="Multifamily" onclick="toggleChip(this)">🏢 Multifamily</button>
-        <button type="button" class="chip" data-val="Commercial" onclick="toggleChip(this)">🏪 Commercial</button>
-        <button type="button" class="chip" data-val="Land" onclick="toggleChip(this)">🌿 Land</button>
-        <button type="button" class="chip" data-val="Condo/Townhouse" onclick="toggleChip(this)">🏘️ Condo / Townhouse</button>
+        <button type="button" class="chip on" data-val="Single Family" onclick="toggleChip(this)">Single Family</button>
+        <button type="button" class="chip" data-val="Multi-Family (2-4)" onclick="toggleChip(this)">Multi-Family (2-4)</button>
+        <button type="button" class="chip" data-val="Multi-Family 5+" onclick="toggleChip(this)">Multi-Family 5+</button>
+        <button type="button" class="chip" data-val="Condo/Townhouse" onclick="toggleChip(this)">Condo/Townhouse</button>
+        <button type="button" class="chip" data-val="Mobile Homes" onclick="toggleChip(this)">Mobile Homes</button>
+        <button type="button" class="chip" data-val="Mobile Home/RV Parks" onclick="toggleChip(this)">Mobile Home/RV Parks</button>
+        <button type="button" class="chip" data-val="Land" onclick="toggleChip(this)">Land</button>
+        <button type="button" class="chip" data-val="Commercial" onclick="toggleChip(this)">Commercial</button>
+        <button type="button" class="chip" data-val="Storage" onclick="toggleChip(this)">Storage</button>
+        <button type="button" class="chip" data-val="Tear Down/Dev Lots" onclick="toggleChip(this)">Tear Down/Dev Lots</button>
+        <button type="button" class="chip" data-val="Hotels/Motels" onclick="toggleChip(this)">Hotels/Motels</button>
+        <button type="button" class="chip" data-val="Industrial" onclick="toggleChip(this)">Industrial</button>
+        <button type="button" class="chip" data-val="New Construction" onclick="toggleChip(this)">New Construction</button>
       </div>
     </div>
 
@@ -635,10 +643,12 @@ function creativeForm(){
     chipRow('grp-structures',
       chipBtn('Subject To','Subject To','grp-structures',true,false) +
       chipBtn('Seller Finance','Seller Finance','grp-structures',false,false) +
-      chipBtn('Stack / Morby Method','Stack / Morby Method','grp-structures',false,false) +
+      chipBtn('Hybrid','Hybrid','grp-structures',false,false) +
+      chipBtn('Morby/Stack Method','Morby/Stack Method','grp-structures',false,false) +
       chipBtn('Wrap','Wrap','grp-structures',false,false) +
       chipBtn('Lease Option','Lease Option','grp-structures',false,false) +
-      chipBtn('Novation','Novation','grp-structures',false,false)
+      chipBtn('Novation','Novation','grp-structures',false,false) +
+      chipBtn('Assumable Loans','Assumable Loans','grp-structures',false,false)
     )
   );
   html += card('Financial Parameters',
