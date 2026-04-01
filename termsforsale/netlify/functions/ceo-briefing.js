@@ -96,15 +96,20 @@ exports.handler = async function(event) {
       var state   = prop(page, 'State');
       var type    = prop(page, 'Deal Type');
       var price   = prop(page, 'Asking Price');
+      var amountFunded = prop(page, 'Amount Funded');
+      var dateFunded   = prop(page, 'Date Funded');
       var lastEdit = page.last_edited_time;
       var staleMs  = now - new Date(lastEdit).getTime();
+      var fundedMs = dateFunded ? now - new Date(dateFunded).getTime() : Infinity;
 
       if (!byStatus[status]) byStatus[status] = [];
       byStatus[status].push({
         address: address + (city ? ', ' + city : '') + (state ? ', ' + state : ''),
         type: type,
         price: price ? '$' + (+price).toLocaleString() : '',
-        lastEdited: lastEdit ? lastEdit.slice(0, 10) : '',
+        amountFunded: amountFunded ? '$' + (+amountFunded).toLocaleString() : '',
+        dateFunded: dateFunded || '',
+        fundedDaysAgo: dateFunded ? Math.floor(fundedMs / (24 * 60 * 60 * 1000)) : null,
         staleDays: Math.floor(staleMs / (24 * 60 * 60 * 1000))
       });
 
@@ -123,9 +128,12 @@ exports.handler = async function(event) {
       return d.address + (d.type ? ' [' + d.type + ']' : '') + (d.price ? ' ' + d.price : '');
     });
 
-    var recentlyClosed = (byStatus['Closed'] || byStatus['Sold'] || []).filter(function(d) {
-      return d.staleDays <= 14;
-    }).map(function(d) { return d.address; });
+    // Use Date Funded (not last_edited_time) to identify recently closed deals
+    var recentlyClosed = (byStatus['Closed'] || []).filter(function(d) {
+      return d.fundedDaysAgo !== null && d.fundedDaysAgo <= 14;
+    }).map(function(d) {
+      return d.address + (d.amountFunded ? ' — ' + d.amountFunded : '') + (d.dateFunded ? ' (funded ' + d.dateFunded + ')' : '');
+    });
 
     // 4. Generate briefing with Claude
     var today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Phoenix' });

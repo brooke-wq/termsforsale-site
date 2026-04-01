@@ -131,6 +131,8 @@ exports.handler = async function(event) {
         status:  prop(page, 'Deal Status') || 'Unknown',
         type:    prop(page, 'Deal Type'),
         price:   prop(page, 'Asking Price'),
+        amountFunded: prop(page, 'Amount Funded'),
+        dateFunded:   prop(page, 'Date Funded'),
         lastEdited: page.last_edited_time ? page.last_edited_time.slice(0, 10) : ''
       };
     });
@@ -142,10 +144,20 @@ exports.handler = async function(event) {
       changedByStatus[d.status].push(d.address + (d.city ? ', ' + d.city : '') + ', ' + d.state);
     });
 
-    // Identify wins: any deal that moved to Closed/Sold in the last 7 days
-    var wins = (changedByStatus['Closed'] || [])
-      .concat(changedByStatus['Sold'] || [])
-      .concat(changedByStatus['Under Contract'] || []);
+    // Identify wins: deals with Date Funded in the last 7 days
+    var sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    var wins = allDeals.filter(function(page) {
+      var dateFunded = prop(page, 'Date Funded');
+      return dateFunded && dateFunded >= sevenDaysAgo;
+    }).map(function(page) {
+      var addr = prop(page, 'Street Address') || 'Unknown';
+      var city = prop(page, 'City');
+      var amount = prop(page, 'Amount Funded');
+      var dateFunded = prop(page, 'Date Funded');
+      return addr + (city ? ', ' + city : '') +
+        (amount ? ' — $' + (+amount).toLocaleString() : '') +
+        (dateFunded ? ' (funded ' + dateFunded + ')' : '');
+    });
 
     // Build pipeline summary string
     var pipelineSummary = Object.keys(pipelineByStatus).map(function(s) {
