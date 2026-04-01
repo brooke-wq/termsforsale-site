@@ -113,6 +113,24 @@ exports.handler = async (event) => {
       console.warn('Webhook fire failed (non-critical):', e.message);
     }
 
+    // Send welcome SMS
+    if (phone && contactId) {
+      try {
+        await fetch(GHL_BASE + '/conversations/messages', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            type: 'SMS',
+            contactId,
+            message: 'Welcome to Terms For Sale, ' + firstName + '! Browse off-market deals: https://deals.termsforsale.com — Reply STOP to opt out.'
+          })
+        });
+        console.log('[auth-signup] welcome SMS sent to ' + phone);
+      } catch (e) {
+        console.warn('[auth-signup] SMS failed:', e.message);
+      }
+    }
+
     return respond(200, {
       success: true,
       exists: false,

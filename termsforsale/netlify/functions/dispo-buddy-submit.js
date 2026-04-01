@@ -83,6 +83,21 @@ exports.handler = async (event) => {
       opportunityId: oppData?.id || 'not created',
     }));
 
+    // Send confirmation SMS to the JV partner
+    var partnerPhone = body.jv_partner_phone || body.phone || '';
+    if (partnerPhone && contactId) {
+      try {
+        await ghlFetch(`${GHL_BASE}/conversations/messages`, 'POST', {
+          type: 'SMS',
+          contactId: contactId,
+          message: 'Thanks for submitting your deal in ' + (body.property_city || '') + ', ' + (body.property_state || '') + '! Our team will review it within 24hrs. — Deal Pros LLC'
+        }, headers);
+        console.log('[dispo-buddy-submit] confirmation SMS sent to ' + partnerPhone);
+      } catch (e) {
+        console.warn('[dispo-buddy-submit] SMS failed:', e.message);
+      }
+    }
+
     return respond(200, { success: true, contactId, message: 'Deal submitted successfully' });
 
   } catch (err) {

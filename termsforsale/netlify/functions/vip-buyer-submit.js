@@ -1,7 +1,7 @@
 // VIP Buyer QR funnel — creates/upserts contact in GHL with tags + custom fields
 // POST /api/vip-buyer-submit
 
-const { upsertContact, addTags, updateCustomFields, CF_IDS } = require('./_ghl');
+const { upsertContact, addTags, updateCustomFields, sendSMS, CF_IDS } = require('./_ghl');
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') {
@@ -84,6 +84,17 @@ exports.handler = async function(event) {
 
   if (customFields.length) {
     await updateCustomFields(apiKey, contactId, customFields);
+  }
+
+  // Send confirmation SMS to the new buyer
+  if (phone && contactId) {
+    try {
+      await sendSMS(apiKey, locationId, phone,
+        'Welcome to the Terms For Sale VIP list, ' + firstName + '! You\'ll get first access to our best off-market deals. Browse now: https://deals.termsforsale.com');
+      console.log('[vip-buyer-submit] confirmation SMS sent to ' + phone);
+    } catch (e) {
+      console.warn('[vip-buyer-submit] SMS failed:', e.message);
+    }
   }
 
   return {
