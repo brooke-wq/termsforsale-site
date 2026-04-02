@@ -166,6 +166,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/booking-notify"
+  to = "/.netlify/functions/booking-notify"
+  status = 200
+
+[[redirects]]
+  from = "/api/buyer-response-tag"
+  to = "/.netlify/functions/buyer-response-tag"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
