@@ -89,6 +89,7 @@ exports.handler = async function(event) {
         var dealCity = cf['KuaUFXhbQB6kKvBSKfoI'] || '';
         var dealAddress = cf['TerjqctukTW67rB21ugC'] || dealCity || 'the deal';
         var dealType = cf['0thrOdoETTLlFA45oN8U'] || '';
+        var dealUrl = cf['5eEVPcp8nERlR6GpjZUn'] || 'https://termsforsale.com';
 
         try {
           // DAY 0: 4-12 hours after initial alert
@@ -97,7 +98,7 @@ exports.handler = async function(event) {
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
                 type: 'SMS', contactId: contact.id,
-                message: 'Quick check on ' + (dealCity || dealAddress) + ' I sent you:\n1 = very interested\n2 = maybe / want to talk\n3 = pass\nReply with just the number.'
+                message: 'Quick check on ' + (dealCity || dealAddress) + ' I sent you:\n1 = very interested\n2 = maybe / want to talk\n3 = pass\nReply with just the number.\n' + dealUrl
               });
             }
             // Email 1
@@ -112,6 +113,7 @@ exports.handler = async function(event) {
                   + '<strong>MAYBE</strong> = not sure, want to talk<br>'
                   + '<strong>PASS</strong> = not my box, keep sending others</p>'
                   + '<p>This helps me prioritize who gets first crack on this and similar deals.</p>'
+                  + '<p><a href="' + dealUrl + '" style="color:#29ABE2;font-weight:700">View Deal Details →</a></p>'
                   + '<p>— Brooke, Terms For Sale</p></div>',
                 emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
               });
@@ -127,7 +129,7 @@ exports.handler = async function(event) {
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
                 type: 'SMS', contactId: contact.id,
-                message: 'Still buying in ' + (dealCity || 'the area') + (dealType ? ' at ' + dealType : '') + '? If yes, want me to prioritize deals like ' + (dealAddress || 'this one') + ' for you, or pause you for now?'
+                message: 'Still buying in ' + (dealCity || 'the area') + (dealType ? ' at ' + dealType : '') + '? If yes, want me to prioritize deals like ' + (dealAddress || 'this one') + ' for you, or pause you for now?\n' + dealUrl
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d1Tag] });
@@ -147,6 +149,7 @@ exports.handler = async function(event) {
                   + '<p>If you want main or backup spot, reply <strong>IN</strong> today.</p>'
                   + '<p>If not, hit reply with your exact buy box (price, city, strategy) so I only send you slam-dunks.</p>'
                   + '<p>If I don\'t hear back, I\'ll assume you\'re paused for now.</p>'
+                  + '<p><a href="' + dealUrl + '" style="color:#29ABE2;font-weight:700">View Deal Details →</a></p>'
                   + '<p>— Brooke, Terms For Sale</p></div>',
                 emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
               });
@@ -155,7 +158,7 @@ exports.handler = async function(event) {
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
                 type: 'SMS', contactId: contact.id,
-                message: 'Last ping on ' + (dealAddress || 'the deal') + '.\nWant me to:\nA) Keep sending you stuff like this\nB) Tighten to ' + (dealCity || 'your market') + ' only\nC) Pause alerts for now\nReply A/B/C.'
+                message: 'Last ping on ' + (dealAddress || 'the deal') + '.\nWant me to:\nA) Keep sending you stuff like this\nB) Tighten to ' + (dealCity || 'your market') + ' only\nC) Pause alerts for now\nReply A/B/C.\n' + dealUrl
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d2Tag] });
