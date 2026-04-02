@@ -464,57 +464,52 @@ footer{background:var(--navy);padding:52px 55px 0}
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bg">
-    <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1800&auto=format&fit=crop&q=80" alt="Real estate">
+    <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&auto=format&fit=crop&q=85" alt="Property">
   </div>
-  <div class="hero-content">
+  <div class="hero-content hero-content-grid">
     <div class="hero-headline">
-      <h1>Off-Market Deals.<br>Real Terms.<br>Real Equity.</h1>
-      <p>Subject-to, seller finance, and cash deals sourced weekly by Deal Pros LLC. Entry fees from $15K.</p>
+      <h1>Off-Market Deals You Won't Find on Zillow</h1>
+      <p>Subject-to, seller finance, and cash deals delivered weekly. Lock in rates under 3% on properties with built-in equity.</p>
     </div>
     <div class="hero-widget">
       <div class="hw-top">
-        <div class="hw-title">Find Your Next Deal</div>
+        <div class="hw-title">Search Active Deals</div>
         <div class="hw-badge">
+          <div>
+            <div class="hw-badge-num" id="hero-count">&mdash;</div>
+            <div class="hw-badge-lbl">Active Deals</div>
+          </div>
           <div class="hw-dot"></div>
-          <div class="hw-badge-num" id="hero-count">&mdash;</div>
-          <div class="hw-badge-lbl">live deals</div>
         </div>
       </div>
       <div class="hw-tabs">
-        <button class="hw-tab on" onclick="setHeroTab(this,'')">All Deals</button>
-        <button class="hw-tab" onclick="setHeroTab(this,'creative')">Creative</button>
-        <button class="hw-tab" onclick="setHeroTab(this,'cash')">Cash</button>
+        <button class="hw-tab on">All Deals</button>
+        <button class="hw-tab">Creative</button>
+        <button class="hw-tab">Cash</button>
       </div>
-      <div class="hw-search-lbl">Search by location</div>
-      <form class="hw-search-row" onsubmit="goSearch();return false">
-        <input class="hw-input" id="hero-search" placeholder="City, state, or zip code…">
-        <button class="hw-search-btn" type="submit">Search Deals</button>
-      </form>
+      <div class="hw-search-lbl">Search For Off-Market Deals</div>
+      <div class="hw-search-row">
+        <input class="hw-input" id="hero-search" placeholder="Enter a County, State, City, or Zip Code...">
+        <button class="hw-search-btn" onclick="window.location.href='/'">Search</button>
+      </div>
+      <a href="/" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;transition:color .15s" onmouseover="this.style.color='rgba(255,255,255,.9)'" onmouseout="this.style.color='rgba(255,255,255,.55)'">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Browse deals on the map &rarr;
+      </a>
     </div>
   </div>
 </section>
 
 <!-- SOCIAL PROOF BAR -->
-<section style="background:#fff;border-top:3px solid #E2E8F0;border-bottom:1px solid #E2E8F0;padding:28px 40px">
-  <div style="max-width:1100px;margin:0 auto;display:flex;justify-content:center;gap:48px;flex-wrap:wrap">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:42px;height:42px;border-radius:12px;background:#EBF8FF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
-      <div><div style="font-size:22px;font-weight:900;color:#0D1F3C" id="sp-count">&mdash;</div><div style="font-size:11px;color:#718096;font-weight:500">Active Deals</div></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:42px;height:42px;border-radius:12px;background:#FFF3E0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F7941D" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <div><div style="font-size:22px;font-weight:900;color:#0D1F3C">100+</div><div style="font-size:11px;color:#718096;font-weight:500">Active Buyers</div></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:42px;height:42px;border-radius:12px;background:#E6F9F0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div><div style="font-size:22px;font-weight:900;color:#0D1F3C">250+</div><div style="font-size:11px;color:#718096;font-weight:500">Deals Closed</div></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:42px;height:42px;border-radius:12px;background:#F3E8FF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-      <div><div style="font-size:22px;font-weight:900;color:#0D1F3C">6+</div><div style="font-size:11px;color:#718096;font-weight:500">States Covered</div></div>
-    </div>
+<div style="background:var(--navy);padding:20px 40px">
+  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap">
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff" id="sp-count">&mdash;</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Deals</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">$2.1M+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deal Volume</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">250+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deals Closed</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">2,000+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Investors</div></div>
+    <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">12</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">States Served</div></div>
   </div>
-</section>
+</div>
 
 <!-- HOW IT WORKS -->
 <section style="background:#fff;border-top:1px solid #E2E8F0;padding:56px 40px">
