@@ -262,6 +262,8 @@ All form submissions send confirmation SMS + email:
 
 These items are deferred and MUST be completed in the next session:
 
+**CRITICAL FIX — deal-follow-up.js is DISABLED (cron commented out). It was sending duplicate Day 0 messages because the GHL search API doesn't return full tag lists. Before re-enabling: must fetch each contact individually via getContact() to check for sprint-d0/d1/d2 tags. The cron line in the Droplet crontab is commented out with #.**
+
 1. **Split-Screen Map Homepage** — Zillow/Redfin style: left panel scrollable deal cards with filters, right panel interactive map with pins. Click pin → highlight deal card. Click deal → highlight pin. Responsive: stacks on mobile.
 
 2. **Client Portal + Real Auth** — Authenticated buyer dashboard with saved deals, offer tracking, buy box management, deal alerts history. Current auth is localStorage-only (no password verification). Needs real GHL-backed auth: verify email+password against GHL contacts, session management, protected routes. Separate project, done correctly.
