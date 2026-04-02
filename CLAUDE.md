@@ -262,7 +262,17 @@ All form submissions send confirmation SMS + email:
 
 These items are deferred and MUST be completed in the next session:
 
-**CRITICAL FIX — deal-follow-up.js is DISABLED (cron commented out). It was sending duplicate Day 0 messages because the GHL search API doesn't return full tag lists. Before re-enabling: must fetch each contact individually via getContact() to check for sprint-d0/d1/d2 tags. The cron line in the Droplet crontab is commented out with #.**
+**CRITICAL FIX — deal-follow-up.js is DISABLED (cron commented out on Droplet with #). It was sending duplicate Day 0 messages 10+ times because GHL search API doesn't return full tag lists, so dedup tags were invisible.**
+
+**Required fix approach — FILE-BASED DEDUP (not tag-based):**
+- Create `/root/termsforsale-site/jobs/sent-log.json` on the Droplet
+- Before sending ANY SMS or email in deal-follow-up.js AND notify-buyers.js, check this file
+- Key format: `{contactId}-{dealId}-{step}` (e.g. `abc123-def456-d0`)
+- If key exists in the file, SKIP — do not send
+- After sending, write the key + timestamp to the file
+- This is filesystem-based, zero API dependency, impossible to double-send
+- Do NOT re-enable the deal-follow-up cron until this fix is implemented and tested
+- Also apply file-based dedup to notify-buyers.js for extra safety (in addition to existing tag dedup)
 
 1. **Split-Screen Map Homepage** — Zillow/Redfin style: left panel scrollable deal cards with filters, right panel interactive map with pins. Click pin → highlight deal card. Click deal → highlight pin. Responsive: stacks on mobile.
 
