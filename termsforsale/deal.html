@@ -709,7 +709,7 @@ function renderDeal(d,allDeals){
   // TERMS TABLE
   const termRows=[];
   termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
-  termRows.push({l:'Deal Type',v:d.dealType||'—'},{l:'IF not Cash',v:entry&&entry!==+d.askingPrice?fc(entry)+' Entry':entry?fc(entry):'—'});
+  termRows.push({l:'Deal Type',v:d.dealType||'—'},{l:'Entry Fee',v:entry?fc(entry)+' + CC/TC':'—'});
   if(isSubTo){termRows.push({l:'Subject To',v:d.subtoLoanBalance?'Yes':'—'},{l:'Loan Type',v:'Existing Mortgage'});termRows.push({l:'Loan Balance',v:fc(d.subtoLoanBalance)},{l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});termRows.push({l:'Escrow Payment',v:d.piti?'Included in PITI':'—'},{l:'APR',v:fmtRate(d.subtoRate)});termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'},{l:'Balloon',v:d.subToBalloon||'—'});}
   if(isSF){termRows.push({l:'SF Loan Amount',v:fc(d.sfLoanAmount)},{l:'Interest Rate',v:d.sfRate||'—'});termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'},{l:'Term',v:d.sfTerm||'—'});termRows.push({l:'Balloon',v:d.sfBalloon||'—'},{l:'Down Payment',v:fc(entry)});}
 
