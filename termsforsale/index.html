@@ -537,6 +537,7 @@ footer{background:var(--navy);padding:52px 55px 0}
 <nav id="main-nav">
   <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:46px"></a>
   <div class="nav-links">
+    <a href="/about.html">About</a>
     <a href="https://dispobuddy.com" target="_blank">Sell Your Deal</a>
     <a href="/buying-criteria.html">Get Deal Alerts</a>
     <a href="/map.html" target="_blank" style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Deal Map</a>
@@ -1077,7 +1078,8 @@ function toggleSave(e,id,el){
   e.stopPropagation();
   var saved=getSaved();
   var idx=saved.indexOf(id);
-  if(idx>-1){saved.splice(idx,1);}else{saved.push(id);}
+  var action;
+  if(idx>-1){saved.splice(idx,1);action='unsave';}else{saved.push(id);action='save';}
   localStorage.setItem('tfs_saved',JSON.stringify(saved));
   var isSaved=saved.indexOf(id)>-1;
   var svg=el.querySelector('svg');
@@ -1085,6 +1087,11 @@ function toggleSave(e,id,el){
   svg.setAttribute('stroke',isSaved?'#ef4444':'currentColor');
   // Record activity
   try{var acts=JSON.parse(localStorage.getItem('tfs_activity')||'[]');acts.unshift({text:(isSaved?'Saved':'Unsaved')+' deal '+id,color:isSaved?'#C53030':'#718096',time:new Date().toISOString()});localStorage.setItem('tfs_activity',JSON.stringify(acts.slice(0,20)));}catch(ex){}
+  // Sync to GHL in background
+  var user=getUser();
+  if(user&&user.contactId){
+    fetch('/api/saved-deals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,action:action,dealId:id})}).catch(function(){});
+  }
 }
 const DEAL_STORE={};
 function storeDeal(d){DEAL_STORE[d.id]=d;}
@@ -1394,12 +1401,26 @@ async function doLogin(){
     const user={contactId:u.id,name:u.firstName||u.name,email:u.email,phone:u.phone||'',initials:u.initials||'B'};
     setUser(user);updateNavAuth(user);
     ok.innerHTML='Welcome back, '+user.name+'! <a href="/dashboard.html" style="color:var(--blue);font-weight:700">Open Dashboard &rarr;</a>';ok.style.display='block';
+    // Sync saved deals from GHL
+    syncSavedDeals(u.id);
     setTimeout(()=>closeAuth(),2000);
   }catch(e){
     console.error('Login error:',e);
     err.textContent='Connection error. Please try again.';err.style.display='block';
   }
   btn.disabled=false;btn.textContent='Log In';
+}
+function syncSavedDeals(contactId){
+  if(!contactId)return;
+  fetch('/api/saved-deals?contactId='+encodeURIComponent(contactId))
+    .then(r=>r.json()).then(data=>{
+      if(data.ok&&data.dealIds&&data.dealIds.length){
+        var local=getSaved();
+        var merged=[...new Set(local.concat(data.dealIds))];
+        localStorage.setItem('tfs_saved',JSON.stringify(merged));
+        console.log('Synced '+data.dealIds.length+' saved deals from GHL');
+      }
+    }).catch(()=>{});
 }
 async function doSignup(){
   const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
