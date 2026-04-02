@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse Deals — Terms For Sale | Off-Market Real Estate Deals</title>
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+
+  <!-- Primary SEO -->
+  <meta name="description" content="Browse active off-market real estate deals. Subject-to, seller finance, and cash deals in AZ, TX, FL, KY and more. Entry fees from $15K. Updated weekly by Deal Pros LLC.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://deals.termsforsale.com/deals.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Terms For Sale">
+  <meta property="og:title" content="Terms For Sale — Off-Market Real Estate Deals | Subject-To, Seller Finance, Cash">
+  <meta property="og:description" content="Browse active off-market real estate deals. Subject-to, seller finance, and cash deals in AZ, TX, FL, KY and more. Entry fees from $15K. Updated weekly by Deal Pros LLC.">
+  <meta property="og:url" content="https://deals.termsforsale.com">
+  <meta property="og:image" content="https://deals.termsforsale.com/og-default.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@termsforsale">
+  <meta name="twitter:title" content="Terms For Sale — Off-Market Real Estate Deals | Subject-To, Seller Finance, Cash">
+  <meta name="twitter:description" content="Browse active off-market real estate deals. Subject-to, seller finance, and cash deals in AZ, TX, FL, KY and more. Entry fees from $15K. Updated weekly by Deal Pros LLC.">
+  <meta name="twitter:image" content="https://deals.termsforsale.com/og-default.png">
+
+  <!-- Local Business Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "Terms For Sale",
+    "alternateName": "Deal Pros LLC",
+    "url": "https://deals.termsforsale.com",
+    "telephone": "(480) 637-3117",
+    "email": "info@termsforsale.com",
+    "description": "Off-market real estate deals including subject-to, seller finance, and cash wholesale assignments. Serving AZ, TX, FL, KY and nationwide.",
+    "areaServed": ["Arizona", "Texas", "Florida", "Kentucky", "Tennessee", "Georgia"],
+    "sameAs": []
+  }
+  </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Exact Figma colors */
+  --navy:#0D1F3C;
+  --navy-card:#043e5c;
+  --blue:#29ABE2;
+  --blue-dark:#1a8bbf;
+  --blue-light:#EBF8FF;
+  --blue-mid:#d0eef9;
+  --orange:#F7941D;
+  --orange-dark:#d97c0e;
+  --teal:#7296aa;
+  --white:#fff;
+  --bg:#F4F6F9;
+  --bg-section:#EEF2F6;
+  --text:#0D1F3C;
+  --text-mid:#4A6070;
+  --text-light:#718096;
+  --border:#E2E8F0;
+  --font:'Poppins',sans-serif;
+  --shadow-card: -5.45px 6.81px 19.08px 0px rgba(29,51,64,0.10), -21.8px 24.53px 34.06px 0px rgba(29,51,64,0.09), -50.41px 55.86px 44.96px 0px rgba(29,51,64,0.05);
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--text);overflow-x:hidden;background:var(--white);-webkit-font-smoothing:antialiased}
+
+/* ── NAV ────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:72px;display:flex;align-items:center;padding:0 32px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06);transition:box-shadow .3s}
+nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
+.nav-logo img{height:46px;width:auto;display:block}
+.nav-links{display:flex;align-items:center;gap:24px;margin-left:32px}
+.nav-links a{color:var(--text-mid);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+.nav-links a:hover{color:var(--blue)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn-signup{padding:8px 20px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text-mid);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s}
+.btn-signup:hover{background:var(--bg);border-color:var(--text-mid)}
+.btn-login{padding:8px 22px;border-radius:8px;background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:background .15s}
+.btn-login:hover{background:var(--blue-dark)}
+.nav-avatar-wrap{position:relative}
+.nav-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-dropdown{position:absolute;top:100%;right:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.15);min-width:180px;padding:6px 0;display:none;z-index:600;padding-top:10px}
+.nav-dropdown::before{content:'';position:absolute;top:-10px;right:0;width:100%;height:10px}
+.nav-avatar-wrap:hover .nav-dropdown{display:block}
+.nav-dropdown a,.nav-dropdown button{display:block;padding:10px 16px;font-size:13px;color:var(--text-mid);text-decoration:none;background:none;border:none;width:100%;text-align:left;cursor:pointer;font-family:var(--font)}
+.nav-dropdown a:hover,.nav-dropdown button:hover{background:var(--bg);color:var(--text)}
+.nav-dropdown hr{border:none;border-top:1px solid var(--border);margin:4px 0}
+
+/* ── SPLIT SCREEN LAYOUT ───────────────── */
+.split-app{display:flex;height:calc(100vh - 72px);margin-top:72px;overflow:hidden;position:relative}
+.split-sidebar{width:480px;min-width:380px;max-width:520px;display:flex;flex-direction:column;background:#fff;border-right:1px solid var(--border);z-index:10;flex-shrink:0}
+.split-toolbar{padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff}
+.split-toolbar-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.split-toolbar-top h2{font-size:18px;font-weight:800;color:var(--navy);white-space:nowrap}
+.split-badge{display:flex;align-items:center;gap:6px;background:var(--blue-light);border-radius:8px;padding:5px 12px;margin-left:auto;flex-shrink:0}
+.split-badge-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite}
+.split-badge-num{font-size:14px;font-weight:800;color:var(--navy)}
+.split-badge-lbl{font-size:10px;color:var(--text-light);font-weight:500}
+.split-search{width:100%;padding:9px 14px 9px 36px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:#fff;color:var(--text);outline:none;transition:border .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0AEC0' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+.split-search:focus{border-color:var(--blue)}
+.split-search::placeholder{color:#A0AEC0}
+.split-filters{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.split-filter-select{padding:7px 26px 7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:12px;font-weight:600;color:var(--text);background:#fff;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;transition:border .2s}
+.split-filter-select:focus{border-color:var(--blue)}
+.split-tabs{display:flex;gap:0;flex-shrink:0}
+.split-tab{padding:6px 14px;font-family:var(--font);font-size:12px;font-weight:600;color:var(--text-light);background:transparent;border:1.5px solid var(--border);cursor:pointer;transition:all .15s}
+.split-tab:first-child{border-radius:8px 0 0 8px}
+.split-tab:last-child{border-radius:0 8px 8px 0}
+.split-tab:not(:first-child){border-left:none}
+.split-tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.split-count{font-size:12px;font-weight:600;color:var(--text-light);margin-left:auto;white-space:nowrap}
+.split-cards{flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:thin}
+.split-cards::-webkit-scrollbar{width:5px}
+.split-cards::-webkit-scrollbar-track{background:var(--bg)}
+.split-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.split-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* Compact card overrides for split view */
+.split-cards .deal-card{border-radius:10px}
+.split-cards .deal-card-photo{height:150px}
+.split-cards .deal-card-body{padding:12px 14px 14px}
+.split-cards .deal-card-price{font-size:19px}
+.split-cards .deal-card-loc{font-size:11px;margin-bottom:8px}
+.split-cards .deal-card-specs{font-size:11px}
+.split-cards .deal-card-spec strong{font-size:12px}
+.split-cards .deal-card-arv{font-size:11px;margin-bottom:6px}
+/* Highlighted card when hovering on map */
+.split-cards .deal-card.map-highlight{box-shadow:0 0 0 2px var(--blue),0 8px 24px rgba(41,171,226,.2);transform:translateY(-2px)}
+
+/* MAP PANEL */
+.split-map{flex:1;position:relative;z-index:1}
+#map{width:100%;height:100%}
+.leaflet-popup-content-wrapper{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.12);border:none;padding:0;overflow:hidden;min-width:220px}
+.leaflet-popup-content{margin:0;font-family:var(--font)}
+.leaflet-popup-tip-container{display:none}
+
+/* MAP LEGEND */
+.map-legend-float{position:absolute;bottom:24px;right:24px;background:rgba(255,255,255,.96);border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,.1);z-index:500;font-size:11px}
+.map-legend-float h4{font-size:9px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.mleg-item{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-weight:600;color:var(--text-mid)}
+.mleg-item:last-child{margin-bottom:0}
+.mleg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* TOGGLE VIEW BUTTONS */
+.view-toggle{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:600;background:var(--navy);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+
+/* Below-fold sections spacer */
+.below-fold{position:relative;z-index:5}
+
+/* MOBILE */
+@media(max-width:900px){
+  .split-app{flex-direction:column}
+  .split-sidebar{width:100%;max-width:100%;min-width:0;height:55vh;flex-shrink:0}
+  .split-sidebar.map-mode{display:none}
+  .split-map{height:45vh;flex:none}
+  .split-map.list-mode{display:none}
+  .split-cards-grid{grid-template-columns:1fr}
+  .view-toggle{display:block}
+  .map-legend-float{bottom:70px;right:12px}
+}
+@media(max-width:600px){
+  .split-sidebar{height:auto;flex:1}
+  .split-map{height:100%;position:absolute;inset:0}
+  .split-toolbar-top h2{font-size:15px}
+  .split-filters{gap:6px}
+}
+
+/* ── HERO ───────────────────────────────── */
+.hero{position:relative;height:auto;min-height:360px;overflow:hidden;margin-top:72px;display:none}
+.hero-bg{position:absolute;inset:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom, rgba(5,20,40,.3) 0%, rgba(5,20,40,.55) 100%)}
+.hero-content{position:relative;z-index:2;display:grid;grid-template-columns:1fr 440px;gap:48px;align-items:center;padding:48px 55px;max-width:1440px;margin:0 auto;width:100%}
+/* Headline */
+.hero-headline{max-width:520px;margin-bottom:0}
+.hero-headline h1{font-size:44px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:12px}
+.hero-headline p{font-size:15px;color:rgba(255,255,255,.7);max-width:400px;line-height:1.6}
+/* Search Widget */
+.hero-widget{background:rgba(13,31,60,.72);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:22px 24px;width:520px}
+.hw-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.hw-title{font-size:18px;font-weight:800;color:#fff;line-height:1.2}
+.hw-badge{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:10px;padding:8px 14px}
+.hw-badge-num{font-size:22px;font-weight:800;color:#fff;line-height:1}
+.hw-badge-lbl{font-size:11px;color:rgba(255,255,255,.65);font-weight:500}
+.hw-dot{width:9px;height:9px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
+.hw-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.15);margin-bottom:14px}
+.hw-tab{padding:6px 14px;font-family:var(--font);font-size:13px;font-weight:600;color:rgba(255,255,255,.45);background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .15s}
+.hw-tab.on{color:#fff;border-bottom-color:#fff}
+.hw-search-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.hw-search-row{display:flex;border-radius:10px;overflow:hidden;background:#fff}
+.hw-input{flex:1;padding:13px 16px;border:none;font-family:var(--font);font-size:13px;color:var(--text);outline:none;background:transparent}
+.hw-input::placeholder{color:var(--text-light)}
+.hw-search-btn{padding:13px 22px;background:var(--orange);border:none;color:#fff;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;white-space:nowrap}
+.hw-search-btn:hover{background:var(--orange-dark)}
+
+/* ── STREAMLINED ────────────────────────── */
+.streamlined{background:#fff;padding:80px 55px}
+.streamlined-inner{max-width:1330px;margin:0 auto;display:grid;grid-template-columns:320px 1fr auto;gap:64px;align-items:center}
+.st-img{width:320px;height:320px;border-radius:20px;overflow:hidden;flex-shrink:0;box-shadow:0 12px 40px rgba(0,0,0,.12)}
+.st-img img{width:100%;height:100%;object-fit:cover;display:block}
+.st-text .eyebrow{font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.st-text h2{font-size:46px;font-weight:900;color:var(--navy);line-height:1.08;letter-spacing:-.5px;margin-bottom:16px}
+.daily-pill{display:inline-block;background:var(--blue);color:#fff;padding:2px 14px;border-radius:8px;font-size:42px;font-weight:900;line-height:1.1;vertical-align:middle}
+.st-text p{font-size:15px;color:var(--text-mid);line-height:1.7;max-width:440px}
+.st-stats{display:flex;flex-direction:column;gap:28px;padding-left:20px;border-left:1px solid var(--border)}
+.st-stat{display:flex;align-items:center;gap:14px}
+.st-stat-icon{width:48px;height:48px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.st-stat-icon svg{color:var(--blue)}
+.st-stat-num{font-size:26px;font-weight:900;color:var(--navy);line-height:1}
+.st-stat-lbl{font-size:11px;color:var(--text-light);font-weight:500;margin-top:1px}
+
+/* ── HOW IT WORKS ───────────────────────── */
+.how{background:var(--navy);padding:80px 55px}
+.how-inner{max-width:1330px;margin:0 auto}
+.how-label{font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.how-header{display:grid;grid-template-columns:1fr 1fr;align-items:start;margin-bottom:56px}
+.how-header h2{font-size:56px;font-weight:900;color:#fff;line-height:1.05;letter-spacing:-.5px}
+.how-header-right{padding-top:20px}
+.how-header-right p{font-size:15px;color:rgba(255,255,255,.5);line-height:1.7}
+.how-header-right strong{color:rgba(255,255,255,.85)}
+/* Steps */
+.how-step{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;padding:60px 0;border-top:1px solid rgba(255,255,255,.08)}
+.how-step-text .step-num{font-size:12px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.how-step-text h3{font-size:46px;font-weight:900;color:#fff;line-height:1.08;letter-spacing:-.5px;margin-bottom:16px}
+.how-step-text p{font-size:15px;color:rgba(255,255,255,.5);line-height:1.7;max-width:500px}
+/* Step visuals */
+.step-visual{border-radius:20px;overflow:hidden;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+/* Mini deal cards grid */
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px}
+.mini-card{background:#fff;border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s}
+.mini-card:hover{transform:translateY(-2px)}
+.mini-card-photo{height:100px;overflow:hidden;background:#c8e8f5}
+.mini-card-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.mini-card-body{padding:8px 10px}
+.mini-card-price{font-size:13px;font-weight:700;color:var(--navy-card)}
+.mini-card-entry{font-size:9px;color:rgba(4,62,92,.6);font-weight:500}
+.mini-card-loc{font-size:9px;color:rgba(4,62,92,.7);margin-top:2px;display:flex;align-items:center;gap:3px}
+.mini-card-specs{font-size:9px;color:rgba(4,62,92,.5);margin-top:1px}
+/* Big deal card */
+.big-card-wrap{position:relative;margin:24px 20px 20px 36px}
+.big-card-check{position:absolute;top:-18px;left:-18px;width:50px;height:50px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 4px 16px rgba(247,148,29,.4)}
+.big-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.2);cursor:pointer}
+.big-card-img{height:188px;overflow:hidden;background:#c8e8f5}
+.big-card-img img{width:100%;height:100%;object-fit:cover;display:block}
+.big-card-body{padding:16px}
+.big-card-price{font-size:22px;font-weight:800;color:var(--navy-card)}
+.big-card-entry{font-size:11px;color:rgba(4,62,92,.6);font-weight:500;margin-bottom:8px}
+.big-card-loc{font-size:12px;color:rgba(4,62,92,.7);display:flex;align-items:center;gap:4px}
+.big-card-specs{font-size:11px;color:rgba(4,62,92,.5);margin-top:4px}
+/* My Deals */
+.my-deals-wrap{padding:20px}
+.my-deals-title{font-size:17px;font-weight:800;color:var(--navy-card);margin-bottom:14px}
+.my-deals-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.my-deal-thumb{border-radius:10px;overflow:hidden;background:#c8e8f5;cursor:pointer;transition:transform .2s}
+.my-deal-thumb:hover{transform:translateY(-2px)}
+.my-deal-photo{height:65px;overflow:hidden}
+.my-deal-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.my-deal-body{padding:5px 7px 7px}
+.my-deal-price{font-size:10px;font-weight:700;color:var(--navy-card)}
+.my-deal-loc{font-size:8px;color:rgba(4,62,92,.5)}
+
+/* ── EXPLORE DEALS ───────────────────────── */
+.explore{background:#F5F7FA;padding:60px 0 80px;border-top:3px solid #E2E8F0}
+.explore-inner{max-width:1400px;margin:0 auto;padding:0 40px}
+.explore-eyebrow{font-size:12px;font-weight:700;color:#29ABE2;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.explore-title{font-size:34px;font-weight:900;color:#0D1F3C;letter-spacing:-0.5px;line-height:1.1;margin-bottom:6px}
+.explore-subtitle{font-size:14px;color:#718096;margin-bottom:28px}
+/* Tabs */
+.explore-tabs{display:flex;gap:8px;margin-bottom:24px}
+.explore-tab{padding:9px 20px;border-radius:50px;font-family:var(--font);font-size:13px;font-weight:600;color:#4A5568;background:#fff;border:1.5px solid #E2E8F0;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.explore-tab:hover:not(.on){border-color:#29ABE2;color:#29ABE2}
+.explore-tab.on{background:#0D1F3C;color:#fff;border-color:#0D1F3C}
+/* Filter row */
+.filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.filter-input{flex:1;min-width:240px;padding:10px 14px 10px 38px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:var(--font);font-size:13px;background:#fff;color:#0D1F3C;outline:none;transition:border .2s;box-shadow:0 1px 3px rgba(0,0,0,.04);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0AEC0' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+.filter-input:focus{border-color:#29ABE2}
+.filter-input::placeholder{color:#A0AEC0}
+.filter-select{padding:10px 28px 10px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:var(--font);font-size:13px;background:#fff;color:#4A5568;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;cursor:pointer;outline:none;transition:border .2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.filter-select:focus{border-color:#29ABE2}
+.filter-count{font-size:13px;font-weight:600;color:#718096;white-space:nowrap;margin-left:auto}
+/* Deal grid */
+.deals-scroll{padding:0}
+.deals-row{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+/* Deal card */
+.deal-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);cursor:pointer;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s;border:1px solid #E9EDF2}
+.deal-card:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,0,0,.13)}
+.deal-card-photo{height:220px;position:relative;background:#dbeaf5;flex-shrink:0;overflow:hidden}
+.deal-card-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+.deal-card:hover .deal-card-photo img{transform:scale(1.05)}
+.deal-card-photo-empty{width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5 0%,#a8d4ea 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(4,62,92,.3)}
+.deal-card-save{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.97);display:flex;align-items:center;justify-content:center;z-index:10;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:transform .15s}
+.deal-card-save:hover{transform:scale(1.15)}
+.deal-card-save svg{transition:all .15s}
+.deal-card-type{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:5px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.type-cash{background:#10B981;color:#fff}
+.type-subto{background:#29ABE2;color:#fff}
+.type-sf{background:#F7941D;color:#fff}
+.type-hybrid{background:#7C3AED;color:#fff}
+.type-lease{background:#EC4899;color:#fff}
+.type-novation{background:#0EA5E9;color:#fff}
+.type-wrap{background:#8B5CF6;color:#fff}
+.deal-card-discount{position:absolute;bottom:0;left:0;right:0;padding:32px 14px 12px;background:linear-gradient(to top,rgba(13,31,60,.82),transparent);display:flex;align-items:flex-end;justify-content:space-between}
+.deal-card-discount-pct{font-size:13px;font-weight:800;color:#fff;letter-spacing:.3px}
+.deal-card-urgency-badge{font-size:10px;font-weight:700;background:rgba(247,148,29,.95);color:#fff;padding:3px 8px;border-radius:4px}
+.deal-badge-uc{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:5px;font-size:10px;font-weight:800;background:#F7941D;color:#fff;z-index:2}
+.deal-badge-sold{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:5px;font-size:10px;font-weight:800;background:rgba(100,116,139,.9);color:#fff;z-index:2}
+.deal-card-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
+.deal-card-price-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2px}
+.deal-card-price{font-size:24px;font-weight:900;color:#0D1F3C;line-height:1}
+.deal-card-status-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#EBF8FF;color:#1a8bbf;line-height:1.5}
+.deal-card-arv{font-size:12px;color:#718096;margin-bottom:10px}
+.deal-card-arv strong{color:#4A5568;font-weight:600}
+.deal-card-loc{display:flex;align-items:center;gap:5px;font-size:12px;color:#4A5568;font-weight:500;margin-bottom:12px}
+.deal-card-loc svg{color:#29ABE2;flex-shrink:0}
+.deal-card-divider{height:1px;background:#F0F4F8;margin:0 0 12px}
+.deal-card-specs{display:flex;align-items:center;gap:16px;font-size:12px;color:#718096}
+.deal-card-spec{display:flex;align-items:center;gap:5px}
+.deal-card-spec strong{color:#0D1F3C;font-weight:700;font-size:13px}
+/* ── TESTIMONIALS ───────────────────────── */
+.testi{background:var(--bg-section);padding:80px 55px}
+.testi-inner{max-width:1330px;margin:0 auto}
+.testi-eyebrow{font-size:14px;font-weight:700;color:var(--teal);margin-bottom:10px}
+.testi-title{font-size:60px;font-weight:900;color:var(--navy);line-height:1.05;letter-spacing:-.5px;margin-bottom:52px}
+.testi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.testi-card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(29,51,64,.07)}
+.testi-quote{font-size:44px;font-weight:900;color:var(--orange);line-height:.8;margin-bottom:14px}
+.testi-text{font-size:13px;color:var(--text-mid);line-height:1.65;margin-bottom:20px}
+.testi-author{display:flex;align-items:center;gap:12px}
+.testi-av{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.testi-name{font-size:13px;font-weight:700;color:var(--navy)}
+.testi-loc{font-size:11px;color:var(--text-light);display:flex;align-items:center;gap:3px;margin-top:2px}
+
+/* ── VIP ────────────────────────────────── */
+.vip{background:#fff;padding:80px 55px}
+.vip-inner{max-width:1330px;margin:0 auto;display:grid;grid-template-columns:1fr 560px;gap:80px;align-items:center}
+.vip-eyebrow{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px}
+.vip-title{font-size:52px;font-weight:900;color:var(--navy);line-height:1.08;letter-spacing:-.5px;margin-bottom:16px}
+.vip-sub{font-size:15px;color:var(--text-mid);line-height:1.7;margin-bottom:32px;max-width:500px}
+.vip-perks{display:flex;flex-direction:column;gap:14px}
+.vip-perk{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:var(--text-mid)}
+.vip-perk-icon{font-size:20px;flex-shrink:0}
+.vip-perk strong{color:var(--navy)}
+/* Form card */
+.vip-form-card{background:var(--navy);border-radius:20px;padding:32px;box-shadow:0 24px 64px rgba(13,31,60,.25)}
+.vfc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:16px}
+.vfc-top h3{font-size:28px;font-weight:800;color:#fff;line-height:1.2;max-width:220px}
+.vfc-top img{height:44px;width:auto;opacity:.9;flex-shrink:0}
+.vf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.vf-input{width:100%;padding:12px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(255,255,255,.07);color:#fff;font-family:var(--font);font-size:13px;outline:none;transition:border .2s}
+.vf-input:focus{border-color:var(--blue);background:rgba(255,255,255,.12)}
+.vf-input::placeholder{color:rgba(255,255,255,.3)}
+.vf-label{font-size:13px;font-weight:700;color:#fff;margin:12px 0 6px;display:flex;align-items:center;justify-content:space-between}
+.vf-label span{font-size:11px;color:rgba(255,255,255,.35);font-weight:400}
+.vf-select{width:100%;padding:12px 28px 12px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font-family:var(--font);font-size:12px;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;transition:border .2s;margin-bottom:0}
+.vf-select:focus{border-color:var(--blue)}
+.vf-select option{background:#1a2e47}
+.vf-agree{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:14px 0 16px;cursor:pointer}
+.vf-agree input{margin-top:2px;flex-shrink:0;accent-color:var(--orange)}
+.vf-agree a{color:rgba(255,255,255,.65)}
+.btn-orange-full{display:block;width:100%;padding:14px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-orange-full:hover{background:var(--orange-dark)}
+
+/* ── MAP ────────────────────────────────── */
+.map-section{background:var(--navy);padding:72px 55px 80px}
+.map-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;gap:20px}
+.map-head-left .map-eyebrow{font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.map-head-left h2{font-size:44px;font-weight:900;color:#fff;line-height:1.08;letter-spacing:-.5px}
+.map-head-left p{font-size:15px;color:rgba(255,255,255,.5);margin-top:8px;max-width:460px;line-height:1.6}
+.map-head-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0}
+.map-open-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--blue);color:#fff;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:none;transition:background .15s}
+.map-open-btn:hover{background:var(--blue-dark)}
+.map-legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.map-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:rgba(255,255,255,.5)}
+.map-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.map-frame{border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+
+/* ── FOOTER ─────────────────────────────── */
+footer{background:var(--navy);padding:52px 55px 0}
+.footer-inner{max-width:1330px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:44px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
+.footer-brand-sub{font-size:11px;color:rgba(255,255,255,.3);line-height:1.6;margin-top:8px}
+.footer-email-row{display:flex;margin:14px 0 8px}
+.footer-email-in{flex:1;padding:10px 14px;border:1.5px solid rgba(255,255,255,.15);border-right:none;border-radius:8px 0 0 8px;background:rgba(255,255,255,.08);color:#fff;font-family:var(--font);font-size:13px;outline:none}
+.footer-email-in::placeholder{color:rgba(255,255,255,.3)}
+.footer-sub-btn{padding:10px 16px;background:var(--orange);color:#fff;border:none;border-radius:0 8px 8px 0;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.footer-col h4{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.footer-col a{font-size:13px;color:rgba(255,255,255,.55);text-decoration:none;transition:color .15s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding:16px 0;font-size:12px;color:rgba(255,255,255,.3);flex-wrap:wrap;gap:8px}
+.footer-links{display:flex;gap:18px}
+.footer-links a{color:rgba(255,255,255,.3);text-decoration:none}
+.footer-links a:hover{color:rgba(255,255,255,.65)}
+
+/* ── AUTH MODAL ─────────────────────────── */
+.auth-overlay{position:fixed;inset:0;background:rgba(13,31,60,.8);backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.auth-overlay.open{opacity:1;pointer-events:all}
+.auth-modal{background:#fff;border-radius:20px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.25);transform:translateY(16px);transition:transform .25s}
+.auth-overlay.open .auth-modal{transform:translateY(0)}
+.auth-head{background:var(--navy);padding:24px 28px;position:relative}
+.auth-head h2{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.auth-head p{font-size:12px;color:rgba(255,255,255,.55)}
+.auth-x{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.55);font-size:24px;cursor:pointer;line-height:1;padding:2px}
+.auth-body{padding:24px 28px 28px}
+.auth-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px}
+.auth-tab{padding:8px 16px;font-size:13px;font-weight:600;color:var(--text-light);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.auth-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.a-field{margin-bottom:10px}
+.a-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
+.a-input:focus{border-color:var(--blue);background:#fff}
+.a-input::placeholder{color:var(--text-light)}
+.a-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
+.a-perks{padding:10px 12px;background:var(--blue-light);border-radius:8px;margin-bottom:14px;display:flex;flex-direction:column;gap:5px}
+.a-perk{display:flex;align-items:center;gap:7px;font-size:12px;color:#1a6f8a;font-weight:500}
+.a-err{font-size:12px;color:#e53e3e;background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
+.a-ok{font-size:12px;color:#276749;background:#E6F9F0;border:1px solid #b2dfce;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:none}
+.a-note{font-size:10px;color:var(--text-light);text-align:center;margin-top:9px;line-height:1.6}
+.a-note a{color:var(--blue)}
+.btn-full-blue{display:block;width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-full-blue:hover{background:var(--blue-dark)}
+
+/* ── EMPTY / LOADING ────────────────────── */
+.empty-deals{padding:60px 20px;text-align:center;color:rgba(255,255,255,.4)}
+.spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── STICKY ACTION BAR ──────────────────── */
+.sticky-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(13,31,60,.97);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.1);padding:12px 40px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:500;transform:translateY(100%);transition:transform .3s}
+.sticky-bar.show{transform:translateY(0)}
+.sticky-bar-text{font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
+.sticky-bar-text strong{color:#fff}
+.sticky-bar a{padding:10px 22px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:none;transition:all .15s;white-space:nowrap}
+.sticky-bar .sb-primary{background:var(--orange);color:#fff}
+.sticky-bar .sb-primary:hover{background:var(--orange-dark)}
+.sticky-bar .sb-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.sticky-bar .sb-secondary:hover{background:rgba(255,255,255,.2)}
+
+/* ── RESPONSIVE ─────────────────────────── */
+@media(max-width:1100px){
+  .streamlined-inner{grid-template-columns:1fr 1fr;gap:40px}.st-stats{display:none}
+  .vip-inner{grid-template-columns:1fr}
+  .how-step{grid-template-columns:1fr}.how-header{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr 1fr}
+  .footer-top{grid-template-columns:1fr 1fr;gap:28px}
+  .deals-row{grid-template-columns:repeat(2,1fr);gap:14px}
+}
+@media(max-width:1024px){
+  nav{padding:0 20px}
+  .nav-links{gap:18px;margin-left:24px}
+  .nav-links a{font-size:13px}
+  .nav-right{gap:8px}
+  .btn-signup,.btn-login{padding:7px 14px;font-size:12px}
+}
+@media(max-width:768px){
+  nav{padding:0 12px;height:56px}
+  .nav-logo img{height:36px !important}
+  .nav-links{display:none}
+  .nav-right{gap:6px}
+  .btn-signup,.btn-login{padding:6px 12px;font-size:11px}
+  #tfs-buybox-container a{padding:6px 10px !important;font-size:11px !important}
+  .hero{margin-top:56px}
+  .hero-content{padding:36px 20px 36px;grid-template-columns:1fr !important;gap:20px !important}
+  .hero-widget{width:100%;padding:16px}
+  .hero-headline h1{font-size:28px;line-height:1.15}
+  .hero-headline p{font-size:14px}
+  .streamlined,.how,.explore,.testi,.vip,.map-section,footer{padding-left:16px;padding-right:16px}
+  .explore-inner{padding:0 16px}
+  .explore-title{font-size:26px}
+  .testi-title{font-size:28px}
+  .vip-title{font-size:28px}
+  .testi-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr;gap:24px}
+  .deals-grid{grid-template-columns:1fr}
+  .deals-row{grid-template-columns:1fr;gap:12px}
+  .deal-card{border-radius:12px}
+  .deal-card-photo{height:200px}
+  .filter-row{flex-direction:column;align-items:stretch}
+  .filter-input{min-width:0}
+  .vip-form{grid-template-columns:1fr}
+  .vip-form-row{grid-template-columns:1fr}
+  .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
+  .auth-overlay{align-items:flex-end}
+  .sticky-bar{padding:10px 16px;gap:8px;flex-wrap:wrap;justify-content:center}
+  .sticky-bar-text{font-size:12px;text-align:center;width:100%}
+  .sticky-bar a{padding:9px 16px;font-size:12px;flex:1;text-align:center}
+}
+</style>
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DRV6NWNY06"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DRV6NWNY06');
+</script>
+<!-- Meta Pixel -->
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1588903745115563');fbq('track','PageView');</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1588903745115563&ev=PageView&noscript=1"/></noscript>
+<!-- Google Ads Remarketing — DISABLED: uncomment and add your Conversion ID when ready
+<script async src="https://www.googletagmanager.com/gtag/js?id=REPLACE_WITH_CONVERSION_ID"></script>
+<script>window.gtag||function(){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','REPLACE_WITH_CONVERSION_ID')}();</script>
+-->
+  <!-- TFS Buy Box — native page button -->
+  <script>
+    function renderBuyBoxNavBtn() {
+      var container = document.getElementById('tfs-buybox-container');
+      if (!container) return;
+      var user = null;
+      try { user = JSON.parse(localStorage.getItem('tfs_buyer') || 'null'); } catch(e){}
+      var loggedIn = !!(user && user.email);
+      if (loggedIn) {
+        container.innerHTML = '<a href="/buy-box.html" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#29ABE2;color:#fff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:background .15s" onmouseover="this.style.background=\'#1a8bbf\'" onmouseout="this.style.background=\'#29ABE2\'">'
+          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>My Buy Box</a>';
+      } else {
+        container.innerHTML = '<a href="/buy-box.html" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:transparent;border:1.5px solid #29ABE2;color:#29ABE2;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s" onmouseover="this.style.background=\'#29ABE2\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'#29ABE2\'">'
+          + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Set My Buy Box</a>';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderBuyBoxNavBtn);
+    } else { renderBuyBoxNavBtn(); }
+  </script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:46px"></a>
+  <div class="nav-links">
+    <a href="/">About</a>
+    <a href="https://dispobuddy.com" target="_blank">Sell Your Deal</a>
+    <a href="/buying-criteria.html">Get Deal Alerts</a>
+    <a href="/map.html" target="_blank" style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Deal Map</a>
+    <a href="mailto:support@termsforsale.com">Help</a>
+  </div>
+  <div class="nav-right" id="nav-right">
+    <div id="tfs-buybox-container"></div>
+    <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
+    <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
+    <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
+  </div>
+</nav>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-modal">
+    <div class="auth-head">
+      <button class="auth-x" onclick="closeAuth()">&#215;</button>
+      <h2>Welcome to Terms For Sale</h2>
+      <p>Unlock addresses, photos and your buyer dashboard</p>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="at-li" onclick="switchAuthTab('login')">Log In</button>
+        <button class="auth-tab" id="at-su" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <!-- LOGIN -->
+      <div id="ap-login">
+        <div class="a-err" id="a-li-err"></div>
+        <div class="a-ok" id="a-li-ok"></div>
+        <div class="a-field"><input class="a-input" id="li-email" type="email" placeholder="Email address"></div>
+        <div class="a-field"><input class="a-input" id="li-pass" type="password" placeholder="Password"></div>
+        <button class="btn-full-blue" onclick="doLogin()">Log In</button>
+        <div class="a-note">No account? <a href="#" onclick="switchAuthTab('signup');return false">Sign up free &rarr;</a></div>
+      </div>
+      <!-- SIGNUP -->
+      <div id="ap-signup" style="display:none">
+        <div class="a-perks">
+          <div class="a-perk">&#10003; Full address + photos unlocked</div>
+          <div class="a-perk">&#10003; Early access before public</div>
+          <div class="a-perk">&#10003; Buyer dashboard</div>
+        </div>
+        <div class="a-err" id="a-su-err"></div>
+        <div class="a-ok" id="a-su-ok"></div>
+        <div class="a-row" style="margin-bottom:10px">
+          <input class="a-input" id="su-fn" placeholder="First name">
+          <input class="a-input" id="su-ln" placeholder="Last name">
+        </div>
+        <div class="a-field"><input class="a-input" id="su-email" type="email" placeholder="Email address"></div>
+        <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
+        <div class="a-field"><input class="a-input" id="su-pass" type="password" placeholder="Create password"></div>
+        <div class="a-field">
+          <select class="a-input" id="su-buy" style="appearance:none;cursor:pointer">
+            <option value="">How do you buy?</option>
+            <option>Cash</option>
+            <option>Subject To</option>
+            <option>Seller Finance</option>
+            <option>Lease Option</option>
+            <option>Novation</option>
+            <option>Morby Method</option>
+            <option>Assumable Loans</option>
+            <option>Partnerships/JV</option>
+            <option>Traditional Financing</option>
+            <option>DSCR</option>
+          </select>
+        </div>
+        <button class="btn-full-blue" onclick="doSignup()">Create Free Account</button>
+        <div class="a-note">By signing up you agree to receive SMS &amp; email alerts. Reply STOP to opt out.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SPLIT-SCREEN MAP HOMEPAGE -->
+<div class="split-app" id="split-app">
+
+  <!-- LEFT PANEL: DEAL CARDS -->
+  <div class="split-sidebar" id="split-sidebar">
+    <div class="split-toolbar">
+      <div class="split-toolbar-top">
+        <h2>Active Deals</h2>
+        <div class="split-badge">
+          <div class="split-badge-dot"></div>
+          <span class="split-badge-num" id="hero-count">&mdash;</span>
+          <span class="split-badge-lbl">live</span>
+        </div>
+      </div>
+      <input class="split-search" id="f-search" placeholder="Search city, state, zip, or address…" oninput="clearTimeout(window._ft);window._ft=setTimeout(applyFilters,200)">
+      <div class="split-filters">
+        <div class="split-tabs">
+          <button class="split-tab on" onclick="setExploreTab(this,'')">All</button>
+          <button class="split-tab" onclick="setExploreTab(this,'creative')">Creative</button>
+          <button class="split-tab" onclick="setExploreTab(this,'cash')">Cash</button>
+        </div>
+        <select class="split-filter-select" id="f-type" onchange="applyFilters()">
+          <option value="">All Types</option>
+          <option value="cash">Cash</option>
+          <option value="subto">Subject To</option>
+          <option value="sf">Seller Finance</option>
+          <option value="hybrid">Hybrid / Morby</option>
+          <option value="wrap">Wrap</option>
+          <option value="lease">Lease Option</option>
+        </select>
+        <select class="split-filter-select" id="f-state" onchange="applyFilters()">
+          <option value="">All States</option>
+        </select>
+        <span class="split-count" id="filter-count"></span>
+      </div>
+    </div>
+    <div class="split-cards" id="split-cards">
+      <div class="split-cards-grid" id="deals-row">
+        <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:12px"><div class="spinner"></div><p style="font-size:13px;font-weight:600;color:#718096">Loading deals&hellip;</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: MAP -->
+  <div class="split-map" id="split-map">
+    <div id="map"></div>
+    <div class="map-legend-float">
+      <h4>Deal Type</h4>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#10B981"></div>Cash</div>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#29ABE2"></div>Subject To</div>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#F7941D"></div>Seller Finance</div>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#8B5CF6"></div>Hybrid / Other</div>
+    </div>
+  </div>
+
+  <!-- MOBILE TOGGLE -->
+  <button class="view-toggle" id="view-toggle" onclick="toggleMobileView()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    Show Map
+  </button>
+</div>
+
+<div class="below-fold" id="all-deals">
+<!-- hidden spacer for old sp-count reference -->
+<span id="sp-count" style="display:none"></span>
+
+<section style="background:#fff;border-top:1px solid #E2E8F0;padding:56px 40px">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:44px">
+      <div style="font-size:12px;font-weight:700;color:#29ABE2;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px">How It Works</div>
+      <div style="font-size:28px;font-weight:900;color:#0D1F3C;letter-spacing:-.3px">From browse to close in 3 steps</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px">
+      <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
+        <div style="width:52px;height:52px;border-radius:14px;background:#EBF8FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#29ABE2;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 1</div>
+        <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Browse Active Deals</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Filter by city, state, price, or deal type. Every listing is off-market with full terms, numbers, and photos.</div>
+      </div>
+      <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
+        <div style="width:52px;height:52px;border-radius:14px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F7941D" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#F7941D;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 2</div>
+        <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Submit Your Offer</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Request access or walkthrough, then submit your offer. If accepted, lock your position with an EMD deposit.</div>
+      </div>
+      <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
+        <div style="width:52px;height:52px;border-radius:14px;background:#E6F9F0;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#10B981;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Step 3</div>
+        <div style="font-size:17px;font-weight:800;color:#0D1F3C;margin-bottom:8px">Close with Confidence</div>
+        <div style="font-size:13px;color:#718096;line-height:1.65">Your deal coordinator walks you through close. No agents. No MLS. Just you, the seller, and a clean contract.</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        No agent needed
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Close in 7-30 days
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        SubTo, seller finance, cash
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Entry from $15K
+      </div>
+    </div>
+  </div>
+</section>
+<section class="streamlined">
+  <div class="streamlined-inner">
+    <div class="st-img">
+      <img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=700&auto=format&fit=crop&q=80" alt="Property" loading="lazy">
+    </div>
+    <div class="st-text">
+      <div class="eyebrow" style="font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Streamlined Matched Deals</div>
+      <h2>Streamlined Matched Deals <span class="daily-pill">Daily</span></h2>
+      <p style="margin-top:14px">From cash offers to creative financing, discover the perfect match for your next investment.</p>
+    </div>
+    <div class="st-stats">
+      <div class="st-stat">
+        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div><div class="st-stat-num" id="st-count">&mdash;</div><div class="st-stat-lbl">Active Deals</div></div>
+      </div>
+      <div class="st-stat">
+        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><div class="st-stat-num">100+</div><div class="st-stat-lbl">Members</div></div>
+      </div>
+      <div class="st-stat">
+        <div class="st-stat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div><div class="st-stat-num">250+</div><div class="st-stat-lbl">Completed Deals</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Map section removed — map is now integrated into split-screen homepage -->
+
+<!-- TESTIMONIALS -->
+<section class="testi">
+  <div class="testi-inner">
+    <div class="testi-eyebrow">Want some proof?</div>
+    <div class="testi-title">Hear From Happy Buyers</div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-quote">&ldquo;</div>
+        <p class="testi-text">Found a sub-to deal in Tampa with a 2.875% rate locked in. Cash flow positive from day one. The team made it completely effortless.</p>
+        <div class="testi-author"><div class="testi-av" style="background:linear-gradient(135deg,var(--blue),var(--blue-dark))">MR</div><div><div class="testi-name">Marcus R.</div><div class="testi-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Tampa, FL</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">&ldquo;</div>
+        <p class="testi-text">Closed on a seller finance deal in Texas — $27K down, 4.5% rate on a property with $1,490/mo rent. No agent. No nonsense.</p>
+        <div class="testi-author"><div class="testi-av" style="background:linear-gradient(135deg,var(--orange),var(--orange-dark))">JL</div><div><div class="testi-name">Jessica L.</div><div class="testi-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>San Antonio, TX</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">&ldquo;</div>
+        <p class="testi-text">Got early access through the VIP list and locked in a cash deal before anyone else saw it. $85K spread at entry. Highly recommend.</p>
+        <div class="testi-author"><div class="testi-av" style="background:linear-gradient(135deg,#10b981,#059669)">DK</div><div><div class="testi-name">David K.</div><div class="testi-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Hopkinsville, KY</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">&ldquo;</div>
+        <p class="testi-text">The deal coordinator walked me through everything. From offer to close in 21 days. Zero stress, exactly what it promises.</p>
+        <div class="testi-author"><div class="testi-av" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">AT</div><div><div class="testi-name">Amanda T.</div><div class="testi-loc"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Austin, TX</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VIP -->
+<section class="vip">
+  <div class="vip-inner">
+    <div>
+      <div class="vip-eyebrow">Deals That Match Your Criteria</div>
+      <h2 class="vip-title">Never Miss a Deal Again</h2>
+      <p class="vip-sub">Our private buyers list sees deals 48 hours before they go public. Join 2,000+ investors who close faster.</p>
+      <div class="vip-perks">
+        <div class="vip-perk"><div class="vip-perk-icon">&#128680;</div><div><strong>Priority alerts via SMS + email</strong> &mdash; beat the crowd</div></div>
+        <div class="vip-perk"><div class="vip-perk-icon">&#127919;</div><div><strong>Deals that match your exact buy box</strong> &mdash; no junk, no spam</div></div>
+        <div class="vip-perk"><div class="vip-perk-icon">&#9889;</div><div><strong>Zero bidding wars</strong> &mdash; move fast, buy fast, done.</div></div>
+      </div>
+    </div>
+    <div class="vip-form-card">
+      <div class="vfc-top">
+        <h3>Get Exclusive First Access</h3>
+        <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale">
+      </div>
+      <div class="vf-row">
+        <input class="vf-input" id="vip-fn" placeholder="First Name">
+        <input class="vf-input" id="vip-ln" placeholder="Last Name">
+      </div>
+      <div class="vf-row">
+        <input class="vf-input" id="vip-phone" type="tel" placeholder="Phone Number">
+        <input class="vf-input" id="vip-email" type="email" placeholder="Email Address">
+      </div>
+      <div class="vf-label">Investment Areas <span>Which areas do you buy in?</span></div>
+      <select class="vf-select" id="vip-market" style="margin-bottom:0">
+        <option>Kansas</option><option>Arizona</option><option>Texas</option><option>Florida</option><option>California</option><option>Georgia</option><option>Kentucky</option><option>Tennessee</option><option>Colorado</option><option>Multiple / Nationwide</option>
+      </select>
+      <div class="vf-label">Investment Preferences</div>
+      <div class="vf-row">
+        <select class="vf-select" id="vip-type">
+          <option value="">Deal Type / How I Buy</option>
+          <option>Cash</option>
+          <option>Subject To</option>
+          <option>Seller Finance</option>
+          <option>Lease Option</option>
+          <option>Novation</option>
+          <option>Morby Method</option>
+          <option>Assumable Loans</option>
+          <option>Partnerships/JV</option>
+          <option>Traditional Financing</option>
+          <option>DSCR</option>
+        </select>
+        <select class="vf-select" id="vip-exit">
+          <option value="">Exit Strategy</option>
+          <option>Fix &amp; Flip</option>
+          <option>Buy &amp; Hold</option>
+          <option>Long Term Rental</option>
+          <option>Short Term Rental</option>
+          <option>Midterm Rental</option>
+          <option>Co-Living / PadSplit</option>
+          <option>BRRR</option>
+          <option>Wrap Around</option>
+          <option>Lease Option</option>
+          <option>Wholesale</option>
+          <option>Group Homes</option>
+          <option>Assisted Living</option>
+          <option>Section 8</option>
+          <option>Note Trading</option>
+          <option>Development</option>
+          <option>Primary Residence</option>
+        </select>
+      </div>
+      <label class="vf-agree"><input type="checkbox" id="vip-agree"> By continuing, I also agree to the <a href="/terms.html">Terms of Service</a> &amp; <a href="/privacy.html">Privacy Policy</a></label>
+      <button class="btn-orange-full" onclick="submitVIP()">Join the VIP List — Free</button>
+    </div>
+  </div>
+</section>
+
+<!-- STICKY ACTION BAR -->
+</div><!-- end below-fold -->
+
+<div class="sticky-bar" id="sticky-bar">
+  <span class="sticky-bar-text"><strong id="sb-count">32</strong> active deals available now</span>
+  <a href="#all-deals" class="sb-primary" onclick="scrollToDeals();return false">Browse Deals</a>
+  <a href="/buying-criteria.html" class="sb-secondary">Get Deal Alerts</a>
+  <a href="/blog/" class="sb-secondary">Blog</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:40px">
+        <div class="footer-email-row">
+          <input class="footer-email-in" placeholder="Enter your email">
+          <button class="footer-sub-btn">Subscribe</button>
+        </div>
+        <div class="footer-brand-sub">By subscribing, you agree to receive marketing emails and accept our Privacy Policy.</div>
+      </div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="/">About Us</a></li><li><a href="/deals.html">Active Deals</a></li><li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li><li><a href="https://calendar.app.google/DXJoTQwDpGhCjicu6" target="_blank">Book a Call</a></li></ul></div>
+      <div class="footer-col"><h4>Contact</h4><ul><li><a href="mailto:info@termsforsale.com">info@termsforsale.com</a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
+      <div class="footer-col"><h4>Social Media</h4><ul><li><a href="https://www.instagram.com/termsforsale" target="_blank">Instagram</a></li><li><a href="https://www.facebook.com/termsforsale" target="_blank">Facebook</a></li><li><a href="https://x.com/termsforsale" target="_blank">X / Twitter</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2025 Deal Pros LLC. All Rights Reserved.</span><div class="footer-links"><a href="/privacy.html">Privacy</a><a href="/privacy.html">Cookie Policy</a><a href="/terms.html">Terms</a></div></div>
+  </div>
+</footer>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────
+const SHEET_ID  = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
+const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/88c6d9de-eb76-45ef-ac83-db284b7da5ac';
+const GHL_LOGIN_WEBHOOK  = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/caa1f812-8957-48af-ae00-45322992102b';
+const GHL_PORTAL_URL     = 'https://termsforsale.app.clientclub.net/';
+
+// ── UTM TRACKING ──────────────────────────────────────────────
+(function(){
+  const p=new URLSearchParams(window.location.search);
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{if(p.get(k))sessionStorage.setItem(k,p.get(k));});
+})();
+function getUTMs(){
+  const o={};
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{const v=sessionStorage.getItem(k);if(v)o[k]=v;});
+  if(document.referrer)o.referrer=document.referrer;
+  return o;
+}
+const AUTH_KEY = 'tfs_buyer';
+
+// ─── NAV SCROLL ────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('main-nav').classList.toggle('scrolled', scrollY > 60);
+}, {passive:true});
+
+// ─── SHEET PARSE ───────────────────────────────────────────────
+function parseGviz(text){const m=text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);if(m)return JSON.parse(m[1]);const s=text.indexOf('{');if(s>-1)return JSON.parse(text.substring(s,text.lastIndexOf('}')+1));throw new Error('Cannot parse gviz');}
+function parseSheet(text){
+  const json=parseGviz(text);
+  const cols=json.table.cols.map(c=>c.label.trim());
+  const rows=json.table.rows.map(row=>{
+    const o={};
+    const seen={};
+    cols.forEach((c,i)=>{
+      const cell=row.c[i];
+      const val=cell?(cell.v!==null?String(cell.v).trim():''):'';
+      // Handle duplicate column names — store first occurrence as _0, _1 etc
+      if(seen[c]===undefined){
+        seen[c]=0;
+        o[c]=val;
+        o[c+'__0']=val; // also store indexed version
+      } else {
+        seen[c]++;
+        o[c+'__'+seen[c]]=val;
+        o[c]=val; // last value wins for plain key (status = "Actively Marketing")
+      }
+    });
+    return o;
+  });
+  return{cols,rows};
+}
+function col(raw,...names){for(const n of names){if(raw[n]!==undefined&&raw[n]!=='')return raw[n];}return'';}
+function parseYear(v){
+  if(!v)return'';
+  var s=String(v).trim();
+  var gm=s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if(gm){
+    var yr=parseInt(gm[1]),mo=parseInt(gm[2]),dy=parseInt(gm[3]);
+    // Sheets stores year-built as a serial number (days since Dec 30 1899)
+    // gviz converts that serial to a date — year comes out as ~1900+serial/365
+    // Reverse: recompute the serial from the gviz date to get the actual year
+    if(yr<1940){
+      var d=new Date(yr,mo,dy);
+      var epoch=new Date(1899,11,30);
+      var serial=Math.round((d-epoch)/86400000);
+      if(serial>=1800&&serial<=2200)return String(serial);
+    }
+    return String(yr);
+  }
+  var ym=s.match(/^(\d{4})$/);if(ym)return ym[1];
+  var dm=s.match(/^(\d{4})-/);if(dm)return dm[1];
+  return s;
+}
+function parseRow(raw){return{
+  // Column A "Deal Status" contains the unique hash ID — use as deal ID
+  id:col(raw,'Deal ID','Deal Status__0'),
+  dealType:col(raw,'Deal Type'),
+  dealStatus:col(raw,'Deal Status'),streetAddress:col(raw,'Street Address'),city:col(raw,'City'),state:col(raw,'State'),zip:col(raw,'ZIP'),nearestMetro:col(raw,'Nearest Metro Area'),propertyType:col(raw,'Property Type'),askingPrice:+col(raw,'Asking Price')||0,entryFee:+col(raw,'Entry Fee')||0,compsArv:+col(raw,'Comps ARV')||0,piti:+col(raw,'PITI','PITI ')||'',subtoBalance:+col(raw,'SubTo Loan Balance')||'',subtoLoanBalance:+col(raw,'SubTo Loan Balance')||'',subtoRate:col(raw,'SubTo Rate','SubTo Rate (%)'),loanType:col(raw,'Loan Type','SubTo Loan Type','Mortgage Type'),sfAmount:+col(raw,'SF Loan Amount')||'',sfLoanAmount:+col(raw,'SF Loan Amount')||'',sfRate:col(raw,'SF Rate','SF Rate (%)'),sfTerm:col(raw,'SF Term','SF Term '),sfPayment:+col(raw,'SF Payment')||'',rentFinal:+col(raw,'Rent Final')||'',occupancy:col(raw,'Occupancy'),hoa:col(raw,'HOA'),coe:col(raw,'COE'),
+  // Photo columns — Cover Photo is a single direct file share URL, Photos is folder or comma-list
+  coverPhoto:col(raw,'Cover Photo','cover photo','Cover photo','Photo 1','photo1'),
+  photos:col(raw,'Photos'),
+  highlight1:col(raw,'Highlight 1'),highlight2:col(raw,'Highlight 2'),highlight3:col(raw,'Highlight 3'),entryBreakdown:col(raw,'Entry Breakdown'),details:col(raw,'Details','Details '),beds:col(raw,'Beds'),baths:col(raw,'Baths'),sqft:col(raw,'Sqft'),yearBuilt:parseYear(col(raw,'Year Built','Year Build'))};}
+
+// ─── PHOTO HELPERS ─────────────────────────────────────────────
+// Extract a Drive file ID from ANY Google Drive URL format
+function driveFileId(url){
+  if(!url)return null;
+  url=url.trim();
+  // /d/FILE_ID (covers /file/d/, /open/d/, googleusercontent.com/d/, etc.)
+  var m=url.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  if(m)return m[1];
+  // ?id=FILE_ID or &id=FILE_ID
+  m=url.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);
+  if(m)return m[1];
+  // /open?id= or /uc?id=
+  m=url.match(/\/(?:open|uc)\?.*id=([a-zA-Z0-9_-]{20,})/);
+  if(m)return m[1];
+  // bare 20+ char ID string (raw file ID)
+  m=url.match(/^([a-zA-Z0-9_-]{20,})$/);
+  if(m)return m[1];
+  return null;
+}
+function driveThumb(url, size) {
+  const id = driveFileId(url);
+  if (!id) return null;
+  // Primary: server proxy via Netlify function (uses API key, most reliable)
+  return `/api/drive-thumb?id=${id}&sz=${size||800}`;
+}
+// Called on img onerror — tries next URL format
+function driveImgFallback(img, id) {
+  const tried = img.dataset.tried || '';
+  // Try each format in order
+  const formats = [
+    `/api/drive-thumb?id=${id}&sz=800`,
+    `https://lh3.googleusercontent.com/d/${id}=s800`,
+    `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
+    `https://drive.google.com/uc?export=view&id=${id}`,
+  ];
+  const next = formats.find(f => !tried.includes(f));
+  if (next) {
+    img.dataset.tried = (tried + '|' + next);
+    img.src = next;
+  } else {
+    // All formats failed — show empty state
+    img.parentElement.innerHTML = '<div class="deal-card-photo-empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".35"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+  }
+}
+function getFolderId(url){
+  if(!url)return null;
+  const m=url.match(/\/folders\/([a-zA-Z0-9_-]{20,})/);
+  return m?m[1]:null;
+}
+function getFolderUrl(d){
+  const r=d.photos||'';
+  return r.includes('/drive/folders/')?r.split('?')[0]:'';
+}
+// Get best single photo URL for a deal card
+// Priority: coverPhoto field → direct file in Photos → folder first-file (async)
+function getFirstPhoto(d){
+  // 1. Dedicated cover photo column
+  if(d.coverPhoto){
+    const t=driveThumb(d.coverPhoto,600);
+    if(t)return t;
+    // might be a direct image URL
+    if(d.coverPhoto.match(/\.(jpg|jpeg|png|webp|gif)(\?|$)/i))return d.coverPhoto;
+  }
+  // 2. Photos column — if it's a direct file link (not a folder)
+  const raw=(d.photos||'').trim();
+  if(raw&&!raw.includes('/drive/folders/')){
+    // might be comma-separated list
+    const first=raw.split(',')[0].trim();
+    const t=driveThumb(first,600);
+    if(t)return t;
+    if(first.match(/^https?:\/\//))return first;
+  }
+  return null; // folder — needs async load
+}
+
+// ─── FORMAT ────────────────────────────────────────────────────
+function money(n){if(!n&&n!==0)return'—';const v=+n;if(isNaN(v)||v===0)return'—';return'$'+v.toLocaleString();}
+function typeClass(t){
+  if(!t)return'type-cash';
+  var l=t.toLowerCase();
+  if(l==='cash')return'type-cash';
+  if(l==='subto'||l.includes('subject'))return'type-subto';
+  if(l.includes('seller finance')||l==='sf')return'type-sf';
+  if(l.includes('lease'))return'type-lease';
+  if(l.includes('novation'))return'type-novation';
+  if(l.includes('wrap'))return'type-wrap';
+  return'type-hybrid';
+}
+function typeLabel(t){
+  if(!t)return'Deal';
+  var l=t.toLowerCase();
+  if(l==='seller finance')return'Seller Finance';
+  if(l==='subto')return'Subject To';
+  if(l.includes('lease'))return'Lease Option';
+  if(l.includes('novation'))return'Novation';
+  if(l.includes('wrap'))return'Wrap';
+  if(l.includes('morby')||l.includes('stack'))return'Stack Method';
+  return t;
+}
+
+// ─── SAVED DEALS ──────────────────────────────────────
+function getSaved(){try{return JSON.parse(localStorage.getItem('tfs_saved')||'[]');}catch(e){return[];}}
+function toggleSave(e,id,el){
+  e.stopPropagation();
+  var saved=getSaved();
+  var idx=saved.indexOf(id);
+  var action;
+  if(idx>-1){saved.splice(idx,1);action='unsave';}else{saved.push(id);action='save';}
+  localStorage.setItem('tfs_saved',JSON.stringify(saved));
+  var isSaved=saved.indexOf(id)>-1;
+  var svg=el.querySelector('svg');
+  svg.setAttribute('fill',isSaved?'#ef4444':'none');
+  svg.setAttribute('stroke',isSaved?'#ef4444':'currentColor');
+  // Record activity
+  try{var acts=JSON.parse(localStorage.getItem('tfs_activity')||'[]');acts.unshift({text:(isSaved?'Saved':'Unsaved')+' deal '+id,color:isSaved?'#C53030':'#718096',time:new Date().toISOString()});localStorage.setItem('tfs_activity',JSON.stringify(acts.slice(0,20)));}catch(ex){}
+  // Sync to GHL in background
+  var user=getUser();
+  if(user&&user.contactId){
+    fetch('/api/saved-deals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,action:action,dealId:id})}).catch(function(){});
+  }
+}
+const DEAL_STORE={};
+function storeDeal(d){DEAL_STORE[d.id]=d;}
+function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href='deal.html?id='+encodeURIComponent(id);}
+
+// ─── CARD HTML ─────────────────────────────────────────────────
+function makeCard(d){
+  storeDeal(d);
+  const entry = +d.entryFee || +d.askingPrice;
+  const arv   = +d.compsArv || 0;
+  const photo  = getFirstPhoto(d);
+  const folderId = getFolderId(d.photos||'');
+  const safeId = d.id.replace(/'/g,"\\'");
+  const cardId = 'card-'+d.id.replace(/[^a-z0-9]/gi,'_');
+
+  // Discount % below ARV
+  const discount = (arv && entry && arv > entry)
+    ? Math.round((1 - entry/arv)*100) : 0;
+
+  const dl = null; // COE badges disabled
+
+  // Photo HTML
+  let photoHtml;
+  if(photo){
+    const _pid = driveFileId((d.coverPhoto||d.photos||''));
+    photoHtml=`<img src="${photo}" alt="${d.city}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" ${_pid?`data-id="${_pid}" onerror="driveImgFallback(this,'${_pid}')"`:"onerror=\"this.style.display='none'\""}>`;
+  } else if(folderId){
+    photoHtml=`<div class="deal-card-photo-empty" id="${cardId}"><div style="width:22px;height:22px;border:2.5px solid rgba(4,62,92,.15);border-top-color:#29ABE2;border-radius:50%;animation:spin .7s linear infinite"></div></div>`;
+  } else {
+    photoHtml=`<div class="deal-card-photo-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+  }
+
+  // Status badge (Under Contract / Sold override the deal type badge)
+  const dsLower = (d.dealStatus||'').toLowerCase().trim();
+  const isUC   = dsLower==='under contract';
+  const isSold = dsLower==='sold';
+
+  // Heart save button
+  const isSaved = getSaved().indexOf(d.id)>-1;
+  const saveFill   = isSaved?'#ef4444':'none';
+  const saveStroke = isSaved?'#ef4444':'currentColor';
+
+  // Specs
+  const beds  = d.beds  ? `<div class="deal-card-spec"><strong>${d.beds}</strong> bd</div>` : '';
+  const baths = d.baths ? `<div class="deal-card-spec"><strong>${d.baths}</strong> ba</div>` : '';
+  const sqft  = d.sqft  ? `<div class="deal-card-spec"><strong>${Number(d.sqft).toLocaleString()}</strong> sqft</div>` : '';
+
+  // Entry vs asking
+  const hasDiff = +d.entryFee && +d.entryFee !== +d.askingPrice;
+
+  return`<div class="deal-card" data-deal-id="${d.id}" onclick="clickDeal('${safeId}')" onmouseenter="highlightMarker('${safeId}')" onmouseleave="unhighlightMarker('${safeId}')">
+    <div class="deal-card-photo">
+      ${photoHtml}
+      ${isUC  ? `<div class="deal-badge-uc">🔒 Under Contract</div>`
+              : isSold ? `<div class="deal-badge-sold">✓ Sold</div>`
+              : `<div class="deal-card-type ${typeClass(d.dealType)}">${typeLabel(d.dealType)}</div>`}
+      ${dl!==null&&dl>0&&dl<=30&&!isUC&&!isSold?`<div style="position:absolute;bottom:8px;left:8px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;z-index:2;${dl<=7?'background:#FFF5F5;color:#E53E3E':dl<=14?'background:#FFFAF0;color:#DD6B20':'background:#EBF8FF;color:#1a8bbf'}">${dl===1?'Closes tomorrow':'Closes in '+dl+'d'}</div>`:''}
+      ${(discount>=10||(dl!==null&&dl>0&&dl<=7)) ? `<div class="deal-card-discount">
+        ${discount>=10 ? `<div class="deal-card-discount-pct">${discount}% below ARV</div>` : '<div></div>'}
+        ${dl!==null&&dl>0&&dl<=7&&!isUC&&!isSold ? `<div class="deal-card-urgency-badge">⏰ ${dl}d left</div>` : ''}
+      </div>` : ''}
+      <div class="deal-card-save" onclick="toggleSave(event,'${safeId}',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="${saveFill}" stroke="${saveStroke}" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+    </div>
+    <div class="deal-card-body">
+      <div class="deal-card-price-row">
+        <div class="deal-card-price">${money(entry)}</div>
+        <div class="deal-card-new">Just Listed</div>
+      </div>
+      ${arv ? `<div class="deal-card-arv">(ARV — <strong>${money(arv)}</strong>)</div>` : hasDiff ? `<div class="deal-card-arv">Entry: <strong>${money(d.entryFee)}</strong></div>` : '<div style="margin-bottom:8px"></div>'}
+      <div class="deal-card-loc">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${d.nearestMetro||d.city+', '+d.state}
+      </div>
+      <div class="deal-card-divider"></div>
+      <div class="deal-card-specs">
+        ${beds}${baths}${sqft}
+        ${d.yearBuilt?`<div class="deal-card-spec" style="margin-left:auto;color:#94A3B8;font-size:11px">${d.yearBuilt}</div>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── STATE ────────────────────────────────────────────────────
+let ALL_DEALS=[];
+let _tab='';
+
+function normType(t){
+  if(!t)return'';
+  var l=t.toLowerCase().replace(/[^a-z]/g,'');
+  if(l.includes('cash'))return'cash';
+  if(l.includes('subto')||l.includes('subject'))return'subto';
+  if(l.includes('seller')||l==='sf')return'sf';
+  if(l.includes('hybrid')||l.includes('morby')||l.includes('stack'))return'hybrid';
+  if(l.includes('wrap'))return'wrap';
+  if(l.includes('lease')||l.includes('option'))return'lease';
+  if(l.includes('novation'))return'novation';
+  return l;
+}
+
+function applyFilters(){
+  const q=(document.getElementById('f-search').value||'').toLowerCase();
+  const type=document.getElementById('f-type').value;
+  const state=document.getElementById('f-state').value;
+  const typeNorm=normType(type);
+  const CREATIVE_TYPES = ['subto','sf','hybrid','wrap','lease','novation'];
+  let filtered=ALL_DEALS.filter(d=>{
+    if(q&&!`${d.city} ${d.state} ${d.zip} ${d.nearestMetro} ${d.dealType} ${d.streetAddress}`.toLowerCase().includes(q))return false;
+    if(type&&normType(d.dealType)!==typeNorm)return false;
+    if(state&&d.state!==state)return false;
+    if(_tab==='creative'&&CREATIVE_TYPES.indexOf(normType(d.dealType))===-1)return false;
+    if(_tab==='cash'&&normType(d.dealType)!=='cash')return false;
+    return true;
+  });
+  const el=document.getElementById('filter-count');
+  if(el)el.textContent=filtered.length+' deal'+(filtered.length!==1?'s':'');
+  const row=document.getElementById('deals-row');
+  if(!row)return;
+  if(!filtered.length){row.innerHTML='<div class="empty-deals"><p>No deals match your filters.</p></div>';return;}
+  row.innerHTML=filtered.map(d=>makeCard(d)).join('');
+  // Lazy-load folder thumbnails for cards with Drive folders
+  setTimeout(()=>loadCardThumbnails(filtered),100);
+}
+
+const _folderCache={};
+function loadCardThumbnails(deals){
+  deals.forEach(d=>{
+    const folderId=getFolderId(d.photos||'');
+    if(!folderId||getFirstPhoto(d))return;
+    const cardId='card-'+d.id.replace(/[^a-z0-9]/gi,'_');
+    // Use cache
+    if(_folderCache[folderId]){
+      const el=document.getElementById(cardId);
+      if(el)fillCardImg(el,_folderCache[folderId]);
+      return;
+    }
+    // Use server-side proxy (Google Drive API via Netlify function)
+    fetch('/api/drive-photos?folderId='+encodeURIComponent(folderId))
+      .then(r=>{if(!r.ok)throw new Error('drive-photos '+r.status);return r.json();})
+      .then(data=>{
+        const fileIds=data.fileIds||[];
+        if(!fileIds.length)throw new Error('no photos');
+        const fileId=fileIds[0];
+        const thumb='/api/drive-thumb?id='+fileId+'&sz=800';
+        _folderCache[folderId]=thumb;
+        const el=document.getElementById(cardId);
+        if(el)fillCardImg(el,thumb);
+      })
+      .catch(()=>{
+        const el=document.getElementById(cardId);
+        if(el)el.innerHTML='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+      });
+  });
+}
+function fillCardImg(el,url){
+  const img=new Image();
+  img.onload=()=>{el.innerHTML='';el.appendChild(img);el.style.background='none';el.style.flexDirection='';};
+  img.onerror=()=>{el.innerHTML='';};
+  img.src=url;img.alt='Property';img.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
+}
+
+function setExploreTab(btn,tab){
+  document.querySelectorAll('.split-tab,.explore-tab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');_tab=tab;applyFilters();
+}
+function scrollToDeals(){document.getElementById('all-deals').scrollIntoView({behavior:'smooth'});}
+
+// ─── CARD ↔ MAP HOVER SYNC ───────────────────────────────────
+function highlightMarker(id){
+  if(typeof MARKERS==='undefined')return;
+  var m=MARKERS[id];
+  if(m){
+    var icon=m.getElement();
+    if(icon){icon.style.transform='scale(1.3)';icon.style.zIndex='9999';}
+  }
+}
+function unhighlightMarker(id){
+  if(typeof MARKERS==='undefined')return;
+  var m=MARKERS[id];
+  if(m){
+    var icon=m.getElement();
+    if(icon){icon.style.transform='';icon.style.zIndex='';}
+  }
+}
+
+function populateStates(){
+  const states=[...new Set(ALL_DEALS.map(d=>d.state).filter(Boolean))].sort();
+  const sel=document.getElementById('f-state');if(!sel)return;
+  states.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+}
+
+function updateStats(){
+  const n=ALL_DEALS.length;
+  ['hero-count','st-count'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=n;});
+}
+
+function updateHowSections(){
+  if(!ALL_DEALS.length)return;
+  // Mini grid
+  const mg=document.getElementById('how-mini-grid');
+  if(mg){
+    mg.innerHTML=ALL_DEALS.slice(0,4).map(d=>{
+      storeDeal(d);
+      const photo=getFirstPhoto(d);
+      const fid=getFolderId(d.photos||'');
+      return`<div class="mini-card" onclick="clickDeal('${d.id.replace(/'/g,"\\'")}')">
+        <div class="mini-card-photo">${photo?`<img src="${photo}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`:`<div style="width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>`}</div>
+        <div class="mini-card-body">
+          <div class="mini-card-price">${money(+d.entryFee||+d.askingPrice)}</div>
+          ${+d.entryFee&&+d.entryFee!==+d.askingPrice?`<div class="mini-card-entry">Entry ${money(d.entryFee)}</div>`:''}
+          <div class="mini-card-loc"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${d.nearestMetro||d.city+', '+d.state}</div>
+          <div class="mini-card-specs">${[d.beds?d.beds+' bd':null,d.baths?d.baths+' ba':null].filter(Boolean).join(' · ')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  // Big card
+  const bc=document.getElementById('how-big-card');
+  if(bc&&ALL_DEALS[0]){
+    const d=ALL_DEALS[0];
+    storeDeal(d);
+    const photo=getFirstPhoto(d);
+    bc.innerHTML=`<div class="big-card-check"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="big-card" onclick="clickDeal('${d.id.replace(/'/g,"\\'")}')">
+        <div class="big-card-img">${photo?`<img src="${photo}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`:''}</div>
+        <div class="big-card-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
+            <div class="big-card-price">${money(+d.entryFee||+d.askingPrice)}</div>
+            ${+d.entryFee&&+d.entryFee!==+d.askingPrice?`<div style="text-align:right"><div style="font-size:10px;color:rgba(4,62,92,.55)">Entry Fee</div><div style="font-size:13px;font-weight:600;color:var(--navy-card)">${money(d.entryFee)}</div></div>`:''}
+          </div>
+          <div class="big-card-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${d.nearestMetro||d.city+', '+d.state}</div>
+          <div class="big-card-specs">${[d.beds?d.beds+' rooms':null,d.baths?d.baths+' Baths':null,d.sqft?Number(d.sqft).toLocaleString()+' ft²':null,d.yearBuilt?'Built in '+d.yearBuilt:null].filter(Boolean).join(' | ')}</div>
+        </div>
+      </div>`;
+  }
+  // My Deals
+  const md=document.getElementById('how-my-deals');
+  if(md){
+    md.innerHTML=ALL_DEALS.slice(0,6).map(d=>{
+      const photo=getFirstPhoto(d);
+      return`<div class="my-deal-thumb" onclick="clickDeal('${d.id.replace(/'/g,"\\'")}')">
+        <div class="my-deal-photo">${photo?`<img src="${photo}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`:''}</div>
+        <div class="my-deal-body"><div class="my-deal-price">${money(+d.entryFee||+d.askingPrice)}</div><div class="my-deal-loc">${d.city}, ${d.state}</div></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ─── VIP FORM ─────────────────────────────────────────────────
+async function submitVIP(){
+  const fn=document.getElementById('vip-fn').value.trim();
+  const ln=document.getElementById('vip-ln').value.trim();
+  const phone=document.getElementById('vip-phone').value.trim();
+  const email=document.getElementById('vip-email').value.trim();
+  const market=document.getElementById('vip-market').value;
+  const type=document.getElementById('vip-type').value;
+  const exit=document.getElementById('vip-exit').value;
+  const agreed=document.getElementById('vip-agree').checked;
+  if(!fn||!phone||!email){alert('Please fill in your name, phone and email.');return;}
+  if(!agreed){alert('Please agree to the Terms of Service & Privacy Policy.');return;}
+  const btn=event.target;btn.disabled=true;btn.textContent='Sending…';
+  try{
+    await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,target_zips:market,deal_structure:type,exits:exit,source:'TFS Website - VIP Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['Buying Criteria Form Submitted','TFS Buyer']},getUTMs()))});
+    btn.textContent='✓ You\'re on the list!';btn.style.background='#10B981';
+    const user={name:fn,email,phone,initials:(fn[0]+(ln?ln[0]:'')).toUpperCase()};
+    setUser(user);updateNavAuth(user);
+  }catch(e){btn.disabled=false;btn.textContent='Join the VIP List \u2014 Free';}
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────
+function getUser(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null');}catch{return null;}}
+function setUser(u){try{localStorage.setItem(AUTH_KEY,JSON.stringify(u));}catch(e){}}
+function clearUser(){try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+function openAuth(tab='login'){switchAuthTab(tab);document.getElementById('auth-overlay').classList.add('open');setTimeout(()=>{const f=document.getElementById(tab==='login'?'li-email':'su-fn');if(f)f.focus();},100);}
+function closeAuth(){document.getElementById('auth-overlay').classList.remove('open');}
+function switchAuthTab(tab){
+  document.getElementById('ap-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('ap-signup').style.display=tab==='signup'?'block':'none';
+  document.getElementById('at-li').classList.toggle('on',tab==='login');
+  document.getElementById('at-su').classList.toggle('on',tab==='signup');
+  ['a-li-err','a-li-ok','a-su-err','a-su-ok'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+}
+async function doLogin(){
+  const email=document.getElementById('li-email').value.trim();
+  const pass=document.getElementById('li-pass').value.trim();
+  const err=document.getElementById('a-li-err'),ok=document.getElementById('a-li-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!email||!pass){err.textContent='Please enter email and password.';err.style.display='block';return;}
+  const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
+  try{
+    const res=await fetch('/api/auth-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const data=await res.json();
+    if(!res.ok||!data.success){
+      err.textContent=data.error||'Login failed. Please try again.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Log In';return;
+    }
+    const u=data.user;
+    const user={contactId:u.id,name:u.firstName||u.name,email:u.email,phone:u.phone||'',initials:u.initials||'B'};
+    setUser(user);updateNavAuth(user);
+    ok.innerHTML='Welcome back, '+user.name+'! <a href="/dashboard.html" style="color:var(--blue);font-weight:700">Open Dashboard &rarr;</a>';ok.style.display='block';
+    // Sync saved deals from GHL
+    syncSavedDeals(u.id);
+    setTimeout(()=>closeAuth(),2000);
+  }catch(e){
+    console.error('Login error:',e);
+    err.textContent='Connection error. Please try again.';err.style.display='block';
+  }
+  btn.disabled=false;btn.textContent='Log In';
+}
+function syncSavedDeals(contactId){
+  if(!contactId)return;
+  fetch('/api/saved-deals?contactId='+encodeURIComponent(contactId))
+    .then(r=>r.json()).then(data=>{
+      if(data.ok&&data.dealIds&&data.dealIds.length){
+        var local=getSaved();
+        var merged=[...new Set(local.concat(data.dealIds))];
+        localStorage.setItem('tfs_saved',JSON.stringify(merged));
+        console.log('Synced '+data.dealIds.length+' saved deals from GHL');
+      }
+    }).catch(()=>{});
+}
+async function doSignup(){
+  const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
+  const email=document.getElementById('su-email').value.trim(),phone=document.getElementById('su-phone').value.trim();
+  const buy=document.getElementById('su-buy').value;
+  const pass=document.getElementById('su-pass').value.trim();
+  const err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
+  try{
+    const res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup'})});
+    const data=await res.json();
+    if(!res.ok||!data.success){
+      err.textContent=data.error||'Signup failed. Please try again.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Create Free Account';return;
+    }
+    const u=data.user;
+    const user={contactId:u.id,name:u.firstName||u.name||fn,email:u.email||email,phone:u.phone||phone,initials:u.initials||(fn[0]+(ln?ln[0]:'')).toUpperCase()};
+    setUser(user);updateNavAuth(user);
+    ok.innerHTML=data.exists?'Welcome back, '+user.name+'! You already have an account.':'Account created! Welcome, '+user.name+'! <a href="/dashboard.html" style="color:var(--blue);font-weight:700">Open Dashboard &rarr;</a>';ok.style.display='block';
+    setTimeout(()=>closeAuth(),2000);
+  }catch(e){
+    console.error('Signup error:',e);
+    err.textContent='Connection error. Please try again.';err.style.display='block';
+  }
+  btn.disabled=false;btn.textContent='Create Free Account';
+}
+function updateNavAuth(user){
+  const el=document.getElementById('nav-right');
+  if(!el||!user)return;
+  el.innerHTML=`
+    <div id="tfs-buybox-container">
+      <a href="/buy-box.html" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;background:#EBF8FF;border:1.5px solid #29ABE2;color:#1a8bbf;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:none;transition:all .15s" onmouseover="this.style.background='#29ABE2';this.style.color='#fff'" onmouseout="this.style.background='#EBF8FF';this.style.color='#1a8bbf'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        My Buy Box
+      </a>
+    </div>
+    <div class="nav-avatar-wrap">
+      <div class="nav-avatar">${user.initials}</div>
+      <div class="nav-dropdown">
+        <a href="/dashboard.html">📊 My Dashboard</a>
+        <a href="/buy-box.html">✏️ Update Buy Box</a>
+        <a href="/deals.html">🏠 All Deals</a>
+        <a href="/blog/">📝 Blog</a>
+        <a href="https://termsforsale.app.clientclub.net/" target="_blank">🔑 Buyer Portal</a>
+        <hr>
+        <button onclick="clearUser();location.reload()">Log Out</button>
+      </div>
+    </div>`;
+}
+
+// ─── LOAD DEALS (Notion first, Google Sheets fallback) ───────
+async function loadDealsFromNotion(){
+  const r=await fetch('/api/deals');
+  if(!r.ok)throw new Error('Notion API '+r.status);
+  const data=await r.json();
+  if(!data.deals||!data.deals.length)throw new Error('No deals from Notion');
+  return data.deals;
+}
+async function loadDealsFromSheet(){
+  const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=0&headers=1`);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const t=await r.text();
+  const {rows}=parseSheet(t);
+  const ACTIVE_STATUSES=['actively marketing','active marketing','active','actively listed','marketing'];
+  return rows.filter(r=>ACTIVE_STATUSES.includes((r['Deal Status']||'').trim().toLowerCase())).map(parseRow).filter(d=>d.id);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+(async function(){
+  const u=getUser();if(u)updateNavAuth(u);
+  try{
+    ALL_DEALS=await loadDealsFromNotion();
+    console.log('Loaded '+ALL_DEALS.length+' deals from Notion');
+    if(ALL_DEALS.length){
+      updateStats();
+      populateStates();
+      updateHowSections();
+      applyFilters();
+      const sbc=document.getElementById('sb-count');if(sbc)sbc.textContent=ALL_DEALS.length;
+      const spc=document.getElementById('sp-count');if(spc)spc.textContent=ALL_DEALS.length+'+';
+      // Initialize map markers
+      if(window._mapInitDeals)window._mapInitDeals(ALL_DEALS);
+    }else{
+      document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">No active deals found.</p></div>`;
+    }
+  }catch(e){
+    document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">Could not load deals: ${e.message}</p></div>`;
+  }
+  // Show sticky bar after scrolling past hero
+  const sb=document.getElementById('sticky-bar');
+  if(sb){window.addEventListener('scroll',()=>{sb.classList.toggle('show',window.scrollY>400);},{passive:true});}
+})();
+</script>
+
+<!-- LEAFLET MAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+(function(){
+// ─── MAP INIT ──────────────────────────────────────────────────
+var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([37.5,-96],4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+  attribution:'&copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains:'abcd',maxZoom:19
+}).addTo(map);
+L.control.zoom({position:'topright'}).addTo(map);
+
+window.MARKERS={};
+var MARKERS=window.MARKERS;
+var DEAL_BASE=(function(){var h=window.location.hostname;if(h==='localhost'||h==='127.0.0.1')return'';return window.location.origin;})();
+
+// ─── GEOCODE — instant US city cache ───────────────────────────
+var CITY_COORDS={
+  'phoenix,az':[33.4484,-112.0740],'tucson,az':[32.2226,-110.9747],'scottsdale,az':[33.4942,-111.9261],'mesa,az':[33.4152,-111.8315],'chandler,az':[33.3062,-111.8413],'tempe,az':[33.4255,-111.9400],'gilbert,az':[33.3528,-111.7890],'glendale,az':[33.5387,-112.1860],'peoria,az':[33.5806,-112.2374],'surprise,az':[33.6292,-112.3679],'goodyear,az':[33.4353,-112.3580],'avondale,az':[33.4356,-112.3496],'buckeye,az':[33.3703,-112.5838],'casa grande,az':[32.8795,-111.7574],'maricopa,az':[33.0581,-112.0476],'queen creek,az':[33.2487,-111.6343],'apache junction,az':[33.4151,-111.5496],'florence,az':[33.0314,-111.3873],'nogales,az':[31.3404,-110.9343],
+  'los angeles,ca':[34.0522,-118.2437],'san diego,ca':[32.7157,-117.1611],'san jose,ca':[37.3382,-121.8863],'san francisco,ca':[37.7749,-122.4194],'fresno,ca':[36.7378,-119.7871],'sacramento,ca':[38.5816,-121.4944],'riverside,ca':[33.9534,-117.3962],'bakersfield,ca':[35.3733,-119.0187],
+  'houston,tx':[29.7604,-95.3698],'san antonio,tx':[29.4241,-98.4936],'dallas,tx':[32.7767,-96.7970],'austin,tx':[30.2672,-97.7431],'fort worth,tx':[32.7555,-97.3308],'el paso,tx':[31.7619,-106.4850],'arlington,tx':[32.7357,-97.1081],'corpus christi,tx':[27.8006,-97.3964],'plano,tx':[33.0198,-96.6989],'lubbock,tx':[33.5779,-101.8552],'killeen,tx':[31.1171,-97.7278],'amarillo,tx':[35.2220,-101.8313],'temple,tx':[31.0982,-97.3428],'new braunfels,tx':[29.7030,-98.1245],'converse,tx':[29.5169,-98.3170],'seguin,tx':[29.5688,-97.9647],'kyle,tx':[29.9891,-97.8772],'buda,tx':[30.0852,-97.8461],'pflugerville,tx':[30.4394,-97.6200],'round rock,tx':[30.5083,-97.6789],'georgetown,tx':[30.6333,-97.6781],'cedar park,tx':[30.5052,-97.8203],'leander,tx':[30.5788,-97.8531],'manor,tx':[30.3408,-97.5567],'hutto,tx':[30.5374,-97.5467],'liberty hill,tx':[30.6644,-97.9225],'jarrell,tx':[30.8274,-97.6050],'gatesville,tx':[31.4357,-97.7392],'van alstyne,tx':[33.4215,-96.5772],'celina,tx':[33.3248,-96.7847],'haslet,tx':[32.9737,-97.3478],'boyd,tx':[33.0785,-97.5650],'la marque,tx':[29.3686,-94.9713],'lytle,tx':[29.2327,-98.7961],'von ormy,tx':[29.2869,-98.6453],'del valle,tx':[30.1744,-97.6103],'elgin,tx':[30.3499,-97.3703],'dayton,tx':[30.0466,-94.8852],'liberty,tx':[30.0580,-94.7955],'huntsville,tx':[30.7235,-95.5508],'conroe,tx':[30.3119,-95.4561],'montgomery,tx':[30.3877,-95.6936],'new caney,tx':[30.1488,-95.1844],'spring branch,tx':[29.8652,-98.3839],'canyon lake,tx':[29.8752,-98.2362],'la porte,tx':[29.6658,-95.0194],'port aransas,tx':[27.8339,-97.0611],'tyler,tx':[32.3513,-95.3011],'jasper,tx':[30.9202,-94.0027],'mesquite,tx':[32.7668,-96.5992],
+  'jacksonville,fl':[30.3322,-81.6557],'miami,fl':[25.7617,-80.1918],'tampa,fl':[27.9506,-82.4572],'orlando,fl':[28.5383,-81.3792],'st. petersburg,fl':[27.7676,-82.6403],'cape coral,fl':[26.5629,-81.9495],'fort lauderdale,fl':[26.1224,-80.1373],'tallahassee,fl':[30.4383,-84.2807],'kissimmee,fl':[28.2920,-81.4076],'palm bay,fl':[28.0345,-80.5887],'lakeland,fl':[28.0395,-81.9498],'riverview,fl':[27.8758,-82.3265],'parrish,fl':[27.5892,-82.3540],'hudson,fl':[28.3647,-82.6932],'homosassa,fl':[28.7814,-82.6162],'haines city,fl':[28.1142,-81.6178],'winter haven,fl':[28.0222,-81.7329],'middleburg,fl':[30.0688,-81.8604],'st. augustine,fl':[29.8943,-81.3145],
+  'atlanta,ga':[33.7490,-84.3880],'savannah,ga':[32.0835,-81.0998],'augusta,ga':[33.4735,-82.0105],'columbus,ga':[32.4610,-84.9877],
+  'louisville,ky':[38.2527,-85.7585],'lexington,ky':[38.0406,-84.5037],'bowling green,ky':[36.9685,-86.4808],'hopkinsville,ky':[36.8656,-87.4886],
+  'nashville,tn':[36.1627,-86.7816],'memphis,tn':[35.1495,-90.0490],'knoxville,tn':[35.9606,-83.9207],'chattanooga,tn':[35.0456,-85.3097],'clarksville,tn':[36.5298,-87.3595],'maryville,tn':[35.7565,-83.9705],
+  'charlotte,nc':[35.2271,-80.8431],'raleigh,nc':[35.7796,-78.6382],'jacksonville,nc':[34.7541,-77.4302],'dunn,nc':[35.3063,-78.6089],
+  'columbia,sc':[34.0007,-81.0348],'charleston,sc':[32.7765,-79.9311],'north augusta,sc':[33.5018,-81.9651],
+  'cleveland,oh':[41.4993,-81.6944],'columbus,oh':[39.9612,-82.9988],'cincinnati,oh':[39.1031,-84.5120],'toledo,oh':[41.6528,-83.5379],'salem,oh':[40.9009,-80.8565],
+  'indianapolis,in':[39.7684,-86.1581],'fort wayne,in':[41.1306,-85.1289],
+  'chicago,il':[41.8781,-87.6298],
+  'detroit,mi':[42.3314,-83.0458],
+  'denver,co':[39.7392,-104.9903],'colorado springs,co':[38.8339,-104.8214],
+  'philadelphia,pa':[39.9526,-75.1652],
+  'new york,ny':[40.7128,-74.0060],
+  'seattle,wa':[47.6062,-122.3321],'portland,or':[45.5051,-122.6750],
+  'las vegas,nv':[36.1699,-115.1398],'henderson,nv':[36.0395,-114.9817],'pahrump,nv':[36.2083,-115.9839],
+  'albuquerque,nm':[35.0853,-106.6056],
+  'salt lake city,ut':[40.7608,-111.8910],'clearfield,ut':[41.1105,-112.0261],
+  'boise,id':[43.6150,-116.2023],
+  'minneapolis,mn':[44.9778,-93.2650],
+  'omaha,ne':[41.2565,-95.9345],'norfolk,ne':[42.0286,-97.4170],
+  'sioux falls,sd':[43.5446,-96.7311],'sioux city,ia':[42.4963,-96.4049],
+  'des moines,ia':[41.5868,-93.6250],
+  'kansas city,mo':[39.0997,-94.5786],'st. louis,mo':[38.6270,-90.1994],
+  'oklahoma city,ok':[35.4676,-97.5164],'tulsa,ok':[36.1540,-95.9928],
+  'little rock,ar':[34.7465,-92.2896],
+  'new orleans,la':[29.9511,-90.0715],'baton rouge,la':[30.4515,-91.1871],
+  'jackson,ms':[32.2988,-90.1848],'myrtle,ms':[34.5576,-89.1198],'hattiesburg,ms':[31.3271,-89.2903],
+  'birmingham,al':[33.5186,-86.8104],'jasper,al':[33.8312,-87.2775],'athens,al':[34.8023,-86.9717],
+  'norfolk,va':[36.8508,-76.2859],'richmond,va':[37.5407,-77.4360],
+  'baltimore,md':[39.2904,-76.6122],
+  'boston,ma':[42.3601,-71.0589],
+  'south padre island,tx':[26.1118,-97.1681],'panama city beach,fl':[30.1766,-85.8055]
+};
+
+var geoCache={};
+var geoQueue=[];
+var geoRunning=false;
+
+function geocode(city,state,zip,cb){
+  if(!city&&!state){cb(null);return;}
+  var key=(city+','+state).toLowerCase().trim();
+  if(geoCache[key]){cb(geoCache[key]);return;}
+  if(CITY_COORDS[key]){geoCache[key]=CITY_COORDS[key];cb(CITY_COORDS[key]);return;}
+  // Try state capital fallback
+  var stateKey=','+state.toLowerCase().trim();
+  for(var k in CITY_COORDS){if(k.endsWith(stateKey)){geoCache[key]=CITY_COORDS[k];cb(CITY_COORDS[k]);return;}}
+  // Nominatim for unknowns
+  geoQueue.push({city:city,state:state,zip:zip,key:key,cb:cb});
+  if(!geoRunning)runGeoQueue();
+}
+function runGeoQueue(){
+  if(!geoQueue.length){geoRunning=false;return;}
+  geoRunning=true;
+  var item=geoQueue.shift();
+  var query=encodeURIComponent(item.city+', '+item.state+', USA');
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+query,{headers:{'Accept-Language':'en','User-Agent':'TermsForSale/1.0'}})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var ll=data&&data[0]?[parseFloat(data[0].lat),parseFloat(data[0].lon)]:null;
+      if(ll)geoCache[item.key]=ll;
+      item.cb(ll);
+    })
+    .catch(function(){item.cb(null);})
+    .finally(function(){setTimeout(runGeoQueue,1100);});
+}
+
+// ─── MARKER CREATION ───────────────────────────────────────────
+function markerColor(type){
+  if(!type)return'#8B5CF6';
+  if(type==='Cash')return'#10B981';
+  if(type==='SubTo')return'#29ABE2';
+  if(/Seller Finance/i.test(type))return'#F7941D';
+  return'#8B5CF6';
+}
+function makeMarkerIcon(deal){
+  var color=markerColor(deal.dealType);
+  var label=deal.dealType==='Seller Finance'?'SF':deal.dealType==='SubTo'?'ST':deal.dealType==='Cash'?'$':'HY';
+  var html='<div style="width:32px;height:32px;background:'+color+';border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s">'
+    +'<span style="transform:rotate(45deg);font-size:9px;font-weight:800;color:#fff;font-family:Poppins,sans-serif">'+label+'</span>'
+    +'</div>';
+  return L.divIcon({html:html,className:'',iconSize:[32,32],iconAnchor:[16,32],popupAnchor:[0,-32]});
+}
+function makePopup(deal){
+  var color=markerColor(deal.dealType);
+  var entry=deal.entryFee||deal.askingPrice;
+  var dealUrl=DEAL_BASE+'/deal.html?id='+encodeURIComponent(deal.id);
+  return'<div style="font-family:Poppins,sans-serif;min-width:200px;max-width:250px">'
+    +'<div style="background:'+color+';padding:10px 14px 8px">'
+      +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+deal.dealType+'</div>'
+      +'<div style="font-size:18px;font-weight:800;color:#fff;line-height:1">'+(entry?'$'+Number(entry).toLocaleString():'—')+'</div>'
+    +'</div>'
+    +'<div style="padding:12px 14px">'
+      +'<div style="font-size:11px;font-weight:600;color:#0D1F3C;margin-bottom:2px">'+(deal.streetAddress||'')+'</div>'
+      +'<div style="font-size:10px;color:#718096;margin-bottom:6px">'+(deal.nearestMetro||deal.city+', '+deal.state)+'</div>'
+      +(deal.beds||deal.baths||deal.sqft?'<div style="font-size:10px;color:#718096;margin-bottom:8px">'+[deal.beds?deal.beds+' bd':null,deal.baths?deal.baths+' ba':null,deal.sqft?Number(deal.sqft).toLocaleString()+' ft²':null].filter(Boolean).join(' · ')+'</div>':'')
+      +'<a href="'+dealUrl+'" style="display:block;width:100%;padding:8px;background:#29ABE2;color:#fff;border:none;border-radius:6px;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none">View Deal →</a>'
+    +'</div>'
+  +'</div>';
+}
+function placeMarker(deal,latlng){
+  if(!latlng)return;
+  var jitter=0.006;
+  var ll=[latlng[0]+(Math.random()-.5)*jitter,latlng[1]+(Math.random()-.5)*jitter];
+  var marker=L.marker(ll,{icon:makeMarkerIcon(deal)});
+  marker.bindPopup(makePopup(deal),{maxWidth:260,className:'deal-popup'});
+  marker.dealId=deal.id;
+  // Hover card highlight
+  marker.on('mouseover',function(){
+    var card=document.querySelector('[data-deal-id="'+deal.id+'"]');
+    if(card){card.classList.add('map-highlight');card.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  });
+  marker.on('mouseout',function(){
+    var card=document.querySelector('[data-deal-id="'+deal.id+'"]');
+    if(card)card.classList.remove('map-highlight');
+  });
+  marker.on('click',function(){
+    map.flyTo(marker.getLatLng(),13,{duration:0.6});
+  });
+  marker.addTo(map);
+  MARKERS[deal.id]=marker;
+}
+
+// ─── GEOCODE ALL DEALS & PLACE ON MAP ──────────────────────────
+window._mapReady=false;
+window._mapInitDeals=function(deals){
+  if(window._mapReady)return;
+  window._mapReady=true;
+  var bounds=[];
+  var placed=0;
+  deals.forEach(function(deal){
+    geocode(deal.city,deal.state,deal.zip,function(ll){
+      placed++;
+      if(ll){placeMarker(deal,ll);bounds.push(ll);}
+      if(placed===deals.length&&bounds.length){
+        try{map.fitBounds(bounds,{padding:[50,50],maxZoom:12});}catch(e){}
+      }
+    });
+  });
+};
+
+// ─── SYNC FILTERS WITH MAP ─────────────────────────────────────
+// Override applyFilters to also toggle markers
+var _origApplyFilters=window.applyFilters;
+window.applyFilters=function(){
+  _origApplyFilters();
+  // Sync marker visibility
+  if(typeof ALL_DEALS==='undefined'||!ALL_DEALS.length)return;
+  var q=(document.getElementById('f-search').value||'').toLowerCase();
+  var type=document.getElementById('f-type').value;
+  var state=document.getElementById('f-state').value;
+  var typeNorm=typeof normType==='function'?normType(type):'';
+  var tab=typeof _tab!=='undefined'?_tab:'';
+  var CREATIVE_TYPES=['subto','sf','hybrid','wrap','lease','novation'];
+  var visibleIds={};
+  ALL_DEALS.forEach(function(d){
+    var show=true;
+    if(q&&!((d.city||'')+' '+(d.state||'')+' '+(d.zip||'')+' '+(d.nearestMetro||'')+' '+(d.dealType||'')+' '+(d.streetAddress||'')).toLowerCase().includes(q))show=false;
+    if(type&&normType(d.dealType)!==typeNorm)show=false;
+    if(state&&d.state!==state)show=false;
+    if(tab==='creative'&&CREATIVE_TYPES.indexOf(normType(d.dealType))===-1)show=false;
+    if(tab==='cash'&&normType(d.dealType)!=='cash')show=false;
+    if(show)visibleIds[d.id]=true;
+  });
+  Object.keys(MARKERS).forEach(function(id){
+    var m=MARKERS[id];
+    if(visibleIds[id]&&!map.hasLayer(m))m.addTo(map);
+    else if(!visibleIds[id]&&map.hasLayer(m))map.removeLayer(m);
+  });
+};
+
+// ─── MOBILE VIEW TOGGLE ────────────────────────────────────────
+window._mobileView='list';
+window.toggleMobileView=function(){
+  var sidebar=document.getElementById('split-sidebar');
+  var mapEl=document.getElementById('split-map');
+  var btn=document.getElementById('view-toggle');
+  if(window._mobileView==='list'){
+    window._mobileView='map';
+    sidebar.classList.add('map-mode');
+    mapEl.classList.remove('list-mode');
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Show List';
+    setTimeout(function(){map.invalidateSize();},100);
+  }else{
+    window._mobileView='list';
+    sidebar.classList.remove('map-mode');
+    mapEl.classList.add('list-mode');
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Show Map';
+  }
+};
+
+// Resize map on window resize
+window.addEventListener('resize',function(){map.invalidateSize();},{passive:true});
+// Initial size fix after a tick
+setTimeout(function(){map.invalidateSize();},200);
+})();
+</script>
+
+<script>
+if (window.netlifyIdentity) {
+  window.netlifyIdentity.on('init', function(user) {
+    if (!user) {
+      window.netlifyIdentity.on('login', function() {
+        document.location.href = '/admin/';
+      });
+    }
+  });
+}
+</script>
+<!-- BUY BOX MODAL v2 — Multi-profile, multi-asset, conditional logic -->
+<div id="buybox-overlay" style="display:none;position:fixed;inset:0;background:rgba(13,31,60,.6);z-index:800;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
+<div id="buybox-modal" style="background:#fff;border-radius:16px;width:100%;max-width:640px;box-shadow:0 24px 64px rgba(0,0,0,.22);overflow:hidden;margin:auto">
+
+  <!-- Header -->
+  <div style="background:#0D1F3C;padding:22px 28px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#93C5FD;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">My Profile</div>
+      <div style="font-size:20px;font-weight:800;color:#fff">Buy Box &amp; Lending Criteria</div>
+    </div>
+    <button onclick="closeBuyBox()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
+  </div>
+
+  <!-- Profile type selector -->
+  <div style="padding:20px 28px 0;border-bottom:1px solid #EDF2F7">
+    <div style="font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">I am a…</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding-bottom:16px">
+      <button class="bb-profile-btn on" onclick="setProfile('cash_buyer',this)">
+        <span style="font-size:16px">💵</span> Cash Buyer
+      </button>
+      <button class="bb-profile-btn" onclick="setProfile('creative_buyer',this)">
+        <span style="font-size:16px">🔑</span> Creative Finance Buyer
+      </button>
+      <button class="bb-profile-btn" onclick="setProfile('lender',this)">
+        <span style="font-size:16px">🏦</span> Lender / Capital Partner
+      </button>
+    </div>
+  </div>
+
+  <!-- Asset type tabs -->
+  <div id="bb-asset-tabs" style="display:flex;gap:0;border-bottom:2px solid #EDF2F7;padding:0 28px;overflow-x:auto">
+    <button class="bb-asset-tab on" onclick="setAsset('sf',this)">Single Family</button>
+    <button class="bb-asset-tab" onclick="setAsset('mf',this)">Multifamily</button>
+    <button class="bb-asset-tab" onclick="setAsset('commercial',this)">Commercial</button>
+    <button class="bb-asset-tab" onclick="setAsset('land',this)">Land</button>
+  </div>
+
+  <!-- Dynamic form body -->
+  <div id="bb-form-body" style="padding:24px 28px;display:flex;flex-direction:column;gap:18px">
+    <!-- Injected by renderBBForm() -->
+  </div>
+
+  <!-- Footer -->
+  <div style="padding:0 28px 24px;display:flex;flex-direction:column;gap:10px">
+    <button id="bb-submit" onclick="submitBuyBox()" style="padding:13px;background:#29ABE2;color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:background .15s">
+      Save This Buy Box
+    </button>
+    <div id="bb-saved-msg" style="display:none;text-align:center;padding:11px;background:#E6F9F0;border-radius:8px;font-size:13px;font-weight:600;color:#276749">
+      ✓ Saved! We'll match you to deals that fit.
+    </div>
+    <div style="text-align:center;font-size:11px;color:#A0AEC0">Saves to your profile and alerts our team to match you to the right deals.</div>
+  </div>
+
+</div>
+</div><!-- end buybox-overlay -->
+
+<style>
+.bb-profile-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;color:#4A5568;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.bb-profile-btn:hover{border-color:#29ABE2;color:#29ABE2}
+.bb-profile-btn.on{background:#0D1F3C;border-color:#0D1F3C;color:#fff}
+.bb-asset-tab{padding:11px 18px;border:none;background:transparent;font-family:var(--font);font-size:13px;font-weight:600;color:#718096;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s}
+.bb-asset-tab:hover{color:#29ABE2}
+.bb-asset-tab.on{color:#0D1F3C;border-bottom-color:#0D1F3C}
+.bb-chip{padding:7px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;color:#4A5568;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.bb-chip:hover{border-color:#29ABE2;color:#29ABE2}
+.bb-chip.on{background:#0D1F3C;border-color:#0D1F3C;color:#fff}
+.bb-label{font-size:12px;font-weight:700;color:#0D1F3C;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px}
+.bb-input{padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:var(--font);font-size:13px;color:#0D1F3C;outline:none;transition:border .2s;background:#FAFAFA;width:100%}
+.bb-input:focus{border-color:#29ABE2;background:#fff}
+.bb-input::placeholder{color:#A0AEC0}
+.bb-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bb-section{display:flex;flex-direction:column;gap:6px}
+.bb-note{font-size:11px;color:#A0AEC0;margin-top:3px}
+.bb-saved-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981;margin-right:6px}
+</style>
+
+<script>
+var _bbProfile = 'cash_buyer';
+var _bbAsset   = 'sf';
+// Storage key: 'tfs_bb__{profile}__{asset}'  e.g. 'tfs_bb__cash_buyer__sf'
+function bbKey(){ return 'tfs_bb__'+_bbProfile+'__'+_bbAsset; }
+
+function setProfile(p, btn){
+  _bbProfile = p;
+  document.querySelectorAll('.bb-profile-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  renderBBForm();
+}
+function setAsset(a, btn){
+  _bbAsset = a;
+  document.querySelectorAll('.bb-asset-tab').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  renderBBForm();
+}
+
+function getChips(id){
+  return Array.from(document.querySelectorAll('#'+id+' .bb-chip.on')).map(function(c){return c.dataset.val;});
+}
+function setChips(id, vals){
+  document.querySelectorAll('#'+id+' .bb-chip').forEach(function(c){
+    c.classList.toggle('on', (vals||[]).indexOf(c.dataset.val)>-1);
+  });
+}
+function toggleChip(el){ el.classList.toggle('on'); }
+function iv(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
+function sv(id, val){ var el=document.getElementById(id); if(el&&val!=null) el.value=val; }
+
+// ── FORM TEMPLATES ────────────────────────────────────────────────
+function formCashBuyer(asset, saved){
+  var s = saved || {};
+  var assetNote = {sf:'Single Family',mf:'Multifamily (2-4 units)',commercial:'Commercial',land:'Land / Lots'}[asset]||asset;
+  return '<div style="padding:10px 14px;background:#EBF8FF;border-radius:8px;border-left:3px solid #29ABE2;font-size:13px;color:#1a8bbf;font-weight:600">💵 Cash Buyer — '+assetNote+'</div>'
+  +'<div class="bb-row">'
+    +'<div class="bb-section"><label class="bb-label">Max Purchase Price</label><input class="bb-input" id="bb-max-price" placeholder="e.g. $250,000" value="'+(s.maxPrice||'')+'"></div>'
+    +'<div class="bb-section"><label class="bb-label">Min Equity at Entry</label><input class="bb-input" id="bb-min-equity" placeholder="e.g. 20%" value="'+(s.minEquity||'')+'"></div>'
+  +'</div>'
+  +'<div class="bb-row">'
+    +'<div class="bb-section"><label class="bb-label">Max Repair Budget</label><input class="bb-input" id="bb-max-repair" placeholder="e.g. $30,000" value="'+(s.maxRepair||'')+'"></div>'
+    +'<div class="bb-section"><label class="bb-label">Min ARV</label><input class="bb-input" id="bb-min-arv" placeholder="e.g. $150,000" value="'+(s.minArv||'')+'"></div>'
+  +'</div>'
+  +(asset==='sf'||asset==='mf' ? '<div class="bb-section"><label class="bb-label">Min Bedrooms</label><div style="display:flex;gap:8px" id="bb-beds">'
+    +['Any','2+','3+','4+'].map(function(v){return '<button type="button" class="bb-chip'+(s.beds===v?' on':'')+'" onclick="toggleExclusive(this,\'bb-beds\')" data-val="'+v+'">'+v+'</button>';}).join('')
+    +'</div></div>' : '')
+  +'<div class="bb-section"><label class="bb-label">Exit Strategies</label><div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-exits">'
+    +['Buy & Hold','BRRRR','Flip','STR / Airbnb','MTR','PadSplit'].map(function(v){return '<button type="button" class="bb-chip'+((s.exits||[]).indexOf(v)>-1?' on':'')+'" onclick="toggleChip(this)" data-val="'+v+'">'+v+'</button>';}).join('')
+  +'</div></div>'
+  +'<div class="bb-section"><label class="bb-label">Target Markets</label><input class="bb-input" id="bb-markets" placeholder="Phoenix AZ, San Antonio TX, Tampa FL…" value="'+(s.markets||'')+'"><div class="bb-note">Cities, states, or zip codes separated by commas</div></div>'
+  +'<div class="bb-section"><label class="bb-label">Close Timeline</label><div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-timeline">'
+    +['ASAP (7 days)','10-14 days','14-21 days','21-30 days','30-45 days'].map(function(v){return '<button type="button" class="bb-chip'+((s.timeline||[]).indexOf(v)>-1?' on':'')+'" onclick="toggleChip(this)" data-val="'+v+'">'+v+'</button>';}).join('')
+  +'</div></div>'
+  +'<div class="bb-section"><label class="bb-label">Additional Notes</label><textarea class="bb-input" id="bb-notes" rows="2" placeholder="Min lot size, preferred neighborhoods, deal size range…">'+(s.notes||'')+'</textarea></div>';
+}
+
+function formCreativeBuyer(asset, saved){
+  var s = saved || {};
+  var assetNote = {sf:'Single Family',mf:'Multifamily (2-4 units)',commercial:'Commercial',land:'Land / Lots'}[asset]||asset;
+  return '<div style="padding:10px 14px;background:#F3E8FF;border-radius:8px;border-left:3px solid #7C3AED;font-size:13px;color:#7C3AED;font-weight:600">🔑 Creative Finance Buyer — '+assetNote+'</div>'
+  +'<div class="bb-section"><label class="bb-label">Deal Structures I Buy</label><div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-structures">'
+    +['Subject To','Seller Finance','Hybrid / Morby','Wrap','Lease Option','Novation'].map(function(v){return '<button type="button" class="bb-chip'+((s.structures||[]).indexOf(v)>-1?' on':'')+'" onclick="toggleChip(this)" data-val="'+v+'">'+v+'</button>';}).join('')
+  +'</div></div>'
+  +'<div class="bb-row">'
+    +'<div class="bb-section"><label class="bb-label">Max Monthly Payment</label><input class="bb-input" id="bb-max-pmt" placeholder="e.g. $2,500/mo" value="'+(s.maxPmt||'')+'"><div class="bb-note">PITI or seller finance payment</div></div>'
+    +'<div class="bb-section"><label class="bb-label">Min Monthly Cash Flow</label><input class="bb-input" id="bb-min-cf" placeholder="e.g. $200/mo" value="'+(s.minCf||'')+'"></div>'
+  +'</div>'
+  +'<div class="bb-row">'
+    +'<div class="bb-section"><label class="bb-label">Max Entry Fee</label><input class="bb-input" id="bb-max-entry" placeholder="e.g. $35,000" value="'+(s.maxEntry||'')+'"></div>'
+    +'<div class="bb-section"><label class="bb-label">Max Interest Rate I\'ll Accept</label><input class="bb-input" id="bb-max-rate" placeholder="e.g. 6.5%" value="'+(s.maxRate||'')+'"></div>'
+  +'</div>'
+  +'<div class="bb-section"><label class="bb-label">Rate Sensitivity</label><div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-rate-pref">'
+    +['Only below 4%','Up to 5%','Up to 6.5%','Any rate if CF positive'].map(function(v){return '<button type="button" class="bb-chip'+(s.ratePref===v?' on':'')+'" onclick="toggleExclusive(this,\'bb-rate-pref\')" data-val="'+v+'">'+v+'</button>';}).join('')
+  +'</div></div>'
+  +(asset==='sf'||asset==='mf' ? '<div class="bb-section"><label class="bb-label">Min Bedrooms</label><div style="display:flex;gap:8px" id="bb-beds">'
+    +['Any','2+','3+','4+'].map(function(v){return '<button type="button" class="bb-chip'+(s.beds===v?' on':'')+'" onclick="toggleExclusive(this,\'bb-beds\')" data-val="'+v+'">'+v+'</button>';}).join('')
+    +'</div></div>' : '')
+  +'<div class="bb-section"><label class="bb-label">Exit Strategies</label><div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-exits">'
+    +['Buy & Hold','BRRRR (refi out)','Wrap & Resell','MTR / STR','PadSplit'].map(function(v){return '<button type="button" class="bb-chip"+((s.exits||[]).indexOf(v)>-1?" on":"")+" onclick="toggleChip(this)" data-val="'+v+'">'+v+'</button>';}).join('')
+  +'</div></div>'
+  +'<div class="bb-section"><label class="bb-label">Target Markets</label><input class="bb-input" id="bb-markets" placeholder="Phoenix AZ, San Antonio TX, Tampa FL…" value="'+(s.markets||'')+'"><div class="bb-note">Cities, states, or zip codes separated by commas</div></div>'
+  +'<div class="bb-section"><label class="bb-label">Additional Notes</label><textarea class="bb-input" id="bb-notes" rows="2" placeholder="Occupancy preference, HOA limits, specific submarkets…">'+(s.notes||'')+'</textarea></div>';
+}
+
+function formLender(asset, saved){
+  var s = saved || {};
+  var assetNote = {sf:'Single Family',mf:'Multifamily (2-4 units)',commercial:'Commercial',land:'Land / Lots'}[asset]||asset;
+  return '<div style="padding:10px 14px;background:#FFF3E0;border-radius:8px;border-left:3px solid #F7941D;font-size:13px;color:#c05621;font-weight:600">🏦 Lender / Capital Partner — '+assetNote+'</div>'
+  +'<div class="bb-section"><label class="bb-label">Loan Types I Offer</label><div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-loan-types">'
+    +['Hard Money','Private Money','DSCR','Bridge','Fix & Flip','Gap Funding','Equity Partner','Transactional'].map(function(v){return '<button type="button" class="bb-chip"+((s.loanTypes||[]).indexOf(v)>-1?" on":"")+" onclick="toggleChip(this)" data-val="'+v+'">'+v+'</button>';}).join('')
+  +'</div></div>'
+  +'<div class="bb-row">'
+    +'<div class="bb-section"><label class="bb-label">Min Loan Amount</label><input class="bb-input" id="bb-loan-min" placeholder="e.g. $50,000" value="'+(s.loanMin||'')+'"></div>'
+    +'<div class="bb-section"><label class="bb-label">Max Loan Amount</label><input class="bb-input" id="bb-loan-max" placeholder="e.g. $2,000,000" value="'+(s.loanMax||'')+'"></div>'
+  +'</div>'
+  +'<div class="bb-row">'
+    +'<div class="bb-section"><label class="bb-label">Max LTV</label><input class="bb-input" id="bb-max-ltv" placeholder="e.g. 75%" value="'+(s.maxLtv||'')+'"></div>'
+    +'<div class="bb-section"><label class="bb-label">Typical Rate Range</label><input class="bb-input" id="bb-rate-range" placeholder="e.g. 9-12%" value="'+(s.rateRange||'')+'"></div>'
+  +'</div>'
+  +'<div class="bb-row">'
+    +'<div class="bb-section"><label class="bb-label">Min Credit Score</label><input class="bb-input" id="bb-min-credit" placeholder="e.g. 620" value="'+(s.minCredit||'')+'"></div>'
+    +'<div class="bb-section"><label class="bb-label">Points Charged</label><input class="bb-input" id="bb-points" placeholder="e.g. 2 points" value="'+(s.points||'')+'"></div>'
+  +'</div>'
+  +'<div class="bb-section"><label class="bb-label">Close Speed</label><div style="display:flex;flex-wrap:wrap;gap:8px" id="bb-close-speed">'
+    +['3-5 days','7 days','10-14 days','2-3 weeks'].map(function(v){return '<button type="button" class="bb-chip"+(s.closeSpeed===v?" on":"")+" onclick="toggleExclusive(this,\'bb-close-speed\')" data-val="'+v+'">'+v+'</button>';}).join('')
+  +'</div></div>'
+  +'<div class="bb-section"><label class="bb-label">Markets I Lend In</label><input class="bb-input" id="bb-markets" placeholder="National, or specific states/cities…" value="'+(s.markets||'')+'"></div>'
+  +'<div class="bb-section"><label class="bb-label">Additional Notes / Requirements</label><textarea class="bb-input" id="bb-notes" rows="2" placeholder="Recourse vs non-recourse, seasoning requirements, foreign national, etc.">'+(s.notes||'')+'</textarea></div>';
+}
+
+// ── RENDER ────────────────────────────────────────────────────────
+function renderBBForm(){
+  var key = bbKey();
+  var saved = null;
+  try{ saved = JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
+  var body = document.getElementById('bb-form-body');
+  if(!body)return;
+  if(_bbProfile==='cash_buyer')     body.innerHTML = formCashBuyer(_bbAsset, saved);
+  else if(_bbProfile==='creative_buyer') body.innerHTML = formCreativeBuyer(_bbAsset, saved);
+  else                               body.innerHTML = formLender(_bbAsset, saved);
+  // Show saved indicator if this box has data
+  var submitBtn = document.getElementById('bb-submit');
+  if(submitBtn){
+    submitBtn.textContent = saved ? '✓ Update Buy Box' : 'Save This Buy Box';
+    submitBtn.style.background = saved ? '#0D1F3C' : '#29ABE2';
+  }
+  document.getElementById('bb-saved-msg').style.display='none';
+}
+
+function toggleExclusive(el, containerId){
+  document.querySelectorAll('#'+containerId+' .bb-chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────
+function submitBuyBox(){
+  var key = bbKey();
+  var data = { profile:_bbProfile, asset:_bbAsset, updatedAt: new Date().toISOString() };
+
+  // Collect all inputs
+  ['max-price','min-equity','max-repair','min-arv','max-pmt','min-cf','max-entry','max-rate',
+   'markets','notes','loan-min','loan-max','max-ltv','rate-range','min-credit','points'].forEach(function(k){
+    var el=document.getElementById('bb-'+k);
+    if(el&&el.value.trim()) data[k.replace(/-([a-z])/g,function(m,c){return c.toUpperCase();})] = el.value.trim();
+  });
+  ['structures','exits','loan-types','bb-beds','timeline','rate-pref','close-speed'].forEach(function(k){
+    var id = k.startsWith('bb-') ? k : 'bb-'+k;
+    var chips = getChips(id);
+    if(chips.length) data[k.replace(/-([a-z])/g,function(m,c){return c.toUpperCase();})] = chips;
+  });
+  // Beds single-select
+  var bedsEl = document.querySelector('#bb-beds .bb-chip.on');
+  if(bedsEl) data.beds = bedsEl.dataset.val;
+  var rateEl = document.querySelector('#bb-rate-pref .bb-chip.on');
+  if(rateEl) data.ratePref = rateEl.dataset.val;
+  var speedEl = document.querySelector('#bb-close-speed .bb-chip.on');
+  if(speedEl) data.closeSpeed = speedEl.dataset.val;
+
+  localStorage.setItem(key, JSON.stringify(data));
+
+  // Send to GHL
+  var user = getUser()||{};
+  var profileLabel = {cash_buyer:'Cash Buyer',creative_buyer:'Creative Finance Buyer',lender:'Lender / Capital Partner'}[_bbProfile]||_bbProfile;
+  var assetLabel = {sf:'Single Family',mf:'Multifamily',commercial:'Commercial',land:'Land'}[_bbAsset]||_bbAsset;
+  var ghlPayload = Object.assign({
+    firstName: user.name?user.name.split(' ')[0]:'',
+    email: user.email||'',
+    phone: user.phone||'',
+    deal_structure: (data.structures||[]).join(', ') || (data.loanTypes||[]).join(', '),
+    exits: (data.exits||[]).join(', '),
+    target_zips: data.markets||'',
+    notes: '['+profileLabel+' — '+assetLabel+'] '
+      + 'Entry: '+(data.maxEntry||data.maxPrice||'?')
+      + ' | CF: '+(data.minCf||'?')
+      + ' | Pmt: '+(data.maxPmt||'?')
+      + ' | '+(data.notes||''),
+    source: 'TFS Buy Box — '+profileLabel+' — '+assetLabel,
+    tags: ['TFS Buyer', _bbProfile==='lender'?'TFS Lender':'TFS Buyer']
+  }, getUTMs());
+
+  fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593',{
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ghlPayload)
+  }).catch(function(){});
+
+  // UI feedback
+  var btn=document.getElementById('bb-submit');
+  btn.textContent='✓ Saved!'; btn.style.background='#10B981';
+  document.getElementById('bb-saved-msg').style.display='block';
+  setTimeout(function(){ closeBuyBox(); btn.style.background='#0D1F3C'; }, 2000);
+}
+
+function openBuyBox(){
+  var ov=document.getElementById('buybox-overlay');
+  ov.style.display='flex';
+  renderBBForm();
+}
+function closeBuyBox(){
+  document.getElementById('buybox-overlay').style.display='none';
+}
+document.getElementById('buybox-overlay').addEventListener('click',function(e){
+  if(e.target===this)closeBuyBox();
+});
+</script>
+</body>
+</html>

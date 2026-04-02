@@ -313,7 +313,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 <!-- NAV -->
 <nav>
   <div class="nav-left d-links" style="display:flex;gap:24px">
-    <a href="/">Buy</a>
+    <a href="/deals.html">Buy</a>
     <a href="https://dispobuddy.com" target="_blank">Sell</a>
     <a href="https://dispobuddy.com" target="_blank">Dispo My Deal</a>
   </div>
@@ -393,7 +393,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 <!-- BREADCRUMB -->
 <div class="breadcrumb">
   <div class="breadcrumb-inner">
-    <a href="/" class="bc-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back</a>
+    <a href="/deals.html" class="bc-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back</a>
     <span class="bc-sep">/</span>
     <span class="bc-cur" id="bc-addr">Loading…</span>
   </div>
@@ -419,7 +419,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 <div class="sticky-bar" id="sticky-bar">
   <span class="sticky-bar-text">Interested in this deal?</span>
   <button class="sb-primary" onclick="if(!getUser()){openAuth('signup');return;}const rf=document.getElementById('req-form');if(rf)rf.style.display='block';document.getElementById('request-form').scrollIntoView({behavior:'smooth'});">Request Info</button>
-  <a href="/" class="sb-secondary">Browse All Deals</a>
+  <a href="/deals.html" class="sb-secondary">Browse All Deals</a>
   <a href="/blog/" class="sb-secondary">Blog</a>
 </div>
 
@@ -441,7 +441,7 @@ footer{background:var(--navy);padding:44px 40px 0}
         <h4>Company</h4>
         <ul>
           <li><a href="/">About Us</a></li>
-          <li><a href="/">Deals</a></li>
+          <li><a href="/deals.html">Deals</a></li>
           <li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li>
           <li><a href="https://dealproszoom.com" target="_blank">Book a Call</a></li>
         </ul>
@@ -549,7 +549,7 @@ function updateNavAuth(user){
         <a href="https://termsforsale.app.clientclub.net/" target="_blank">🔑 Buyer Portal</a>
         <a href="/dashboard.html">📊 My Dashboard</a>
         <a href="/buy-box.html">✏️ Update Buy Box</a>
-        <a href="/">🏠 All Deals</a>
+        <a href="/deals.html">🏠 All Deals</a>
         <hr>
         <button onclick="clearUser();location.reload()">Log Out</button>
       </div>
@@ -970,7 +970,7 @@ function renderDeal(d,allDeals){
         </div>
       </div>
       <div style="text-align:center">
-        <a href="/" style="font-size:12px;color:var(--text-light);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--text-light)'">
+        <a href="/deals.html" style="font-size:12px;color:var(--text-light);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--text-light)'">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back to all active deals
         </a>
       </div>
@@ -1133,7 +1133,7 @@ async function loadDealsFromSheet(){
 async function init(){
   const params=new URLSearchParams(window.location.search);
   const id=params.get('id');
-  if(!id){document.getElementById('app').innerHTML='<div class="not-found"><h2>No Deal Selected</h2><p>Return to the deals board to select a property.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';return}
+  if(!id){document.getElementById('app').innerHTML='<div class="not-found"><h2>No Deal Selected</h2><p>Return to the deals board to select a property.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';return}
 
   // Always fetch fresh deals from Notion for similar deals (don't use stale SAMPLE data)
   const cached=sessionStorage.getItem('deal');
@@ -1158,14 +1158,14 @@ async function init(){
       deal=cachedDeal;
       console.log('Loaded '+allDeals.length+' deals from Sheets');
     }
-    if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
+    if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
     renderDeal(deal,allDeals);
     // Track deal view for logged-in users
     var viewer=getUser();
     if(viewer&&viewer.contactId&&id){
       fetch('/api/track-view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:viewer.contactId,dealId:id,source:'website'})}).catch(function(){});
     }
-  }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
+  }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
 }
 const u=getUser();if(u)updateNavAuth(u);
 const sb=document.getElementById('sticky-bar');

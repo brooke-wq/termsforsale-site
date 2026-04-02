@@ -133,7 +133,7 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:68px;display:fl
 <nav>
   <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
   <div class="nav-right">
-    <a href="/" class="nav-link">Browse Deals</a>
+    <a href="/deals.html" class="nav-link">Browse Deals</a>
     <a href="/map.html" class="nav-link">Map</a>
     <a href="/blog/" class="nav-link">Blog</a>
     <span class="nav-name" id="nav-name"></span>
@@ -250,16 +250,16 @@ function renderDashboard(user,deals){
 
       // Saved deals panel
       +'<div id="dp-saved" class="dash-panel on">'
-        +'<div class="section-head"><div class="section-title">Saved Deals</div><a href="/" class="section-link">Browse all →</a></div>'
+        +'<div class="section-head"><div class="section-title">Saved Deals</div><a href="/deals.html" class="section-link">Browse all →</a></div>'
         +(savedDeals.length?dealList(savedDeals,true)
-          :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><h3>No saved deals yet</h3><p>Click the ❤️ on any deal to save it here for easy access.</p><a href="/" class="btn-blue">Browse Active Deals →</a></div>')
+          :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><h3>No saved deals yet</h3><p>Click the ❤️ on any deal to save it here for easy access.</p><a href="/deals.html" class="btn-blue">Browse Active Deals →</a></div>')
       +'</div>'
 
       // Offers panel
       +'<div id="dp-offers" class="dash-panel">'
         +'<div class="section-head"><div class="section-title">My Offers</div></div>'
         +(offers.length?offers.map(offerCard).join('')
-          :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><h3>No offers submitted yet</h3><p>When you submit an offer on a deal, it will appear here with its current status.</p><a href="/" class="btn-blue">Browse Active Deals →</a></div>')
+          :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><h3>No offers submitted yet</h3><p>When you submit an offer on a deal, it will appear here with its current status.</p><a href="/deals.html" class="btn-blue">Browse Active Deals →</a></div>')
       +'</div>'
 
       // Activity panel
@@ -277,7 +277,7 @@ function renderDashboard(user,deals){
 
       // Browse panel
       +'<div id="dp-browse" class="dash-panel">'
-        +'<div class="section-head"><div class="section-title">All Active Deals</div><a href="/" class="section-link">Full listing page →</a></div>'
+        +'<div class="section-head"><div class="section-title">All Active Deals</div><a href="/deals.html" class="section-link">Full listing page →</a></div>'
         +dealList(deals,false)
       +'</div>'
 

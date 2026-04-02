@@ -15,6 +15,23 @@
   status = 301
   force = true
 
+# /browse and /deals → deals.html
+[[redirects]]
+  from = "/browse"
+  to = "/deals.html"
+  status = 200
+
+[[redirects]]
+  from = "/deals"
+  to = "/deals.html"
+  status = 200
+
+# Legacy /about.html → homepage
+[[redirects]]
+  from = "/about.html"
+  to = "/"
+  status = 301
+
 [[redirects]]
   from = "/api/hud-fmr"
   to = "/.netlify/functions/hud-fmr"
