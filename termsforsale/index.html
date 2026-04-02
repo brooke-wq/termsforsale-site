@@ -1140,7 +1140,7 @@ function makeCard(d){
       ${arv ? `<div class="deal-card-arv">(ARV — <strong>${money(arv)}</strong>)</div>` : hasDiff ? `<div class="deal-card-arv">Entry: <strong>${money(d.entryFee)}</strong></div>` : '<div style="margin-bottom:8px"></div>'}
       <div class="deal-card-loc">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        ${d.nearestMetro||d.city+', '+d.state}
+        ${d.nearestMetro||[d.city,d.county,d.state].filter(Boolean).join(', ')}
       </div>
       <div class="deal-card-divider"></div>
       <div class="deal-card-specs">
@@ -1175,7 +1175,7 @@ function applyFilters(){
   const typeNorm=normType(type);
   const CREATIVE_TYPES = ['subto','sf','hybrid','wrap','lease','novation'];
   let filtered=ALL_DEALS.filter(d=>{
-    if(q&&!`${d.city} ${d.state} ${d.zip} ${d.nearestMetro} ${d.dealType} ${d.streetAddress}`.toLowerCase().includes(q))return false;
+    if(q&&!`${d.city} ${d.state} ${d.zip} ${d.nearestMetro} ${d.county} ${d.dealType} ${d.streetAddress}`.toLowerCase().includes(q))return false;
     if(type&&normType(d.dealType)!==typeNorm)return false;
     if(state&&d.state!==state)return false;
     if(_tab==='creative'&&CREATIVE_TYPES.indexOf(normType(d.dealType))===-1)return false;
@@ -1277,7 +1277,7 @@ function updateHowSections(){
         <div class="mini-card-body">
           <div class="mini-card-price">${money(+d.entryFee||+d.askingPrice)}</div>
           ${+d.entryFee&&+d.entryFee!==+d.askingPrice?`<div class="mini-card-entry">Entry ${money(d.entryFee)}</div>`:''}
-          <div class="mini-card-loc"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${d.nearestMetro||d.city+', '+d.state}</div>
+          <div class="mini-card-loc"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${d.nearestMetro||[d.city,d.county,d.state].filter(Boolean).join(', ')}</div>
           <div class="mini-card-specs">${[d.beds?d.beds+' bd':null,d.baths?d.baths+' ba':null].filter(Boolean).join(' · ')}</div>
         </div>
       </div>`;
@@ -1297,7 +1297,7 @@ function updateHowSections(){
             <div class="big-card-price">${money(+d.entryFee||+d.askingPrice)}</div>
             ${+d.entryFee&&+d.entryFee!==+d.askingPrice?`<div style="text-align:right"><div style="font-size:10px;color:rgba(4,62,92,.55)">Entry Fee</div><div style="font-size:13px;font-weight:600;color:var(--navy-card)">${money(d.entryFee)}</div></div>`:''}
           </div>
-          <div class="big-card-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${d.nearestMetro||d.city+', '+d.state}</div>
+          <div class="big-card-loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${d.nearestMetro||[d.city,d.county,d.state].filter(Boolean).join(', ')}</div>
           <div class="big-card-specs">${[d.beds?d.beds+' rooms':null,d.baths?d.baths+' Baths':null,d.sqft?Number(d.sqft).toLocaleString()+' ft²':null,d.yearBuilt?'Built in '+d.yearBuilt:null].filter(Boolean).join(' | ')}</div>
         </div>
       </div>`;

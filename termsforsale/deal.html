@@ -679,7 +679,7 @@ function renderDeal(d,allDeals){
   const ld=document.createElement('script');ld.type='application/ld+json';
   ld.textContent=JSON.stringify({"@context":"https://schema.org","@type":"RealEstateListing","name":`${d.dealType} Deal — ${d.city}, ${d.state}`,"description":seoDesc,"url":window.location.href,"offers":{"@type":"Offer","price":d.askingPrice||0,"priceCurrency":"USD"},"address":{"@type":"PostalAddress","addressLocality":d.city,"addressRegion":d.state,"postalCode":d.zip||''}});
   document.head.appendChild(ld);
-  document.getElementById('bc-addr').textContent=`${d.nearestMetro||d.city+', '+d.state} — ${d.dealType||'Deal Details'}`;
+  document.getElementById('bc-addr').textContent=`${d.nearestMetro||[d.city,d.county,d.state].filter(Boolean).join(', ')} — ${d.dealType||'Deal Details'}`;
 
   const ti=typeInfo(d.dealType);
   const dl=daysLeft(d.coe);

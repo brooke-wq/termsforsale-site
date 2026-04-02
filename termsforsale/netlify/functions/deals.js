@@ -192,6 +192,7 @@ exports.handler = async function(event) {
         city: prop(page, 'City'),
         state: prop(page, 'State'),
         zip: prop(page, 'ZIP'),
+        county: prop(page, 'County'),
         nearestMetro: prop(page, 'Nearest Metro') || prop(page, 'Nearest Metro Area'),
         propertyType: prop(page, 'Property Type'),
         askingPrice: +prop(page, 'Asking Price') || 0,
