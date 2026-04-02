@@ -155,6 +155,16 @@ The VS Code "Deploy to Netlify" task (Cmd+Shift+B) automates this.
 ## Key Notes for AI Agents
 
 - `deal.html` has an `init();` call at the bottom of its `<script>` block — **do not remove it**
+- **Deal page label rules (DO NOT CHANGE):**
+  - "IF not Cash" field → MUST be labeled **"Entry Fee"** with **"+ CC/TC"** suffix
+  - SubTo deals payment → MUST be labeled **"PITI (est)"** (NOT "Principle & Interest")
+  - Seller Finance deals payment → MUST be labeled **"Principal & Interest"** (NOT "SF Payment")
+  - Hybrid/Morby deals with SF portion → SF portion uses "Principal & Interest", SubTo portion uses "PITI (est)"
+  - **No "Close of Escrow" or "Closes in X days"** anywhere on deal pages or cards
+- **Photo display rules:**
+  - Photos sort by `createdTime` (first uploaded = cover photo, usually front of house)
+  - Do NOT change photo sort order to alphabetical
+  - Photo grid orientation must remain consistent (landscape main photo, square thumbs)
 - `/api/*` routes are aliases for `/.netlify/functions/*` — both work; prefer `/api/` in frontend code
 - Notion deal status `"Actively Marketing"` is the filter used by `deals.js` to show live deals
 - GHL is the source of truth for contacts/leads; Notion is the source of truth for deal inventory
