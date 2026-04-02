@@ -10,6 +10,10 @@
 
 const https = require('https');
 
+// ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
+var sentLog;
+try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
+
 // ─── HTTP HELPERS ────────────────────────────────────────────
 
 function httpRequest(url, options, body) {
@@ -395,7 +399,16 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
 // ─── GHL: Trigger alert for a buyer (with dedup) ────────────
 
 async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
-  // DEDUP CHECK: create a unique tag per deal so we never alert twice
+  // DEDUP CHECK 1: File-based dedup (Droplet — most reliable, zero API dependency)
+  if (sentLog && sentLog.isDroplet()) {
+    var dealIdShort = (deal.id || '').slice(0, 8);
+    if (sentLog.wasSent(contact.id, dealIdShort, 'alert')) {
+      console.log('notify-buyers: SKIP ' + contact.name + ' — file dedup for deal ' + deal.id);
+      return 'skipped-file-dedup';
+    }
+  }
+
+  // DEDUP CHECK 2: Tag-based dedup (GHL — works on Netlify too)
   var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
   var existingTags = contact.tags || [];
   if (existingTags.indexOf(dealTag) > -1) {
@@ -529,6 +542,11 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     } catch (emailErr) {
       console.warn('notify-buyers: Email failed for ' + contact.name + ': ' + emailErr.message);
     }
+  }
+
+  // Mark as sent in file-based dedup log
+  if (sentLog && sentLog.isDroplet()) {
+    sentLog.markSent(contact.id, (deal.id || '').slice(0, 8), 'alert');
   }
 
   return result.status;
