@@ -1055,7 +1055,6 @@ function makeCard(d){
               : isSold ? `<div class="deal-badge-sold">✓ Sold</div>`
               : `<div class="deal-card-type ${typeClass(d.dealType)}">${typeLabel(d.dealType)}</div>`}
       ${discount>=10 ? `<div class="deal-card-discount">${discount}% below ARV</div>` : ''}
-      ${dl!==null&&dl<=7&&!isUC&&!isSold ? `<div class="deal-card-urgency-badge">⏰ ${dl}d left</div>` : ''}
       <div class="deal-card-save" onclick="toggleSave(event,'${safeId}',this)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="${saveFill}" stroke="${saveStroke}" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </div>
