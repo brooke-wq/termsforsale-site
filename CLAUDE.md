@@ -254,13 +254,15 @@ These items are deferred and MUST be completed in the next session:
 
 1. **Split-Screen Map Homepage** — Zillow/Redfin style: left panel scrollable deal cards with filters, right panel interactive map with pins. Click pin → highlight deal card. Click deal → highlight pin. Responsive: stacks on mobile.
 
-2. **Client Portal** — Authenticated buyer dashboard with saved deals, offer tracking, buy box management, deal alerts history. Separate project, done correctly.
+2. **Client Portal + Real Auth** — Authenticated buyer dashboard with saved deals, offer tracking, buy box management, deal alerts history. Current auth is localStorage-only (no password verification). Needs real GHL-backed auth: verify email+password against GHL contacts, session management, protected routes. Separate project, done correctly.
 
-3. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
+3. **Per-Contact Deal View Tracking** — When a logged-in user views a deal page, log it to their GHL contact (add `deal-viewed` tag, post note with deal address/URL, update custom field with last viewed deal). Also integrate GHL trigger links into deal alert emails so clicks are tracked in GHL workflows. Goal: Brooke can see in GHL exactly which deals each buyer clicked on.
 
-4. **GHL Booking Notification** — Set up in GHL Calendars → Notifications for calendar PoyDG0tNCK8wb9oi6zZ4 → notify Brooke + Eddie on new bookings.
+4. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
 
-5. **Auto-Tag Buyer Responses** — Create GHL workflow to auto-tag when buyer replies to deal follow-up:
+5. **GHL Booking Notification** — Set up in GHL Calendars → Notifications for calendar PoyDG0tNCK8wb9oi6zZ4 → notify Brooke + Eddie on new bookings.
+
+6. **Auto-Tag Buyer Responses** — Create GHL workflow to auto-tag when buyer replies to deal follow-up:
    - Trigger: Customer Reply (SMS)
    - Reply "1" or "IN" → add tag `deal-hot`
    - Reply "2" or "MAYBE" → add tag `deal-warm`
