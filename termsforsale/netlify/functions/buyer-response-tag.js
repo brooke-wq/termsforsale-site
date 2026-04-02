@@ -14,11 +14,29 @@
 
 const { getContact, addTags, removeTags, postNote } = require('./_ghl');
 
-// Response patterns (case-insensitive)
+// Response patterns (case-insensitive, tested against trimmed message)
+// Exact matches first, then "contains" patterns for natural language
 const PATTERNS = [
-  { match: /^1$|^in$|^interested$|^i'm in$|^im in$|^yes$|^send it$|^send info$/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
-  { match: /^2$|^maybe$|^possibly$|^tell me more$|^more info$/i, tag: 'buyer-maybe', label: 'MAYBE', emoji: '🟡' },
-  { match: /^3$|^pass$|^no$|^not interested$|^no thanks$|^nah$|^skip$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
+  // ── INTERESTED (green) ──
+  { match: /^1$|^in$|^i'm in$|^im in$|^yes$|^yep$|^yeah$|^yea$|^ya$|^yup$/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  { match: /^interested$|^i'm interested$|^im interested$|^very interested$/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  { match: /^send it$|^send info$|^send me info$|^send details$|^send me details$/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  { match: /^let's go$|^lets go$|^lock it$|^i want it$|^i'll take it$|^ill take it$/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  { match: /^sign me up$|^count me in$|^down$|^i'm down$|^im down$|^for sure$/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  { match: /^let me know$|^keep me posted$|^sounds good$|^sounds great$/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  { match: /^what's the address|^whats the address|^where is it|^send me the address/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  { match: /^can i see it|^can I get more|^tell me more about this|^what are the terms/i, tag: 'buyer-interested', label: 'INTERESTED', emoji: '🟢' },
+  // ── MAYBE (yellow) ──
+  { match: /^2$|^maybe$|^possibly$|^perhaps$|^might be$|^could be$/i, tag: 'buyer-maybe', label: 'MAYBE', emoji: '🟡' },
+  { match: /^more info$|^need more info$|^send more info$|^tell me more$/i, tag: 'buyer-maybe', label: 'MAYBE', emoji: '🟡' },
+  { match: /^what's the price|^whats the price|^how much$|^what's the entry|^whats the entry/i, tag: 'buyer-maybe', label: 'MAYBE', emoji: '🟡' },
+  { match: /^depends$|^it depends$|^not sure$|^idk$|^i don't know$|^thinking about it$/i, tag: 'buyer-maybe', label: 'MAYBE', emoji: '🟡' },
+  // ── PASS (red) ──
+  { match: /^3$|^pass$|^no$|^nope$|^nah$|^no thanks$|^no thank you$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
+  { match: /^not interested$|^not for me$|^i'll pass$|^ill pass$|^hard pass$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
+  { match: /^skip$|^remove me$|^unsubscribe$|^stop$|^take me off$|^opt out$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
+  { match: /^too expensive$|^too rich$|^out of my range$|^over budget$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
+  { match: /^not in my area$|^wrong market$|^don't buy there$|^too far$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
 ];
 
 // Tags to remove when re-categorizing (so a buyer doesn't have conflicting tags)
