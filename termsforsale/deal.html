@@ -708,7 +708,7 @@ function renderDeal(d,allDeals){
 
   // TERMS TABLE
   const termRows=[];
-  termRows.push({l:'Asking Price',v:fc(d.askingPrice)},{l:'Close of Escrow',v:d.coe?new Date(d.coe).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'});
+  termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
   termRows.push({l:'Deal Type',v:d.dealType||'—'},{l:'IF not Cash',v:entry&&entry!==+d.askingPrice?fc(entry)+' Entry':entry?fc(entry):'—'});
   if(isSubTo){termRows.push({l:'Subject To',v:d.subtoLoanBalance?'Yes':'—'},{l:'Loan Type',v:'Existing Mortgage'});termRows.push({l:'Loan Balance',v:fc(d.subtoLoanBalance)},{l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});termRows.push({l:'Escrow Payment',v:d.piti?'Included in PITI':'—'},{l:'APR',v:fmtRate(d.subtoRate)});termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'},{l:'Balloon',v:d.subToBalloon||'—'});}
   if(isSF){termRows.push({l:'SF Loan Amount',v:fc(d.sfLoanAmount)},{l:'Interest Rate',v:d.sfRate||'—'});termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'},{l:'Term',v:d.sfTerm||'—'});termRows.push({l:'Balloon',v:d.sfBalloon||'—'},{l:'Down Payment',v:fc(entry)});}
@@ -889,7 +889,7 @@ function renderDeal(d,allDeals){
 
       <div id="tab-process" class="tab-panel">
         <div style="display:flex;flex-direction:column;gap:12px">
-          ${['Explore the Deal — Review all deal details and terms on this page.','Tell Us You\'re Interested — Submit a request and we\'ll reach out within 24 hours.','Make It Official with an Offer — Submit your offer amount, COE, and payment method.','Lock It In — If accepted, secure your position with an EMD deposit.','Meet Your Deal Coordinator — Your coordinator will guide you through close.','Close the Deal — Step into contract and close with confidence.'].map((s,i)=>`<div style="display:flex;gap:14px;padding:14px;background:var(--white);border-radius:var(--r);border:1px solid var(--border-light)"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:var(--white);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><div style="font-size:13px;color:var(--text-mid);line-height:1.6"><strong style="color:var(--text)">${s.split('—')[0]}</strong>${s.includes('—')?'— '+s.split('—')[1]:''}</div></div>`).join('')}
+          ${['Explore the Deal — Review all deal details and terms on this page.','Tell Us You\'re Interested — Submit a request and we\'ll reach out within 24 hours.','Make It Official with an Offer — Submit your offer amount and payment method.','Lock It In — If accepted, secure your position with an EMD deposit.','Meet Your Deal Coordinator — Your coordinator will guide you through close.','Close the Deal — Step into contract and close with confidence.'].map((s,i)=>`<div style="display:flex;gap:14px;padding:14px;background:var(--white);border-radius:var(--r);border:1px solid var(--border-light)"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:var(--white);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><div style="font-size:13px;color:var(--text-mid);line-height:1.6"><strong style="color:var(--text)">${s.split('—')[0]}</strong>${s.includes('—')?'— '+s.split('—')[1]:''}</div></div>`).join('')}
         </div>
       </div>
 
