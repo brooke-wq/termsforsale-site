@@ -38,12 +38,14 @@ function httpRequest(url, options, body) {
 // ─── NOTION: Get recently published deals ────────────────────
 
 async function getRecentDeals(token, dbId, sinceMinutes) {
-  var since = new Date(Date.now() - sinceMinutes * 60 * 1000).toISOString();
+  // Use "Started Marketing" date field — only alerts on newly listed deals,
+  // not on any random edit. Dedup tags prevent double sends per buyer per deal.
+  var today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   var body = {
     filter: {
       and: [
         { property: 'Deal Status', status: { equals: 'Actively Marketing' } },
-        { timestamp: 'last_edited_time', last_edited_time: { after: since } }
+        { property: 'Started Marketing ', date: { on_or_after: today } }
       ]
     },
     page_size: 20
