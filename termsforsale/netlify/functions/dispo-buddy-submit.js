@@ -83,8 +83,6 @@ exports.handler = async (event) => {
       opportunityId: oppData?.id || 'not created',
     }));
 
-    // SMS deferred — will enable when new Dispo Buddy site goes live
-
     return respond(200, { success: true, contactId, message: 'Deal submitted successfully' });
 
   } catch (err) {
@@ -169,7 +167,7 @@ function buildContactPayload(d, locationId) {
 // BUILD TAGS
 // ─────────────────────────────────────────────────────────────
 function buildTags(d) {
-  const tags = ['dispo-buddy', 'jv-partner'];
+  const tags = ['dispo-buddy', 'jv-partner', 'jv-submitted'];
 
   const type = (d.deal_type || '').toLowerCase();
   if (type.includes('cash'))           tags.push('db-cash');

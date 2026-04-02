@@ -134,8 +134,8 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:68px;display:fl
   <a href="/"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
   <div class="nav-right">
     <a href="/" class="nav-link">Browse Deals</a>
+    <a href="/map.html" class="nav-link">Map</a>
     <a href="/blog/" class="nav-link">Blog</a>
-    <a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank" class="nav-link">Book a Call</a>
     <span class="nav-name" id="nav-name"></span>
     <div class="nav-avatar" id="nav-avatar" onclick="showMenu()">?</div>
   </div>
@@ -145,6 +145,7 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:68px;display:fl
   <div class="loading-spinner"></div>
 </div>
 
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script>
 var SHEET_ID = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
 var GHL_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
@@ -186,24 +187,24 @@ function typeClass(t){
   return'type-cash';
 }
 
-// ── FETCH ACTIVE DEALS (from Notion via /api/deals) ────
+// ── FETCH ACTIVE DEALS (from Notion API) ──────────────
 function fetchDeals(){
   return fetch('/api/deals')
-    .then(function(r){if(!r.ok)throw new Error('Deals API error');return r.json();})
+    .then(function(r){if(!r.ok)throw new Error('API error '+r.status);return r.json();})
     .then(function(data){
       return (data.deals||[]).map(function(d){
         return {
           id:d.id,
           dealType:d.dealType,
-          streetAddress:d.streetAddress||d.street_address,
+          streetAddress:d.streetAddress,
           city:d.city,state:d.state,
-          nearestMetro:d.nearestMetro||d.nearest_metro||(d.city+', '+d.state),
-          askingPrice:+d.askingPrice||+d.asking_price||0,
-          entryFee:+d.entryFee||+d.entry_fee||0,
-          beds:d.beds,baths:d.baths,sqft:d.sqft||d.living_area,
+          nearestMetro:d.nearestMetro,
+          askingPrice:+d.askingPrice||0,
+          entryFee:+d.entryFee||0,
+          beds:d.beds,baths:d.baths,sqft:d.sqft,
           coe:d.coe,
-          coverPhoto:d.photos||d.coverPhoto,
-          highlight1:d.highlight1||d.highlight_1
+          coverPhoto:d.coverPhoto,
+          highlight1:d.highlight1
         };
       });
     });

@@ -312,15 +312,19 @@ footer{background:var(--navy);padding:44px 40px 0}
 
 <!-- NAV -->
 <nav>
+  <div class="nav-left d-links" style="display:flex;gap:24px">
+    <a href="/">Buy</a>
+    <a href="https://dispobuddy.com" target="_blank">Sell</a>
+    <a href="https://dispobuddy.com" target="_blank">Dispo My Deal</a>
+  </div>
   <a href="/" class="nav-logo">
     <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:44px;width:auto">
   </a>
-  <div class="nav-left d-links" style="display:flex;gap:24px">
-    <a href="/">Browse Deals</a>
-    <a href="/blog/">Blog</a>
-    <a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Book a Call</a>
-  </div>
   <div class="nav-right" id="nav-right">
+    <a href="/buying-criteria.html">Buying Criteria</a>
+    <a href="#" style="display:none">FAQ</a>
+    <a href="https://dealproszoom.com" target="_blank">Help</a>
+    <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -438,8 +442,8 @@ footer{background:var(--navy);padding:44px 40px 0}
         <ul>
           <li><a href="/">About Us</a></li>
           <li><a href="/">Deals</a></li>
-          <li><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Contact Us</a></li>
-          <li><a href="https://link.reibuilt.com/widget/booking/PoyDG0tNCK8wb9oi6zZ4" target="_blank">Book a Call</a></li>
+          <li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li>
+          <li><a href="https://dealproszoom.com" target="_blank">Book a Call</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -511,8 +515,8 @@ async function doLogin(){
   const name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
   setUser(user);updateNavAuth(user);
-  ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
-  setTimeout(()=>{closeAuth();location.reload();},1500);
+  ok.innerHTML='Welcome back, '+user.name+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  setTimeout(()=>closeAuth(),2000);
   btn.disabled=false;btn.textContent='Log In';
 }
 async function doSignup(){
@@ -529,21 +533,23 @@ async function doSignup(){
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
-  ok.innerHTML='Account created! Welcome, '+fn+'! Check your phone and email for confirmation.';ok.style.display='block';
-  setTimeout(()=>{closeAuth();location.reload();},1500);
+  ok.innerHTML='Account created! Welcome, '+fn+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
+  setTimeout(()=>closeAuth(),1400);
   btn.disabled=false;btn.textContent='Create Free Account';
 }
 function updateNavAuth(user){
   const el=document.getElementById('nav-right');
   if(!el||!user)return;
   el.innerHTML=`
+    <a href="/buying-criteria.html">Buying Criteria</a>
+    <a href="https://dealproszoom.com" target="_blank">Help</a>
     <div class="nav-avatar-wrap">
       <div class="nav-avatar">${user.initials}</div>
       <div class="nav-dropdown">
-        <a href="/dashboard.html">My Dashboard</a>
-        <a href="/buy-box.html">Update Buy Box</a>
-        <a href="/">All Deals</a>
-        <a href="/blog/">Blog</a>
+        <a href="https://termsforsale.app.clientclub.net/" target="_blank">🔑 Buyer Portal</a>
+        <a href="/dashboard.html">📊 My Dashboard</a>
+        <a href="/buy-box.html">✏️ Update Buy Box</a>
+        <a href="/">🏠 All Deals</a>
         <hr>
         <button onclick="clearUser();location.reload()">Log Out</button>
       </div>
@@ -679,7 +685,7 @@ function renderDeal(d,allDeals){
   const ld=document.createElement('script');ld.type='application/ld+json';
   ld.textContent=JSON.stringify({"@context":"https://schema.org","@type":"RealEstateListing","name":`${d.dealType} Deal — ${d.city}, ${d.state}`,"description":seoDesc,"url":window.location.href,"offers":{"@type":"Offer","price":d.askingPrice||0,"priceCurrency":"USD"},"address":{"@type":"PostalAddress","addressLocality":d.city,"addressRegion":d.state,"postalCode":d.zip||''}});
   document.head.appendChild(ld);
-  document.getElementById('bc-addr').textContent=`${d.nearestMetro||[d.city,d.county,d.state].filter(Boolean).join(', ')} — ${d.dealType||'Deal Details'}`;
+  document.getElementById('bc-addr').textContent=`${d.nearestMetro||d.city+', '+d.state} — ${d.dealType||'Deal Details'}`;
 
   const ti=typeInfo(d.dealType);
   const dl=daysLeft(d.coe);
@@ -708,10 +714,10 @@ function renderDeal(d,allDeals){
 
   // TERMS TABLE
   const termRows=[];
-  termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
-  termRows.push({l:'Deal Type',v:d.dealType||'—'},{l:'Entry Fee',v:entry?fc(entry)+' + CC/TC':'—'});
-  if(isSubTo){termRows.push({l:'Subject To',v:d.subtoLoanBalance?'Yes':'—'},{l:'Loan Type',v:'Existing Mortgage'});termRows.push({l:'Loan Balance',v:fc(d.subtoLoanBalance)},{l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});termRows.push({l:'Escrow Payment',v:d.piti?'Included in PITI':'—'},{l:'APR',v:fmtRate(d.subtoRate)});termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'},{l:'Balloon',v:d.subToBalloon||'—'});}
-  if(isSF){termRows.push({l:'SF Loan Amount',v:fc(d.sfLoanAmount)},{l:'Interest Rate',v:d.sfRate||'—'});termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'},{l:'Term',v:d.sfTerm||'—'});termRows.push({l:'Balloon',v:d.sfBalloon||'—'},{l:'Down Payment',v:fc(entry)});}
+  termRows.push({l:'Asking Price',v:fc(d.askingPrice)},{l:'Close of Escrow',v:d.coe?new Date(d.coe).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'});
+  termRows.push({l:'Deal Type',v:d.dealType||'—'},{l:'IF not Cash',v:entry&&entry!==+d.askingPrice?fc(entry)+' Entry':entry?fc(entry):'—'});
+  if(isSubTo){termRows.push({l:'Subject To',v:d.subtoLoanBalance?'Yes':'—'},{l:'Loan Type',v:'Existing Mortgage'});termRows.push({l:'Loan Balance',v:fc(d.subtoLoanBalance)},{l:'Principle & Interest',v:d.piti?fc(d.piti)+'/mo':'—'});termRows.push({l:'Escrow Payment',v:d.piti?'Included in PITI':'—'},{l:'APR',v:fmtRate(d.subtoRate)});termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'},{l:'Balloon',v:d.subToBalloon||'—'});}
+  if(isSF){termRows.push({l:'SF Loan Amount',v:fc(d.sfLoanAmount)},{l:'Interest Rate',v:d.sfRate||'—'});termRows.push({l:'SF Payment',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'},{l:'Term',v:d.sfTerm||'—'});termRows.push({l:'Balloon',v:d.sfBalloon||'—'},{l:'Down Payment',v:fc(entry)});}
 
   const termsTableHtml=`<div class="terms-grid">${termRows.map(r=>`<div class="term-item"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div>`;
 
@@ -754,7 +760,7 @@ function renderDeal(d,allDeals){
   </div>`:'' ;
 
   // SIDEBAR
-  const urgency='';
+  const urgency=dl!==null&&dl<=10?`<div class="urgency-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div class="urgency-text">Contract expires in ${dl} day${dl!==1?'s':''}. Move fast.</div></div>`:'';
 
   document.getElementById('app').innerHTML=`
   <div class="main">
@@ -762,6 +768,7 @@ function renderDeal(d,allDeals){
       <div class="photo-grid" id="photo-grid">${photoHtml}</div>
 
       <div class="deal-header">
+        ${dl!==null&&dl<=30?`<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;font-size:12px;font-weight:700;margin-bottom:10px;${dl<=7?'background:#FFF5F5;color:#E53E3E;border:1px solid #FEB2B2':dl<=14?'background:#FFFAF0;color:#DD6B20;border:1px solid #FBD38D':'background:var(--blue-light);color:var(--blue-dark);border:1px solid var(--blue-mid)'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${dl<=0?'Closing today!':dl===1?'Closes tomorrow':'Closes in '+dl+' days'}</div>`:''}
         <div class="deal-price-row">
           <span class="deal-price">${fc(entry||+d.askingPrice)}</span>
           ${entry&&entry!==+d.askingPrice?`<span style="font-size:16px;font-weight:600;color:var(--orange)">${fc(d.askingPrice)} asking</span>`:''}
@@ -889,7 +896,7 @@ function renderDeal(d,allDeals){
 
       <div id="tab-process" class="tab-panel">
         <div style="display:flex;flex-direction:column;gap:12px">
-          ${['Explore the Deal — Review all deal details and terms on this page.','Tell Us You\'re Interested — Submit a request and we\'ll reach out within 24 hours.','Make It Official with an Offer — Submit your offer amount and payment method.','Lock It In — If accepted, secure your position with an EMD deposit.','Meet Your Deal Coordinator — Your coordinator will guide you through close.','Close the Deal — Step into contract and close with confidence.'].map((s,i)=>`<div style="display:flex;gap:14px;padding:14px;background:var(--white);border-radius:var(--r);border:1px solid var(--border-light)"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:var(--white);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><div style="font-size:13px;color:var(--text-mid);line-height:1.6"><strong style="color:var(--text)">${s.split('—')[0]}</strong>${s.includes('—')?'— '+s.split('—')[1]:''}</div></div>`).join('')}
+          ${['Explore the Deal — Review all deal details and terms on this page.','Tell Us You\'re Interested — Submit a request and we\'ll reach out within 24 hours.','Make It Official with an Offer — Submit your offer amount, COE, and payment method.','Lock It In — If accepted, secure your position with an EMD deposit.','Meet Your Deal Coordinator — Your coordinator will guide you through close.','Close the Deal — Step into contract and close with confidence.'].map((s,i)=>`<div style="display:flex;gap:14px;padding:14px;background:var(--white);border-radius:var(--r);border:1px solid var(--border-light)"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:var(--white);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><div style="font-size:13px;color:var(--text-mid);line-height:1.6"><strong style="color:var(--text)">${s.split('—')[0]}</strong>${s.includes('—')?'— '+s.split('—')[1]:''}</div></div>`).join('')}
         </div>
       </div>
 
@@ -924,44 +931,29 @@ function renderDeal(d,allDeals){
             </div>
             <input class="sf-input" placeholder="Phone Number" id="f-phone" type="tel">
             <input class="sf-input" placeholder="Email Address" id="f-email" type="email">
-            <textarea class="sf-input" placeholder="What is your request?" rows="2" id="f-notes" style="resize:vertical"></textarea>
+            <div class="sf-row">
+              <select class="sf-select" id="f-structure">
+                <option value="">Buying how?</option>
+                <option>Cash</option>
+                <option>Hard Money</option>
+                <option>Sub-To / Creative</option>
+                <option>Seller Finance</option>
+                <option>Wrap</option>
+                <option>Hybrid</option>
+              </select>
+              <select class="sf-select" id="f-timeline">
+                <option value="">Close when?</option>
+                <option>ASAP / 7 days</option>
+                <option>10–14 days</option>
+                <option>14–21 days</option>
+                <option>21–30 days</option>
+                <option>30–45 days</option>
+              </select>
+            </div>
+            <textarea class="sf-input" placeholder="Notes (optional)" rows="2" id="f-notes" style="resize:vertical"></textarea>
             <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="submitRequest('${d.id}')">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
               Submit Request
-            </button>
-          </div>
-
-          <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">
-            <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px">Submit an Offer</div>
-            <div class="sidebar-form">
-              <input class="sf-input" placeholder="Your Name" id="o-name">
-              <input class="sf-input" placeholder="Phone" id="o-phone" type="tel">
-              <input class="sf-input" placeholder="Email" id="o-email" type="email">
-              <input class="sf-input" placeholder="Offer Amount ($)" id="o-amount" type="number">
-              <select class="sf-select" id="o-structure">
-                <option value="">Deal Structure</option>
-                <option>Cash</option>
-                <option>Subject To</option>
-                <option>Seller Finance</option>
-                <option>Hybrid</option>
-                <option>Morby/Stack</option>
-                <option>Wrap</option>
-                <option>Lease Option</option>
-                <option>Novation</option>
-              </select>
-              <select class="sf-select" id="o-close">
-                <option value="">How soon can you close?</option>
-                <option>ASAP / 7 days</option>
-                <option>10-14 days</option>
-                <option>14-21 days</option>
-                <option>21-30 days</option>
-                <option>30-45 days</option>
-                <option>45-60 days</option>
-                <option>Flexible</option>
-              </select>
-              <textarea class="sf-input" placeholder="Offer notes / contingencies" rows="2" id="o-notes" style="resize:vertical"></textarea>
-              <button class="btn" style="width:100%;justify-content:center;background:var(--orange);color:#fff;border:none" onclick="submitOffer('${d.id}','${d.streetAddress||''}','${d.city||''}','${d.state||''}')">
-                Submit Offer
             </button>
             <div class="sf-note">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>
           </div>
@@ -1103,50 +1095,22 @@ async function submitRequest(dealId){
   const lname=document.getElementById('f-lname').value.trim();
   const phone=document.getElementById('f-phone').value.trim();
   const email=document.getElementById('f-email').value.trim();
+  const structure=document.getElementById('f-structure').value.trim();
+  const timeline=document.getElementById('f-timeline').value.trim();
   const notes=document.getElementById('f-notes').value.trim();
   if(!fname||!phone){alert('Please enter your name and phone number.');return}
-  const btn=event.target;btn.textContent='Sending…';btn.disabled=true;
+  const btn=event.target;
+  btn.textContent='Sending…';btn.disabled=true;
+  const structureTagMap={'Cash':['buy:cash'],'Hard Money':['buy:hard-money'],'Sub-To / Creative':['buy:subto','buy:creative'],'Seller Finance':['buy:seller-finance','buy:creative'],'Wrap':['buy:creative'],'Hybrid':['buy:hybrid','buy:creative']};
+  const buyTags=structureTagMap[structure]||[];
+  const tags=['TFS Buyer','Website Inquiry','consent:sms',...buyTags];
+  const utms=getUTMs();
+  const payload=Object.assign({firstName:fname,lastName:lname||'',phone,email:email||'',tags,source:'TFS Deal Page',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',deal_structure:structure||'',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:notes||'',lead_source_detail:utms.utm_source||'TFS Deal Page'}},utms);
   try{
-    await fetch('/api/buyer-inquiry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      firstName:fname,lastName:lname,phone,email,
-      message:notes,propertyStreetAddress:dealId,
-      source:'TFS Deal Page — Request Info',
-      tags:['TFS Buyer','Website Inquiry','consent:sms']
-    })});
-  }catch(err){console.error('Inquiry error:',err);}
+    await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  }catch(err){console.error('GHL webhook error:',err);}
   btn.textContent='✓ Request Sent!';btn.style.background='#276749';
   setTimeout(()=>{btn.textContent='Submit Request';btn.style.background='';btn.disabled=false;},3000);
-}
-
-async function submitOffer(dealId,address,city,state){
-  const name=document.getElementById('o-name').value.trim();
-  const phone=document.getElementById('o-phone').value.trim();
-  const email=document.getElementById('o-email').value.trim();
-  const amount=document.getElementById('o-amount').value.trim();
-  const structure=document.getElementById('o-structure').value;
-  const closeDate=document.getElementById('o-close').value;
-  const notes=document.getElementById('o-notes').value.trim();
-  if(!name||!phone||!amount){alert('Please enter your name, phone, and offer amount.');return}
-  const btn=event.target;btn.textContent='Submitting…';btn.disabled=true;
-  try{
-    await fetch('/api/buyer-inquiry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      type:'OFFER',
-      customerFirstName:name.split(' ')[0],
-      customerLastName:name.split(' ').slice(1).join(' '),
-      customerPhoneNumber:phone,
-      email,
-      price:amount,
-      propertyStreetAddress:address||dealId,
-      propertyCity:city,
-      propertyStateCode:state,
-      deal_structure:structure,
-      close_date:closeDate,
-      message:notes,
-      source:'TFS Deal Page — Offer'
-    })});
-  }catch(err){console.error('Offer error:',err);}
-  btn.textContent='✓ Offer Submitted!';btn.style.background='#276749';
-  setTimeout(()=>{btn.textContent='Submit Offer';btn.style.background='';btn.disabled=false;},3000);
 }
 
 async function loadDealsFromNotion(){
@@ -1183,16 +1147,25 @@ async function init(){
     try{
       allDeals=await loadDealsFromNotion();
       const freshDeal=allDeals.find(d=>String(d.id)===String(id));
+      // Prefer fresh Notion data if it has a cover photo the cache is missing
       if(cachedDeal&&freshDeal){deal=Object.assign({},cachedDeal,{coverPhoto:freshDeal.coverPhoto||cachedDeal.coverPhoto,photos:freshDeal.photos||cachedDeal.photos});}
       else{deal=freshDeal||cachedDeal;}
       console.log('Loaded '+allDeals.length+' deals from Notion');
     }catch(notionErr){
-      console.error('Failed to load deals:',notionErr.message);
+      console.warn('Notion unavailable, falling back to Sheets:',notionErr.message);
+      const sheet=await loadDealsFromSheet();
+      allDeals=sheet.allDeals;
+      if(!cachedDeal){const raw=sheet.rows.find(r=>String(r['Deal ID'])===String(id));cachedDeal=raw?sheet.parse(raw):null;}
       deal=cachedDeal;
-      allDeals=[];
+      console.log('Loaded '+allDeals.length+' deals from Sheets');
     }
     if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
     renderDeal(deal,allDeals);
+    // Track deal view for logged-in users
+    var viewer=getUser();
+    if(viewer&&viewer.contactId&&id){
+      fetch('/api/track-view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:viewer.contactId,dealId:id,source:'website'})}).catch(function(){});
+    }
   }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
 }
 const u=getUser();if(u)updateNavAuth(u);

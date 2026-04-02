@@ -151,6 +151,21 @@
   status = 200
 
 [[redirects]]
+  from = "/api/track-view"
+  to = "/.netlify/functions/track-view"
+  status = 200
+
+[[redirects]]
+  from = "/api/saved-deals"
+  to = "/.netlify/functions/saved-deals"
+  status = 200
+
+[[redirects]]
+  from = "/api/submit-offer"
+  to = "/.netlify/functions/submit-offer"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
