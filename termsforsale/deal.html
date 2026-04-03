@@ -528,10 +528,17 @@ async function doSignup(){
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structures:structures.join(', '),max_entry_fee:maxEntry||'',source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
-  const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
-  const user={name:fn,email,phone,initials};
-  setUser(user);updateNavAuth(user);
+  try{
+    const res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structures:structures.join(', '),max_entry_fee:maxEntry||'',source:'TFS Website - Signup'})});
+    const data=await res.json();
+    if(!res.ok||!data.success){
+      err.textContent=data.error||'Signup failed. Please try again.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Create Free Account';return;
+    }
+    const u=data.user;
+    const user={contactId:u.id,name:u.firstName||u.name||fn,email:u.email||email,phone:u.phone||phone,initials:u.initials||(fn[0]+(ln?ln[0]:'')).toUpperCase()};
+    setUser(user);updateNavAuth(user);
+  }catch(e){console.error('Signup error:',e);}
   ok.innerHTML='Account created! Welcome, '+fn+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
   setTimeout(()=>closeAuth(),1400);
   btn.disabled=false;btn.textContent='Create Free Account';
