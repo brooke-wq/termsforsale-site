@@ -709,8 +709,9 @@ function renderDeal(d,allDeals){
   const dl=daysLeft(d.coe);
   const arv=+d.compsArv||+d.aiArvBase||0;
   const entry=+d.entryFee||0;
-  const isSubTo=d.dealType==='SubTo'||d.dealType==='Hybrid'||d.dealType==='Morby Method'||d.dealType==='Morby/Stack Method'||d.dealType==='Wrap';
-  const isSF=d.dealType==='Seller Finance'||d.dealType==='Hybrid'||d.dealType==='Morby Method'||d.dealType==='Wrap';
+  const dtl=(d.dealType||'').toLowerCase();
+  const isSubTo=dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl==='morby method'||dtl==='morby/stack method'||dtl==='wrap';
+  const isSF=dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl==='morby method'||dtl==='wrap';
   const loggedIn=!!getUser();
 
   // PHOTO GRID — placeholder, filled by loadDealPhotos() after render
