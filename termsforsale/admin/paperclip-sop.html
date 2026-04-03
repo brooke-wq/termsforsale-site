@@ -39,7 +39,12 @@ li{margin-bottom:6px;color:#4A5568}
 <div class="page">
 
 <h1>Paperclip AI OS — VA Process Sheet</h1>
-<p class="subtitle">Deal Pros LLC / Terms For Sale — Last updated April 1, 2026</p>
+<p class="subtitle">Deal Pros LLC / Terms For Sale — Last updated April 2, 2026</p>
+
+<div style="background:#FEE2E2;border:3px solid #C53030;border-radius:10px;padding:20px 24px;margin-bottom:32px">
+<h2 style="color:#C53030;font-size:18px;margin:0 0 8px;border:none;padding:0">AUDIT / STABILIZATION MODE</h2>
+<p style="margin:0;color:#C53030;font-weight:600">ALL Droplet cron jobs are DISABLED except watchdog. All GHL workflows are disabled. No outbound messaging (SMS/email) is firing. Each automation must be tested individually before re-enabling.</p>
+</div>
 
 <!-- ============================================ -->
 <h2>1. System Overview</h2>
@@ -47,7 +52,7 @@ li{margin-bottom:6px;color:#4A5568}
 <p><strong>Paperclip</strong> is the AI operating system that automates Deal Pros' back-office. It scores leads, underwrites deals, matches buyers, sends alerts, and generates daily reports — all automatically.</p>
 
 <div class="card">
-<div class="card-title">What's Automated (Don't Touch)</div>
+<div class="card-title">What's Automated (When Enabled)</div>
 <ul>
 <li>Buyer signup → auto-profiled + tagged within 30 min</li>
 <li>New deal set to "Actively Marketing" → buyers notified within 30 min (SMS + email)</li>
@@ -65,6 +70,18 @@ li{margin-bottom:6px;color:#4A5568}
 </div>
 
 <div class="card">
+<div class="card-title">Recent Fixes (April 2, 2026)</div>
+<ul>
+<li><strong>File-based dedup</strong> — <code>jobs/sent-log.json</code> now protects notify-buyers and deal-follow-up from duplicate sends</li>
+<li><strong>State normalization</strong> — deals.js handles "Arizona" vs "AZ" automatically</li>
+<li><strong>Notion pagination</strong> — deals.js now handles 100+ deals (was silently dropping extras)</li>
+<li><strong>Photo sort fixed</strong> — sorted by createdTime (first uploaded = cover photo), was alphabetical</li>
+<li><strong>Thumbnail loading fixed</strong> — replaced deprecated Google Drive feeds API with /api/drive-photos proxy</li>
+<li><strong>Site restructured</strong> — termsforsale.com = about/hero page, /deals.html = map + deal cards</li>
+</ul>
+</div>
+
+<div class="card">
 <div class="card-title">Monthly Cost</div>
 <table>
 <tr><td>DigitalOcean Droplet</td><td>$6/mo</td></tr>
@@ -74,7 +91,78 @@ li{margin-bottom:6px;color:#4A5568}
 </div>
 
 <!-- ============================================ -->
-<h2>2. Notion Deal Pipeline — Required Fields</h2>
+<h2>2. Cron Job Status (Droplet)</h2>
+
+<div class="important">
+<strong>ALL DISABLED except watchdog.</strong> Do NOT re-enable any job until it has been tested individually. See Re-enablement Checklist below.
+</div>
+
+<table>
+<tr><th>Job</th><th>Schedule</th><th>Status</th><th>Notes</th></tr>
+<tr><td>underwriting-poller</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>deal-package-poller</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>lead-intake</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Brooke SMS has no dedup</td></tr>
+<tr><td>seller-call-prep</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>buyer-relations</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>dispo-buddy-triage</td><td>*/15 * * * *</td><td><span class="tag tag-gray">DEFERRED</span></td><td>New Dispo Buddy site pending</td></tr>
+<tr><td>notify-buyers</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>File dedup added, needs live test</td></tr>
+<tr><td><strong>deal-follow-up</strong></td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td><strong>Was sending duplicate D0 messages.</strong> File dedup now implemented. DO NOT re-enable until tested.</td></tr>
+<tr><td>deal-dog-poller</td><td>0 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>follow-up-nudge</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Has dedup issues (no per-run tracking)</td></tr>
+<tr><td>equity-exit-intake</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>ceo-briefing</td><td>0 14 * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>No SMS dedup on re-runs</td></tr>
+<tr><td>weekly-synthesis</td><td>0 15 * * 1</td><td><span class="tag tag-red">DISABLED</span></td><td>No SMS dedup on re-runs</td></tr>
+<tr><td>partner-scorecard</td><td>0 15 * * 5</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>revenue-tracker</td><td>0 14 1 * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
+<tr><td>watchdog</td><td>0 */6 * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Health checks only</td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>3. Re-enablement Checklist</h2>
+
+<div class="card">
+<div class="card-title">For Each Job — Follow These Steps In Order</div>
+<ol style="margin-left:20px">
+<li>Test manually: <code>node jobs/run-job.js &lt;job-name&gt;</code> or call <code>/api/&lt;name&gt;</code></li>
+<li>Verify output in Droplet logs: <code>tail -50 /var/log/paperclip.log</code></li>
+<li>For messaging jobs: confirm no duplicate sends — check <code>jobs/sent-log.json</code></li>
+<li>Uncomment cron line on Droplet: <code>ssh root@64.23.204.220</code> then <code>crontab -e</code></li>
+<li>Monitor first 2-3 runs in <code>/var/log/paperclip.log</code></li>
+<li>If duplicates occur: immediately comment out cron line and investigate</li>
+</ol>
+</div>
+
+<!-- ============================================ -->
+<h2>4. Audit Findings</h2>
+
+<table>
+<tr><th>Severity</th><th>Issue</th><th>Status</th></tr>
+<tr><td><span class="tag tag-red">CRITICAL</span></td><td><strong>deal-follow-up.js</strong> was sending duplicate Day 0 messages (GHL search API doesn't return full tag lists)</td><td><span class="tag tag-green">FIXED</span> — file-based dedup added</td></tr>
+<tr><td><span class="tag tag-red">CRITICAL</span></td><td><strong>follow-up-nudge.js</strong> has no per-run dedup — SMS can resend on re-runs</td><td><span class="tag tag-orange">NEEDS FIX</span></td></tr>
+<tr><td><span class="tag tag-orange">HIGH</span></td><td><strong>ceo-briefing.js</strong> + <strong>weekly-synthesis.js</strong> — SMS to Brooke has no dedup</td><td><span class="tag tag-orange">NEEDS FIX</span></td></tr>
+<tr><td><span class="tag tag-orange">HIGH</span></td><td><strong>lead-intake.js</strong> — Brooke SMS on flagged leads has no dedup</td><td><span class="tag tag-orange">NEEDS FIX</span></td></tr>
+<tr><td><span class="tag tag-blue">MEDIUM</span></td><td><strong>auth-signup.js</strong> + <strong>vip-buyer-submit.js</strong> — welcome SMS/email sent without checking if already sent (form resubmit = duplicate messages)</td><td><span class="tag tag-gray">LOW RISK</span></td></tr>
+<tr><td><span class="tag tag-gray">LOW</span></td><td>Several functions have hardcoded fallback IDs instead of failing explicitly (ceo-briefing, weekly-synthesis, partner-scorecard, revenue-tracker)</td><td><span class="tag tag-gray">COSMETIC</span></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>5. File-Based Dedup System</h2>
+
+<div class="card">
+<div class="card-title">How It Works</div>
+<ul>
+<li><strong>Location:</strong> <code>/root/termsforsale-site/jobs/sent-log.json</code> on Droplet</li>
+<li><strong>Module:</strong> <code>jobs/sent-log.js</code></li>
+<li><strong>Key format:</strong> <code>{contactId}-{dealId}-{step}</code> (e.g. <code>abc123-def456-d0</code>)</li>
+<li><strong>Works only on Droplet</strong> — Netlify functions are serverless/ephemeral, so file dedup is skipped there</li>
+<li><strong>notify-buyers.js:</strong> checks <code>wasSent()</code> before sending, calls <code>markSent()</code> after</li>
+<li><strong>deal-follow-up.js:</strong> checks before each Day 0/1/2 send, marks after</li>
+<li>Tag-based dedup in GHL still works as a secondary layer</li>
+</ul>
+</div>
+
+<!-- ============================================ -->
+<h2>6. Notion Deal Pipeline — Required Fields</h2>
 
 <div class="important">
 <strong>IMPORTANT:</strong> If these fields are empty, the deal won't show on the website or trigger automations correctly. Fill in ALL required fields before setting status to "Actively Marketing".
@@ -121,7 +209,7 @@ li{margin-bottom:6px;color:#4A5568}
 </table>
 
 <!-- ============================================ -->
-<h2>3. Deal Status Flow</h2>
+<h2>7. Deal Status Flow</h2>
 
 <div class="card">
 <p style="text-align:center;font-size:13px;font-weight:600;color:#0D1F3C">
@@ -136,7 +224,7 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 </ul>
 
 <!-- ============================================ -->
-<h2>4. VA Responsibilities (Manual Processes)</h2>
+<h2>8. VA Responsibilities (Manual Processes)</h2>
 
 <div class="card">
 <div class="card-title">Daily Tasks</div>
@@ -169,7 +257,7 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 </div>
 
 <!-- ============================================ -->
-<h2>5. GHL Tags Reference</h2>
+<h2>9. GHL Tags Reference</h2>
 
 <table>
 <tr><th>Tag</th><th>What It Means</th><th>Triggers</th></tr>
@@ -190,10 +278,16 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 <tr><td><code>follow-up-sent</code></td><td>Auto follow-up sent</td><td>7-day stale lead nudge</td></tr>
 <tr><td><code>buy box complete</code></td><td>Buyer saved buy box</td><td>Ready for matching</td></tr>
 <tr><td><code>tfs buyer</code></td><td>Terms For Sale buyer</td><td>General buyer tag</td></tr>
+<tr><td><code>sprint-d0-XXXXXXXX</code></td><td>Day 0 follow-up sent</td><td>Dedup — prevents duplicate D0 messages</td></tr>
+<tr><td><code>sprint-d1-XXXXXXXX</code></td><td>Day 1 follow-up sent</td><td>Dedup — prevents duplicate D1 messages</td></tr>
+<tr><td><code>sprint-d2-XXXXXXXX</code></td><td>Day 2 follow-up sent</td><td>Dedup — prevents duplicate D2 messages</td></tr>
+<tr><td><code>deal-hot</code></td><td>Buyer replied "1" or "IN"</td><td>Stops follow-up sprint</td></tr>
+<tr><td><code>deal-warm</code></td><td>Buyer replied "2" or "MAYBE"</td><td>Stops follow-up sprint</td></tr>
+<tr><td><code>deal-paused</code></td><td>Buyer replied "3" or "PASS"</td><td>Stops follow-up sprint</td></tr>
 </table>
 
 <!-- ============================================ -->
-<h2>6. Troubleshooting</h2>
+<h2>10. Troubleshooting</h2>
 
 <table>
 <tr><th>Problem</th><th>Solution</th></tr>
@@ -204,14 +298,18 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 <tr><td>Buyer didn't get deal alert</td><td>Check if they have matching buy box criteria (state, deal type, price range) in GHL</td></tr>
 <tr><td>Form didn't sync to GHL</td><td>Check Netlify function logs at <code>app.netlify.com/projects/jolly-marzipan-8fc443</code> → Functions</td></tr>
 <tr><td>Deals not matching to map</td><td>City, State, and ZIP must all be filled in Notion</td></tr>
+<tr><td>State filter shows no AZ deals</td><td>State field may say "Arizona" instead of "AZ" — deals.js now normalizes this automatically</td></tr>
+<tr><td>Duplicate SMS/emails sent</td><td>Check <code>jobs/sent-log.json</code> on Droplet. If duplicates, disable cron immediately.</td></tr>
+<tr><td>Homepage shows about page</td><td>This is correct as of April 2026. Deals are at <code>/deals.html</code> or <code>/browse</code></td></tr>
 </table>
 
 <!-- ============================================ -->
-<h2>7. Important Links</h2>
+<h2>11. Important Links</h2>
 
 <table>
 <tr><th>What</th><th>URL</th></tr>
-<tr><td>Live Website</td><td><a href="https://deals.termsforsale.com">deals.termsforsale.com</a></td></tr>
+<tr><td>Homepage (About)</td><td><a href="https://deals.termsforsale.com">deals.termsforsale.com</a></td></tr>
+<tr><td>Deals / Browse</td><td><a href="https://deals.termsforsale.com/deals.html">deals.termsforsale.com/deals.html</a></td></tr>
 <tr><td>GHL CRM</td><td><a href="https://app.reibuilt.com">app.reibuilt.com</a></td></tr>
 <tr><td>Notion Deal Pipeline</td><td>Search "Deal Pipeline" in Notion</td></tr>
 <tr><td>Netlify Dashboard</td><td><a href="https://app.netlify.com/projects/jolly-marzipan-8fc443">app.netlify.com</a></td></tr>
@@ -222,7 +320,7 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 </table>
 
 <!-- ============================================ -->
-<h2>8. Domain Switch Checklist</h2>
+<h2>12. Domain Switch Checklist</h2>
 
 <div class="card">
 <div class="card-title">Switching from GHL Website to Netlify</div>

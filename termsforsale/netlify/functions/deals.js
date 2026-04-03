@@ -36,7 +36,7 @@ function getFirstFileFromFolder(folderId, apiKey) {
   var url = 'https://www.googleapis.com/drive/v3/files'
     + '?q=' + encodeURIComponent(query)
     + '&fields=files(id)'
-    + '&orderBy=name'
+    + '&orderBy=createdTime'
     + '&pageSize=1'
     + '&supportsAllDrives=true'
     + '&includeItemsFromAllDrives=true'
@@ -114,6 +114,30 @@ function prop(page, name) {
   }
 }
 
+// Normalize state names to 2-letter abbreviations
+var STATE_ABBREVS = {
+  'alabama':'AL','alaska':'AK','arizona':'AZ','arkansas':'AR','california':'CA',
+  'colorado':'CO','connecticut':'CT','delaware':'DE','florida':'FL','georgia':'GA',
+  'hawaii':'HI','idaho':'ID','illinois':'IL','indiana':'IN','iowa':'IA',
+  'kansas':'KS','kentucky':'KY','louisiana':'LA','maine':'ME','maryland':'MD',
+  'massachusetts':'MA','michigan':'MI','minnesota':'MN','mississippi':'MS','missouri':'MO',
+  'montana':'MT','nebraska':'NE','nevada':'NV','new hampshire':'NH','new jersey':'NJ',
+  'new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND','ohio':'OH',
+  'oklahoma':'OK','oregon':'OR','pennsylvania':'PA','rhode island':'RI','south carolina':'SC',
+  'south dakota':'SD','tennessee':'TN','texas':'TX','utah':'UT','vermont':'VT',
+  'virginia':'VA','washington':'WA','west virginia':'WV','wisconsin':'WI','wyoming':'WY'
+};
+
+function normalizeState(s) {
+  if (!s) return '';
+  var trimmed = s.trim();
+  // Already a 2-letter abbreviation
+  if (trimmed.length === 2) return trimmed.toUpperCase();
+  // Full state name
+  var abbrev = STATE_ABBREVS[trimmed.toLowerCase()];
+  return abbrev || trimmed;
+}
+
 exports.handler = async function(event) {
   var headers = {
     'Content-Type': 'application/json',
@@ -144,24 +168,48 @@ exports.handler = async function(event) {
       sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }]
     };
 
-    var result = await notionRequest('/v1/databases/' + dbId + '/query', token, filterBody);
+    // Try status filter first, then select, then unfiltered (client-side filter)
+    var filterTypes = [
+      { property: 'Deal Status', status: { equals: 'Actively Marketing' } },
+      { property: 'Deal Status', select: { equals: 'Actively Marketing' } },
+      null // no filter — will filter client-side
+    ];
 
-    // If status filter fails, try select filter
-    if (result.status !== 200) {
-      filterBody.filter = {
-        property: 'Deal Status',
-        select: { equals: 'Actively Marketing' }
+    var pages = [];
+    var usedFilter = null;
+
+    for (var fi = 0; fi < filterTypes.length; fi++) {
+      var tryFilter = filterTypes[fi];
+      var queryBody = {
+        page_size: 100,
+        sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }]
       };
-      result = await notionRequest('/v1/databases/' + dbId + '/query', token, filterBody);
+      if (tryFilter) queryBody.filter = tryFilter;
+
+      // Paginate through all results
+      var allPages = [];
+      var hasMore = true;
+      var cursor = undefined;
+
+      while (hasMore) {
+        if (cursor) queryBody.start_cursor = cursor;
+        var result = await notionRequest('/v1/databases/' + dbId + '/query', token, queryBody);
+
+        if (result.status !== 200) { allPages = []; break; }
+
+        allPages = allPages.concat(result.body.results || []);
+        hasMore = result.body.has_more === true;
+        cursor = result.body.next_cursor || undefined;
+      }
+
+      if (allPages.length > 0 || result.status === 200) {
+        pages = allPages;
+        usedFilter = tryFilter;
+        break;
+      }
     }
 
-    // If that also fails, try without filter and filter client-side
-    if (result.status !== 200) {
-      filterBody = { page_size: 100, sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }] };
-      result = await notionRequest('/v1/databases/' + dbId + '/query', token, filterBody);
-    }
-
-    if (result.status !== 200) {
+    if (!pages.length && !usedFilter && result && result.status !== 200) {
       console.error('Notion API error:', result.status, JSON.stringify(result.body));
       return {
         statusCode: result.status,
@@ -170,10 +218,8 @@ exports.handler = async function(event) {
       };
     }
 
-    var pages = result.body.results || [];
-
     // If we couldn't filter server-side, filter here
-    if (!filterBody.filter) {
+    if (!usedFilter) {
       pages = pages.filter(function(p) {
         var status = prop(p, 'Deal Status');
         return status.toLowerCase().trim() === 'actively marketing';
@@ -190,7 +236,7 @@ exports.handler = async function(event) {
         dealStatus: prop(page, 'Deal Status'),
         streetAddress: prop(page, 'Street Address'),
         city: prop(page, 'City'),
-        state: prop(page, 'State'),
+        state: normalizeState(prop(page, 'State')),
         zip: prop(page, 'ZIP'),
         county: prop(page, 'County'),
         nearestMetro: prop(page, 'Nearest Metro') || prop(page, 'Nearest Metro Area'),

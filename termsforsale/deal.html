@@ -120,6 +120,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .term-label{font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
 .term-value{font-size:14px;font-weight:600;color:var(--text)}
 .term-value.empty{color:var(--border);font-style:italic;font-weight:400}
+.term-item.empty-cell{border-bottom:none}
 
 /* MAP */
 .map-embed{border-radius:var(--r);overflow:hidden;height:220px;background:var(--border-light);margin-top:20px;border:1px solid var(--border)}
@@ -313,7 +314,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 <!-- NAV -->
 <nav>
   <div class="nav-left d-links" style="display:flex;gap:24px">
-    <a href="/">Buy</a>
+    <a href="/deals.html">Buy</a>
     <a href="https://dispobuddy.com" target="_blank">Sell</a>
     <a href="https://dispobuddy.com" target="_blank">Dispo My Deal</a>
   </div>
@@ -324,7 +325,7 @@ footer{background:var(--navy);padding:44px 40px 0}
     <a href="/buying-criteria.html">Buying Criteria</a>
     <a href="#" style="display:none">FAQ</a>
     <a href="https://dealproszoom.com" target="_blank">Help</a>
-    <a href="https://termsforsale.app.clientclub.net/" target="_blank" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
+    <a href="#" onclick="window.open(portalUrl(),'_blank');return false" class="btn-signup" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>My Portal</a>
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
@@ -368,21 +369,18 @@ footer{background:var(--navy);padding:44px 40px 0}
         <div class="a-field"><input class="a-input" id="su-email" type="email" placeholder="Email address"></div>
         <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
         <div class="a-field"><input class="a-input" id="su-pass" type="password" placeholder="Create password"></div>
-        <div class="a-field">
-          <select class="a-input" id="su-buy" style="appearance:none;cursor:pointer">
-            <option value="">How do you buy?</option>
-            <option>Cash</option>
-            <option>Subject To</option>
-            <option>Seller Finance</option>
-            <option>Lease Option</option>
-            <option>Novation</option>
-            <option>Morby Method</option>
-            <option>Assumable Loans</option>
-            <option>Partnerships/JV</option>
-            <option>Traditional Financing</option>
-            <option>DSCR</option>
-          </select>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-light);margin-bottom:6px">Deal types you're interested in</div>
+          <div id="su-structures" style="display:flex;flex-wrap:wrap;gap:6px">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Cash" style="display:none">Cash</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Subject To" style="display:none">Subject To</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Seller Finance" style="display:none">Seller Finance</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Hybrid" style="display:none">Hybrid</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Lease Option" style="display:none">Lease Option</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Novation" style="display:none">Novation</label>
+          </div>
         </div>
+        <div class="a-field"><input class="a-input" id="su-maxentry" type="number" placeholder="Max entry fee budget ($)"></div>
         <button class="btn-full-blue" onclick="doSignup()">Create Free Account</button>
         <div class="a-note">By signing up you agree to receive SMS &amp; email alerts. Reply STOP to opt out.</div>
       </div>
@@ -393,7 +391,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 <!-- BREADCRUMB -->
 <div class="breadcrumb">
   <div class="breadcrumb-inner">
-    <a href="/" class="bc-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back</a>
+    <a href="/deals.html" class="bc-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back</a>
     <span class="bc-sep">/</span>
     <span class="bc-cur" id="bc-addr">Loading…</span>
   </div>
@@ -419,7 +417,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 <div class="sticky-bar" id="sticky-bar">
   <span class="sticky-bar-text">Interested in this deal?</span>
   <button class="sb-primary" onclick="if(!getUser()){openAuth('signup');return;}const rf=document.getElementById('req-form');if(rf)rf.style.display='block';document.getElementById('request-form').scrollIntoView({behavior:'smooth'});">Request Info</button>
-  <a href="/" class="sb-secondary">Browse All Deals</a>
+  <a href="/deals.html" class="sb-secondary">Browse All Deals</a>
   <a href="/blog/" class="sb-secondary">Blog</a>
 </div>
 
@@ -441,7 +439,7 @@ footer{background:var(--navy);padding:44px 40px 0}
         <h4>Company</h4>
         <ul>
           <li><a href="/">About Us</a></li>
-          <li><a href="/">Deals</a></li>
+          <li><a href="/deals.html">Deals</a></li>
           <li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li>
           <li><a href="https://dealproszoom.com" target="_blank">Book a Call</a></li>
         </ul>
@@ -494,6 +492,7 @@ const GHL_SIGNUP_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zp
 const GHL_LOGIN_WEBHOOK  = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/caa1f812-8957-48af-ae00-45322992102b';
 function getUser(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null');}catch{return null;}}
 function setUser(u){try{localStorage.setItem(AUTH_KEY,JSON.stringify(u));}catch(e){}}
+function portalUrl(){var u=getUser();return'https://termsforsale.app.clientclub.net/'+(u&&u.email?'?email='+encodeURIComponent(u.email):'');}
 function clearUser(){try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
 function openAuth(tab='login'){switchAuthTab(tab);document.getElementById('auth-overlay').classList.add('open');setTimeout(()=>{const f=document.getElementById(tab==='login'?'li-email':'su-fn');if(f)f.focus();},100);}
 function closeAuth(){document.getElementById('auth-overlay').classList.remove('open');}
@@ -511,31 +510,50 @@ async function doLogin(){
   err.style.display='none';ok.style.display='none';
   if(!email||!pass){err.textContent='Please enter email and password.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
-  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({email,password:pass,source:'TFS Website Login',tags:['TFS Buyer']},getUTMs()))});}catch(e){console.error('Login webhook error:',e);}
-  const name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-  const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
-  setUser(user);updateNavAuth(user);
-  ok.innerHTML='Welcome back, '+user.name+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
-  setTimeout(()=>closeAuth(),2000);
+  try{
+    const res=await fetch('/api/auth-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const data=await res.json();
+    if(!res.ok||!data.success){
+      err.textContent=data.error||'Login failed. Please try again.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Log In';return;
+    }
+    const u=data.user;
+    const user={contactId:u.id,name:u.firstName||u.name,email:u.email,phone:u.phone||'',initials:u.initials||'B',hasBuyBox:!!u.hasBuyBox,isVip:!!u.isVip};
+    setUser(user);updateNavAuth(user);
+    ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
+    setTimeout(()=>{closeAuth();location.reload();},1500);
+    if(!u.hasBuyBox){setTimeout(()=>{if(confirm('Complete your buying criteria to get matched to deals automatically. Set it up now?'))window.location.href='/buying-criteria.html';},2000);}
+  }catch(e){
+    console.error('Login error:',e);
+    err.textContent='Connection error. Please try again.';err.style.display='block';
+  }
   btn.disabled=false;btn.textContent='Log In';
 }
 async function doSignup(){
   const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
   const email=document.getElementById('su-email').value.trim(),phone=document.getElementById('su-phone').value.trim();
-  const buy=document.getElementById('su-buy').value;
+  const structures=[...document.querySelectorAll('#su-structures input:checked')].map(c=>c.value);
+  const maxEntry=document.getElementById('su-maxentry').value.trim();
   const pass=document.getElementById('su-pass').value.trim();
   const err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
   err.style.display='none';ok.style.display='none';
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
-  const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
-  const user={name:fn,email,phone,initials};
-  setUser(user);updateNavAuth(user);
-  ok.innerHTML='Account created! Welcome, '+fn+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
-  setTimeout(()=>closeAuth(),1400);
+  try{
+    const res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structures:structures.join(', '),max_entry_fee:maxEntry||'',source:'TFS Website - Signup'})});
+    const data=await res.json();
+    if(!res.ok||!data.success){
+      err.textContent=data.error||'Signup failed. Please try again.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Create Free Account';return;
+    }
+    const u=data.user;
+    const user={contactId:u.id,name:u.firstName||u.name||fn,email:u.email||email,phone:u.phone||phone,initials:u.initials||(fn[0]+(ln?ln[0]:'')).toUpperCase()};
+    setUser(user);updateNavAuth(user);
+  }catch(e){console.error('Signup error:',e);}
+  ok.innerHTML='Account created! Welcome, '+fn+'!<br><strong>Next:</strong> Tell us what you\'re looking for so we send you the right deals.';ok.style.display='block';
   btn.disabled=false;btn.textContent='Create Free Account';
+  setTimeout(()=>{closeAuth();window.location.href='/buying-criteria.html';},2000);
 }
 function updateNavAuth(user){
   const el=document.getElementById('nav-right');
@@ -546,10 +564,10 @@ function updateNavAuth(user){
     <div class="nav-avatar-wrap">
       <div class="nav-avatar">${user.initials}</div>
       <div class="nav-dropdown">
-        <a href="https://termsforsale.app.clientclub.net/" target="_blank">🔑 Buyer Portal</a>
+        <a href="#" onclick="window.open(portalUrl(),'_blank');return false">🔑 Buyer Portal</a>
         <a href="/dashboard.html">📊 My Dashboard</a>
         <a href="/buy-box.html">✏️ Update Buy Box</a>
-        <a href="/">🏠 All Deals</a>
+        <a href="/deals.html">🏠 All Deals</a>
         <hr>
         <button onclick="clearUser();location.reload()">Log Out</button>
       </div>
@@ -712,14 +730,37 @@ function renderDeal(d,allDeals){
 
   const tagsHtml=tagItems.map(t=>`<span class="tag ${t.cls||''}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg>${t.label}</span>`).join('');
 
-  // TERMS TABLE
+  // TERMS TABLE — structured for investor readability
   const termRows=[];
-  termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
-  termRows.push({l:'Deal Type',v:d.dealType||'—'},{l:'Entry Fee',v:entry?fc(entry)+' + CC/TC':'—'});
-  if(isSubTo){termRows.push({l:'Subject To',v:d.subtoLoanBalance?'Yes':'—'},{l:'Loan Type',v:'Existing Mortgage'});termRows.push({l:'Loan Balance',v:fc(d.subtoLoanBalance)},{l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});termRows.push({l:'Escrow Payment',v:d.piti?'Included in PITI':'—'},{l:'APR',v:fmtRate(d.subtoRate)});termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'},{l:'Balloon',v:d.subToBalloon||'—'});}
-  if(isSF){termRows.push({l:'SF Loan Amount',v:fc(d.sfLoanAmount)},{l:'Interest Rate',v:d.sfRate||'—'});termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'},{l:'Term',v:d.sfTerm||'—'});termRows.push({l:'Balloon',v:d.sfBalloon||'—'},{l:'Down Payment',v:fc(entry)});}
 
-  const termsTableHtml=`<div class="terms-grid">${termRows.map(r=>`<div class="term-item"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div>`;
+  // Deal overview: what you're buying and what it costs to get in
+  termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
+  termRows.push({l:'Deal Type',v:d.dealType||'—'});
+  termRows.push({l:'Entry Fee',v:entry?fc(entry)+' + CC/TC':'—'});
+  if(arv) termRows.push({l:'ARV',v:fc(arv)});
+
+  // SubTo section — existing mortgage being taken over
+  if(isSubTo){
+    termRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
+    termRows.push({l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});
+    termRows.push({l:'APR',v:fmtRate(d.subtoRate)});
+    termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'});
+    if(d.subToBalloon && d.subToBalloon!=='—') termRows.push({l:'Balloon',v:d.subToBalloon});
+  }
+
+  // Seller Finance section — new financing from seller
+  if(isSF){
+    termRows.push({l:'Seller Finance Amount',v:fc(d.sfLoanAmount)});
+    termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'});
+    termRows.push({l:'Interest Rate',v:d.sfRate||'—'});
+    termRows.push({l:'Term',v:d.sfTerm||'—'});
+    if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
+  }
+
+  // Pad to even number for 2-column grid
+  if(termRows.length%2!==0) termRows.push({l:'',v:''});
+
+  const termsTableHtml=`<div class="terms-grid">${termRows.filter(r=>r.l||r.v).map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}${termRows.length%2!==0?'<div class="term-item empty-cell"></div>':''}</div>`;
 
   // HIGHLIGHTS
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
@@ -841,7 +882,7 @@ function renderDeal(d,allDeals){
             <div class="calc-hint">Pre-filled: purchase price and ARV from deal data. Enter your rehab and cost estimates.</div>
             <div class="calc-grid">
               <div class="calc-field"><label>Purchase Price</label><input type="number" id="cf-price" value="${+d.askingPrice||''}" placeholder="Purchase price" oninput="calcFlip()"></div>
-              <div class="calc-field"><label>Entry / Down Payment</label><input type="number" id="cf-entry" value="${entry||''}" placeholder="Your cash in" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Entry Fee</label><input type="number" id="cf-entry" value="${entry||''}" placeholder="Your cash in" oninput="calcFlip()"></div>
               <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cf-rehab" value="" placeholder="Your estimate" oninput="calcFlip()"></div>
               <div class="calc-field"><label>Holding Costs (total)</label><input type="number" id="cf-hold" value="" placeholder="Ins + tax + utils" oninput="calcFlip()"></div>
               <div class="calc-field"><label>Closing Costs (buy+sell)</label><input type="number" id="cf-close" value="" placeholder="Your estimate" oninput="calcFlip()"></div>
@@ -970,7 +1011,7 @@ function renderDeal(d,allDeals){
         </div>
       </div>
       <div style="text-align:center">
-        <a href="/" style="font-size:12px;color:var(--text-light);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--text-light)'">
+        <a href="/deals.html" style="font-size:12px;color:var(--text-light);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--text-light)'">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back to all active deals
         </a>
       </div>
@@ -1133,7 +1174,7 @@ async function loadDealsFromSheet(){
 async function init(){
   const params=new URLSearchParams(window.location.search);
   const id=params.get('id');
-  if(!id){document.getElementById('app').innerHTML='<div class="not-found"><h2>No Deal Selected</h2><p>Return to the deals board to select a property.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';return}
+  if(!id){document.getElementById('app').innerHTML='<div class="not-found"><h2>No Deal Selected</h2><p>Return to the deals board to select a property.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';return}
 
   // Always fetch fresh deals from Notion for similar deals (don't use stale SAMPLE data)
   const cached=sessionStorage.getItem('deal');
@@ -1158,14 +1199,14 @@ async function init(){
       deal=cachedDeal;
       console.log('Loaded '+allDeals.length+' deals from Sheets');
     }
-    if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
+    if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
     renderDeal(deal,allDeals);
     // Track deal view for logged-in users
     var viewer=getUser();
     if(viewer&&viewer.contactId&&id){
       fetch('/api/track-view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:viewer.contactId,dealId:id,source:'website'})}).catch(function(){});
     }
-  }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
+  }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
 }
 const u=getUser();if(u)updateNavAuth(u);
 const sb=document.getElementById('sticky-bar');

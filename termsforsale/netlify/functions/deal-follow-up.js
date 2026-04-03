@@ -17,6 +17,10 @@
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
+// ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
+var sentLog;
+try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
+
 async function ghlRequest(apiKey, method, path, body) {
   var opts = {
     method: method,
@@ -91,9 +95,14 @@ exports.handler = async function(event) {
         var dealType = cf['0thrOdoETTLlFA45oN8U'] || '';
         var dealUrl = cf['5eEVPcp8nERlR6GpjZUn'] || 'https://termsforsale.com';
 
+        // File-based dedup check helper
+        var useFileDedup = sentLog && sentLog.isDroplet();
+        function fileSent(step) { return useFileDedup && sentLog.wasSent(contact.id, dealId, step); }
+        function fileMarkSent(step) { if (useFileDedup) sentLog.markSent(contact.id, dealId, step); }
+
         try {
           // DAY 0: 4-12 hours after initial alert
-          if (hoursSinceAlert >= 4 && hoursSinceAlert < 24 && tags.indexOf(d0Tag) === -1) {
+          if (hoursSinceAlert >= 4 && hoursSinceAlert < 24 && tags.indexOf(d0Tag) === -1 && !fileSent('d0')) {
             // SMS 1
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
@@ -119,12 +128,13 @@ exports.handler = async function(event) {
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d0Tag] });
+            fileMarkSent('d0');
             stats.d0++;
             console.log('[deal-follow-up] D0 sent to ' + name + ' for ' + dealId);
           }
 
           // DAY 1: 24-48 hours after initial alert
-          else if (hoursSinceAlert >= 24 && hoursSinceAlert < 48 && tags.indexOf(d1Tag) === -1 && tags.indexOf(d0Tag) > -1) {
+          else if (hoursSinceAlert >= 24 && hoursSinceAlert < 48 && tags.indexOf(d1Tag) === -1 && tags.indexOf(d0Tag) > -1 && !fileSent('d1')) {
             // SMS 2 for non-responders
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
@@ -133,12 +143,13 @@ exports.handler = async function(event) {
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d1Tag] });
+            fileMarkSent('d1');
             stats.d1++;
             console.log('[deal-follow-up] D1 sent to ' + name + ' for ' + dealId);
           }
 
           // DAY 2: 48-72 hours after initial alert
-          else if (hoursSinceAlert >= 48 && hoursSinceAlert < 96 && tags.indexOf(d2Tag) === -1 && tags.indexOf(d1Tag) > -1) {
+          else if (hoursSinceAlert >= 48 && hoursSinceAlert < 96 && tags.indexOf(d2Tag) === -1 && tags.indexOf(d1Tag) > -1 && !fileSent('d2')) {
             // Email 2
             if (email) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
@@ -162,6 +173,7 @@ exports.handler = async function(event) {
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d2Tag] });
+            fileMarkSent('d2');
             stats.d2++;
             console.log('[deal-follow-up] D2 sent to ' + name + ' for ' + dealId);
           }

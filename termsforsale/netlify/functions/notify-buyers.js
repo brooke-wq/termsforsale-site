@@ -10,6 +10,10 @@
 
 const https = require('https');
 
+// ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
+var sentLog;
+try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
+
 // ─── HTTP HELPERS ────────────────────────────────────────────
 
 function httpRequest(url, options, body) {
@@ -395,7 +399,16 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
 // ─── GHL: Trigger alert for a buyer (with dedup) ────────────
 
 async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
-  // DEDUP CHECK: create a unique tag per deal so we never alert twice
+  // DEDUP CHECK 1: File-based dedup (Droplet — most reliable, zero API dependency)
+  if (sentLog && sentLog.isDroplet()) {
+    var dealIdShort = (deal.id || '').slice(0, 8);
+    if (sentLog.wasSent(contact.id, dealIdShort, 'alert')) {
+      console.log('notify-buyers: SKIP ' + contact.name + ' — file dedup for deal ' + deal.id);
+      return 'skipped-file-dedup';
+    }
+  }
+
+  // DEDUP CHECK 2: Tag-based dedup (GHL — works on Netlify too)
   var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
   var existingTags = contact.tags || [];
   if (existingTags.indexOf(dealTag) > -1) {
@@ -531,6 +544,11 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     }
   }
 
+  // Mark as sent in file-based dedup log
+  if (sentLog && sentLog.isDroplet()) {
+    sentLog.markSent(contact.id, (deal.id || '').slice(0, 8), 'alert');
+  }
+
   return result.status;
 }
 
@@ -544,8 +562,6 @@ exports.handler = async function(event) {
   var dbId = process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
   var apiKey = process.env.GHL_API_KEY;
   var locationId = process.env.GHL_LOCATION_ID;
-  var isLive = process.env.DEAL_ALERTS_LIVE === 'true';
-
   if (!token || !apiKey || !locationId) {
     return { statusCode: 500, headers: headers, body: JSON.stringify({
       error: 'Missing env vars',
@@ -557,6 +573,7 @@ exports.handler = async function(event) {
 
   var params = event.queryStringParameters || {};
   var isTest = params.test === 'true' || params.deal_id;
+  var isLive = process.env.DEAL_ALERTS_LIVE === 'true' && !isTest;
   var deals = [];
 
   try {
