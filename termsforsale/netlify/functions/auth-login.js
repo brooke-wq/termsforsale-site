@@ -66,8 +66,11 @@ exports.handler = async (event) => {
     var storedHash = '';
     var cfs = contact.customFields || [];
     for (var i = 0; i < cfs.length; i++) {
-      if (cfs[i].key === 'tfs_password_hash' || cfs[i].id === 'tfs_password_hash') {
-        storedHash = cfs[i].value || '';
+      var val = cfs[i].value || '';
+      // Match by key, id, or by value format (salt:hash where both are hex, 32+ chars each)
+      if (cfs[i].key === 'tfs_password_hash' || cfs[i].id === 'tfs_password_hash'
+        || (val.length > 100 && /^[a-f0-9]{32}:[a-f0-9]{128}$/.test(val))) {
+        storedHash = val;
         break;
       }
     }

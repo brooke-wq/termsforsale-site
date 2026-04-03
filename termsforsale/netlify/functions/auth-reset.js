@@ -100,12 +100,16 @@ exports.handler = async (event) => {
       return respond(400, { error: 'Password must be at least 6 characters' });
     }
 
-    // Get stored code
+    // Get stored code — search by key, id, or value format (6digits:timestamp)
     var storedReset = '';
+    var resetFieldId = '';
     var cfs = contact.customFields || [];
     for (var i = 0; i < cfs.length; i++) {
-      if (cfs[i].key === 'tfs_reset_code' || cfs[i].id === 'tfs_reset_code') {
-        storedReset = cfs[i].value || '';
+      var val = cfs[i].value || '';
+      if (cfs[i].key === 'tfs_reset_code' || cfs[i].id === 'tfs_reset_code'
+        || /^\d{6}:\d{13}$/.test(val)) {
+        storedReset = val;
+        resetFieldId = cfs[i].id || 'tfs_reset_code';
         break;
       }
     }
