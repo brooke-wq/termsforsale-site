@@ -75,15 +75,19 @@ exports.handler = async function(event) {
 
     var files = (result.body.files) || [];
 
-    // Sort: files named with front/cover/exterior/01/1- come first (front of house),
-    // then maintain createdTime order for the rest
-    var FRONT_PATTERNS = /^(front|cover|exterior|main|hero|01|1[-_.\s])/i;
+    // Sort: prioritize exterior/front-of-house photos
+    // Tier 1: explicitly named front/cover/exterior
+    var FRONT_EXACT = /^(front|cover|exterior|main|hero|01|1[-_.\s])/i;
+    // Tier 2: contains exterior-related words anywhere in name
+    var FRONT_CONTAINS = /(front|exterior|curb|street|facade|house|outside|aerial|drone|entrance)/i;
+    // Tier 3: known interior words — push to end
+    var INTERIOR = /(kitchen|bathroom|bath\b|bedroom|bed\b|laundry|closet|garage|attic|basement|furnace|hvac|utility|water.?heater)/i;
+
     files.sort(function(a, b) {
-      var aFront = FRONT_PATTERNS.test(a.name || '');
-      var bFront = FRONT_PATTERNS.test(b.name || '');
-      if (aFront && !bFront) return -1;
-      if (!aFront && bFront) return 1;
-      return 0; // preserve createdTime order from API
+      var an = a.name || '', bn = b.name || '';
+      var aScore = FRONT_EXACT.test(an) ? 3 : FRONT_CONTAINS.test(an) ? 2 : INTERIOR.test(an) ? 0 : 1;
+      var bScore = FRONT_EXACT.test(bn) ? 3 : FRONT_CONTAINS.test(bn) ? 2 : INTERIOR.test(bn) ? 0 : 1;
+      return bScore - aScore; // higher score first
     });
 
     var fileIds = files.map(function(f) { return f.id; });

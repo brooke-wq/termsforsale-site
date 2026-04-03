@@ -50,10 +50,18 @@ function getFirstFileFromFolder(folderId, apiKey) {
           var parsed = JSON.parse(data);
           var files = (parsed.files || []);
           if (!files.length) { resolve(null); return; }
-          // Prefer files named front/cover/exterior/01/1- (front of house)
-          var FRONT = /^(front|cover|exterior|main|hero|01|1[-_.\s])/i;
-          var front = files.find(function(f) { return FRONT.test(f.name || ''); });
-          resolve(front ? front.id : files[0].id);
+          // Prefer exterior/front-of-house photos
+          var FRONT_EXACT = /^(front|cover|exterior|main|hero|01|1[-_.\s])/i;
+          var FRONT_CONTAINS = /(front|exterior|curb|street|facade|house|outside|aerial|drone|entrance)/i;
+          var INTERIOR = /(kitchen|bathroom|bath\b|bedroom|bed\b|laundry|closet|garage|attic|basement)/i;
+          // Score each file: 3=exact front, 2=contains exterior word, 0=interior, 1=neutral
+          var scored = files.map(function(f) {
+            var n = f.name || '';
+            var s = FRONT_EXACT.test(n) ? 3 : FRONT_CONTAINS.test(n) ? 2 : INTERIOR.test(n) ? 0 : 1;
+            return { id: f.id, score: s };
+          });
+          scored.sort(function(a, b) { return b.score - a.score; });
+          resolve(scored[0].id);
         } catch(e) { resolve(null); }
       });
     }).on('error', function() { resolve(null); });
