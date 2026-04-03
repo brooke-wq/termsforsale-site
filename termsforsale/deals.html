@@ -1640,13 +1640,14 @@ function makePopup(deal){
   var color=markerColor(deal.dealType);
   var entry=deal.entryFee||deal.askingPrice;
   var dealUrl=DEAL_BASE+'/deal.html?id='+encodeURIComponent(deal.id);
+  var loggedIn=!!getUser();
   return'<div style="font-family:Poppins,sans-serif;min-width:200px;max-width:250px">'
     +'<div style="background:'+color+';padding:10px 14px 8px">'
       +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+deal.dealType+'</div>'
       +'<div style="font-size:18px;font-weight:800;color:#fff;line-height:1">'+(entry?'$'+Number(entry).toLocaleString():'—')+'</div>'
     +'</div>'
     +'<div style="padding:12px 14px">'
-      +'<div style="font-size:11px;font-weight:600;color:#0D1F3C;margin-bottom:2px">'+(deal.streetAddress||'')+'</div>'
+      +(loggedIn?'<div style="font-size:11px;font-weight:600;color:#0D1F3C;margin-bottom:2px">'+(deal.streetAddress||'')+'</div>':'')
       +'<div style="font-size:10px;color:#718096;margin-bottom:6px">'+(deal.nearestMetro||deal.city+', '+deal.state)+'</div>'
       +(deal.beds||deal.baths||deal.sqft?'<div style="font-size:10px;color:#718096;margin-bottom:8px">'+[deal.beds?deal.beds+' bd':null,deal.baths?deal.baths+' ba':null,deal.sqft?Number(deal.sqft).toLocaleString()+' ft²':null].filter(Boolean).join(' · ')+'</div>':'')
       +'<a href="'+dealUrl+'" style="display:block;width:100%;padding:8px;background:#29ABE2;color:#fff;border:none;border-radius:6px;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none">View Deal →</a>'
