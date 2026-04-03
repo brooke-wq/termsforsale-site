@@ -289,7 +289,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 
 /* RESPONSIVE */
 @media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px}.deal-sidebar{position:static}.similar-grid{gap:12px}}
-@media(max-width:768px){nav{padding:0 20px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 20px}.photo-grid{height:220px;grid-template-columns:1fr;grid-template-rows:1fr}.photo-main{grid-row:auto;grid-column:auto}.photo-thumb{display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 20px 0}
+@media(max-width:768px){nav{padding:0 16px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 16px}.photo-grid{height:260px;grid-template-columns:1fr;grid-template-rows:1fr}.photo-main{grid-row:auto;grid-column:auto}.photo-thumb{display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.terms-map-grid{grid-template-columns:1fr!important}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 16px 0}
   .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
   .auth-overlay{align-items:flex-end}
   .calc-grid{grid-template-columns:1fr 1fr}
@@ -829,7 +829,7 @@ function renderDeal(d,allDeals){
       </div>
 
       <div id="tab-terms" class="tab-panel on">
-        <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
+        <div class="terms-map-grid" style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
           <div>${termsTableHtml}</div>
           <div>
             <div class="map-embed">
