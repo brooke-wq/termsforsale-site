@@ -215,6 +215,7 @@ function renderDashboard(user,deals){
   var saved=getSaved();
   var activity=getActivity();
   var offers=getOffers();
+  var viewed=[];try{viewed=JSON.parse(localStorage.getItem('tfs_viewed')||'[]');}catch(e){}
   var savedDeals=deals.filter(function(d){return saved.indexOf(d.id)>-1;});
 
   // Update nav
@@ -236,7 +237,7 @@ function renderDashboard(user,deals){
         +statCard('🏠',deals.length,'Active Deals','#EBF8FF','#29ABE2')
         +statCard('❤️',savedDeals.length,'Saved Deals','#FEE2E2','#C53030')
         +statCard('📋',offers.length,'Offers Submitted','#FFF3E0','#F7941D')
-        +statCard('📊',activity.length,'Recent Actions','#E6F9F0','#10B981')
+        +statCard('👁',viewed.length,'Deals Viewed','#E6F9F0','#10B981')
       +'</div>'
 
       // Tabs
@@ -244,6 +245,7 @@ function renderDashboard(user,deals){
         +'<button class="dash-tab on" onclick="switchDashTab(this,\'saved\')">❤️ Saved Deals ('+savedDeals.length+')</button>'
         +'<button class="dash-tab" onclick="switchDashTab(this,\'offers\')">📋 My Offers ('+offers.length+')</button>'
         +'<button class="dash-tab" onclick="switchDashTab(this,\'activity\')">📊 Activity</button>'
+        +'<button class="dash-tab" onclick="switchDashTab(this,\'viewed\')">👁 Recently Viewed ('+viewed.length+')</button>'
         +'<button class="dash-tab" onclick="switchDashTab(this,\'browse\')">🏠 All Active Deals ('+deals.length+')</button>'
         +'<button class="dash-tab" onclick="switchDashTab(this,\'prefs\')">⚙️ Preferences</button>'
       +'</div>'
@@ -273,6 +275,13 @@ function renderDashboard(user,deals){
             +'</div>';
           }).join('')+'</div>'
           :'<div class="empty-state"><h3>No activity yet</h3><p>Your views, saves, and form submissions will show up here.</p></div>')
+      +'</div>'
+
+      // Recently viewed panel
+      +'<div id="dp-viewed" class="dash-panel">'
+        +'<div class="section-head"><div class="section-title">Recently Viewed</div></div>'
+        +(viewed.length?dealList(viewed,false)
+          :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><h3>No viewed deals yet</h3><p>Deals you view will appear here.</p><a href="/deals.html" class="btn-blue">Browse Active Deals →</a></div>')
       +'</div>'
 
       // Browse panel

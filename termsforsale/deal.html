@@ -1220,6 +1220,8 @@ async function init(){
     if(viewer&&viewer.contactId&&id){
       fetch('/api/track-view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:viewer.contactId,dealId:id,source:'website'})}).catch(function(){});
     }
+    // Save to recently viewed (localStorage) for dashboard
+    try{var viewed=JSON.parse(localStorage.getItem('tfs_viewed')||'[]');viewed=viewed.filter(function(v){return v.id!==id;});viewed.unshift({id:id,city:deal.city,state:deal.state,dealType:deal.dealType,askingPrice:deal.askingPrice,entryFee:deal.entryFee,coverPhoto:deal.coverPhoto,beds:deal.beds,baths:deal.baths,sqft:deal.sqft,nearestMetro:deal.nearestMetro,time:new Date().toISOString()});if(viewed.length>20)viewed=viewed.slice(0,20);localStorage.setItem('tfs_viewed',JSON.stringify(viewed));}catch(e){}
   }catch(e){console.error(e);document.getElementById('app').innerHTML='<div class="not-found"><h2>Error Loading Deal</h2><p>Please try again later.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';}
 }
 const u=getUser();if(u)updateNavAuth(u);
