@@ -447,7 +447,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     }
   }, {
     customFields: [
-      { id: 'TerjqctukTW67rB21ugC', value: deal.streetAddress + ', ' + deal.city + ', ' + deal.state + ' ' + (deal.zip || '') },
+      { id: 'TerjqctukTW67rB21ugC', value: deal.city + ', ' + deal.state },
       { id: 'KuaUFXhbQB6kKvBSKfoI', value: deal.city },
       { id: 'ltmVcWUpbwZ0S3dBid3U', value: deal.state },
       { id: 'UqJl4Dq6T8wfNb70EMrL', value: deal.zip || '' },
@@ -523,7 +523,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       + '<div style="padding:28px 32px">'
       + '<div style="display:inline-block;padding:4px 12px;border-radius:20px;background:#EBF8FF;color:#1a8bbf;font-size:12px;font-weight:700;margin-bottom:12px">' + (deal.dealType || 'Deal') + '</div>'
       + '<h2 style="color:#0D1F3C;font-size:22px;margin:0 0 4px">' + deal.city + ', ' + deal.state + '</h2>'
-      + '<p style="color:#718096;font-size:13px;margin:0 0 20px">' + (deal.streetAddress || '') + (specs ? ' &middot; ' + specs : '') + '</p>'
+      + '<p style="color:#718096;font-size:13px;margin:0 0 20px">' + (specs || '') + '</p>'
       // Numbers grid
       + '<table style="width:100%;border-collapse:collapse;margin:0 0 20px">'
       + (price ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Asking Price</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:16px;font-weight:800;text-align:right">' + price + '</td></tr>' : '')

@@ -174,9 +174,10 @@ The VS Code "Deploy to Netlify" task (Cmd+Shift+B) automates this.
   - Seller Finance deals payment → MUST be labeled **"Principal & Interest"** (NOT "SF Payment")
   - Hybrid/Morby deals with SF portion → SF portion uses "Principal & Interest", SubTo portion uses "PITI (est)"
   - **No "Close of Escrow" or "Closes in X days"** anywhere on deal pages or cards
+  - **NEVER show street addresses in outbound marketing** (emails, SMS, deal alerts, blog posts). Only show City, State. Street address is only visible to logged-in users on the deal page itself.
 - **Photo display rules:**
-  - Photos sort by `createdTime` (first uploaded = cover photo, usually front of house)
-  - Do NOT change photo sort order to alphabetical
+  - Photos sort by `name` (alphabetical) from Google Drive API
+  - Do NOT change photo sort order
   - Photo grid orientation must remain consistent (landscape main photo, square thumbs)
 - `/api/*` routes are aliases for `/.netlify/functions/*` — both work; prefer `/api/` in frontend code
 - Notion deal status `"Actively Marketing"` is the filter used by `deals.js` to show live deals

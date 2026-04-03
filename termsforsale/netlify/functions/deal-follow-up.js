@@ -96,7 +96,7 @@ exports.handler = async function(event) {
           if (f.id) cf[f.id] = f.value;
         });
         var dealCity = cf['KuaUFXhbQB6kKvBSKfoI'] || '';
-        var dealAddress = cf['TerjqctukTW67rB21ugC'] || dealCity || 'the deal';
+        var dealAddress = dealCity || 'the deal'; // Never expose street address in marketing
         var dealType = cf['0thrOdoETTLlFA45oN8U'] || '';
         var dealUrlRaw = cf['5eEVPcp8nERlR6GpjZUn'] || '';
         // Extract deal page ID from stored URL for tracking
