@@ -327,6 +327,14 @@ All items below were completed and deployed:
 - **Pipeline ID:** `JqPNGn6dao8hBfTzbLRG` (env: `GHL_PIPELINE_ID_BUYER`)
 - **Stage ID:** `cd4df0dc-731b-4885-a54e-2c2a3bf7acfc` (env: `GHL_STAGE_OFFER_RECEIVED`)
 
+### Authentication System
+- **Real password auth** — PBKDF2 hashing (10,000 iterations + random salt)
+- **Password hash** stored on GHL contact custom field (auto-generated ID, matched by value format `hex32:hex128`)
+- **Password reset** — 6-digit code via email + SMS, 15-min expiry, stored on contact (matched by value format `6digits:13digitTimestamp`)
+- **Legacy users** (pre-April 3 2026) — no hash stored, let in but flagged as `legacyUser`
+- **Endpoints:** `/api/auth-signup`, `/api/auth-login`, `/api/auth-reset`
+- **GHL custom fields:** `tfs_password_hash` (Large Text), `tfs_reset_code` (Large Text) — note: GHL assigns auto-generated IDs, code matches by value pattern not field key
+
 ### GHL Webhooks (configured by Brooke)
 - Calendar booking webhook → `/api/booking-notify`
 - Customer Reply (SMS/Email) workflow → `/api/buyer-response-tag`
@@ -337,10 +345,6 @@ All items below were completed and deployed:
 
 1. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
 
-2. **GHL Client Portal** — Configure portal pages, menu, and content in GHL. Code bridge is built (email pre-fill on portal links).
+2. **GHL Client Portal** — Portal apps configured (Contracts + Shared Files enabled). Set up contract templates with merge fields for assignment contracts. Build automated workflow: Offer Submitted → Contract Sent → Signed → EMD Instructions → Closed.
 
-3. **Split-Screen Zillow Homepage** — Major redesign of deals page: left panel scrollable deal cards, right panel interactive map. Click pin → highlight card. Already partially implemented in current deals.html.
-
-4. **Real Password Auth** — Current auth doesn't verify passwords against GHL. Needs proper password hashing + verification. Low priority since GHL Client Portal handles real auth.
-
-5. **Deal Photo Management** — Photos rely on Google Drive folder order + filename detection. Consider adding a photo reorder UI or requiring Cover Photo field in Notion for all deals.
+3. **Deal Photo Management** — Photos sort by name (alphabetical) from Google Drive API. Consider adding a photo reorder UI or requiring Cover Photo field in Notion for all deals.
