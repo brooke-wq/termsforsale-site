@@ -39,11 +39,10 @@ li{margin-bottom:6px;color:#4A5568}
 <div class="page">
 
 <h1>Paperclip AI OS — VA Process Sheet</h1>
-<p class="subtitle">Deal Pros LLC / Terms For Sale — Last updated April 2, 2026</p>
+<p class="subtitle">Deal Pros LLC / Terms For Sale — Last updated April 3, 2026</p>
 
-<div style="background:#FEE2E2;border:3px solid #C53030;border-radius:10px;padding:20px 24px;margin-bottom:32px">
-<h2 style="color:#C53030;font-size:18px;margin:0 0 8px;border:none;padding:0">AUDIT / STABILIZATION MODE</h2>
-<p style="margin:0;color:#C53030;font-weight:600">ALL Droplet cron jobs are DISABLED except watchdog. All GHL workflows are disabled. No outbound messaging (SMS/email) is firing. Each automation must be tested individually before re-enabling.</p>
+<div class="success">
+<strong>ALL SYSTEMS OPERATIONAL.</strong> All 14 cron jobs are active and running. File-based dedup protects all outbound messaging. GHL webhooks configured. Offer pipeline live.
 </div>
 
 <!-- ============================================ -->
@@ -52,7 +51,7 @@ li{margin-bottom:6px;color:#4A5568}
 <p><strong>Paperclip</strong> is the AI operating system that automates Deal Pros' back-office. It scores leads, underwrites deals, matches buyers, sends alerts, and generates daily reports — all automatically.</p>
 
 <div class="card">
-<div class="card-title">What's Automated (When Enabled)</div>
+<div class="card-title">What's Automated (All Active)</div>
 <ul>
 <li>Buyer signup → auto-profiled + tagged within 30 min</li>
 <li>New deal set to "Actively Marketing" → buyers notified within 30 min (SMS + email)</li>
@@ -70,14 +69,26 @@ li{margin-bottom:6px;color:#4A5568}
 </div>
 
 <div class="card">
-<div class="card-title">Recent Fixes (April 2, 2026)</div>
+<div class="card-title">Completed April 2-3, 2026</div>
 <ul>
-<li><strong>File-based dedup</strong> — <code>jobs/sent-log.json</code> now protects notify-buyers and deal-follow-up from duplicate sends</li>
-<li><strong>State normalization</strong> — deals.js handles "Arizona" vs "AZ" automatically</li>
-<li><strong>Notion pagination</strong> — deals.js now handles 100+ deals (was silently dropping extras)</li>
-<li><strong>Photo sort fixed</strong> — sorted by createdTime (first uploaded = cover photo), was alphabetical</li>
-<li><strong>Thumbnail loading fixed</strong> — replaced deprecated Google Drive feeds API with /api/drive-photos proxy</li>
+<li><strong>File-based dedup</strong> on ALL outbound functions (notify-buyers, deal-follow-up, ceo-briefing, weekly-synthesis, follow-up-nudge)</li>
 <li><strong>Site restructured</strong> — termsforsale.com = about/hero page, /deals.html = map + deal cards</li>
+<li><strong>All auth</strong> uses /api/auth-login and /api/auth-signup (not raw webhooks)</li>
+<li><strong>Welcome SMS + email</strong> on every signup, post-signup redirect to buying criteria</li>
+<li><strong>Deal alert emails</strong> upgraded — ARV, rent, highlights, tracked links, no street addresses</li>
+<li><strong>Offer pipeline</strong> — submit-offer creates GHL opportunity, notifies Brooke, sends buyer confirmation</li>
+<li><strong>Buyer response auto-tagger</strong> wired to deal-follow-up sprint (IN/MAYBE/PASS stops sprint)</li>
+<li><strong>Booking notification</strong> — SMS to Brooke on new calendar bookings</li>
+<li><strong>Deal view tracking</strong> — website views + email clicks logged on GHL contact</li>
+<li><strong>Saved deals</strong> sync to GHL with notes + "Active Saver" tag</li>
+<li><strong>Share buttons</strong> — Text, Email, Copy Link on every deal page</li>
+<li><strong>Auto-blog posts</strong> — deal spotlights created via GitHub API when deals go active</li>
+<li><strong>Deals page</strong> — sort by price/entry, search from homepage, better empty states</li>
+<li><strong>Deal page</strong> — clean terms flow, HOA formatting, photo grid fixed, mobile responsive</li>
+<li><strong>Photos</strong> sort by name (alphabetical) from Google Drive API</li>
+<li><strong>No street addresses</strong> in any outbound marketing (emails, SMS, alerts)</li>
+<li><strong>GHL portal bridge</strong> — "My Portal" links pass email via ?email= param</li>
+<li><strong>Dashboard</strong> — Recently Viewed tab, Deals Viewed stat</li>
 </ul>
 </div>
 
@@ -93,56 +104,61 @@ li{margin-bottom:6px;color:#4A5568}
 <!-- ============================================ -->
 <h2>2. Cron Job Status (Droplet)</h2>
 
-<div class="important">
-<strong>ALL DISABLED except watchdog.</strong> Do NOT re-enable any job until it has been tested individually. See Re-enablement Checklist below.
-</div>
-
 <table>
 <tr><th>Job</th><th>Schedule</th><th>Status</th><th>Notes</th></tr>
-<tr><td>underwriting-poller</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>deal-package-poller</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>lead-intake</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Brooke SMS has no dedup</td></tr>
-<tr><td>seller-call-prep</td><td>*/15 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>buyer-relations</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>dispo-buddy-triage</td><td>*/15 * * * *</td><td><span class="tag tag-gray">DEFERRED</span></td><td>New Dispo Buddy site pending</td></tr>
-<tr><td>notify-buyers</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>File dedup added, needs live test</td></tr>
-<tr><td><strong>deal-follow-up</strong></td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td><strong>Was sending duplicate D0 messages.</strong> File dedup now implemented. DO NOT re-enable until tested.</td></tr>
-<tr><td>deal-dog-poller</td><td>0 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>follow-up-nudge</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Has dedup issues (no per-run tracking)</td></tr>
-<tr><td>equity-exit-intake</td><td>*/30 * * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>ceo-briefing</td><td>0 14 * * *</td><td><span class="tag tag-red">DISABLED</span></td><td>No SMS dedup on re-runs</td></tr>
-<tr><td>weekly-synthesis</td><td>0 15 * * 1</td><td><span class="tag tag-red">DISABLED</span></td><td>No SMS dedup on re-runs</td></tr>
-<tr><td>partner-scorecard</td><td>0 15 * * 5</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>revenue-tracker</td><td>0 14 1 * *</td><td><span class="tag tag-red">DISABLED</span></td><td>Needs isolated test</td></tr>
-<tr><td>watchdog</td><td>0 */6 * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Health checks only</td></tr>
+<tr><td>underwriting-poller</td><td>*/15 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Claude underwriting on uw-requested tag</td></tr>
+<tr><td>deal-package-poller</td><td>*/15 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Marketing package on pkg-requested tag</td></tr>
+<tr><td>lead-intake</td><td>*/15 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Scores seller leads 1-50</td></tr>
+<tr><td>seller-call-prep</td><td>*/15 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Call prep on uw-complete tag</td></tr>
+<tr><td>buyer-relations</td><td>*/30 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Profiles new buyer signups</td></tr>
+<tr><td>dispo-buddy-triage</td><td>—</td><td><span class="tag tag-gray">DEFERRED</span></td><td>New Dispo Buddy site pending</td></tr>
+<tr><td>notify-buyers</td><td>8am-8pm AZ</td><td><span class="tag tag-green">ACTIVE</span></td><td>Deal alerts + auto-blog posts. File dedup.</td></tr>
+<tr><td>deal-follow-up</td><td>8am-8pm AZ</td><td><span class="tag tag-green">ACTIVE</span></td><td>3-day sprint. 1 msg/contact/run. File dedup.</td></tr>
+<tr><td>deal-dog-poller</td><td>0 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Reviews bird dog student leads</td></tr>
+<tr><td>follow-up-nudge</td><td>*/30 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>7-day stale lead SMS. File dedup.</td></tr>
+<tr><td>equity-exit-intake</td><td>*/30 * * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Processes co-ownership inquiries</td></tr>
+<tr><td>ceo-briefing</td><td>7am AZ daily</td><td><span class="tag tag-green">ACTIVE</span></td><td>Daily SMS to Brooke. Daily dedup.</td></tr>
+<tr><td>weekly-synthesis</td><td>8am AZ Mon</td><td><span class="tag tag-green">ACTIVE</span></td><td>Weekly report. Weekly dedup.</td></tr>
+<tr><td>partner-scorecard</td><td>8am AZ Fri</td><td><span class="tag tag-green">ACTIVE</span></td><td>Friday partner performance report</td></tr>
+<tr><td>revenue-tracker</td><td>7am AZ 1st</td><td><span class="tag tag-green">ACTIVE</span></td><td>Monthly P&L summary</td></tr>
+<tr><td>watchdog</td><td>0 */6 * * *</td><td><span class="tag tag-green">ACTIVE</span></td><td>Health checks, alerts if down</td></tr>
 </table>
 
 <!-- ============================================ -->
-<h2>3. Re-enablement Checklist</h2>
+<h2>3. Offer Pipeline</h2>
 
 <div class="card">
-<div class="card-title">For Each Job — Follow These Steps In Order</div>
+<div class="card-title">When a buyer submits an offer on the website:</div>
 <ol style="margin-left:20px">
-<li>Test manually: <code>node jobs/run-job.js &lt;job-name&gt;</code> or call <code>/api/&lt;name&gt;</code></li>
-<li>Verify output in Droplet logs: <code>tail -50 /var/log/paperclip.log</code></li>
-<li>For messaging jobs: confirm no duplicate sends — check <code>jobs/sent-log.json</code></li>
-<li>Uncomment cron line on Droplet: <code>ssh root@64.23.204.220</code> then <code>crontab -e</code></li>
-<li>Monitor first 2-3 runs in <code>/var/log/paperclip.log</code></li>
-<li>If duplicates occur: immediately comment out cron line and investigate</li>
+<li>GHL opportunity created in "Buyer Inquiries" → "Offer Submitted" stage</li>
+<li>Note posted on contact with deal details + offer amount</li>
+<li>Tags added: <code>Offer Submitted</code>, <code>Active Buyer</code></li>
+<li>SMS notification sent to Brooke</li>
+<li>Confirmation email sent to buyer with next steps</li>
+<li>Property address synced to opportunity custom field</li>
 </ol>
 </div>
 
+<div class="card">
+<div class="card-title">GHL Webhooks (configured)</div>
+<ul>
+<li><strong>Calendar booking</strong> → <code>/api/booking-notify</code> — SMS to Brooke on new bookings</li>
+<li><strong>Customer Reply (SMS/Email)</strong> → <code>/api/buyer-response-tag</code> — auto-tags IN/MAYBE/PASS, stops follow-up sprint</li>
+</ul>
+</div>
+
 <!-- ============================================ -->
-<h2>4. Audit Findings</h2>
+<h2>4. Audit Findings (All Resolved)</h2>
 
 <table>
-<tr><th>Severity</th><th>Issue</th><th>Status</th></tr>
-<tr><td><span class="tag tag-red">CRITICAL</span></td><td><strong>deal-follow-up.js</strong> was sending duplicate Day 0 messages (GHL search API doesn't return full tag lists)</td><td><span class="tag tag-green">FIXED</span> — file-based dedup added</td></tr>
-<tr><td><span class="tag tag-red">CRITICAL</span></td><td><strong>follow-up-nudge.js</strong> has no per-run dedup — SMS can resend on re-runs</td><td><span class="tag tag-orange">NEEDS FIX</span></td></tr>
-<tr><td><span class="tag tag-orange">HIGH</span></td><td><strong>ceo-briefing.js</strong> + <strong>weekly-synthesis.js</strong> — SMS to Brooke has no dedup</td><td><span class="tag tag-orange">NEEDS FIX</span></td></tr>
-<tr><td><span class="tag tag-orange">HIGH</span></td><td><strong>lead-intake.js</strong> — Brooke SMS on flagged leads has no dedup</td><td><span class="tag tag-orange">NEEDS FIX</span></td></tr>
-<tr><td><span class="tag tag-blue">MEDIUM</span></td><td><strong>auth-signup.js</strong> + <strong>vip-buyer-submit.js</strong> — welcome SMS/email sent without checking if already sent (form resubmit = duplicate messages)</td><td><span class="tag tag-gray">LOW RISK</span></td></tr>
-<tr><td><span class="tag tag-gray">LOW</span></td><td>Several functions have hardcoded fallback IDs instead of failing explicitly (ceo-briefing, weekly-synthesis, partner-scorecard, revenue-tracker)</td><td><span class="tag tag-gray">COSMETIC</span></td></tr>
+<tr><th>Issue</th><th>Status</th></tr>
+<tr><td><strong>deal-follow-up.js</strong> duplicate D0 messages</td><td><span class="tag tag-green">FIXED</span> — file dedup + 1 msg/contact/run cap</td></tr>
+<tr><td><strong>follow-up-nudge.js</strong> per-run dedup</td><td><span class="tag tag-green">FIXED</span> — file dedup added</td></tr>
+<tr><td><strong>ceo-briefing.js</strong> + <strong>weekly-synthesis.js</strong> SMS dedup</td><td><span class="tag tag-green">FIXED</span> — daily/weekly dedup keys</td></tr>
+<tr><td><strong>notify-buyers.js</strong> test mode bypass</td><td><span class="tag tag-green">FIXED</span> — test=true always overrides isLive</td></tr>
+<tr><td>Street addresses in outbound marketing</td><td><span class="tag tag-green">FIXED</span> — all emails/SMS show city/state only</td></tr>
+<tr><td>Login/signup using raw GHL webhooks</td><td><span class="tag tag-green">FIXED</span> — all use /api/ endpoints now</td></tr>
+<tr><td>Map popup showing addresses to logged-out users</td><td><span class="tag tag-green">FIXED</span> — auth check added</td></tr>
 </table>
 
 <!-- ============================================ -->
@@ -155,8 +171,11 @@ li{margin-bottom:6px;color:#4A5568}
 <li><strong>Module:</strong> <code>jobs/sent-log.js</code></li>
 <li><strong>Key format:</strong> <code>{contactId}-{dealId}-{step}</code> (e.g. <code>abc123-def456-d0</code>)</li>
 <li><strong>Works only on Droplet</strong> — Netlify functions are serverless/ephemeral, so file dedup is skipped there</li>
-<li><strong>notify-buyers.js:</strong> checks <code>wasSent()</code> before sending, calls <code>markSent()</code> after</li>
-<li><strong>deal-follow-up.js:</strong> checks before each Day 0/1/2 send, marks after</li>
+<li><strong>notify-buyers.js:</strong> checks before sending, marks after (per contact per deal)</li>
+<li><strong>deal-follow-up.js:</strong> checks before each Day 0/1/2, marks after. 1 msg/contact/run cap.</li>
+<li><strong>ceo-briefing.js:</strong> daily dedup key — won't double-SMS on re-runs</li>
+<li><strong>weekly-synthesis.js:</strong> weekly dedup key — won't double-SMS on re-runs</li>
+<li><strong>follow-up-nudge.js:</strong> per-contact dedup — won't re-nudge same contact</li>
 <li>Tag-based dedup in GHL still works as a secondary layer</li>
 </ul>
 </div>
@@ -231,7 +250,8 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 <ul>
 <li>Enter all new deal data in Notion with ALL required fields</li>
 <li>Upload property photos to Google Drive folder, link URL in Notion "Photos" field</li>
-<li>First photo uploaded = cover photo (sort by upload time)</li>
+<li>Photos sort alphabetically by filename — name the front-of-house photo first (e.g. <code>01-front.jpg</code>)</li>
+<li><strong>NEVER include street addresses in outbound marketing</strong> (emails, SMS, deal alerts, blog posts)</li>
 <li>Set deal status to "Actively Marketing" when ready to list</li>
 <li>Review CEO briefing notes in GHL for action items</li>
 <li>Monitor GHL for flagged leads (<code>flag-escalate</code> tag)</li>
@@ -284,6 +304,14 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 <tr><td><code>deal-hot</code></td><td>Buyer replied "1" or "IN"</td><td>Stops follow-up sprint</td></tr>
 <tr><td><code>deal-warm</code></td><td>Buyer replied "2" or "MAYBE"</td><td>Stops follow-up sprint</td></tr>
 <tr><td><code>deal-paused</code></td><td>Buyer replied "3" or "PASS"</td><td>Stops follow-up sprint</td></tr>
+<tr><td><code>buyer-interested</code></td><td>Auto-tagged: buyer said IN/yes/interested</td><td>Sets deal-hot + stops sprint</td></tr>
+<tr><td><code>buyer-maybe</code></td><td>Auto-tagged: buyer said MAYBE/not sure</td><td>Sets deal-warm + stops sprint</td></tr>
+<tr><td><code>buyer-pass</code></td><td>Auto-tagged: buyer said PASS/no</td><td>Sets deal-paused + stops sprint</td></tr>
+<tr><td><code>Offer Submitted</code></td><td>Buyer submitted offer on website</td><td>Creates GHL opportunity + notifies Brooke</td></tr>
+<tr><td><code>Active Buyer</code></td><td>Buyer has taken action</td><td>Offer or inquiry submitted</td></tr>
+<tr><td><code>Active Saver</code></td><td>Buyer saved a deal</td><td>Heart button clicked</td></tr>
+<tr><td><code>Active Viewer</code></td><td>Buyer viewed a deal</td><td>Deal page visit or email click</td></tr>
+<tr><td><code>Booked Call</code></td><td>Buyer booked a call</td><td>Calendar booking webhook</td></tr>
 </table>
 
 <!-- ============================================ -->
@@ -293,7 +321,7 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 <tr><th>Problem</th><th>Solution</th></tr>
 <tr><td>Deals don't show on website</td><td>Check Notion → Deal Status must be exactly <strong>"Actively Marketing"</strong></td></tr>
 <tr><td>Photos don't load</td><td>Check Notion → Photos field must be a Google Drive <strong>folder</strong> URL (not a file URL)</td></tr>
-<tr><td>Wrong cover photo</td><td>First photo uploaded to the Drive folder = cover. Rename or re-upload the main exterior photo first.</td></tr>
+<tr><td>Wrong cover photo</td><td>Photos sort alphabetically by filename. Name the front photo <code>01-front.jpg</code> or similar so it sorts first.</td></tr>
 <tr><td>CEO briefing didn't fire</td><td>Check Droplet logs: <code>ssh root@64.23.204.220</code> then <code>tail -50 /var/log/paperclip.log</code></td></tr>
 <tr><td>Buyer didn't get deal alert</td><td>Check if they have matching buy box criteria (state, deal type, price range) in GHL</td></tr>
 <tr><td>Form didn't sync to GHL</td><td>Check Netlify function logs at <code>app.netlify.com/projects/jolly-marzipan-8fc443</code> → Functions</td></tr>
@@ -308,8 +336,12 @@ New Submission → Pending Items → Ready for Review → Accepted → <span sty
 
 <table>
 <tr><th>What</th><th>URL</th></tr>
-<tr><td>Homepage (About)</td><td><a href="https://deals.termsforsale.com">deals.termsforsale.com</a></td></tr>
+<tr><td>Homepage</td><td><a href="https://deals.termsforsale.com">deals.termsforsale.com</a></td></tr>
 <tr><td>Deals / Browse</td><td><a href="https://deals.termsforsale.com/deals.html">deals.termsforsale.com/deals.html</a></td></tr>
+<tr><td>Buying Criteria</td><td><a href="https://deals.termsforsale.com/buying-criteria.html">deals.termsforsale.com/buying-criteria.html</a></td></tr>
+<tr><td>Buyer Dashboard</td><td><a href="https://deals.termsforsale.com/dashboard.html">deals.termsforsale.com/dashboard.html</a></td></tr>
+<tr><td>GHL Client Portal</td><td><a href="https://termsforsale.app.clientclub.net/">termsforsale.app.clientclub.net</a></td></tr>
+<tr><td>This SOP Page</td><td><a href="https://deals.termsforsale.com/admin/paperclip-sop.html">deals.termsforsale.com/admin/paperclip-sop.html</a></td></tr>
 <tr><td>GHL CRM</td><td><a href="https://app.reibuilt.com">app.reibuilt.com</a></td></tr>
 <tr><td>Notion Deal Pipeline</td><td>Search "Deal Pipeline" in Notion</td></tr>
 <tr><td>Netlify Dashboard</td><td><a href="https://app.netlify.com/projects/jolly-marzipan-8fc443">app.netlify.com</a></td></tr>
