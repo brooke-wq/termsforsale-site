@@ -322,6 +322,11 @@ All items below were completed and deployed:
 ### SEO
 - **Sitemap** updated to use Notion API (not Google Sheets), includes all pages
 
+### Offer Pipeline
+- **submit-offer.js** — creates GHL opportunity in "Buyer Inquiries" → "Offer Submitted", notifies Brooke via SMS, sends buyer confirmation email, syncs property address to opportunity
+- **Pipeline ID:** `JqPNGn6dao8hBfTzbLRG` (env: `GHL_PIPELINE_ID_BUYER`)
+- **Stage ID:** `cd4df0dc-731b-4885-a54e-2c2a3bf7acfc` (env: `GHL_STAGE_OFFER_RECEIVED`)
+
 ### GHL Webhooks (configured by Brooke)
 - Calendar booking webhook → `/api/booking-notify`
 - Customer Reply (SMS/Email) workflow → `/api/buyer-response-tag`
