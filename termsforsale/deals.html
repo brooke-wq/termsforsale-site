@@ -1499,6 +1499,10 @@ async function loadDealsFromSheet(){
       updateStats();
       populateStates();
       updateHowSections();
+      // Apply search params from homepage hero search
+      var urlParams=new URLSearchParams(window.location.search);
+      if(urlParams.get('q')){var si=document.getElementById('f-search');if(si)si.value=urlParams.get('q');}
+      if(urlParams.get('tab')){var tab=urlParams.get('tab');_tab=tab;document.querySelectorAll('.split-tab').forEach(function(t){t.classList.remove('on');if(t.textContent.toLowerCase()===tab||(!tab&&t.textContent==='All'))t.classList.add('on');});}
       applyFilters();
       const sbc=document.getElementById('sb-count');if(sbc)sbc.textContent=ALL_DEALS.length;
       const spc=document.getElementById('sp-count');if(spc)spc.textContent=ALL_DEALS.length+'+';

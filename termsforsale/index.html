@@ -485,14 +485,14 @@ footer{background:var(--navy);padding:52px 55px 0}
         </div>
       </div>
       <div class="hw-tabs">
-        <button class="hw-tab on">All Deals</button>
-        <button class="hw-tab">Creative</button>
-        <button class="hw-tab">Cash</button>
+        <button class="hw-tab on" onclick="setHeroTab(this,'')">All Deals</button>
+        <button class="hw-tab" onclick="setHeroTab(this,'creative')">Creative</button>
+        <button class="hw-tab" onclick="setHeroTab(this,'cash')">Cash</button>
       </div>
       <div class="hw-search-lbl">Search For Off-Market Deals</div>
       <div class="hw-search-row">
-        <input class="hw-input" id="hero-search" placeholder="Enter a County, State, City, or Zip Code...">
-        <button class="hw-search-btn" onclick="openAuth('signup')">Create Free Investor Account</button>
+        <input class="hw-input" id="hero-search" placeholder="Enter a County, State, City, or Zip Code..." onkeydown="if(event.key==='Enter')goSearch()">
+        <button class="hw-search-btn" onclick="goSearch()">Search Deals</button>
       </div>
       <a href="/deals.html" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;transition:color .15s" onmouseover="this.style.color='rgba(255,255,255,.9)'" onmouseout="this.style.color='rgba(255,255,255,.55)'">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -758,7 +758,7 @@ function setHeroTab(btn, tab) {
 }
 function goSearch() {
   const q = (document.getElementById('hero-search').value || '').trim();
-  let url = '/';
+  let url = '/deals.html';
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (_heroTab) params.set('tab', _heroTab);
