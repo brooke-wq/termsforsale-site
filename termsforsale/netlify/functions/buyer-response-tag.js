@@ -80,8 +80,13 @@ exports.handler = async (event) => {
 
   try {
     // Remove any existing response tags, then add the new one
-    await removeTags(apiKey, contactId, ALL_RESPONSE_TAGS);
-    await addTags(apiKey, contactId, [matched.tag, 'buyer-responded']);
+    // Also add deal-hot/warm/paused for deal-follow-up sprint compatibility
+    var SPRINT_TAGS = ['deal-hot', 'deal-warm', 'deal-paused'];
+    var sprintTag = matched.tag === 'buyer-interested' ? 'deal-hot'
+                  : matched.tag === 'buyer-maybe' ? 'deal-warm'
+                  : 'deal-paused';
+    await removeTags(apiKey, contactId, ALL_RESPONSE_TAGS.concat(SPRINT_TAGS));
+    await addTags(apiKey, contactId, [matched.tag, sprintTag, 'buyer-responded']);
 
     // Post note
     await postNote(apiKey, contactId,

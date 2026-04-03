@@ -76,8 +76,10 @@ exports.handler = async function(event) {
         var d1Tag = 'sprint-d1-' + dealId;
         var d2Tag = 'sprint-d2-' + dealId;
 
-        // Check if buyer already responded (hot/warm/paused)
-        var responded = tags.indexOf('deal-hot') > -1 || tags.indexOf('deal-warm') > -1 || tags.indexOf('deal-paused') > -1;
+        // Check if buyer already responded (any response tag stops the sprint)
+        var responded = tags.indexOf('deal-hot') > -1 || tags.indexOf('deal-warm') > -1 || tags.indexOf('deal-paused') > -1
+          || tags.indexOf('buyer-interested') > -1 || tags.indexOf('buyer-maybe') > -1 || tags.indexOf('buyer-pass') > -1
+          || tags.indexOf('buyer-responded') > -1;
         if (responded) { stats.skipped++; continue; }
 
         // Get the alert timestamp from contact's dateUpdated (approximate)

@@ -8,10 +8,11 @@
  * GHL webhook sends: { contact_id, calendar_id, start_time, ... }
  */
 
-const { getContact, postNote, addTags } = require('./_ghl');
+const { getContact, postNote, addTags, sendSMS } = require('./_ghl');
 
 const CALENDAR_ID = 'PoyDG0tNCK8wb9oi6zZ4';
-const BROOKE_PHONE = '+14806373117';
+const BROOKE_CONTACT_ID = '1HMBtAv9EuTlJa5EekAL';
+const BROOKE_PHONE = process.env.BROOKE_PHONE || '+15167120113';
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -75,8 +76,16 @@ exports.handler = async (event) => {
     // Tag the contact
     await addTags(apiKey, contactId, ['Booked Call', 'Hot Lead']);
 
-    // Notify Brooke via SMS (using GHL conversations — need to find Brooke's contact or use direct)
-    // For now, log it — Brooke can set up a GHL workflow trigger on "Booked Call" tag
+    // Notify Brooke via SMS
+    var sms = '📅 New booking: ' + name.trim() + (phone ? ' (' + phone + ')' : '') + ' — ' + timeStr;
+    if (sms.length > 160) sms = sms.slice(0, 157) + '...';
+    try {
+      await sendSMS(apiKey, locationId, BROOKE_PHONE, sms);
+      console.log('[booking-notify] SMS sent to Brooke: ' + sms);
+    } catch (e) {
+      console.warn('[booking-notify] Brooke SMS failed:', e.message);
+    }
+
     console.log('[booking-notify] ' + name.trim() + ' booked for ' + timeStr + ' | phone=' + phone);
 
     return respond(200, {
