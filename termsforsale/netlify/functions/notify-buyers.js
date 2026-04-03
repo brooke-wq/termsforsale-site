@@ -14,6 +14,10 @@ const https = require('https');
 var sentLog;
 try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
 
+// ─── AUTO BLOG POST ─────────────────────────────────────────
+var autoBlog;
+try { autoBlog = require('./auto-blog'); } catch(e) { autoBlog = null; }
+
 // ─── HTTP HELPERS ────────────────────────────────────────────
 
 function httpRequest(url, options, body) {
@@ -675,6 +679,11 @@ exports.handler = async function(event) {
       }
 
       results.push(dealResult);
+
+      // Auto-generate blog post for new deals (fire and forget)
+      if (autoBlog && isLive) {
+        try { await autoBlog.createDealPost(deal); } catch(e) { console.warn('[notify-buyers] auto-blog failed:', e.message); }
+      }
     }
 
     return {
