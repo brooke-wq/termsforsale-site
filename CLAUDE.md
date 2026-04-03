@@ -258,36 +258,70 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 2026 Audit/Stabilization Session
+
+All items below were completed and deployed:
+
+### Infrastructure
+- **File-based dedup** (`jobs/sent-log.js`) on ALL outbound messaging functions: notify-buyers, deal-follow-up, ceo-briefing, weekly-synthesis, follow-up-nudge
+- **All 14 cron jobs** tested individually and re-enabled on Droplet (only dispo-buddy-triage remains disabled)
+- **notify-buyers test mode fix** — `test=true` or `deal_id` param now forces test mode regardless of `DEAL_ALERTS_LIVE` env var
+- **deal-follow-up** — capped at 1 message per contact per run, runs 8am-8pm AZ only
+- **notify-buyers** — runs 8am-8pm AZ only
+
+### Site Structure
+- **Homepage** (`/`) = about/hero page with working search → redirects to `/deals.html`
+- **Deals page** (`/deals.html`) = split-screen map + deal cards with sort/filter
+- **Old `/about.html`** → 301 redirects to `/`
+- **`/browse`** and **`/deals`** → redirect to `/deals.html`
+
+### Deal Page
+- **Terms table** restructured: Price → Entry → ARV → SubTo details → SF details
+- **"Down Payment" removed** — uses "Entry Fee" per CLAUDE.md rules
+- **Deal type matching** — case-insensitive (`Subject To` = `SubTo` = `sub-to`)
+- **HOA formatting** — extracts dollar amount, shows "$129/mo HOA" not raw text
+- **Photo grid** — 1 large + 2 thumbs, 380px height desktop, 260px mobile
+- **Photos** sorted by `name` (alphabetical) from Google Drive API
+- **Share buttons** — Text, Email, Copy Link on every deal page
+- **Address hidden** from logged-out users in map popups
+
+### Auth & Funnel
+- **All login/signup** uses `/api/auth-login` and `/api/auth-signup` (not raw webhooks)
+- **Welcome SMS + email** sent on every signup via auth-signup.js
+- **Post-signup** → auto-redirect to `/buying-criteria.html`
+- **Login** → returns `hasBuyBox` and `isVip` from GHL tags; nudges buy box completion
+- **GHL portal bridge** — "My Portal" links pass email via `?email=` param
+- **Signup form** — simplified to name, email, phone, password only
+
+### Automations
+- **buyer-response-tag.js** — auto-tags buyer responses (IN/MAYBE/PASS, 1/2/3) and maps to deal-hot/deal-warm/deal-paused to stop follow-up sprint
+- **booking-notify.js** — sends SMS to Brooke on new bookings (was previously just logging)
+- **Tracked links** — all deal URLs in alert emails/SMS route through `/api/track-view` for GHL logging
+- **Deal view tracking** — website views (logged-in) + email clicks both tracked on GHL contact
+- **Auto-blog posts** — `auto-blog.js` creates deal spotlight posts via GitHub API when notify-buyers processes new deals
+- **Saved deals** — sync to GHL with notes + "Active Saver" tag
+
+### Dashboard
+- **Recently Viewed** tab showing last 20 deals the buyer viewed
+- **Deals Viewed** stat card
+
+### SEO
+- **Sitemap** updated to use Notion API (not Google Sheets), includes all pages
+
+### GHL Webhooks (configured by Brooke)
+- Calendar booking webhook → `/api/booking-notify`
+- Customer Reply (SMS/Email) workflow → `/api/buyer-response-tag`
+
+---
+
 ## TODO — Next Session
 
-These items are deferred and MUST be completed in the next session:
+1. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
 
-**CRITICAL FIX — deal-follow-up.js is DISABLED (cron commented out on Droplet with #). It was sending duplicate Day 0 messages 10+ times because GHL search API doesn't return full tag lists, so dedup tags were invisible.**
+2. **GHL Client Portal** — Configure portal pages, menu, and content in GHL. Code bridge is built (email pre-fill on portal links).
 
-**Required fix approach — FILE-BASED DEDUP (not tag-based):**
-- Create `/root/termsforsale-site/jobs/sent-log.json` on the Droplet
-- Before sending ANY SMS or email in deal-follow-up.js AND notify-buyers.js, check this file
-- Key format: `{contactId}-{dealId}-{step}` (e.g. `abc123-def456-d0`)
-- If key exists in the file, SKIP — do not send
-- After sending, write the key + timestamp to the file
-- This is filesystem-based, zero API dependency, impossible to double-send
-- Do NOT re-enable the deal-follow-up cron until this fix is implemented and tested
-- Also apply file-based dedup to notify-buyers.js for extra safety (in addition to existing tag dedup)
+3. **Split-Screen Zillow Homepage** — Major redesign of deals page: left panel scrollable deal cards, right panel interactive map. Click pin → highlight card. Already partially implemented in current deals.html.
 
-1. **Split-Screen Map Homepage** — Zillow/Redfin style: left panel scrollable deal cards with filters, right panel interactive map with pins. Click pin → highlight deal card. Click deal → highlight pin. Responsive: stacks on mobile.
+4. **Real Password Auth** — Current auth doesn't verify passwords against GHL. Needs proper password hashing + verification. Low priority since GHL Client Portal handles real auth.
 
-2. **Client Portal + Real Auth** — Authenticated buyer dashboard with saved deals, offer tracking, buy box management, deal alerts history. Current auth is localStorage-only (no password verification). Needs real GHL-backed auth: verify email+password against GHL contacts, session management, protected routes. Separate project, done correctly.
-
-3. **Per-Contact Deal View Tracking** — When a logged-in user views a deal page, log it to their GHL contact (add `deal-viewed` tag, post note with deal address/URL, update custom field with last viewed deal). Also integrate GHL trigger links into deal alert emails so clicks are tracked in GHL workflows. Goal: Brooke can see in GHL exactly which deals each buyer clicked on.
-
-4. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
-
-5. **GHL Booking Notification** — Set up in GHL Calendars → Notifications for calendar PoyDG0tNCK8wb9oi6zZ4 → notify Brooke + Eddie on new bookings.
-
-6. **Auto-Tag Buyer Responses** — Create GHL workflow to auto-tag when buyer replies to deal follow-up:
-   - Trigger: Customer Reply (SMS)
-   - Reply "1" or "IN" → add tag `deal-hot`
-   - Reply "2" or "MAYBE" → add tag `deal-warm`
-   - Reply "3" or "PASS" → add tag `deal-paused`
-   - Same for email replies with IN/MAYBE/PASS
-   - These tags stop the 3-day follow-up sprint from sending further messages
+5. **Deal Photo Management** — Photos rely on Google Drive folder order + filename detection. Consider adding a photo reorder UI or requiring Cover Photo field in Notion for all deals.
