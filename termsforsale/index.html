@@ -439,21 +439,18 @@ footer{background:var(--navy);padding:52px 55px 0}
         <div class="a-field"><input class="a-input" id="su-email" type="email" placeholder="Email address"></div>
         <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
         <div class="a-field"><input class="a-input" id="su-pass" type="password" placeholder="Create password"></div>
-        <div class="a-field">
-          <select class="a-input" id="su-buy" style="appearance:none;cursor:pointer">
-            <option value="">How do you buy?</option>
-            <option>Cash</option>
-            <option>Subject To</option>
-            <option>Seller Finance</option>
-            <option>Lease Option</option>
-            <option>Novation</option>
-            <option>Morby Method</option>
-            <option>Assumable Loans</option>
-            <option>Partnerships/JV</option>
-            <option>Traditional Financing</option>
-            <option>DSCR</option>
-          </select>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-light);margin-bottom:6px">Deal types you're interested in</div>
+          <div id="su-structures" style="display:flex;flex-wrap:wrap;gap:6px">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Cash" style="display:none">Cash</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Subject To" style="display:none">Subject To</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Seller Finance" style="display:none">Seller Finance</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Hybrid" style="display:none">Hybrid</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Lease Option" style="display:none">Lease Option</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-mid);cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;transition:all .15s" onclick="this.classList.toggle('checked');this.style.borderColor=this.classList.contains('checked')?'var(--blue)':'';this.style.background=this.classList.contains('checked')?'var(--blue-light)':''"><input type="checkbox" value="Novation" style="display:none">Novation</label>
+          </div>
         </div>
+        <div class="a-field"><input class="a-input" id="su-maxentry" type="number" placeholder="Max entry fee budget ($)"></div>
         <button class="btn-full-blue" onclick="doSignup()">Create Free Account</button>
         <div class="a-note">By signing up you agree to receive SMS &amp; email alerts. Reply STOP to opt out.</div>
       </div>
@@ -905,13 +902,14 @@ async function doLogin(){
 async function doSignup(){
   const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
   const email=document.getElementById('su-email').value.trim(),phone=document.getElementById('su-phone').value.trim();
-  const buy=document.getElementById('su-buy').value;
+  const structures=[...document.querySelectorAll('#su-structures input:checked')].map(c=>c.value);
+  const maxEntry=document.getElementById('su-maxentry').value.trim();
   const pass=document.getElementById('su-pass').value.trim();
   const err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
   err.style.display='none';ok.style.display='none';
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Creating\u2026';
-  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structure:buy,source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
+  try{await fetch(GHL_SIGNUP_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({firstName:fn,lastName:ln,email,phone,password:pass,deal_structures:structures.join(', '),max_entry_fee:maxEntry||'',source:'TFS Website - Signup',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',tags:['TFS Buyer','Website Signup']},getUTMs()))});}catch(e){console.error('Signup webhook error:',e);}
   const initials=(fn[0]+(ln?ln[0]:'')).toUpperCase();
   const user={name:fn,email,phone,initials};
   setUser(user);updateNavAuth(user);
