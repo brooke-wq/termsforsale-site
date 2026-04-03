@@ -35,9 +35,9 @@ function getFirstFileFromFolder(folderId, apiKey) {
   var query = "'" + folderId + "' in parents and trashed=false and mimeType contains 'image/'";
   var url = 'https://www.googleapis.com/drive/v3/files'
     + '?q=' + encodeURIComponent(query)
-    + '&fields=files(id)'
+    + '&fields=files(id,name)'
     + '&orderBy=createdTime'
-    + '&pageSize=1'
+    + '&pageSize=10'
     + '&supportsAllDrives=true'
     + '&includeItemsFromAllDrives=true'
     + '&key=' + apiKey;
@@ -49,7 +49,11 @@ function getFirstFileFromFolder(folderId, apiKey) {
         try {
           var parsed = JSON.parse(data);
           var files = (parsed.files || []);
-          resolve(files.length ? files[0].id : null);
+          if (!files.length) { resolve(null); return; }
+          // Prefer files named front/cover/exterior/01/1- (front of house)
+          var FRONT = /^(front|cover|exterior|main|hero|01|1[-_.\s])/i;
+          var front = files.find(function(f) { return FRONT.test(f.name || ''); });
+          resolve(front ? front.id : files[0].id);
         } catch(e) { resolve(null); }
       });
     }).on('error', function() { resolve(null); });

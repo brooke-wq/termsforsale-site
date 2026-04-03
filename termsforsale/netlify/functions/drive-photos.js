@@ -73,8 +73,21 @@ exports.handler = async function(event) {
       };
     }
 
-    var fileIds = ((result.body.files) || []).map(function(f) { return f.id; });
-    console.log('Drive API success: folderId=' + folderId + ' fileCount=' + fileIds.length);
+    var files = (result.body.files) || [];
+
+    // Sort: files named with front/cover/exterior/01/1- come first (front of house),
+    // then maintain createdTime order for the rest
+    var FRONT_PATTERNS = /^(front|cover|exterior|main|hero|01|1[-_.\s])/i;
+    files.sort(function(a, b) {
+      var aFront = FRONT_PATTERNS.test(a.name || '');
+      var bFront = FRONT_PATTERNS.test(b.name || '');
+      if (aFront && !bFront) return -1;
+      if (!aFront && bFront) return 1;
+      return 0; // preserve createdTime order from API
+    });
+
+    var fileIds = files.map(function(f) { return f.id; });
+    console.log('Drive API success: folderId=' + folderId + ' fileCount=' + fileIds.length + (files[0] ? ' first=' + files[0].name : ''));
 
     return {
       statusCode: 200,
