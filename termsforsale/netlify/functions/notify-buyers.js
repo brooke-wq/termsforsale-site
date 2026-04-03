@@ -502,25 +502,40 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       deal.yearBuilt ? 'Built ' + deal.yearBuilt : ''
     ].filter(Boolean).join(' · ');
 
+    var trackUrl = 'https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
+    var arvStr = deal.arv ? '$' + deal.arv.toLocaleString() : '';
+    var rentStr = deal.rentFinal ? '$' + deal.rentFinal.toLocaleString() + '/mo' : '';
+    var highlights = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean);
+
     var emailHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff">'
-      + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
+      // Header
+      + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between">'
       + '<img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:32px">'
+      + '<span style="color:rgba(255,255,255,.5);font-size:11px;font-weight:600">NEW DEAL ALERT</span>'
       + '</div>'
-      + (coverImg ? '<div style="width:100%;max-height:300px;overflow:hidden"><img src="' + coverImg + '" alt="Property" style="width:100%;display:block"></div>' : '')
+      // Photo
+      + (coverImg ? '<a href="' + trackUrl + '" style="display:block;width:100%;max-height:300px;overflow:hidden"><img src="' + coverImg + '" alt="Property" style="width:100%;display:block"></a>' : '')
+      // Body
       + '<div style="padding:28px 32px">'
       + '<div style="display:inline-block;padding:4px 12px;border-radius:20px;background:#EBF8FF;color:#1a8bbf;font-size:12px;font-weight:700;margin-bottom:12px">' + (deal.dealType || 'Deal') + '</div>'
-      + '<h2 style="color:#0D1F3C;font-size:22px;margin:0 0 6px">' + deal.city + ', ' + deal.state + '</h2>'
-      + '<p style="color:#718096;font-size:13px;margin:0 0 20px">' + (deal.streetAddress || '') + (specs ? ' · ' + specs : '') + '</p>'
-      + '<table style="width:100%;border-collapse:collapse;margin:0 0 24px">'
-      + (price ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Asking Price</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:15px;font-weight:800;text-align:right">' + price + '</td></tr>' : '')
-      + (entry ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Entry Fee</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:15px;font-weight:800;text-align:right">' + entry + '</td></tr>' : '')
-      + '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Deal Type</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:14px;font-weight:600;text-align:right">' + (deal.dealType || 'N/A') + '</td></tr>'
+      + '<h2 style="color:#0D1F3C;font-size:22px;margin:0 0 4px">' + deal.city + ', ' + deal.state + '</h2>'
+      + '<p style="color:#718096;font-size:13px;margin:0 0 20px">' + (deal.streetAddress || '') + (specs ? ' &middot; ' + specs : '') + '</p>'
+      // Numbers grid
+      + '<table style="width:100%;border-collapse:collapse;margin:0 0 20px">'
+      + (price ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Asking Price</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:16px;font-weight:800;text-align:right">' + price + '</td></tr>' : '')
+      + (entry ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Entry Fee</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:16px;font-weight:800;text-align:right">' + entry + '</td></tr>' : '')
+      + (arvStr ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">ARV</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:16px;font-weight:800;text-align:right">' + arvStr + '</td></tr>' : '')
+      + (rentStr ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Est. Rent</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#10B981;font-size:16px;font-weight:800;text-align:right">' + rentStr + '</td></tr>' : '')
       + '</table>'
-      + '<a href="https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1" style="display:inline-block;padding:14px 32px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">View Full Deal Details</a>'
-      + '<p style="color:#718096;font-size:12px;margin-top:24px">This deal matched your buying criteria. <a href="https://deals.termsforsale.com/buying-criteria.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
+      // Highlights
+      + (highlights.length ? '<div style="background:#F7FAFC;border-radius:8px;padding:14px 16px;margin-bottom:20px">' + highlights.map(function(h) { return '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><span style="color:#10B981;font-size:14px;line-height:1">&#10003;</span><span style="color:#4A5568;font-size:13px;line-height:1.4">' + h + '</span></div>'; }).join('') + '</div>' : '')
+      // CTA
+      + '<a href="' + trackUrl + '" style="display:block;text-align:center;padding:16px 32px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">View Full Deal Details &rarr;</a>'
+      + '<p style="color:#718096;font-size:12px;margin-top:20px;text-align:center">This deal matched your buying criteria. <a href="https://deals.termsforsale.com/buying-criteria.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
       + '</div>'
+      // Footer
       + '<div style="background:#F4F6F9;padding:16px 32px;border-radius:0 0 12px 12px;text-align:center">'
-      + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale · Deal Pros LLC · <a href="https://deals.termsforsale.com" style="color:#29ABE2">deals.termsforsale.com</a></p>'
+      + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale &middot; Deal Pros LLC &middot; <a href="https://deals.termsforsale.com" style="color:#29ABE2">deals.termsforsale.com</a></p>'
       + '</div></div>';
 
     try {
