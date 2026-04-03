@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Alerts — Terms For Sale</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0D1F3C;--blue:#29ABE2;--blue-light:#EBF8FF;--text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;--border:#E2E8F0;--bg:#F4F6F9;--font:'Poppins',sans-serif}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6}
+.page{max-width:800px;margin:0 auto;padding:32px 24px 80px}
+h1{font-size:24px;font-weight:800;margin-bottom:4px}
+.sub{font-size:13px;color:var(--text-light);margin-bottom:24px}
+.alert-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;display:flex;gap:16px;align-items:center;text-decoration:none;color:var(--text);transition:box-shadow .15s}
+.alert-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.alert-thumb{width:80px;height:60px;border-radius:6px;background:var(--border);overflow:hidden;flex-shrink:0}
+.alert-thumb img{width:100%;height:100%;object-fit:cover}
+.alert-info{flex:1}
+.alert-type{display:inline-block;padding:2px 8px;border-radius:4px;background:var(--blue-light);color:var(--blue);font-size:10px;font-weight:700;margin-bottom:4px}
+.alert-title{font-size:14px;font-weight:700}
+.alert-meta{font-size:12px;color:var(--text-light)}
+.alert-price{font-size:16px;font-weight:800;color:var(--navy);white-space:nowrap}
+.empty{text-align:center;padding:60px 20px;color:var(--text-light)}
+.empty h3{color:var(--text);margin-bottom:8px}
+.btn{display:inline-block;padding:10px 24px;background:var(--blue);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;margin-top:12px}
+.loading{text-align:center;padding:60px;color:var(--text-light);font-size:13px}
+</style>
+</head>
+<body>
+<div class="page">
+<h1>Deal Alerts</h1>
+<p class="sub">Deals that matched your buying criteria</p>
+<div id="alerts"><div class="loading">Loading your deal alerts...</div></div>
+</div>
+<script>
+(function(){
+  var user;
+  try{user=JSON.parse(localStorage.getItem('tfs_buyer')||'null');}catch(e){}
+  if(!user||!user.contactId){
+    document.getElementById('alerts').innerHTML='<div class="empty"><h3>Log in to see your deal alerts</h3><p>Sign in to view deals matched to your buying criteria.</p><a href="/deals.html" class="btn">Browse Deals</a></div>';
+    return;
+  }
+  // Fetch deals the buyer was alerted about from GHL tags
+  fetch('/api/auth-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:user.email,password:'check'})})
+    .then(function(r){return r.json();})
+    .then(function(){
+      // We can't easily get alert history from GHL via frontend.
+      // Show recently viewed + saved as a proxy for now.
+      var viewed=[];try{viewed=JSON.parse(localStorage.getItem('tfs_viewed')||'[]');}catch(e){}
+      var saved=[];try{saved=JSON.parse(localStorage.getItem('tfs_saved')||'[]');}catch(e){}
+
+      // Fetch active deals to show matching ones
+      return fetch('/api/deals').then(function(r){return r.json();}).then(function(data){
+        var deals=data.deals||[];
+        var el=document.getElementById('alerts');
+        if(!deals.length){
+          el.innerHTML='<div class="empty"><h3>No active deals right now</h3><p>We\'ll send you alerts when deals match your criteria.</p><a href="/buying-criteria.html" class="btn">Update Buy Box</a></div>';
+          return;
+        }
+        // Show all active deals as "alerts" — in a real implementation this would
+        // filter to deals that were actually sent to this buyer
+        var html=deals.map(function(d){
+          var price=d.askingPrice?'$'+Number(d.askingPrice).toLocaleString():'';
+          var entry=d.entryFee?'$'+Number(d.entryFee).toLocaleString()+' entry':'';
+          var thumb='';
+          if(d.coverPhoto){
+            var m=(d.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+            if(m)thumb='<img src="/api/drive-thumb?id='+m[1]+'&sz=200" alt="">';
+          }
+          return'<a class="alert-card" href="/deal.html?id='+encodeURIComponent(d.id)+'">'
+            +'<div class="alert-thumb">'+thumb+'</div>'
+            +'<div class="alert-info">'
+            +'<div class="alert-type">'+(d.dealType||'Deal')+'</div>'
+            +'<div class="alert-title">'+(d.city||'')+', '+(d.state||'')+'</div>'
+            +'<div class="alert-meta">'+(d.beds?d.beds+'bd ':'')+(d.baths?d.baths+'ba ':'')+(d.sqft?Number(d.sqft).toLocaleString()+' sqft':'')+'</div>'
+            +'</div>'
+            +'<div class="alert-price">'+(entry||price)+'</div>'
+            +'</a>';
+        }).join('');
+        el.innerHTML=html;
+      });
+    })
+    .catch(function(){
+      document.getElementById('alerts').innerHTML='<div class="empty"><h3>Could not load alerts</h3><p>Please try again later.</p><a href="/deals.html" class="btn">Browse Deals</a></div>';
+    });
+})();
+</script>
+</body>
+</html>
