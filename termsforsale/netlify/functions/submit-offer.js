@@ -37,6 +37,7 @@ exports.handler = async (event) => {
   var city = body.city || '';
   var state = body.state || '';
   var dealType = body.dealType || '';
+  var streetAddress = body.streetAddress || '';
   var amount = body.amount || '';
   var coe = body.coe || '';
   var notes = body.notes || '';
@@ -54,6 +55,7 @@ exports.handler = async (event) => {
   var buyerPhone = contact ? contact.phone : '';
 
   var location = city && state ? city + ', ' + state : 'Deal ' + dealId.substring(0, 8);
+  var fullAddress = streetAddress ? streetAddress + ', ' + city + ', ' + state : location;
 
   // 1. Build note
   var noteLines = [
@@ -85,9 +87,12 @@ exports.handler = async (event) => {
         pipelineStageId: stageId,
         locationId: locationId,
         contactId: contactId,
-        name: (dealType || 'Offer') + ' — ' + location + ' — ' + buyerName.trim(),
+        name: (dealType || 'Offer') + ' — ' + fullAddress + ' — ' + buyerName.trim(),
         status: 'open',
         monetaryValue: amount ? +amount : 0,
+        customFields: [
+          { key: 'property_address', field_value: fullAddress }
+        ],
       };
       await fetch(GHL_BASE + '/opportunities/', {
         method: 'POST',

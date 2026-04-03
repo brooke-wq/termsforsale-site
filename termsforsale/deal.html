@@ -1165,7 +1165,7 @@ async function submitRequest(dealId){
     var user=getUser();
     var deal=window._currentDeal||{};
     if(user&&user.contactId){
-      fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',amount:deal.entryFee||deal.askingPrice||'',coe:timeline||'',notes:notes||''})}).catch(function(){});
+      fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',streetAddress:deal.streetAddress||'',amount:deal.entryFee||deal.askingPrice||'',coe:timeline||'',notes:notes||''})}).catch(function(){});
     }
   }catch(err){console.error('GHL webhook error:',err);}
   btn.textContent='✓ Request Sent!';btn.style.background='#276749';
