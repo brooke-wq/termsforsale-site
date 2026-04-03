@@ -1010,7 +1010,15 @@ function renderDeal(d,allDeals){
           </div>
         </div>
       </div>
-      <div style="text-align:center">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Share This Deal</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="shareDeal('sms')" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;color:var(--text-mid);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='';this.style.color=''"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Text</button>
+          <button onclick="shareDeal('email')" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;color:var(--text-mid);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='';this.style.color=''"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email</button>
+          <button onclick="shareDeal('copy')" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;color:var(--text-mid);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='';this.style.color=''"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Link</button>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:12px">
         <a href="/deals.html" style="font-size:12px;color:var(--text-light);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--text-light)'">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back to all active deals
         </a>
@@ -1021,6 +1029,17 @@ function renderDeal(d,allDeals){
   loadDealPhotos(d);
 }
 
+function shareDeal(method){
+  var url=window.location.href;
+  var d=window._currentDeal||{};
+  var title=(d.dealType||'Deal')+' in '+(d.city||'')+', '+(d.state||'');
+  var price=d.askingPrice?'$'+Number(d.askingPrice).toLocaleString():'';
+  var entry=d.entryFee?'$'+Number(d.entryFee).toLocaleString()+' entry':'';
+  var text=title+(price?' — '+price:'')+(entry?' ('+entry+')':'')+' '+url;
+  if(method==='sms'){window.open('sms:?&body='+encodeURIComponent('Check out this deal: '+text));}
+  else if(method==='email'){window.open('mailto:?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent('I found this deal on Terms For Sale:\n\n'+text));}
+  else if(method==='copy'){navigator.clipboard.writeText(url).then(function(){var b=event.target.closest('button');if(b){b.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Copied!';setTimeout(function(){b.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Link';},2000);}});}
+}
 function switchTab(btn,id){
   document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
@@ -1200,6 +1219,7 @@ async function init(){
       console.log('Loaded '+allDeals.length+' deals from Sheets');
     }
     if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
+    window._currentDeal=deal;
     renderDeal(deal,allDeals);
     // Track deal view for logged-in users
     var viewer=getUser();
