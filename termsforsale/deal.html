@@ -660,11 +660,11 @@ async function loadDealPhotos(d){
 
   let thumbsHtml='';
   if(loggedIn&&thumbIds.length){
-    thumbIds.slice(0,4).forEach((id,i)=>{
+    thumbIds.slice(0,2).forEach((id,i)=>{
       const idx=coverSrc?i+1:i+1;
-      const isLast=i===Math.min(thumbIds.length,4)-1&&allUrls.length>5;
+      const isLast=i===1&&allUrls.length>3;
       thumbsHtml+=`<div class="photo-thumb" onclick="openLB(${idx})"><img src="${thumbUrl(id,400)}" alt="Photo">`;
-      if(isLast)thumbsHtml+=`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;cursor:pointer">+${allUrls.length-5} more</div>`;
+      if(isLast)thumbsHtml+=`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;cursor:pointer">+${allUrls.length-3} more</div>`;
       thumbsHtml+=`</div>`;
     });
   }else if(!loggedIn&&(coverSrc||photoIds.length)){
@@ -714,7 +714,7 @@ function renderDeal(d,allDeals){
     d.sqft?{icon:'<path d="M21 3H3v7h18V3z"/><path d="M21 14H3v7h18v-7z"/>',label:`${(()=>{const n=parseInt(String(d.sqft).replace(/[^0-9]/g,''));return isNaN(n)?d.sqft:n.toLocaleString()+' sqft';})()}`}:null,
     d.propertyType?{icon:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:d.propertyType}:null,
     d.occupancy?{icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>',label:d.occupancy,cls:'tag-orange'}:null,
-    d.hoa?{icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:(()=>{let h=String(d.hoa).replace(/[$,]/g,'').replace(/\/mo.*/i,'').trim();const n=parseFloat(h);return!isNaN(n)?'$'+n.toLocaleString()+'/mo HOA':d.hoa+' HOA';})()}:null,
+    d.hoa?{icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',label:(()=>{var raw=String(d.hoa).trim();if(/^(no|none|n\/a|0|false)/i.test(raw))return'NO HOA';var m=raw.match(/\$?([\d,]+(?:\.\d+)?)/);if(m){return'$'+parseFloat(m[1].replace(/,/g,'')).toLocaleString()+'/mo HOA';}return'HOA';})()}:null,
   ].filter(Boolean);
 
   const tagsHtml=tagItems.map(t=>`<span class="tag ${t.cls||''}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg>${t.label}</span>`).join('');
