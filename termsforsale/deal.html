@@ -120,6 +120,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .term-label{font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
 .term-value{font-size:14px;font-weight:600;color:var(--text)}
 .term-value.empty{color:var(--border);font-style:italic;font-weight:400}
+.term-item.empty-cell{border-bottom:none}
 
 /* MAP */
 .map-embed{border-radius:var(--r);overflow:hidden;height:220px;background:var(--border-light);margin-top:20px;border:1px solid var(--border)}
@@ -712,14 +713,37 @@ function renderDeal(d,allDeals){
 
   const tagsHtml=tagItems.map(t=>`<span class="tag ${t.cls||''}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg>${t.label}</span>`).join('');
 
-  // TERMS TABLE
+  // TERMS TABLE — structured for investor readability
   const termRows=[];
-  termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
-  termRows.push({l:'Deal Type',v:d.dealType||'—'},{l:'Entry Fee',v:entry?fc(entry)+' + CC/TC':'—'});
-  if(isSubTo){termRows.push({l:'Subject To',v:d.subtoLoanBalance?'Yes':'—'},{l:'Loan Type',v:'Existing Mortgage'});termRows.push({l:'Loan Balance',v:fc(d.subtoLoanBalance)},{l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});termRows.push({l:'Escrow Payment',v:d.piti?'Included in PITI':'—'},{l:'APR',v:fmtRate(d.subtoRate)});termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'},{l:'Balloon',v:d.subToBalloon||'—'});}
-  if(isSF){termRows.push({l:'SF Loan Amount',v:fc(d.sfLoanAmount)},{l:'Interest Rate',v:d.sfRate||'—'});termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'},{l:'Term',v:d.sfTerm||'—'});termRows.push({l:'Balloon',v:d.sfBalloon||'—'},{l:'Down Payment',v:fc(entry)});}
 
-  const termsTableHtml=`<div class="terms-grid">${termRows.map(r=>`<div class="term-item"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div>`;
+  // Deal overview: what you're buying and what it costs to get in
+  termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
+  termRows.push({l:'Deal Type',v:d.dealType||'—'});
+  termRows.push({l:'Entry Fee',v:entry?fc(entry)+' + CC/TC':'—'});
+  if(arv) termRows.push({l:'ARV',v:fc(arv)});
+
+  // SubTo section — existing mortgage being taken over
+  if(isSubTo){
+    termRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
+    termRows.push({l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});
+    termRows.push({l:'APR',v:fmtRate(d.subtoRate)});
+    termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'});
+    if(d.subToBalloon && d.subToBalloon!=='—') termRows.push({l:'Balloon',v:d.subToBalloon});
+  }
+
+  // Seller Finance section — new financing from seller
+  if(isSF){
+    termRows.push({l:'Seller Finance Amount',v:fc(d.sfLoanAmount)});
+    termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'});
+    termRows.push({l:'Interest Rate',v:d.sfRate||'—'});
+    termRows.push({l:'Term',v:d.sfTerm||'—'});
+    if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
+  }
+
+  // Pad to even number for 2-column grid
+  if(termRows.length%2!==0) termRows.push({l:'',v:''});
+
+  const termsTableHtml=`<div class="terms-grid">${termRows.filter(r=>r.l||r.v).map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}${termRows.length%2!==0?'<div class="term-item empty-cell"></div>':''}</div>`;
 
   // HIGHLIGHTS
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
@@ -841,7 +865,7 @@ function renderDeal(d,allDeals){
             <div class="calc-hint">Pre-filled: purchase price and ARV from deal data. Enter your rehab and cost estimates.</div>
             <div class="calc-grid">
               <div class="calc-field"><label>Purchase Price</label><input type="number" id="cf-price" value="${+d.askingPrice||''}" placeholder="Purchase price" oninput="calcFlip()"></div>
-              <div class="calc-field"><label>Entry / Down Payment</label><input type="number" id="cf-entry" value="${entry||''}" placeholder="Your cash in" oninput="calcFlip()"></div>
+              <div class="calc-field"><label>Entry Fee</label><input type="number" id="cf-entry" value="${entry||''}" placeholder="Your cash in" oninput="calcFlip()"></div>
               <div class="calc-field"><label>Rehab Budget</label><input type="number" id="cf-rehab" value="" placeholder="Your estimate" oninput="calcFlip()"></div>
               <div class="calc-field"><label>Holding Costs (total)</label><input type="number" id="cf-hold" value="" placeholder="Ins + tax + utils" oninput="calcFlip()"></div>
               <div class="calc-field"><label>Closing Costs (buy+sell)</label><input type="number" id="cf-close" value="" placeholder="Your estimate" oninput="calcFlip()"></div>
