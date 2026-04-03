@@ -8,7 +8,16 @@
  *   GHL_LOCATION_ID  — GoHighLevel location/sub-account ID
  */
 
+const crypto = require('crypto');
 const GHL_BASE = 'https://services.leadconnectorhq.com';
+
+function verifyPassword(pw, stored) {
+  if (!stored) return false;
+  var parts = stored.split(':');
+  if (parts.length !== 2) return false;
+  var hash = crypto.pbkdf2Sync(pw, parts[0], 10000, 64, 'sha512').toString('hex');
+  return hash === parts[1];
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -53,7 +62,34 @@ exports.handler = async (event) => {
       });
     }
 
-    // 2. Fire login webhook so GHL workflows can track it
+    // 2. Verify password against stored hash
+    var storedHash = '';
+    var cfs = contact.customFields || [];
+    for (var i = 0; i < cfs.length; i++) {
+      if (cfs[i].key === 'tfs_password_hash' || cfs[i].id === 'tfs_password_hash') {
+        storedHash = cfs[i].value || '';
+        break;
+      }
+    }
+
+    // If contact has a stored hash, verify it. If no hash yet (legacy user), let them in and prompt to set password.
+    var passwordVerified = false;
+    var legacyUser = false;
+    if (storedHash) {
+      passwordVerified = verifyPassword(password, storedHash);
+      if (!passwordVerified) {
+        return respond(401, {
+          error: 'Incorrect password. Please try again or reset your password.',
+          wrongPassword: true,
+        });
+      }
+    } else {
+      // Legacy user — no hash stored. Let them in but flag it.
+      legacyUser = true;
+      passwordVerified = true;
+    }
+
+    // 3. Fire login webhook so GHL workflows can track it
     const webhookUrl = 'https://services.leadconnectorhq.com/hooks/' + locationId + '/webhook-trigger/caa1f812-8957-48af-ae00-45322992102b';
     try {
       await fetch(webhookUrl, {
@@ -65,13 +101,14 @@ exports.handler = async (event) => {
       console.warn('Login webhook fire failed (non-critical):', e.message);
     }
 
-    // 3. Return verified user data (including tags for frontend status checks)
+    // 4. Return verified user data (including tags for frontend status checks)
     var tags = contact.tags || [];
     var hasBuyBox = tags.indexOf('buy box complete') > -1;
     var isVip = tags.indexOf('vip-buyer') > -1 || tags.indexOf('VIP Buyer') > -1;
 
     return respond(200, {
       success: true,
+      legacyUser: legacyUser,
       user: {
         id: contact.id,
         name: contact.firstName || contact.firstNameLowerCase || email.split('@')[0],

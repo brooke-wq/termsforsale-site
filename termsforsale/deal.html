@@ -351,7 +351,24 @@ footer{background:var(--navy);padding:44px 40px 0}
         <div class="a-field"><input class="a-input" id="li-email" type="email" placeholder="Email address"></div>
         <div class="a-field"><input class="a-input" id="li-pass" type="password" placeholder="Password"></div>
         <button class="btn-full-blue" onclick="doLogin()">Log In</button>
-        <div class="a-note">No account? <a href="#" onclick="switchAuthTab('signup');return false">Sign up free &rarr;</a></div>
+        <div class="a-note"><a href="#" onclick="showResetForm();return false" style="color:var(--blue)">Forgot password?</a> &middot; No account? <a href="#" onclick="switchAuthTab('signup');return false">Sign up free &rarr;</a></div>
+      </div>
+      <!-- RESET PASSWORD -->
+      <div id="ap-reset" style="display:none">
+        <div class="a-err" id="a-rs-err"></div>
+        <div class="a-ok" id="a-rs-ok"></div>
+        <div id="rs-step1">
+          <p style="font-size:13px;color:var(--text-mid);margin-bottom:12px">Enter your email and we'll send you a reset code.</p>
+          <div class="a-field"><input class="a-input" id="rs-email" type="email" placeholder="Email address"></div>
+          <button class="btn-full-blue" onclick="requestReset()">Send Reset Code</button>
+        </div>
+        <div id="rs-step2" style="display:none">
+          <p style="font-size:13px;color:var(--text-mid);margin-bottom:12px">Enter the 6-digit code sent to your email/phone.</p>
+          <div class="a-field"><input class="a-input" id="rs-code" type="text" placeholder="6-digit code" maxlength="6"></div>
+          <div class="a-field"><input class="a-input" id="rs-newpass" type="password" placeholder="New password (6+ characters)"></div>
+          <button class="btn-full-blue" onclick="confirmReset()">Reset Password</button>
+        </div>
+        <div class="a-note"><a href="#" onclick="switchAuthTab('login');return false">&larr; Back to login</a></div>
       </div>
       <!-- SIGNUP -->
       <div id="ap-signup" style="display:none">
@@ -484,9 +501,48 @@ function portalUrl(){var u=getUser();return'https://termsforsale.app.clientclub.
 function clearUser(){try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
 function openAuth(tab='login'){switchAuthTab(tab);document.getElementById('auth-overlay').classList.add('open');setTimeout(()=>{const f=document.getElementById(tab==='login'?'li-email':'su-fn');if(f)f.focus();},100);}
 function closeAuth(){document.getElementById('auth-overlay').classList.remove('open');}
+function showResetForm(){
+  document.getElementById('ap-login').style.display='none';
+  document.getElementById('ap-signup').style.display='none';
+  document.getElementById('ap-reset').style.display='block';
+  document.getElementById('at-li').classList.remove('on');
+  document.getElementById('at-su').classList.remove('on');
+  var liEmail=document.getElementById('li-email').value;
+  if(liEmail)document.getElementById('rs-email').value=liEmail;
+}
+async function requestReset(){
+  var email=document.getElementById('rs-email').value.trim();
+  var err=document.getElementById('a-rs-err'),ok=document.getElementById('a-rs-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!email){err.textContent='Please enter your email.';err.style.display='block';return;}
+  try{
+    var res=await fetch('/api/auth-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
+    var data=await res.json();
+    ok.textContent=data.message||'Reset code sent!';ok.style.display='block';
+    document.getElementById('rs-step1').style.display='none';
+    document.getElementById('rs-step2').style.display='block';
+  }catch(e){err.textContent='Connection error. Please try again.';err.style.display='block';}
+}
+async function confirmReset(){
+  var email=document.getElementById('rs-email').value.trim();
+  var code=document.getElementById('rs-code').value.trim();
+  var newPass=document.getElementById('rs-newpass').value.trim();
+  var err=document.getElementById('a-rs-err'),ok=document.getElementById('a-rs-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!code||!newPass){err.textContent='Please enter the code and new password.';err.style.display='block';return;}
+  if(newPass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  try{
+    var res=await fetch('/api/auth-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,code:code,newPassword:newPass})});
+    var data=await res.json();
+    if(!res.ok){err.textContent=data.error||'Reset failed.';err.style.display='block';return;}
+    ok.textContent='Password updated! You can now log in.';ok.style.display='block';
+    setTimeout(function(){switchAuthTab('login');},2000);
+  }catch(e){err.textContent='Connection error. Please try again.';err.style.display='block';}
+}
 function switchAuthTab(tab){
   document.getElementById('ap-login').style.display=tab==='login'?'block':'none';
   document.getElementById('ap-signup').style.display=tab==='signup'?'block':'none';
+  var resetEl=document.getElementById('ap-reset');if(resetEl)resetEl.style.display='none';
   document.getElementById('at-li').classList.toggle('on',tab==='login');
   document.getElementById('at-su').classList.toggle('on',tab==='signup');
   ['a-li-err','a-li-ok','a-su-err','a-su-ok'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});

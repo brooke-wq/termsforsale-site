@@ -1,13 +1,28 @@
 /**
  * Auth Signup — POST /.netlify/functions/auth-signup
  * Creates/upserts contact in GHL via API, returns verified user data.
+ * Hashes password and stores on contact custom field for real auth.
  *
  * ENV VARS REQUIRED:
  *   GHL_API_KEY      — GoHighLevel API key
  *   GHL_LOCATION_ID  — GoHighLevel location/sub-account ID
  */
 
+const crypto = require('crypto');
 const GHL_BASE = 'https://services.leadconnectorhq.com';
+
+function hashPassword(pw) {
+  var salt = crypto.randomBytes(16).toString('hex');
+  var hash = crypto.pbkdf2Sync(pw, salt, 10000, 64, 'sha512').toString('hex');
+  return salt + ':' + hash;
+}
+
+function verifyPassword(pw, stored) {
+  var parts = stored.split(':');
+  if (parts.length !== 2) return false;
+  var hash = crypto.pbkdf2Sync(pw, parts[0], 10000, 64, 'sha512').toString('hex');
+  return hash === parts[1];
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -90,6 +105,13 @@ exports.handler = async (event) => {
         field_value: max_entry_fee,
       });
     }
+
+    // Hash password and store on contact
+    var hashedPw = hashPassword(password);
+    contactPayload.customFields.push({
+      key: 'tfs_password_hash',
+      field_value: hashedPw,
+    });
 
     const res = await ghlFetch(`${GHL_BASE}/contacts/upsert`, 'POST', contactPayload, headers);
     const data = await res.json();
