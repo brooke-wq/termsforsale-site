@@ -467,7 +467,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
     if (price) smsMsg += ' — ' + price;
     if (entry) smsMsg += ' entry ' + entry;
-    smsMsg += '. View: ' + deal.dealUrl;
+    smsMsg += '. View: https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
     if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
 
     try {
@@ -516,8 +516,8 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       + (entry ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Entry Fee</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:15px;font-weight:800;text-align:right">' + entry + '</td></tr>' : '')
       + '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Deal Type</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:14px;font-weight:600;text-align:right">' + (deal.dealType || 'N/A') + '</td></tr>'
       + '</table>'
-      + '<a href="' + deal.dealUrl + '" style="display:inline-block;padding:14px 32px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">View Full Deal Details</a>'
-      + '<p style="color:#718096;font-size:12px;margin-top:24px">This deal matched your buying criteria. <a href="https://deals.termsforsale.com/buy-box.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
+      + '<a href="https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1" style="display:inline-block;padding:14px 32px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">View Full Deal Details</a>'
+      + '<p style="color:#718096;font-size:12px;margin-top:24px">This deal matched your buying criteria. <a href="https://deals.termsforsale.com/buying-criteria.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
       + '</div>'
       + '<div style="background:#F4F6F9;padding:16px 32px;border-radius:0 0 12px 12px;text-align:center">'
       + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale · Deal Pros LLC · <a href="https://deals.termsforsale.com" style="color:#29ABE2">deals.termsforsale.com</a></p>'

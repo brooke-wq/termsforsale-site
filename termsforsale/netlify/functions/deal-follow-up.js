@@ -98,7 +98,10 @@ exports.handler = async function(event) {
         var dealCity = cf['KuaUFXhbQB6kKvBSKfoI'] || '';
         var dealAddress = cf['TerjqctukTW67rB21ugC'] || dealCity || 'the deal';
         var dealType = cf['0thrOdoETTLlFA45oN8U'] || '';
-        var dealUrl = cf['5eEVPcp8nERlR6GpjZUn'] || 'https://termsforsale.com';
+        var dealUrlRaw = cf['5eEVPcp8nERlR6GpjZUn'] || '';
+        // Extract deal page ID from stored URL for tracking
+        var dealPageId = (dealUrlRaw.match(/[?&]id=([^&]+)/) || [])[1] || dealId;
+        var dealUrl = dealUrlRaw ? 'https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + dealPageId + '&r=1' : 'https://deals.termsforsale.com/deals.html';
 
         // File-based dedup check helper
         var useFileDedup = sentLog && sentLog.isDroplet();
