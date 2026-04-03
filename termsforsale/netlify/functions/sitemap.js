@@ -9,41 +9,28 @@ exports.handler = async function(event) {
 
   var urls = [
     { loc: BASE_URL + '/', priority: '1.0', freq: 'daily' },
-    { loc: BASE_URL + '/blog/', priority: '0.9', freq: 'daily' },
-    { loc: BASE_URL + '/map.html', priority: '0.8', freq: 'weekly' }
+    { loc: BASE_URL + '/deals.html', priority: '0.95', freq: 'daily' },
+    { loc: BASE_URL + '/blog/', priority: '0.8', freq: 'daily' },
+    { loc: BASE_URL + '/buying-criteria.html', priority: '0.7', freq: 'monthly' },
+    { loc: BASE_URL + '/vip-buyers.html', priority: '0.6', freq: 'monthly' },
+    { loc: BASE_URL + '/privacy.html', priority: '0.3', freq: 'yearly' },
+    { loc: BASE_URL + '/terms.html', priority: '0.3', freq: 'yearly' }
   ];
 
-  // Fetch deal IDs from Google Sheet
+  // Fetch active deals from Notion via internal API
   try {
-    var sheetUrl = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&gid=0&headers=1';
-    var res = await fetch(sheetUrl);
-    var text = await res.text();
-    var m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
-    if (m) {
-      var json = JSON.parse(m[1]);
-      var cols = json.table.cols.map(function(c){return c.label.trim();});
-      var rows = json.table.rows || [];
-      var ACTIVE = ['actively marketing','active marketing','active'];
-      rows.forEach(function(row) {
-        var o = {};
-        var seen = {};
-        cols.forEach(function(c,i){
-          var cell=row.c[i]; var val=cell?(cell.v!==null?String(cell.v).trim():''):'';
-          if(seen[c]===undefined){seen[c]=0;o[c]=val;o[c+'__0']=val;}
-          else{seen[c]++;o[c+'__'+seen[c]]=val;o[c]=val;}
+    var dealsRes = await fetch(BASE_URL + '/api/deals');
+    if (dealsRes.ok) {
+      var dealsData = await dealsRes.json();
+      (dealsData.deals || []).forEach(function(d) {
+        urls.push({
+          loc: BASE_URL + '/deal.html?id=' + encodeURIComponent(d.id),
+          priority: '0.8',
+          freq: 'weekly'
         });
-        var status = (o['Deal Status'] || '').trim().toLowerCase();
-        var id = o['Deal ID'] || o['Deal Status__0'];
-        if (ACTIVE.indexOf(status) > -1 && id) {
-          urls.push({
-            loc: BASE_URL + '/deal.html?id=' + encodeURIComponent(id),
-            priority: '0.8',
-            freq: 'weekly'
-          });
-        }
       });
     }
-  } catch(e) {}
+  } catch(e) { console.warn('sitemap: deals fetch failed:', e.message); }
 
   // Fetch blog posts from posts-index.json
   try {
