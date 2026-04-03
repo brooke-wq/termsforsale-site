@@ -1229,22 +1229,14 @@ function loadCardThumbnails(deals){
       if(el)fillCardImg(el,_folderCache[folderId]);
       return;
     }
-    const feedUrl=`https://drive.google.com/feeds/default/public/full/folder%3A${folderId}?alt=json&max-results=1`;
-    fetch(feedUrl)
-      .then(r=>{if(!r.ok)throw new Error('feed failed');return r.json();})
+    // Use our API which sorts by createdTime (first uploaded = cover)
+    fetch(`/api/drive-photos?folderId=${folderId}`)
+      .then(r=>{if(!r.ok)throw new Error('api failed');return r.json();})
       .then(data=>{
-        const entries=(data.feed&&data.feed.entry)||[];
-        if(!entries.length)throw new Error('empty feed');
-        const e=entries[0];
-        let fileId=((e['gd$resourceId']&&e['gd$resourceId']['$t'])||'').replace('file:','');
-        if(!fileId){
-          for(const l of(e['link']||[])){
-            const m=(l['@href']||'').match(/\/d\/([a-zA-Z0-9_-]{20,})\//);
-            if(m){fileId=m[1];break;}
-          }
-        }
-        if(!fileId)throw new Error('no file id');
-        const thumb=`https://lh3.googleusercontent.com/d/${fileId}=s800`;
+        const fileIds=data.fileIds||[];
+        if(!fileIds.length)throw new Error('no photos');
+        const fileId=fileIds[0];
+        const thumb=`/api/drive-thumb?id=${fileId}&sz=600`;
         _folderCache[folderId]=thumb;
         const el=document.getElementById(cardId);
         if(el)fillCardImg(el,thumb);
