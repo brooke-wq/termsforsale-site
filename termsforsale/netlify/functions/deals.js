@@ -36,7 +36,7 @@ function getFirstFileFromFolder(folderId, apiKey) {
   var url = 'https://www.googleapis.com/drive/v3/files'
     + '?q=' + encodeURIComponent(query)
     + '&fields=files(id,name)'
-    + '&orderBy=createdTime'
+    + '&orderBy=name'
     + '&pageSize=10'
     + '&supportsAllDrives=true'
     + '&includeItemsFromAllDrives=true'
