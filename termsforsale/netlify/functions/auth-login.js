@@ -65,7 +65,11 @@ exports.handler = async (event) => {
       console.warn('Login webhook fire failed (non-critical):', e.message);
     }
 
-    // 3. Return verified user data
+    // 3. Return verified user data (including tags for frontend status checks)
+    var tags = contact.tags || [];
+    var hasBuyBox = tags.indexOf('buy box complete') > -1;
+    var isVip = tags.indexOf('vip-buyer') > -1 || tags.indexOf('VIP Buyer') > -1;
+
     return respond(200, {
       success: true,
       user: {
@@ -76,6 +80,8 @@ exports.handler = async (event) => {
         email: contact.email || email,
         phone: contact.phone || '',
         initials: getInitials(contact.firstName, contact.lastName),
+        hasBuyBox: hasBuyBox,
+        isVip: isVip,
       }
     });
 
@@ -91,7 +97,18 @@ async function findContactByEmail(email, locationId, headers) {
   const res = await ghlFetch(url, 'GET', null, headers);
   if (!res.ok) return null;
   const data = await res.json();
-  return data.contact || null;
+  var contact = data.contact || null;
+  // Duplicate search may not return tags — fetch full contact
+  if (contact && contact.id) {
+    try {
+      var fullRes = await ghlFetch(`${GHL_BASE}/contacts/${contact.id}`, 'GET', null, headers);
+      if (fullRes.ok) {
+        var fullData = await fullRes.json();
+        contact = fullData.contact || contact;
+      }
+    } catch (e) { /* use partial contact */ }
+  }
+  return contact;
 }
 
 // ─── Helpers ────────────────────────────────────────────────

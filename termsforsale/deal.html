@@ -509,12 +509,23 @@ async function doLogin(){
   err.style.display='none';ok.style.display='none';
   if(!email||!pass){err.textContent='Please enter email and password.';err.style.display='block';return;}
   const btn=event.target;btn.disabled=true;btn.textContent='Logging in…';
-  try{await fetch(GHL_LOGIN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({email,password:pass,source:'TFS Website Login',tags:['TFS Buyer']},getUTMs()))});}catch(e){console.error('Login webhook error:',e);}
-  const name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-  const user={name,email,initials:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'B'};
-  setUser(user);updateNavAuth(user);
-  ok.innerHTML='Welcome back, '+user.name+'! <a href="https://termsforsale.app.clientclub.net/" target="_blank" style="color:var(--blue);font-weight:700">Open Buyer Portal &rarr;</a>';ok.style.display='block';
-  setTimeout(()=>closeAuth(),2000);
+  try{
+    const res=await fetch('/api/auth-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const data=await res.json();
+    if(!res.ok||!data.success){
+      err.textContent=data.error||'Login failed. Please try again.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Log In';return;
+    }
+    const u=data.user;
+    const user={contactId:u.id,name:u.firstName||u.name,email:u.email,phone:u.phone||'',initials:u.initials||'B',hasBuyBox:!!u.hasBuyBox,isVip:!!u.isVip};
+    setUser(user);updateNavAuth(user);
+    ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
+    setTimeout(()=>{closeAuth();location.reload();},1500);
+    if(!u.hasBuyBox){setTimeout(()=>{if(confirm('Complete your buying criteria to get matched to deals automatically. Set it up now?'))window.location.href='/buying-criteria.html';},2000);}
+  }catch(e){
+    console.error('Login error:',e);
+    err.textContent='Connection error. Please try again.';err.style.display='block';
+  }
   btn.disabled=false;btn.textContent='Log In';
 }
 async function doSignup(){

@@ -1387,12 +1387,14 @@ async function doLogin(){
       btn.disabled=false;btn.textContent='Log In';return;
     }
     const u=data.user;
-    const user={contactId:u.id,name:u.firstName||u.name,email:u.email,phone:u.phone||'',initials:u.initials||'B'};
+    const user={contactId:u.id,name:u.firstName||u.name,email:u.email,phone:u.phone||'',initials:u.initials||'B',hasBuyBox:!!u.hasBuyBox,isVip:!!u.isVip};
     setUser(user);updateNavAuth(user);
-    ok.innerHTML='Welcome back, '+user.name+'! <a href="/dashboard.html" style="color:var(--blue);font-weight:700">Open Dashboard &rarr;</a>';ok.style.display='block';
+    ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
     // Sync saved deals from GHL
     syncSavedDeals(u.id);
-    setTimeout(()=>closeAuth(),2000);
+    setTimeout(()=>closeAuth(),1500);
+    // If no buy box, nudge them
+    if(!u.hasBuyBox){setTimeout(()=>{if(confirm('Complete your buying criteria to get matched to deals automatically. Set it up now?'))window.location.href='/buying-criteria.html';},2000);}
   }catch(e){
     console.error('Login error:',e);
     err.textContent='Connection error. Please try again.';err.style.display='block';
