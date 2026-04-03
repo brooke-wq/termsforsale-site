@@ -1432,8 +1432,13 @@ async function doSignup(){
     const u=data.user;
     const user={contactId:u.id,name:u.firstName||u.name||fn,email:u.email||email,phone:u.phone||phone,initials:u.initials||(fn[0]+(ln?ln[0]:'')).toUpperCase()};
     setUser(user);updateNavAuth(user);
-    ok.innerHTML=data.exists?'Welcome back, '+user.name+'! You already have an account.':'Account created! Welcome, '+user.name+'! <a href="/dashboard.html" style="color:var(--blue);font-weight:700">Open Dashboard &rarr;</a>';ok.style.display='block';
-    setTimeout(()=>closeAuth(),2000);
+    if(data.exists){
+      ok.innerHTML='Welcome back, '+user.name+'!';ok.style.display='block';
+      setTimeout(()=>closeAuth(),1500);
+    }else{
+      ok.innerHTML='Account created! Welcome, '+user.name+'!<br><strong>Next:</strong> Tell us what you\'re looking for so we send you the right deals.';ok.style.display='block';
+      setTimeout(()=>{closeAuth();window.location.href='/buying-criteria.html';},2000);
+    }
   }catch(e){
     console.error('Signup error:',e);
     err.textContent='Connection error. Please try again.';err.style.display='block';
