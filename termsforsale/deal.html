@@ -1161,6 +1161,12 @@ async function submitRequest(dealId){
   const payload=Object.assign({firstName:fname,lastName:lname||'',phone,email:email||'',tags,source:'TFS Deal Page',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',deal_structure:structure||'',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:notes||'',lead_source_detail:utms.utm_source||'TFS Deal Page'}},utms);
   try{
     await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    // Also submit via API for pipeline tracking + notifications
+    var user=getUser();
+    var deal=window._currentDeal||{};
+    if(user&&user.contactId){
+      fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',amount:deal.entryFee||deal.askingPrice||'',coe:timeline||'',notes:notes||''})}).catch(function(){});
+    }
   }catch(err){console.error('GHL webhook error:',err);}
   btn.textContent='✓ Request Sent!';btn.style.background='#276749';
   setTimeout(()=>{btn.textContent='Submit Request';btn.style.background='';btn.disabled=false;},3000);
