@@ -1,5 +1,18 @@
 # Deal Pros LLC — Codebase Guide + Paperclip AI OS
 
+## MANDATORY SESSION RULES
+
+**Before ending ANY session, you MUST:**
+1. Update the "Completed" section of this file with a summary of what was built/changed
+2. Update the "TODO" section with any new items or remove completed ones
+3. Commit and push the updated CLAUDE.md to main
+4. This is NON-NEGOTIABLE — do not end a session without updating this file
+
+**Before making ANY outbound API call that sends SMS/email:**
+1. Verify test mode is active (check env vars, URL params)
+2. NEVER run notify-buyers, deal-follow-up, or any messaging function without confirming it won't send live messages
+3. When in doubt, ASK the user before running
+
 ## Project Overview
 
 Deal Pros LLC is a real estate wholesale company that operates two public-facing sites and an AI-powered back-office stack called **Paperclip**:
