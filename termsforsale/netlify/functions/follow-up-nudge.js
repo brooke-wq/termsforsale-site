@@ -12,6 +12,10 @@
 const { complete } = require('./_claude');
 const { cfMap, getContact, postNote, addTags, swapTags, sendSMS, findByTag } = require('./_ghl');
 
+// File-based dedup (Droplet only)
+var sentLog;
+try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
+
 const SMS_SYSTEM = `You are a friendly real estate follow-up assistant for Deal Pros LLC.
 Write a single follow-up SMS message to a seller who submitted a property lead but hasn't responded recently.
 Rules:
@@ -101,6 +105,12 @@ exports.handler = async function(event) {
 
         if (daysSinceActivity < NUDGE_AFTER_DAYS) continue;
 
+        // File-based dedup: skip if already nudged this contact
+        if (sentLog && sentLog.isDroplet() && sentLog.wasSent(contact.id, 'nudge', 'sent')) {
+          console.log('[follow-up-nudge] skipping ' + contact.id + ' — already nudged (file dedup)');
+          continue;
+        }
+
         // Need phone to send SMS
         var phone = contact.phone;
         if (!phone) {
@@ -154,6 +164,7 @@ exports.handler = async function(event) {
           'Auto follow-up sent: ' + smsText + '\n\n' +
           'Days inactive: ' + Math.round(daysSinceActivity) +
           '\n--- Follow-Up Nudge Agent / Deal Pros LLC ---');
+        if (sentLog && sentLog.isDroplet()) sentLog.markSent(contact.id, 'nudge', 'sent');
 
         stats.nudged++;
         console.log('[follow-up-nudge] nudged ' + contact.id + ' cost=$' + claudeRes.usage.cost.toFixed(6));

@@ -9,6 +9,10 @@
 const { complete } = require('./_claude');
 const { postNote, sendSMS, searchContacts } = require('./_ghl');
 
+// File-based dedup (Droplet only)
+var sentLog;
+try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
+
 exports.config = { schedule: '0 15 * * 1' };
 
 // ─── Notion helpers ───────────────────────────────────────────
@@ -237,18 +241,26 @@ Format the report as:
       console.log('weekly-synthesis: note posted, status=' + noteResult.status);
     }
 
-    // SMS to Brooke (abbreviated)
-    var activeLine = pipelineByStatus['Actively Marketing']
-      ? pipelineByStatus['Actively Marketing'] + ' active'
-      : '';
-    var closedLine = (pipelineByStatus['Closed'] || 0) + (pipelineByStatus['Sold'] || 0);
-    var sms = '📅 Weekly Report ' + weekRange + ': ' +
-      [activeLine, closedLine ? closedLine + ' closed' : ''].filter(Boolean).join(', ') +
-      (wins.length ? ' | Wins: ' + wins.slice(0, 2).join(', ') : '');
-    if (sms.length > 155) sms = sms.slice(0, 152) + '...';
+    // SMS to Brooke (abbreviated) — with weekly dedup
+    var weekKey = weekRange.replace(/\s/g, '');
+    var smsResult = { status: 'skipped-dedup' };
 
-    var smsResult = await sendSMS(ghlApiKey, locationId, brookePhone, sms);
-    console.log('weekly-synthesis: SMS sent, status=' + smsResult.status);
+    if (sentLog && sentLog.isDroplet() && sentLog.wasSent('brooke', 'weekly-synthesis', weekKey)) {
+      console.log('weekly-synthesis: SMS already sent for ' + weekRange + ', skipping');
+    } else {
+      var activeLine = pipelineByStatus['Actively Marketing']
+        ? pipelineByStatus['Actively Marketing'] + ' active'
+        : '';
+      var closedLine = (pipelineByStatus['Closed'] || 0) + (pipelineByStatus['Sold'] || 0);
+      var sms = '📅 Weekly Report ' + weekRange + ': ' +
+        [activeLine, closedLine ? closedLine + ' closed' : ''].filter(Boolean).join(', ') +
+        (wins.length ? ' | Wins: ' + wins.slice(0, 2).join(', ') : '');
+      if (sms.length > 155) sms = sms.slice(0, 152) + '...';
+
+      smsResult = await sendSMS(ghlApiKey, locationId, brookePhone, sms);
+      console.log('weekly-synthesis: SMS sent, status=' + smsResult.status);
+      if (sentLog && sentLog.isDroplet()) sentLog.markSent('brooke', 'weekly-synthesis', weekKey);
+    }
 
     return {
       statusCode: 200,

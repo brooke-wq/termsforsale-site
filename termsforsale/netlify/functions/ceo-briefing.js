@@ -9,6 +9,10 @@
 const { complete } = require('./_claude');
 const { postNote, sendSMS, searchContacts } = require('./_ghl');
 
+// File-based dedup (Droplet only)
+var sentLog;
+try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
+
 exports.config = { schedule: '0 14 * * *' };
 
 // ─── Notion helpers ───────────────────────────────────────────
@@ -183,19 +187,26 @@ exports.handler = async function(event) {
       console.log('ceo-briefing: note posted, status=' + noteResult.status);
     }
 
-    // 7. Send abbreviated SMS to Brooke (under 160 chars)
-    var lines = briefing.split('\n').filter(function(l) { return l.trim(); });
-    // Build SMS: first line + action line
-    var winLine    = lines.find(function(l) { return l.startsWith('🟢'); }) || '';
-    var actionLine = lines.find(function(l) { return l.startsWith('🔴'); }) || '';
-    var funnel     = lines.find(function(l) { return l.startsWith('📥'); }) || '';
+    // 7. Send abbreviated SMS to Brooke (under 160 chars) — with daily dedup
+    var today = new Date().toISOString().split('T')[0];
+    var smsResult = { status: 'skipped-dedup' };
 
-    var sms = [winLine, actionLine, funnel].filter(Boolean).join(' | ');
-    if (sms.length > 155) sms = sms.slice(0, 152) + '...';
-    if (!sms) sms = 'CEO Briefing ready — ' + statusSummary.slice(0, 130);
+    if (sentLog && sentLog.isDroplet() && sentLog.wasSent('brooke', 'ceo-briefing', today)) {
+      console.log('ceo-briefing: SMS already sent today, skipping');
+    } else {
+      var lines = briefing.split('\n').filter(function(l) { return l.trim(); });
+      var winLine    = lines.find(function(l) { return l.startsWith('🟢'); }) || '';
+      var actionLine = lines.find(function(l) { return l.startsWith('🔴'); }) || '';
+      var funnel     = lines.find(function(l) { return l.startsWith('📥'); }) || '';
 
-    var smsResult = await sendSMS(ghlApiKey, locationId, brookePhone, sms);
-    console.log('ceo-briefing: SMS sent, status=' + smsResult.status);
+      var sms = [winLine, actionLine, funnel].filter(Boolean).join(' | ');
+      if (sms.length > 155) sms = sms.slice(0, 152) + '...';
+      if (!sms) sms = 'CEO Briefing ready — ' + statusSummary.slice(0, 130);
+
+      smsResult = await sendSMS(ghlApiKey, locationId, brookePhone, sms);
+      console.log('ceo-briefing: SMS sent, status=' + smsResult.status);
+      if (sentLog && sentLog.isDroplet()) sentLog.markSent('brooke', 'ceo-briefing', today);
+    }
 
     return {
       statusCode: 200,
