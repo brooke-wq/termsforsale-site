@@ -632,10 +632,15 @@ async function loadDealPhotos(d){
     }catch(e){console.error('Photo load error:',e);}
   }
 
-  // Build photo URLs
+  // Build photo URLs — use Drive folder order (createdTime)
   const allUrls=[];
-  if(coverSrc)allUrls.push(coverSrc);
-  photoIds.forEach(id=>{if(id!==(coverId||''))allUrls.push(thumbUrl(id,1200));});
+  if(photoIds.length){
+    // Folder photos in upload order — this IS the correct order
+    photoIds.forEach(id=>{allUrls.push(thumbUrl(id,1200));});
+  } else if(coverSrc){
+    // No folder, just a single cover photo
+    allUrls.push(coverSrc);
+  }
   _lbPhotos=allUrls;
 
   // Build strip for lightbox
@@ -651,8 +656,8 @@ async function loadDealPhotos(d){
     return;
   }
 
-  const mainSrc=coverSrc||thumbUrl(photoIds[0],1200);
-  const thumbIds=loggedIn?photoIds.slice(coverSrc?0:1,coverSrc?4:5):[];
+  const mainSrc=allUrls[0];
+  const thumbIds=loggedIn?photoIds.slice(1,3):[];
 
   let mainHtml=`<div class="photo-main" onclick="openLB(0)"><img src="${mainSrc}" alt="Property photo">`;
   if(allUrls.length>1)mainHtml+=`<div class="photo-count-badge" onclick="openLB(0)">${allUrls.length} photos</div>`;
