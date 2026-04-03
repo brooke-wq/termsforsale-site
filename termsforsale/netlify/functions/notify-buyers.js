@@ -562,8 +562,6 @@ exports.handler = async function(event) {
   var dbId = process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
   var apiKey = process.env.GHL_API_KEY;
   var locationId = process.env.GHL_LOCATION_ID;
-  var isLive = process.env.DEAL_ALERTS_LIVE === 'true';
-
   if (!token || !apiKey || !locationId) {
     return { statusCode: 500, headers: headers, body: JSON.stringify({
       error: 'Missing env vars',
@@ -575,6 +573,7 @@ exports.handler = async function(event) {
 
   var params = event.queryStringParameters || {};
   var isTest = params.test === 'true' || params.deal_id;
+  var isLive = process.env.DEAL_ALERTS_LIVE === 'true' && !isTest;
   var deals = [];
 
   try {
