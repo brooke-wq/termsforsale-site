@@ -746,7 +746,7 @@ function renderDeal(d,allDeals){
   if(isSF){
     termRows.push({l:'Seller Finance Amount',v:fc(d.sfLoanAmount)});
     termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'});
-    termRows.push({l:'Interest Rate',v:d.sfRate||'—'});
+    termRows.push({l:'Interest Rate',v:fmtRate(d.sfRate)});
     termRows.push({l:'Term',v:d.sfTerm||'—'});
     if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
   }
