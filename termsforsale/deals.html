@@ -641,6 +641,12 @@ footer{background:var(--navy);padding:52px 55px 0}
         <select class="split-filter-select" id="f-state" onchange="applyFilters()">
           <option value="">All States</option>
         </select>
+        <select class="split-filter-select" id="f-sort" onchange="applyFilters()">
+          <option value="">Newest</option>
+          <option value="price-low">Price: Low → High</option>
+          <option value="price-high">Price: High → Low</option>
+          <option value="entry-low">Entry: Low → High</option>
+        </select>
         <span class="split-count" id="filter-count"></span>
       </div>
     </div>
@@ -1204,11 +1210,17 @@ function applyFilters(){
     if(_tab==='cash'&&normType(d.dealType)!=='cash')return false;
     return true;
   });
+  // Sort
+  const sort=(document.getElementById('f-sort')||{}).value||'';
+  if(sort==='price-low') filtered.sort(function(a,b){return(+a.askingPrice||0)-(+b.askingPrice||0);});
+  else if(sort==='price-high') filtered.sort(function(a,b){return(+b.askingPrice||0)-(+a.askingPrice||0);});
+  else if(sort==='entry-low') filtered.sort(function(a,b){return(+a.entryFee||+a.askingPrice||0)-(+b.entryFee||+b.askingPrice||0);});
+
   const el=document.getElementById('filter-count');
   if(el)el.textContent=filtered.length+' deal'+(filtered.length!==1?'s':'');
   const row=document.getElementById('deals-row');
   if(!row)return;
-  if(!filtered.length){row.innerHTML='<div class="empty-deals"><p>No deals match your filters.</p></div>';return;}
+  if(!filtered.length){row.innerHTML='<div class="empty-deals" style="grid-column:1/-1;text-align:center;padding:60px 20px"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5" style="margin-bottom:12px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px">No deals match your filters</p><p style="font-size:12px;color:#A0AEC0">Try broadening your search or removing filters</p></div>';return;}
   row.innerHTML=filtered.map(d=>makeCard(d)).join('');
   // Lazy-load folder thumbnails for cards with Drive folders
   setTimeout(()=>loadCardThumbnails(filtered),100);
