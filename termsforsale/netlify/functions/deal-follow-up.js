@@ -57,16 +57,19 @@ exports.handler = async function(event) {
 
     var stats = { d0: 0, d1: 0, d2: 0, skipped: 0 };
     var now = Date.now();
+    var MAX_MSGS_PER_CONTACT = 1; // Cap messages per contact per run to avoid spam
 
     for (var i = 0; i < contacts.length; i++) {
       var contact = contacts[i];
       var tags = contact.tags || [];
+      var msgsSentThisRun = 0;
 
       // Find all alerted-* tags to know which deals they were sent
       var alertedTags = tags.filter(function(t) { return t.startsWith('alerted-'); });
       if (!alertedTags.length) continue;
 
       for (var j = 0; j < alertedTags.length; j++) {
+        if (msgsSentThisRun >= MAX_MSGS_PER_CONTACT) { stats.skipped++; continue; }
         var dealTag = alertedTags[j]; // e.g. "alerted-330090d6"
         var dealId = dealTag.replace('alerted-', '');
         var d0Tag = 'sprint-d0-' + dealId;
@@ -129,7 +132,7 @@ exports.handler = async function(event) {
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d0Tag] });
             fileMarkSent('d0');
-            stats.d0++;
+            stats.d0++; msgsSentThisRun++;
             console.log('[deal-follow-up] D0 sent to ' + name + ' for ' + dealId);
           }
 
@@ -144,7 +147,7 @@ exports.handler = async function(event) {
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d1Tag] });
             fileMarkSent('d1');
-            stats.d1++;
+            stats.d1++; msgsSentThisRun++;
             console.log('[deal-follow-up] D1 sent to ' + name + ' for ' + dealId);
           }
 
@@ -174,7 +177,7 @@ exports.handler = async function(event) {
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d2Tag] });
             fileMarkSent('d2');
-            stats.d2++;
+            stats.d2++; msgsSentThisRun++;
             console.log('[deal-follow-up] D2 sent to ' + name + ' for ' + dealId);
           }
 
