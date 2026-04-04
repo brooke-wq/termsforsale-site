@@ -70,16 +70,26 @@ exports.handler = async (event) => {
     const contactId = contactData.contact?.id || contactData.id;
     if (!contactId) return respond(502, { error: 'No contact ID returned' });
 
-    // ── 1b. Update contact with custom fields (separate call for reliability) ──
-    if (contactPayload.customFields && contactPayload.customFields.length > 0) {
+    // ── 1b. Update contact with custom fields (separate PUT for reliability) ──
+    const cf = contactPayload.customFields;
+    if (cf && cf.length > 0) {
+      console.log('Updating', cf.length, 'custom fields. Sample:', JSON.stringify(cf.slice(0, 3)));
       const updateRes = await ghlFetch(`${GHL_BASE}/contacts/${contactId}`, 'PUT', {
-        customFields: contactPayload.customFields,
+        customFields: cf,
       }, headers);
+      const updateData = await updateRes.json().catch(() => ({}));
       if (!updateRes.ok) {
-        const updateData = await updateRes.json();
-        console.warn('Contact custom field update failed:', JSON.stringify(updateData));
+        console.error('Custom field PUT failed:', updateRes.status, JSON.stringify(updateData));
+        // Retry with key-based format if ID-based failed
+        const keyCf = cf.map(f => ({ key: f.key || f.id, field_value: f.field_value }));
+        console.log('Retrying with key format...');
+        const retryRes = await ghlFetch(`${GHL_BASE}/contacts/${contactId}`, 'PUT', {
+          customFields: keyCf,
+        }, headers);
+        const retryData = await retryRes.json().catch(() => ({}));
+        console.log('Retry result:', retryRes.status, JSON.stringify(retryData).substring(0, 200));
       } else {
-        console.log('Custom fields updated on contact:', contactPayload.customFields.length, 'fields');
+        console.log('Custom fields updated successfully on contact');
       }
     }
 
@@ -101,11 +111,18 @@ exports.handler = async (event) => {
     const notionDbId  = process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
     if (notionToken) {
       try {
+        console.log('Creating Notion page in DB:', notionDbId);
         const notionRes = await createNotionDeal(notionToken, notionDbId, body);
-        console.log('Notion page created:', notionRes?.id || 'unknown');
+        if (notionRes?.id) {
+          console.log('Notion page created:', notionRes.id);
+        } else {
+          console.warn('Notion response (no id):', JSON.stringify(notionRes).substring(0, 500));
+        }
       } catch (err) {
-        console.warn('Notion creation failed (non-fatal):', err.message);
+        console.error('Notion creation failed:', err.message);
       }
+    } else {
+      console.warn('NOTION_TOKEN not set — skipping Notion sync. Add it in Netlify env vars.');
     }
 
     // ── 5. AUTOMATED NOTIFICATIONS ──────────────────────────
@@ -684,16 +701,21 @@ async function getCustomFieldMap(locationId, headers) {
       `${GHL_BASE}/locations/${locationId}/customFields`,
       'GET', null, headers
     );
+    const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      const data = await res.json();
-      const fields = data.customFields || [];
+      const fields = data.customFields || data.fields || [];
       for (const f of fields) {
-        if (f.fieldKey) map[f.fieldKey] = f.id;
+        // GHL uses different property names depending on API version
+        const key = f.fieldKey || f.key || f.name;
+        const id = f.id;
+        if (key && id) map[key] = id;
       }
-      console.log(`Loaded ${Object.keys(map).length} custom field IDs`);
+      console.log(`Custom field map: loaded ${Object.keys(map).length} fields`);
+      if (Object.keys(map).length > 0) {
+        console.log('Sample fields:', JSON.stringify(Object.entries(map).slice(0, 5)));
+      }
     } else {
-      const errData = await res.json().catch(() => ({}));
-      console.warn('Custom field lookup failed:', res.status, JSON.stringify(errData));
+      console.warn('Custom field lookup failed:', res.status, JSON.stringify(data));
     }
   } catch (err) {
     console.warn('Custom field lookup error:', err.message);
