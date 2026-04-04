@@ -93,11 +93,16 @@ async function handlePartnerOnboarding(body, headers, locationId) {
     }
 
     // ── 4. AUTOMATED NOTIFICATIONS ──────────────────────────
+    const isLive = process.env.NOTIFICATIONS_LIVE === 'true';
     const notifs = [];
     const first = (body.full_name || '').trim().split(' ')[0] || 'there';
 
+    if (!isLive) {
+      console.log('NOTIFICATIONS_LIVE is not true — skipping SMS/email');
+    }
+
     // 4a. Welcome SMS to partner
-    notifs.push(
+    if (isLive) notifs.push(
       sendSMS(contactId, headers,
         `Hey ${first}! You're in the Dispo Buddy partner network. ` +
         `When you have a deal ready, submit it here: dispobuddy.com/submit-deal\n\n` +
@@ -106,7 +111,7 @@ async function handlePartnerOnboarding(body, headers, locationId) {
     );
 
     // 4b. Welcome email to partner
-    notifs.push(
+    if (isLive) notifs.push(
       sendEmail(contactId, headers, {
         subject: "You're in the Dispo Buddy Network",
         html: buildOnboardingWelcomeEmail(body),
@@ -115,7 +120,7 @@ async function handlePartnerOnboarding(body, headers, locationId) {
 
     // 4c. Internal SMS alert
     const alertPhone = process.env.INTERNAL_ALERT_PHONE;
-    if (alertPhone) {
+    if (isLive && alertPhone) {
       notifs.push(
         sendInternalSMS(alertPhone, headers, locationId,
           `👤 NEW PARTNER\n` +
@@ -131,7 +136,7 @@ async function handlePartnerOnboarding(body, headers, locationId) {
 
     // 4d. Internal email alert
     const alertEmail = process.env.INTERNAL_ALERT_EMAIL;
-    if (alertEmail) {
+    if (isLive && alertEmail) {
       notifs.push(
         sendInternalEmail(alertEmail, headers, locationId, {
           subject: `New Partner: ${body.partner_type} — ${body.full_name}`,
@@ -141,7 +146,7 @@ async function handlePartnerOnboarding(body, headers, locationId) {
     }
 
     // 4e. If deal-ready, send follow-up nudge
-    if (body.deal_ready === 'Yes') {
+    if (isLive && body.deal_ready === 'Yes') {
       notifs.push(
         sendSMS(contactId, headers,
           `Sounds like you have a deal ready to go, ${first}! ` +
@@ -206,11 +211,14 @@ async function handleContactForm(body, headers, locationId) {
     await ghlFetch(`${GHL_BASE}/contacts/${contactId}/tags`, 'POST', { tags }, headers);
 
     // ── NOTIFICATIONS ───────────────────────────────────────
+    const isLive = process.env.NOTIFICATIONS_LIVE === 'true';
     const notifs = [];
     const first = (body.name || '').trim().split(' ')[0] || 'there';
 
+    if (!isLive) console.log('NOTIFICATIONS_LIVE is not true — skipping SMS/email');
+
     // Auto-reply email
-    notifs.push(
+    if (isLive) notifs.push(
       sendEmail(contactId, headers, {
         subject: 'Got your message — Dispo Buddy',
         html: `
@@ -236,7 +244,7 @@ async function handleContactForm(body, headers, locationId) {
 
     // Internal alert
     const alertPhone = process.env.INTERNAL_ALERT_PHONE;
-    if (alertPhone) {
+    if (isLive && alertPhone) {
       notifs.push(
         sendInternalSMS(alertPhone, headers, locationId,
           `📩 CONTACT FORM\n` +
@@ -249,7 +257,7 @@ async function handleContactForm(body, headers, locationId) {
     }
 
     const alertEmail = process.env.INTERNAL_ALERT_EMAIL;
-    if (alertEmail) {
+    if (isLive && alertEmail) {
       notifs.push(
         sendInternalEmail(alertEmail, headers, locationId, {
           subject: `Contact Form: ${body.subject || 'General'} — ${body.name}`,

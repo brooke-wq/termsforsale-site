@@ -19,6 +19,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/partner-login"
+  to = "/.netlify/functions/partner-login"
+  status = 200
+
+[[redirects]]
+  from = "/api/partner-deals"
+  to = "/.netlify/functions/partner-deals"
+  status = 200
+
+[[redirects]]
   from = "/api/buyer-demand"
   to = "/.netlify/functions/buyer-demand"
   status = 200
@@ -57,6 +67,11 @@
 [[redirects]]
   from = "/faq"
   to = "/faq.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
   status = 200
 
 [[redirects]]

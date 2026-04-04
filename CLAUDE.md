@@ -341,9 +341,44 @@ All items below were completed and deployed:
 
 ---
 
+## Completed — Dispo Buddy Site Build (April 2026)
+
+### Site Pages (all in `dispobuddy/`)
+- **Landing page** (`index.html`) — hero, pitch, process timeline, deal types, buyers map callout, social proof, CTA
+- **Deal submission form** (`submit-deal.html`) — 4-step wizard with auto-save, conditional SubTo/SF fields, review step
+- **Partner dashboard** (`dashboard.html`) — login by phone/email, deal status tracking with stats cards
+- **Process page** (`process.html`) — 6-step visual timeline of deal flow
+- **What We Look For** (`what-we-look-for.html`) — deal criteria, accepted types, target markets
+- **Proof page** (`proof.html`) — stats, testimonial, example deals, comparison table
+- **FAQ** (`faq.html`) — 6-tab accordion covering basics, partnership, process, money
+- **Join/Onboard** (`join.html`) — partner application form
+- **Contact** (`contact.html`) — contact form + info cards
+- **Active Buyers Map** (`buyers-map.html`) — interactive buyer demand map
+- **404 page** (`404.html`) — branded error page
+
+### Netlify Functions (`dispobuddy/netlify/functions/`)
+- **`dispo-buddy-submit.js`** — deal submission → GHL contact + opportunity + Notion page + SMS/email confirmations. `jv-submitted` tag re-enabled. All outbound messaging gated behind `NOTIFICATIONS_LIVE=true` env var.
+- **`partner-onboard.js`** — partner join + contact form → GHL contact + opportunity + notifications. Same `NOTIFICATIONS_LIVE` gate.
+- **`partner-login.js`** — authenticate partners by phone/email, verify `dispo-buddy` tag
+- **`partner-deals.js`** — fetch partner's JV pipeline opportunities with stage-to-label mapping
+- **`buyer-demand.js`** — buyer demand data for map
+- **`sitemap.js`** — generates sitemap.xml
+
+### Safety Gates
+- **`NOTIFICATIONS_LIVE`** env var — must be set to `"true"` to send ANY SMS/email. Default OFF. CRM writes (contact, opportunity, tags, notes) always work.
+- **`jv-submitted` tag** — re-enabled in buildTags(). Triage cron on Droplet remains disabled until manually re-enabled.
+- **OPTIONS/CORS** — all functions handle OPTIONS preflight with `Access-Control-Allow-Origin: *` and `Access-Control-Allow-Headers: Content-Type`
+
+### Deployment
+- **Netlify site:** `dispobuddy.netlify.app` → configure base directory to `dispobuddy/`
+- **Custom domain:** point `dispobuddy.com` at this Netlify site
+- **Env vars needed:** `GHL_API_KEY`, `GHL_LOCATION_ID`, `NOTION_TOKEN` (optional), `NOTIFICATIONS_LIVE` (set to `true` only after full testing), `INTERNAL_ALERT_PHONE` (optional), `INTERNAL_ALERT_EMAIL` (optional)
+
+---
+
 ## TODO — Next Session
 
-1. **New Dispo Buddy Website** — When ready, re-enable `jv-submitted` tag in `dispo-buddy-submit.js` and confirmation SMS. Connect new site forms to existing triage automation.
+1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.netlify.app`: set `NOTIFICATIONS_LIVE=true` in Netlify env vars, test one real submission, re-enable `dispo-buddy-triage` cron on Droplet, point `dispobuddy.com` domain.
 
 2. **GHL Client Portal** — Portal apps configured (Contracts + Shared Files enabled). Set up contract templates with merge fields for assignment contracts. Build automated workflow: Offer Submitted → Contract Sent → Signed → EMD Instructions → Closed.
 

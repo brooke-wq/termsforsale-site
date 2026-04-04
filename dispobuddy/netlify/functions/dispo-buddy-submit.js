@@ -6,9 +6,10 @@
  *   GHL_API_KEY          — GHL private integration API key
  *   GHL_LOCATION_ID      — GHL Location ID
  *
- * Optional (for internal alerts):
- *   INTERNAL_ALERT_PHONE — Brooke's phone for internal SMS alerts (e.g. +14808425332)
- *   INTERNAL_ALERT_EMAIL — Brooke's email for internal alerts (e.g. brooke@mydealpros.com)
+ * Optional:
+ *   NOTIFICATIONS_LIVE   — set to "true" to enable SMS/email (default: off)
+ *   INTERNAL_ALERT_PHONE — Brooke's phone for internal SMS alerts
+ *   INTERNAL_ALERT_EMAIL — Brooke's email for internal alerts
  *
  * Pipeline IDs (hardcoded — confirmed from GHL):
  *   Pipeline: "3. JV Deals"   → XbZojO2rHmYtYa8C0yUP
@@ -23,6 +24,9 @@ const JV_STAGE_NEW   = 'cf2388f0-fdbf-4fb1-b633-86569034fcce';
 // MAIN HANDLER
 // ─────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return respond(200, '');
+  }
   if (event.httpMethod !== 'POST') {
     return respond(405, { error: 'Method not allowed' });
   }
@@ -89,17 +93,22 @@ exports.handler = async (event) => {
     }
 
     // ── 5. AUTOMATED NOTIFICATIONS ──────────────────────────
-    // Fire-and-forget — don't block the response on these
+    // Gated behind NOTIFICATIONS_LIVE=true — nothing sends until flipped on
+    const isLive = process.env.NOTIFICATIONS_LIVE === 'true';
     const notificationPromises = [];
 
-    // 4a. Confirmation SMS to partner
-    notificationPromises.push(
+    if (!isLive) {
+      console.log('NOTIFICATIONS_LIVE is not true — skipping all SMS/email');
+    }
+
+    // 5a. Confirmation SMS to partner
+    if (isLive) notificationPromises.push(
       sendSMS(contactId, headers, buildPartnerConfirmationSMS(body))
         .catch(err => console.warn('Partner SMS failed:', err.message))
     );
 
-    // 4b. Confirmation email to partner
-    if (body.jv_partner_email) {
+    // 5b. Confirmation email to partner
+    if (isLive && body.jv_partner_email) {
       notificationPromises.push(
         sendEmail(contactId, headers, {
           subject: 'Deal Received — Dispo Buddy',
@@ -109,18 +118,18 @@ exports.handler = async (event) => {
       );
     }
 
-    // 4c. Internal SMS alert to Brooke
+    // 5c. Internal SMS alert to Brooke
     const internalPhone = process.env.INTERNAL_ALERT_PHONE;
-    if (internalPhone) {
+    if (isLive && internalPhone) {
       notificationPromises.push(
         sendInternalSMS(internalPhone, headers, locationId, buildInternalAlertSMS(body))
           .catch(err => console.warn('Internal SMS failed:', err.message))
       );
     }
 
-    // 4d. Internal email alert to Brooke
+    // 5d. Internal email alert to Brooke
     const internalEmail = process.env.INTERNAL_ALERT_EMAIL;
-    if (internalEmail) {
+    if (isLive && internalEmail) {
       notificationPromises.push(
         sendInternalEmail(internalEmail, headers, locationId, {
           subject: `New JV Deal: ${body.deal_type || 'Deal'} — ${body.property_city || ''}, ${body.property_state || ''}`,
@@ -130,14 +139,14 @@ exports.handler = async (event) => {
       );
     }
 
-    // 4e. Add a note to the contact for CRM visibility
+    // 5e. Add a note to the contact for CRM visibility (always — not outbound messaging)
     notificationPromises.push(
       addNote(contactId, headers, buildContactNote(body))
         .catch(err => console.warn('Note failed:', err.message))
     );
 
-    // 4f. First-deal welcome (extra messaging)
-    if (body.is_this_your_first_deal_with_dispo_buddy === 'Yes') {
+    // 5f. First-deal welcome (extra messaging)
+    if (isLive && body.is_this_your_first_deal_with_dispo_buddy === 'Yes') {
       notificationPromises.push(
         sendSMS(contactId, headers,
           `Welcome to the Dispo Buddy network, ${firstName(body)}! Since this is your first deal with us, here's what to expect:\n\n` +
@@ -453,7 +462,7 @@ function buildContactPayload(d, locationId) {
 // BUILD TAGS
 // ─────────────────────────────────────────────────────────────
 function buildTags(d) {
-  const tags = ['dispo-buddy', 'jv-partner'];
+  const tags = ['dispo-buddy', 'jv-partner', 'jv-submitted'];
 
   const type = (d.deal_type || '').toLowerCase();
   if (type.includes('cash'))           tags.push('db-cash');
@@ -658,7 +667,8 @@ function respond(statusCode, body) {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type',
     },
-    body: JSON.stringify(body),
+    body: typeof body === 'string' ? body : JSON.stringify(body),
   };
 }
