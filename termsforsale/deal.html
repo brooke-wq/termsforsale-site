@@ -901,9 +901,13 @@ function renderDeal(d,allDeals){
             </div></div>
           <div>
             <div class="map-embed">
-              ${loggedIn
-                ?`<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(d.zip&&d.zip.length>=5?d.zip:d.city+', '+d.state)}&t=&z=12&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Property area"></iframe>`
-                :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-light)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div style="font-size:11px;font-weight:600">${d.city}, ${d.state}</div><div style="font-size:10px;color:var(--text-light)">Sign up to view full map</div><button class="photo-unlock-btn" onclick="openAuth('signup')" style="margin-top:4px">Sign Up</button></div>`}
+              <div style="position:relative;width:100%;height:100%;border-radius:8px;overflow:hidden">
+                <iframe src="https://maps.google.com/maps?q=${encodeURIComponent(d.zip&&d.zip.length>=5?d.city+', '+d.state+' '+d.zip:d.city+', '+d.state)}&t=&z=12&ie=UTF8&iwloc=&output=embed" style="width:100%;height:100%;border:0;filter:saturate(0.8)contrast(1.05)" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Property area"></iframe>
+                <div style="position:absolute;top:8px;left:8px;background:rgba(13,31,60,.85);border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:6px">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span style="font-size:11px;font-weight:600;color:#fff">${d.city}, ${d.state}${d.zip?' '+d.zip:''}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1011,20 +1015,19 @@ function renderDeal(d,allDeals){
     <div class="deal-sidebar" id="request-form">
       <div class="sidebar-card">
         <div class="sidebar-head">
-          <h3>Get Deal Details in Minutes</h3>
-          <p>Interested in this deal? You could take over the contract and make it yours faster than you think.</p>
+          <h3>Interested in This Deal?</h3>
+          <p>Take the next step — request info or submit an offer.</p>
         </div>
-        <div class="sidebar-perks">
-          <div class="perk"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>No agent needed</div>
-          <div class="perk"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Simple next steps and support available</div>
+        ${loggedIn?`
+        <div style="padding:0 20px">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-blue" style="flex:1;justify-content:center;font-size:13px" onclick="document.getElementById('inquiry-section').style.display='block';document.getElementById('offer-section').style.display='none'">Request Info</button>
+            <button class="btn" style="flex:1;justify-content:center;font-size:13px;background:var(--navy);color:#fff;border:none" onclick="document.getElementById('offer-section').style.display='block';document.getElementById('inquiry-section').style.display='none'">Submit Offer</button>
+          </div>
         </div>
-        <div class="sidebar-body">
-          ${loggedIn
-            ?``
-            :`<button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px" onclick="openAuth('signup')">Sign Up Free</button>
-              <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px" onclick="openAuth('login')">Already have an account? Log In</button>`}
-        </div>
-        <div id="req-form" style="${loggedIn?'':'display:none;'}padding:0 20px 20px">
+        <!-- INQUIRY FORM -->
+        <div id="inquiry-section" style="padding:0 20px 20px">
+          <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Request More Info</div>
           <div class="sidebar-form">
             <div class="sf-row">
               <input class="sf-input" placeholder="First Name" id="f-fname">
@@ -1032,18 +1035,34 @@ function renderDeal(d,allDeals){
             </div>
             <input class="sf-input" placeholder="Phone Number" id="f-phone" type="tel">
             <input class="sf-input" placeholder="Email Address" id="f-email" type="email">
+            <textarea class="sf-input" placeholder="What would you like to know?" rows="2" id="f-notes" style="resize:vertical"></textarea>
+            <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="submitRequest('${d.id}')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+              Send Inquiry
+            </button>
+          </div>
+        </div>
+        <!-- OFFER FORM -->
+        <div id="offer-section" style="display:none;padding:0 20px 20px">
+          <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Submit Your Offer</div>
+          <div class="sidebar-form">
             <div class="sf-row">
-              <select class="sf-select" id="f-structure">
-                <option value="">Buying how?</option>
+              <input class="sf-input" placeholder="Your Name" id="o-name">
+              <input class="sf-input" placeholder="Phone" id="o-phone" type="tel">
+            </div>
+            <input class="sf-input" placeholder="Email Address" id="o-email" type="email">
+            <input class="sf-input" placeholder="Offer Amount ($)" id="o-amount" type="number">
+            <div class="sf-row">
+              <select class="sf-select" id="o-structure">
+                <option value="">Funding source</option>
                 <option>Cash</option>
-                <option>Hard Money</option>
-                <option>Sub-To / Creative</option>
-                <option>Seller Finance</option>
-                <option>Wrap</option>
-                <option>Hybrid</option>
+                <option>Hard Money / DSCR</option>
+                <option>Subject To (existing terms)</option>
+                <option>Seller Finance (existing terms)</option>
+                <option>Partnership / JV</option>
               </select>
-              <select class="sf-select" id="f-timeline">
-                <option value="">Close when?</option>
+              <select class="sf-select" id="o-timeline">
+                <option value="">Target close</option>
                 <option>ASAP / 7 days</option>
                 <option>10–14 days</option>
                 <option>14–21 days</option>
@@ -1051,15 +1070,19 @@ function renderDeal(d,allDeals){
                 <option>30–45 days</option>
               </select>
             </div>
-            <textarea class="sf-input" placeholder="Notes (optional)" rows="2" id="f-notes" style="resize:vertical"></textarea>
-            <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="submitRequest('${d.id}')">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
-              Submit Request
+            <textarea class="sf-input" placeholder="Additional notes (optional)" rows="2" id="o-notes" style="resize:vertical"></textarea>
+            <button class="btn" style="width:100%;justify-content:center;background:var(--navy);color:#fff;border:none;font-size:14px" onclick="submitOffer('${d.id}')">
+              Submit Offer
             </button>
-            <div class="sf-note">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>
           </div>
         </div>
-        ${urgency}
+        `:`
+        <div style="padding:0 20px 20px">
+          <button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px" onclick="openAuth('signup')">Sign Up Free</button>
+          <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px" onclick="openAuth('login')">Already have an account? Log In</button>
+        </div>
+        `}
+        <div class="sf-note" style="padding:0 20px 16px;font-size:10px;color:var(--text-light)">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>
         <div class="sidebar-contact">
           <div class="contact-row">
             <div class="contact-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
@@ -1226,31 +1249,45 @@ function calcCoLive(){
     (uplift>0?r('vs. Traditional Rent','+'+$(uplift)+'/mo','positive','Co-living premium over '+$(vsTraditional)+' traditional rent'):'');
 }
 
+// INQUIRY FORM — request info
 async function submitRequest(dealId){
-  const fname=document.getElementById('f-fname').value.trim();
-  const lname=document.getElementById('f-lname').value.trim();
-  const phone=document.getElementById('f-phone').value.trim();
-  const email=document.getElementById('f-email').value.trim();
-  const structure=document.getElementById('f-structure').value.trim();
-  const timeline=document.getElementById('f-timeline').value.trim();
-  const notes=document.getElementById('f-notes').value.trim();
-  if(!fname||!phone){alert('Please enter your name and phone number.');return}
-  const btn=event.target;
-  btn.textContent='Sending…';btn.disabled=true;
-  const structureTagMap={'Cash':['buy:cash'],'Hard Money':['buy:hard-money'],'Sub-To / Creative':['buy:subto','buy:creative'],'Seller Finance':['buy:seller-finance','buy:creative'],'Wrap':['buy:creative'],'Hybrid':['buy:hybrid','buy:creative']};
-  const buyTags=structureTagMap[structure]||[];
-  const tags=['TFS Buyer','Website Inquiry','consent:sms',...buyTags];
-  const utms=getUTMs();
-  const payload=Object.assign({firstName:fname,lastName:lname||'',phone,email:email||'',tags,source:'TFS Deal Page',pipeline_name:'Buyer Inquiries',pipeline_stage:'New Lead',deal_structure:structure||'',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:notes||'',lead_source_detail:utms.utm_source||'TFS Deal Page'}},utms);
+  var fname=document.getElementById('f-fname').value.trim();
+  var lname=document.getElementById('f-lname').value.trim();
+  var phone=document.getElementById('f-phone').value.trim();
+  var email=document.getElementById('f-email').value.trim();
+  var notes=document.getElementById('f-notes').value.trim();
+  if(!fname||!phone){alert('Please enter your name and phone number.');return;}
+  var btn=event.target;btn.textContent='Sending…';btn.disabled=true;
+  var utms=getUTMs();
+  var payload=Object.assign({firstName:fname,lastName:lname||'',phone,email:email||'',tags:['TFS Buyer','Website Inquiry','consent:sms'],source:'TFS Deal Page - Inquiry',pipeline_name:'Inquiry Setter',pipeline_stage:'New Lead',customFields:{current_deal_interest:dealId||'',buy_box_notes:notes||''}},utms);
   try{
     await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    // Also submit via API for pipeline tracking + notifications
-    var user=getUser();
-    var deal=window._currentDeal||{};
+  }catch(err){console.error('Inquiry error:',err);}
+  btn.innerHTML='✓ Inquiry Sent!';btn.style.background='#276749';
+  setTimeout(function(){btn.textContent='Send Inquiry';btn.style.background='';btn.disabled=false;},3000);
+}
+// OFFER FORM — submit real offer
+async function submitOffer(dealId){
+  var name=document.getElementById('o-name').value.trim();
+  var phone=document.getElementById('o-phone').value.trim();
+  var email=document.getElementById('o-email').value.trim();
+  var amount=document.getElementById('o-amount').value.trim();
+  var structure=document.getElementById('o-structure').value;
+  var timeline=document.getElementById('o-timeline').value;
+  var notes=document.getElementById('o-notes').value.trim();
+  if(!name||!phone||!amount){alert('Please enter your name, phone, and offer amount.');return;}
+  var btn=event.target;btn.textContent='Submitting…';btn.disabled=true;
+  var user=getUser();
+  var deal=window._currentDeal||{};
+  try{
     if(user&&user.contactId){
-      fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',streetAddress:deal.streetAddress||'',amount:deal.entryFee||deal.askingPrice||'',coe:timeline||'',notes:notes||''})}).catch(function(){});
+      await fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',streetAddress:deal.streetAddress||'',amount:amount,coe:timeline||'',notes:(structure?'Funding: '+structure+'. ':'')+notes})});
+    } else {
+      await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:name.split(' ')[0],lastName:name.split(' ').slice(1).join(' '),phone,email:email||'',tags:['TFS Buyer','Offer Submitted','consent:sms'],source:'TFS Deal Page - Offer',pipeline_name:'Buyer Inquiries',pipeline_stage:'Offer Submitted',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:'Offer: $'+Number(amount).toLocaleString()+'. '+(structure?'Funding: '+structure+'. ':'')+notes}})});
     }
-  }catch(err){console.error('GHL webhook error:',err);}
+  }catch(err){console.error('Offer error:',err);}
+  btn.innerHTML='✓ Offer Submitted!';btn.style.background='#276749';btn.style.color='#fff';
+  setTimeout(function(){btn.textContent='Submit Offer';btn.style.background='';btn.disabled=false;},3000);
   btn.textContent='✓ Request Sent!';btn.style.background='#276749';
   setTimeout(()=>{btn.textContent='Submit Request';btn.style.background='';btn.disabled=false;},3000);
 }
