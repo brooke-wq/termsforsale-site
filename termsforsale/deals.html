@@ -889,7 +889,7 @@ footer{background:var(--navy);padding:52px 55px 0}
         </div>
         <div class="footer-brand-sub">By subscribing, you agree to receive marketing emails and accept our Privacy Policy.</div>
       </div>
-      <div class="footer-col"><h4>Company</h4><ul><li><a href="/">About Us</a></li><li><a href="/deals.html">Active Deals</a></li><li><a href="https://dealproszoom.com" target="_blank">Contact Us</a></li><li><a href="https://calendar.app.google/DXJoTQwDpGhCjicu6" target="_blank">Book a Call</a></li></ul></div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="/">About Us</a></li><li><a href="/deals.html">Active Deals</a></li><li><a href="mailto:info@termsforsale.com">Contact Us</a></li><li><a href="https://calendar.app.google/DXJoTQwDpGhCjicu6" target="_blank">Book a Call</a></li></ul></div>
       <div class="footer-col"><h4>Contact</h4><ul><li><a href="mailto:info@termsforsale.com">info@termsforsale.com</a></li><li><a href="tel:4806373117">(480) 637-3117</a></li></ul></div>
       <div class="footer-col"><h4>Social Media</h4><ul><li><a href="https://www.instagram.com/termsforsale" target="_blank">Instagram</a></li><li><a href="https://www.facebook.com/termsforsale" target="_blank">Facebook</a></li><li><a href="https://x.com/termsforsale" target="_blank">X / Twitter</a></li></ul></div>
     </div>
@@ -1471,18 +1471,18 @@ function syncSavedDeals(contactId){
     }).catch(()=>{});
 }
 async function doSignup(){
-  const fn=document.getElementById('su-fn').value.trim(),ln=document.getElementById('su-ln').value.trim();
-  const email=document.getElementById('su-email').value.trim(),phone=document.getElementById('su-phone').value.trim();
-  const structures=[...document.querySelectorAll('#su-structures input:checked')].map(c=>c.value);
-  const maxEntry=document.getElementById('su-maxentry').value.trim();
-  const pass=document.getElementById('su-pass').value.trim();
-  const err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
+  var fn=(document.getElementById('su-fn')||{}).value||'';fn=fn.trim();
+  var ln=(document.getElementById('su-ln')||{}).value||'';ln=ln.trim();
+  var email=(document.getElementById('su-email')||{}).value||'';email=email.trim();
+  var phone=(document.getElementById('su-phone')||{}).value||'';phone=phone.trim();
+  var pass=(document.getElementById('su-pass')||{}).value||'';pass=pass.trim();
+  var err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
   err.style.display='none';ok.style.display='none';
   if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
-  const btn=event.target;btn.disabled=true;btn.textContent='Creating…';
+  var btn=event.target.closest('button')||event.target;btn.disabled=true;btn.textContent='Creating…';
   try{
-    const res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email,phone,password:pass,deal_structures:structures.join(', '),max_entry_fee:maxEntry||'',source:'TFS Website - Signup'})});
+    var res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email:email,phone:phone,password:pass,source:'TFS Website - Signup'})});
     const data=await res.json();
     if(!res.ok||!data.success){
       err.textContent=data.error||'Signup failed. Please try again.';err.style.display='block';
