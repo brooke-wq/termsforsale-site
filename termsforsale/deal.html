@@ -758,9 +758,9 @@ function renderDeal(d,allDeals){
   const dl=daysLeft(d.coe);
   const arv=+d.compsArv||+d.aiArvBase||0;
   const entry=+d.entryFee||0;
-  const dtl=(d.dealType||'').toLowerCase();
-  const isSubTo=dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl==='morby method'||dtl==='morby/stack method'||dtl==='wrap';
-  const isSF=dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl==='morby method'||dtl==='wrap';
+  const dtl=(d.dealType||'').toLowerCase().trim();
+  const isSubTo=dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl.includes('morby')||dtl==='wrap';
+  const isSF=dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl.includes('morby')||dtl==='wrap';
   const loggedIn=!!getUser();
 
   // PHOTO GRID — placeholder, filled by loadDealPhotos() after render
@@ -791,19 +791,19 @@ function renderDeal(d,allDeals){
 
   // SubTo section — existing mortgage being taken over
   if(isSubTo){
-    termRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
-    termRows.push({l:'PITI (est)',v:d.piti?fc(d.piti)+'/mo':'—'});
-    termRows.push({l:'APR',v:fmtRate(d.subtoRate)});
-    termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity||'—'});
+    if(d.subtoLoanBalance) termRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
+    if(d.piti) termRows.push({l:'PITI (est)',v:fc(d.piti)+'/mo'});
+    if(d.subtoRate) termRows.push({l:'APR',v:fmtRate(d.subtoRate)});
+    if(d.subtoLoanMaturity) termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity});
     if(d.subToBalloon && d.subToBalloon!=='—') termRows.push({l:'Balloon',v:d.subToBalloon});
   }
 
   // Seller Finance section — new financing from seller
   if(isSF){
-    termRows.push({l:'Seller Finance Amount',v:fc(d.sfLoanAmount)});
-    termRows.push({l:'Principal & Interest',v:d.sfPayment?fc(d.sfPayment)+'/mo':'—'});
-    termRows.push({l:'Interest Rate',v:fmtRate(d.sfRate)});
-    termRows.push({l:'Term',v:d.sfTerm||'—'});
+    if(d.sfLoanAmount) termRows.push({l:'Seller Finance Amount',v:fc(d.sfLoanAmount)});
+    if(d.sfPayment) termRows.push({l:'Principal & Interest',v:fc(d.sfPayment)+'/mo'});
+    if(d.sfRate) termRows.push({l:'Interest Rate',v:fmtRate(d.sfRate)});
+    if(d.sfTerm) termRows.push({l:'Term',v:d.sfTerm});
     if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
   }
 
@@ -1019,15 +1019,14 @@ function renderDeal(d,allDeals){
           <p>Take the next step — request info or submit an offer.</p>
         </div>
         ${loggedIn?`
-        <div style="padding:0 20px">
-          <div style="display:flex;gap:8px;margin-bottom:16px">
-            <button class="btn btn-blue" style="flex:1;justify-content:center;font-size:13px" onclick="document.getElementById('inquiry-section').style.display='block';document.getElementById('offer-section').style.display='none'">Request Info</button>
-            <button class="btn" style="flex:1;justify-content:center;font-size:13px;background:var(--navy);color:#fff;border:none" onclick="document.getElementById('offer-section').style.display='block';document.getElementById('inquiry-section').style.display='none'">Submit Offer</button>
+        <div style="padding:16px 20px 0">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+            <button id="tab-inquiry" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('inquiry-section').style.display='block';document.getElementById('offer-section').style.display='none';this.style.background='var(--blue)';this.style.color='#fff';document.getElementById('tab-offer').style.background='var(--bg)';document.getElementById('tab-offer').style.color='var(--text-mid)'">Request Info</button>
+            <button id="tab-offer" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--bg);color:var(--text-mid);border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('offer-section').style.display='block';document.getElementById('inquiry-section').style.display='none';this.style.background='var(--navy)';this.style.color='#fff';document.getElementById('tab-inquiry').style.background='var(--bg)';document.getElementById('tab-inquiry').style.color='var(--text-mid)'">Submit Offer</button>
           </div>
         </div>
         <!-- INQUIRY FORM -->
         <div id="inquiry-section" style="padding:0 20px 20px">
-          <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Request More Info</div>
           <div class="sidebar-form">
             <div class="sf-row">
               <input class="sf-input" placeholder="First Name" id="f-fname">
@@ -1044,7 +1043,6 @@ function renderDeal(d,allDeals){
         </div>
         <!-- OFFER FORM -->
         <div id="offer-section" style="display:none;padding:0 20px 20px">
-          <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Submit Your Offer</div>
           <div class="sidebar-form">
             <div class="sf-row">
               <input class="sf-input" placeholder="Your Name" id="o-name">
@@ -1077,9 +1075,10 @@ function renderDeal(d,allDeals){
           </div>
         </div>
         `:`
-        <div style="padding:0 20px 20px">
-          <button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px" onclick="openAuth('signup')">Sign Up Free</button>
-          <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px" onclick="openAuth('login')">Already have an account? Log In</button>
+        <div style="padding:16px 20px 20px">
+          <p style="font-size:13px;color:var(--text-mid);text-align:center;margin-bottom:12px">Create a free account to request info or submit an offer.</p>
+          <button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:14px;padding:12px" onclick="openAuth('signup')">Create Free Account</button>
+          <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px;padding:10px" onclick="openAuth('login')">Already have an account? Log In</button>
         </div>
         `}
         <div class="sf-note" style="padding:0 20px 16px;font-size:10px;color:var(--text-light)">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>
