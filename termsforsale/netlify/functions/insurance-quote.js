@@ -19,6 +19,7 @@ function steadilyRequest(body, apiKey, isStaging) {
       path: '/v1/quote/estimate',
       method: 'POST',
       headers: {
+        'Authorization': 'Api-Key ' + apiKey,
         'x-api-key': apiKey,
         'Content-Type': 'application/json'
       }

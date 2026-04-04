@@ -1094,11 +1094,14 @@ function renderDeal(d,allDeals){
     fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||''})})
       .then(function(r){return r.json();})
       .then(function(data){
+        var el=document.getElementById('insurance-quote');
+        if(!el)return;
         if(data.available&&data.monthly>0){
-          var el=document.getElementById('insurance-quote');
-          if(el){el.style.display='block';document.getElementById('ins-price').textContent='$'+data.monthly;document.getElementById('ins-cta').href=data.startUrl||'https://dealpros.steadilypartner.com/';
-          // Pre-fill insurance in calculators
-          var insInput=document.getElementById('ch-ins');if(insInput&&!insInput.value)insInput.value=data.monthly;}
+          el.style.display='block';document.getElementById('ins-price').textContent='$'+data.monthly;document.getElementById('ins-cta').href=data.startUrl||'https://dealpros.steadilypartner.com/';
+          var insInput=document.getElementById('ch-ins');if(insInput&&!insInput.value)insInput.value=data.monthly;
+        } else {
+          // API failed but still show the partner link
+          el.style.display='block';document.getElementById('ins-price').textContent='Get Quote';document.getElementById('ins-cta').href='https://dealpros.steadilypartner.com/';
         }
       }).catch(function(){});
   }
