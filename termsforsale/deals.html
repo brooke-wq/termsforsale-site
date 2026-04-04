@@ -157,20 +157,22 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 
 /* MOBILE */
 @media(max-width:900px){
-  .split-app{flex-direction:column}
-  .split-sidebar{width:100%;max-width:100%;min-width:0;height:55vh;flex-shrink:0}
+  .split-app{flex-direction:column;height:auto;min-height:100vh}
+  .split-sidebar{width:100%;max-width:100%;min-width:0;height:auto;flex:1;flex-shrink:0;overflow:visible}
   .split-sidebar.map-mode{display:none}
-  .split-map{height:45vh;flex:none}
+  .split-map{height:50vh;flex:none}
   .split-map.list-mode{display:none}
-  .split-cards-grid{grid-template-columns:1fr}
+  .split-cards{overflow:visible;max-height:none}
+  .split-cards-grid{grid-template-columns:1fr 1fr;gap:12px}
   .view-toggle{display:block}
   .map-legend-float{bottom:70px;right:12px}
 }
 @media(max-width:600px){
-  .split-sidebar{height:auto;flex:1}
-  .split-map{height:100%;position:absolute;inset:0}
+  .split-cards-grid{grid-template-columns:1fr}
   .split-toolbar-top h2{font-size:15px}
   .split-filters{gap:6px}
+  .split-filter-select{font-size:11px;padding:6px 22px 6px 8px}
+  .split-tab{padding:5px 10px;font-size:11px}
 }
 
 /* ── HERO ───────────────────────────────── */
