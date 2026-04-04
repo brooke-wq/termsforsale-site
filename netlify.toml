@@ -158,6 +158,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/insurance-quote"
+  to = "/.netlify/functions/insurance-quote"
+  status = 200
+
+[[redirects]]
   from = "/api/auth-reset"
   to = "/.netlify/functions/auth-reset"
   status = 200
