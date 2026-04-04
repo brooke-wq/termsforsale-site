@@ -1609,7 +1609,7 @@ var CITY_COORDS={
   'chicago,il':[41.8781,-87.6298],
   'detroit,mi':[42.3314,-83.0458],
   'denver,co':[39.7392,-104.9903],'colorado springs,co':[38.8339,-104.8214],
-  'philadelphia,pa':[39.9526,-75.1652],
+  'philadelphia,pa':[39.9526,-75.1652],'ridgeland,sc':[32.4810,-80.9532],'bailey,nc':[35.7771,-78.1139],'anderson,sc':[34.5034,-82.6501],'mount pleasant,tx':[33.1568,-94.9680],'wharton,tx':[29.3116,-96.1027],'la marque,tx':[29.3686,-94.9713],'lytle,tx':[29.2327,-98.7961],'von ormy,tx':[29.2869,-98.6453],'del valle,tx':[30.1744,-97.6103],'elgin,tx':[30.3499,-97.3703],'dayton,tx':[30.0466,-94.8852],'liberty,tx':[30.0580,-94.7955],'north augusta,sc':[33.5018,-81.9651],'dunn,nc':[35.3063,-78.6089],'middleburg,fl':[30.0688,-81.8604],'parrish,fl':[27.5892,-82.3540],'hudson,fl':[28.3647,-82.6932],'homosassa,fl':[28.7814,-82.6162],'haines city,fl':[28.1142,-81.6178],'winter haven,fl':[28.0222,-81.7329],
   'new york,ny':[40.7128,-74.0060],
   'seattle,wa':[47.6062,-122.3321],'portland,or':[45.5051,-122.6750],
   'las vegas,nv':[36.1699,-115.1398],'henderson,nv':[36.0395,-114.9817],'pahrump,nv':[36.2083,-115.9839],
@@ -1652,7 +1652,7 @@ function runGeoQueue(){
   if(!geoQueue.length){geoRunning=false;return;}
   geoRunning=true;
   var item=geoQueue.shift();
-  var query=encodeURIComponent(item.city+', '+item.state+', USA');
+  var query=encodeURIComponent(item.zip&&item.zip.length>=5?item.zip+', USA':item.city+', '+item.state+', USA');
   fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+query,{headers:{'Accept-Language':'en','User-Agent':'TermsForSale/1.0'}})
     .then(function(r){return r.json();})
     .then(function(data){
