@@ -54,8 +54,11 @@ exports.handler = async (event) => {
   };
 
   try {
+    // ── 0. Fetch custom field IDs (key → id map) ───────────
+    const fieldMap = await getCustomFieldMap(locationId, headers);
+
     // ── 1. Upsert Contact ───────────────────────────────────
-    const contactPayload = buildContactPayload(body, locationId);
+    const contactPayload = buildContactPayload(body, locationId, fieldMap);
     const contactRes  = await ghlFetch(`${GHL_BASE}/contacts/upsert`, 'POST', contactPayload, headers);
     const contactData = await contactRes.json();
 
@@ -66,6 +69,19 @@ exports.handler = async (event) => {
 
     const contactId = contactData.contact?.id || contactData.id;
     if (!contactId) return respond(502, { error: 'No contact ID returned' });
+
+    // ── 1b. Update contact with custom fields (separate call for reliability) ──
+    if (contactPayload.customFields && contactPayload.customFields.length > 0) {
+      const updateRes = await ghlFetch(`${GHL_BASE}/contacts/${contactId}`, 'PUT', {
+        customFields: contactPayload.customFields,
+      }, headers);
+      if (!updateRes.ok) {
+        const updateData = await updateRes.json();
+        console.warn('Contact custom field update failed:', JSON.stringify(updateData));
+      } else {
+        console.log('Custom fields updated on contact:', contactPayload.customFields.length, 'fields');
+      }
+    }
 
     // ── 2. Apply Tags ───────────────────────────────────────
     const tags = buildTags(body);
@@ -394,12 +410,17 @@ async function addNote(contactId, headers, body) {
 // ─────────────────────────────────────────────────────────────
 // BUILD CONTACT PAYLOAD
 // ─────────────────────────────────────────────────────────────
-function buildContactPayload(d, locationId) {
+function buildContactPayload(d, locationId, fieldMap) {
   const customFields = [];
 
   function cf(key, val) {
     if (val !== undefined && val !== null && String(val).trim() !== '') {
-      customFields.push({ key, field_value: String(val).trim() });
+      const id = fieldMap ? fieldMap[key] : null;
+      if (id) {
+        customFields.push({ id, field_value: String(val).trim() });
+      } else {
+        customFields.push({ key, field_value: String(val).trim() });
+      }
     }
   }
 
@@ -650,6 +671,34 @@ async function createNotionDeal(token, dbId, d) {
   }
 
   return data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// GHL CUSTOM FIELD ID LOOKUP
+// Fetches all custom fields for the location and builds key → id map
+// ─────────────────────────────────────────────────────────────
+async function getCustomFieldMap(locationId, headers) {
+  const map = {};
+  try {
+    const res = await ghlFetch(
+      `${GHL_BASE}/locations/${locationId}/customFields`,
+      'GET', null, headers
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const fields = data.customFields || [];
+      for (const f of fields) {
+        if (f.fieldKey) map[f.fieldKey] = f.id;
+      }
+      console.log(`Loaded ${Object.keys(map).length} custom field IDs`);
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      console.warn('Custom field lookup failed:', res.status, JSON.stringify(errData));
+    }
+  } catch (err) {
+    console.warn('Custom field lookup error:', err.message);
+  }
+  return map;
 }
 
 // ─────────────────────────────────────────────────────────────
