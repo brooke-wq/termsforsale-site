@@ -902,7 +902,7 @@ function renderDeal(d,allDeals){
           <div>
             <div class="map-embed">
               ${loggedIn
-                ?`<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(d.city+', '+d.state+' '+(d.zip||''))}&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Property area"></iframe>`
+                ?`<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(d.zip&&d.zip.length>=5?d.zip:d.city+', '+d.state)}&t=&z=12&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Property area"></iframe>`
                 :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-light)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div style="font-size:11px;font-weight:600">${d.city}, ${d.state}</div><div style="font-size:10px;color:var(--text-light)">Sign up to view full map</div><button class="photo-unlock-btn" onclick="openAuth('signup')" style="margin-top:4px">Sign Up</button></div>`}
             </div>
           </div>
@@ -1090,11 +1090,9 @@ function renderDeal(d,allDeals){
   loadDealPhotos(d);
   // Fetch insurance quote (uses address server-side only, never displayed)
   if(d.streetAddress&&d.city&&d.state){
-    console.log('[insurance] Fetching quote for '+d.city+', '+d.state);
     fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||''})})
-      .then(function(r){console.log('[insurance] Response status:',r.status);return r.json();})
+      .then(function(r){return r.json();})
       .then(function(data){
-        console.log('[insurance] Data:',data);
         var el=document.getElementById('insurance-quote');
         if(!el)return;
         if(data.available&&data.monthly>0){
