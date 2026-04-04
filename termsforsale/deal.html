@@ -868,7 +868,7 @@ function renderDeal(d,allDeals){
           ${d.baths?`<div class="deal-spec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"/><path d="M3 7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><strong>${d.baths}</strong> baths</div>`:''}
           ${d.sqft?`<div class="deal-spec"><strong>${(()=>{const n=parseInt(String(d.sqft).replace(/[^0-9]/g,''));return isNaN(n)?d.sqft:n.toLocaleString();})()}</strong> sqft</div>`:''}
         </div>
-        <div class="deal-addr">${loggedIn ? d.streetAddress+', '+d.city+', '+d.state+' '+(d.zip||'') : d.city+', '+d.state+' — <a href="#" onclick="openAuth(\'signup\');return false" style="color:var(--blue);font-weight:600">Sign up to unlock address</a>'}</div>
+        <div class="deal-addr">${d.city+', '+d.state+(d.zip?' '+d.zip:'')}</div>
         ${d.piti?`<div class="deal-refi-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Est. PITI payment: <strong>${fc(d.piti)}/mo</strong> (existing loan)</div>`:''}
       </div>
 
@@ -902,7 +902,7 @@ function renderDeal(d,allDeals){
           <div>
             <div class="map-embed">
               ${loggedIn
-                ?`<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(d.streetAddress+', '+d.city+', '+d.state+' '+(d.zip||''))}&t=&z=15&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Property location"></iframe>`
+                ?`<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(d.city+', '+d.state+' '+(d.zip||''))}&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Property area"></iframe>`
                 :`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-light)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div style="font-size:11px;font-weight:600">${d.city}, ${d.state}</div><div style="font-size:10px;color:var(--text-light)">Sign up to view full map</div><button class="photo-unlock-btn" onclick="openAuth('signup')" style="margin-top:4px">Sign Up</button></div>`}
             </div>
           </div>
@@ -1020,8 +1020,7 @@ function renderDeal(d,allDeals){
         </div>
         <div class="sidebar-body">
           ${loggedIn
-            ?`<div style="background:var(--blue-light);border-radius:8px;padding:12px 16px;margin-bottom:8px;font-size:13px;color:var(--blue-dark);font-weight:600;text-align:center">✓ Address: ${d.streetAddress}, ${d.city}, ${d.state} ${d.zip||''}</div>
-              <button class="btn btn-blue" style="width:100%;justify-content:center;font-size:13px" onclick="document.getElementById('req-form').style.display='block'">I'm Interested — Request Info</button>`
+            ?`<button class="btn btn-blue" style="width:100%;justify-content:center;font-size:13px" onclick="document.getElementById('req-form').style.display='block'">I'm Interested — Request Info</button>`
             :`<button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px" onclick="openAuth('signup')">Sign Up to Unlock Address</button>
               <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px" onclick="openAuth('login')">Already have an account? Log In</button>`}
         </div>
