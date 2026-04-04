@@ -1020,11 +1020,11 @@ function renderDeal(d,allDeals){
         </div>
         <div class="sidebar-body">
           ${loggedIn
-            ?`<button class="btn btn-blue" style="width:100%;justify-content:center;font-size:13px" onclick="document.getElementById('req-form').style.display='block'">I'm Interested — Request Info</button>`
-            :`<button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px" onclick="openAuth('signup')">Sign Up to Unlock Address</button>
+            ?``
+            :`<button class="btn btn-blue" style="width:100%;justify-content:center;margin-bottom:8px;font-size:13px" onclick="openAuth('signup')">Sign Up Free</button>
               <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px" onclick="openAuth('login')">Already have an account? Log In</button>`}
         </div>
-        <div id="req-form" style="display:none;padding:0 20px 20px">
+        <div id="req-form" style="${loggedIn?'':'display:none;'}padding:0 20px 20px">
           <div class="sidebar-form">
             <div class="sf-row">
               <input class="sf-input" placeholder="First Name" id="f-fname">
@@ -1090,9 +1090,11 @@ function renderDeal(d,allDeals){
   loadDealPhotos(d);
   // Fetch insurance quote (uses address server-side only, never displayed)
   if(d.streetAddress&&d.city&&d.state){
+    console.log('[insurance] Fetching quote for '+d.city+', '+d.state);
     fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||''})})
-      .then(function(r){return r.json();})
+      .then(function(r){console.log('[insurance] Response status:',r.status);return r.json();})
       .then(function(data){
+        console.log('[insurance] Data:',data);
         var el=document.getElementById('insurance-quote');
         if(!el)return;
         if(data.available&&data.monthly>0){
