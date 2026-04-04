@@ -19,7 +19,7 @@ function steadilyRequest(body, apiKey, isStaging) {
       path: '/v1/quote/estimate',
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + apiKey,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json'
       }
     };
@@ -80,9 +80,10 @@ exports.handler = async function(event) {
       }]
     }, apiKey, isStaging);
 
+    console.log('[insurance-quote] Steadily response: status=' + result.status + ' body=' + JSON.stringify(result.body).substring(0, 300));
+
     if (result.status !== 200) {
-      console.error('[insurance-quote] Steadily API error:', result.status, JSON.stringify(result.body).substring(0, 200));
-      return { statusCode: 502, headers: headers, body: JSON.stringify({ error: 'Quote unavailable' }) };
+      return { statusCode: 502, headers: headers, body: JSON.stringify({ error: 'Quote unavailable', status: result.status, detail: JSON.stringify(result.body).substring(0, 200) }) };
     }
 
     var estimates = result.body.estimates || [];
