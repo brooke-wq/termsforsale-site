@@ -202,7 +202,7 @@ img{max-width:100%;display:block}
 .review-label{color:var(--text-light)}
 .cond-block{background:rgba(41,171,226,.04);border-left-color:var(--blue)}
 .cond-block.sf{background:rgba(34,197,94,.04);border-left-color:var(--green)}
-.consent-wrap{background:rgba(41,171,226,.04)}
+.consent-wrap{background:transparent}
 .success-wrap h2{color:var(--navy)}
 .radio-opt{border-color:var(--border);color:var(--text-mid)}
 .radio-opt:hover{border-color:var(--blue);color:var(--navy)}
@@ -270,10 +270,10 @@ img{max-width:100%;display:block}
 /* ========================================
    CONSENT
    ======================================== */
-.consent-wrap{background:rgba(41,171,226,.07);border:1.5px solid rgba(41,171,226,.2);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:border .2s;margin-top:16px}
-.consent-wrap:has(input:checked){border-color:var(--blue)}
-.consent-inner{display:flex;gap:10px}
-.consent-inner input{width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:var(--blue);margin-top:2px}
+.consent-wrap{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:border-color .2s;margin-top:16px;display:block;position:relative}
+.consent-wrap:has(input:checked){border-color:var(--blue);background:rgba(41,171,226,.03)}
+.consent-inner{display:flex;gap:12px;align-items:flex-start}
+.consent-inner input[type="checkbox"]{width:20px;height:20px;min-width:20px;flex-shrink:0;cursor:pointer;accent-color:var(--blue);margin-top:1px;-webkit-appearance:checkbox;appearance:auto;border:none;outline:none;box-shadow:none;background:none}
 .consent-text{font-size:12px;color:var(--text-mid);line-height:1.6}
 
 /* ========================================
@@ -625,7 +625,7 @@ img{max-width:100%;display:block}
             <input type="hidden" id="firstDeal">
             <div class="field-err" id="firstdeal-err">Required</div>
           </div>
-          <div class="field-group">
+          <div class="field-group" id="hearAboutUsGroup">
             <label class="field-label">How did you hear about us?</label>
             <select class="fi fi-select" id="hearAboutUs">
               <option value="">Select one</option>
@@ -786,9 +786,10 @@ img{max-width:100%;display:block}
             <div class="field-err" id="photo-err">Required -- photos needed for review</div>
           </div>
           <div class="field-group">
-            <label class="field-label">Supporting Documents</label>
+            <label class="field-label">Supporting Documents <span class="req">*</span></label>
             <input class="fi" type="url" id="docsLink" placeholder="https://drive.google.com/...">
             <div class="field-hint">Purchase agreement, mortgage docs, disclosures</div>
+            <div class="field-err" id="docs-err">Required — we need the purchase agreement</div>
           </div>
         </div>
       </div>
@@ -890,13 +891,13 @@ img{max-width:100%;display:block}
               <div class="fi-currency"><input class="fi" type="number" id="arvEstimate" placeholder="220,000" min="0"></div>
               <div class="field-err" id="arv-err">Required</div>
             </div>
-            <div class="field-group">
+            <div class="field-group" id="entryFeeGroup" style="display:none">
               <label class="field-label">Buyer Entry Fee <span class="req">*</span></label>
               <div class="fi-currency"><input class="fi" type="number" id="buyerEntryFee" placeholder="20,000" min="0"></div>
               <div class="field-hint">Including assignment fee, before CC + TC</div>
               <div class="field-err" id="entry-err">Required</div>
             </div>
-            <div class="field-group">
+            <div class="field-group" id="contractedEntryGroup" style="display:none">
               <label class="field-label">Contracted Entry Fee</label>
               <div class="fi-currency"><input class="fi" type="number" id="contractedEntryFee" placeholder="20,000" min="0"></div>
               <div class="field-hint">Entry fee on the actual contract</div>
@@ -1235,6 +1236,7 @@ img{max-width:100%;display:block}
       check('propOccupancy', 'occ-err');
       check('propertyAccess', 'access-err');
       check('photoLink', 'photo-err');
+      check('docsLink', 'docs-err');
     }
     if (n === 3) {
       if (!selectedDealType) {
@@ -1244,7 +1246,10 @@ img{max-width:100%;display:block}
       check('contractedPrice', 'cprice-err');
       check('desiredAskingPrice', 'daprice-err');
       check('arvEstimate', 'arv-err');
-      check('buyerEntryFee', 'entry-err');
+      // Entry fee only required for non-cash deal types
+      if (document.getElementById('entryFeeGroup').style.display !== 'none') {
+        check('buyerEntryFee', 'entry-err');
+      }
     }
     var errBanner = document.getElementById('err' + n);
     if (errBanner) errBanner.classList.toggle('show', !valid);
@@ -1262,8 +1267,11 @@ img{max-width:100%;display:block}
 
     var showSubto = ['Subto', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType);
     var showSf = ['Seller Finance', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType);
+    var showEntry = ['Subto', 'Seller Finance', 'Hybrid', 'Morby/Stack Method', 'Lease Option'].includes(selectedDealType);
     toggleBlock('subtoBlock', showSubto);
     toggleBlock('sfBlock', showSf);
+    document.getElementById('entryFeeGroup').style.display = showEntry ? '' : 'none';
+    document.getElementById('contractedEntryGroup').style.display = showEntry ? '' : 'none';
     scheduleSave();
   };
 
@@ -1281,7 +1289,9 @@ img{max-width:100%;display:block}
     var errEl = document.getElementById(groupId.replace('Group', '') + '-err');
     if (errEl) errEl.classList.remove('show');
     if (hiddenId === 'firstDeal') {
-      document.getElementById('firstDealNotice').classList.toggle('show', label.dataset.val === 'Yes');
+      var isFirst = label.dataset.val === 'Yes';
+      document.getElementById('firstDealNotice').classList.toggle('show', isFirst);
+      document.getElementById('hearAboutUsGroup').style.display = isFirst ? '' : 'none';
       document.getElementById('firstdeal-err').classList.remove('show');
     }
     scheduleSave();
@@ -1511,8 +1521,11 @@ img{max-width:100%;display:block}
           document.getElementById('coreNumbers').style.display = 'block';
           var showSubto = ['Subto', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType);
           var showSf = ['Seller Finance', 'Hybrid', 'Morby/Stack Method'].includes(selectedDealType);
+          var showEntry = ['Subto', 'Seller Finance', 'Hybrid', 'Morby/Stack Method', 'Lease Option'].includes(selectedDealType);
           toggleBlock('subtoBlock', showSubto);
           toggleBlock('sfBlock', showSf);
+          document.getElementById('entryFeeGroup').style.display = showEntry ? '' : 'none';
+          document.getElementById('contractedEntryGroup').style.display = showEntry ? '' : 'none';
         }
       }
 
@@ -1525,6 +1538,8 @@ img{max-width:100%;display:block}
           document.getElementById('firstDeal').value = data.firstDeal;
           if (data.firstDeal === 'Yes') {
             document.getElementById('firstDealNotice').classList.add('show');
+          } else {
+            document.getElementById('hearAboutUsGroup').style.display = 'none';
           }
         }
       }
