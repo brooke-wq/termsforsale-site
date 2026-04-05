@@ -241,7 +241,7 @@ function buildPartnerConfirmationEmail(d) {
   return `
     <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1F3C">
       <div style="padding:32px 0;text-align:center;border-bottom:2px solid #29ABE2">
-        <div style="font-size:22px;font-weight:800;color:#0D1F3C;letter-spacing:-.5px">Dispo Buddy</div>
+        <div style="font-size:26px;font-weight:900;color:#0D1F3C;letter-spacing:-.5px;font-family:'Poppins',Helvetica,Arial,sans-serif">Dispo <span style="color:#29ABE2">Buddy</span></div>
       </div>
       <div style="padding:32px 24px">
         <h1 style="font-size:24px;font-weight:800;margin-bottom:16px">Deal Received!</h1>
