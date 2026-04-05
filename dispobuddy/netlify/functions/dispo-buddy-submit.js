@@ -240,10 +240,10 @@ function buildPartnerConfirmationEmail(d) {
   const addr = [d.property_address, d.property_city, d.property_state, d.property_zip].filter(Boolean).join(', ');
   return `
     <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1F3C">
-      <div style="padding:32px 0;text-align:center;border-bottom:2px solid #29ABE2">
-        <div style="font-size:26px;font-weight:900;color:#0D1F3C;letter-spacing:-.5px;font-family:'Poppins',Helvetica,Arial,sans-serif">Dispo <span style="color:#29ABE2">Buddy</span></div>
+      <div style="background:#0a1828;padding:28px 24px;text-align:center;border-radius:12px 12px 0 0">
+        <img src="https://dispobuddy.netlify.app/logo-email.png" alt="Dispo Buddy" style="height:48px;margin:0 auto">
       </div>
-      <div style="padding:32px 24px">
+      <div style="padding:32px 24px;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">
         <h1 style="font-size:24px;font-weight:800;margin-bottom:16px">Deal Received!</h1>
         <p style="color:#4A6070;line-height:1.7;margin-bottom:24px">
           Hey ${firstName(d)}, we've received your <strong>${d.deal_type || 'deal'}</strong> submission${addr ? ' for <strong>' + addr + '</strong>' : ''}. Here's what happens next:

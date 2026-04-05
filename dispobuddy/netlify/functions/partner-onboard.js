@@ -223,9 +223,10 @@ async function handleContactForm(body, headers, locationId) {
         subject: 'Got your message — Dispo Buddy',
         html: `
           <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:500px;color:#0D1F3C">
-            <div style="padding:24px 0;border-bottom:2px solid #29ABE2;margin-bottom:24px">
-              <div style="font-size:22px;font-weight:900;color:#0D1F3C;letter-spacing:-.5px;font-family:'Poppins',Helvetica,Arial,sans-serif">Dispo <span style="color:#29ABE2">Buddy</span></div>
+            <div style="background:#0a1828;padding:24px;text-align:center;border-radius:12px 12px 0 0">
+              <img src="https://dispobuddy.netlify.app/logo-email.png" alt="Dispo Buddy" style="height:40px;margin:0 auto">
             </div>
+            <div style="padding:24px;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">
             <p>Hey ${first},</p>
             <p style="color:#4A6070;line-height:1.7">Thanks for reaching out. We got your message and will get back to you within 24 hours.</p>
             <p style="color:#4A6070;line-height:1.7">In the meantime:</p>
@@ -237,6 +238,7 @@ async function handleContactForm(body, headers, locationId) {
             <p style="color:#4A6070">— The Dispo Buddy Team</p>
             <div style="margin-top:32px;padding-top:16px;border-top:1px solid #E2E8F0;color:#718096;font-size:12px">
               Dispo Buddy — A Deal Pros LLC Brand · (480) 842-5332
+            </div>
             </div>
           </div>`,
       }).catch(err => console.warn('Auto-reply email failed:', err.message))
@@ -302,10 +304,10 @@ function buildOnboardingWelcomeEmail(d) {
   const first = (d.full_name || '').trim().split(' ')[0] || 'there';
   return `
     <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1F3C">
-      <div style="padding:32px 0;text-align:center;border-bottom:2px solid #29ABE2">
-        <div style="font-size:26px;font-weight:900;color:#0D1F3C;letter-spacing:-.5px;font-family:'Poppins',Helvetica,Arial,sans-serif">Dispo <span style="color:#29ABE2">Buddy</span></div>
+      <div style="background:#0a1828;padding:28px 24px;text-align:center;border-radius:12px 12px 0 0">
+        <img src="https://dispobuddy.netlify.app/logo-email.png" alt="Dispo Buddy" style="height:48px;margin:0 auto">
       </div>
-      <div style="padding:32px 24px">
+      <div style="padding:32px 24px;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">
         <h1 style="font-size:24px;font-weight:800;margin-bottom:16px">Welcome to the Network, ${first}!</h1>
         <p style="color:#4A6070;line-height:1.7;margin-bottom:24px">
           You're now a Dispo Buddy partner. Here's what that means:
