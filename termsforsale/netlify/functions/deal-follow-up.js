@@ -147,7 +147,7 @@ exports.handler = async function(event) {
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
                 type: 'SMS', contactId: contact.id,
-                message: 'Still buying in ' + (dealCity || 'the area') + (dealType ? ' at ' + dealType : '') + '? If yes, want me to prioritize deals like ' + (dealAddress || 'this one') + ' for you, or pause you for now?\n' + dealUrl
+                message: 'Are you still looking for ' + (dealType ? dealType.toLowerCase() + ' deals' : 'deals') + ' in ' + (dealCity || 'the area') + '? If yes, I\'ll prioritize those for you. If not, I can pause outreach.\n' + dealUrl
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d1Tag] });
