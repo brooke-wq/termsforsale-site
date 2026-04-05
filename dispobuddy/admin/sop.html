@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispo Buddy — Internal SOP + Workflow</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;color:#0D1F3C;background:#F4F6F9;font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:40px 32px 80px}
+h1{font-size:32px;font-weight:900;margin-bottom:4px}
+.sub{color:#718096;font-size:14px;margin-bottom:32px}
+h2{font-size:20px;font-weight:800;margin:40px 0 16px;padding-bottom:8px;border-bottom:3px solid #29ABE2}
+h3{font-size:16px;font-weight:700;margin:20px 0 8px}
+p{color:#4A5568;margin-bottom:12px}
+ul,ol{color:#4A5568;padding-left:20px;margin-bottom:12px}
+li{margin-bottom:6px}
+code{background:#FFF3E0;color:#c05621;padding:1px 6px;border-radius:3px;font-size:12px}
+a{color:#29ABE2;text-decoration:none}
+a:hover{text-decoration:underline}
+.card{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.success{background:#E6F9F0;border-left:4px solid #10B981;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:16px;font-size:13px;color:#276749}
+.important{background:#FFF3E0;border-left:4px solid #F59E0B;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:16px;font-size:13px;color:#92400e}
+.danger{background:#FEE2E2;border-left:4px solid #C53030;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:16px;font-size:13px;color:#C53030}
+table{width:100%;border-collapse:collapse;margin-bottom:16px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+th{background:#0D1F3C;color:#fff;text-align:left;padding:10px 14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+td{padding:10px 14px;border-bottom:1px solid #EDF2F7;font-size:13px;color:#4A5568}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-green{background:#E6F9F0;color:#276749}
+.tag-blue{background:#EBF8FF;color:#1a8bbf}
+.tag-orange{background:#FFF3E0;color:#c05621}
+.tag-red{background:#FEE2E2;color:#C53030}
+.tag-gray{background:#EDF2F7;color:#4A5568}
+.tag-purple{background:#F3E8FF;color:#6B21A8}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+.flow-step{background:#fff;border:1.5px solid #E2E8F0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;color:#0D1F3C}
+.flow-step.active{border-color:#29ABE2;background:#EBF8FF;color:#1a8bbf}
+.flow-arrow{color:#CBD5E0;font-size:16px}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-green{background:#10B981}
+.dot-orange{background:#F59E0B}
+.dot-red{background:#C53030}
+@media(max-width:640px){.wrap{padding:24px 16px}h1{font-size:24px}h2{font-size:18px}table{font-size:12px}td,th{padding:8px 10px}}
+@media print{body{background:#fff}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Dispo Buddy — Internal SOP</h1>
+<p class="sub">Deal Pros LLC · JV Disposition Operations · Last updated April 2026</p>
+
+<div class="success"><strong>System Status:</strong> Dispo Buddy site live at dispobuddy.netlify.app. GHL sync active. Notion sync active. Notifications gated behind <code>NOTIFICATIONS_LIVE</code> env var.</div>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>1. System Overview</h2>
+
+<div class="card">
+<div class="card-title">How It Works</div>
+<p>Dispo Buddy is the JV partner-facing site where wholesalers, bird dogs, and agents submit off-market deals to Deal Pros' buyer network. Submissions flow through an automated pipeline from intake to close.</p>
+
+<div class="flow">
+<div class="flow-step active">Partner Submits Deal</div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">GHL Contact + Opportunity</div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Notion Deal Page</div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Team Reviews</div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">JV Agreement</div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Market to Buyers</div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Close + Split</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Tech Stack</div>
+<table>
+<tr><td><strong>Site</strong></td><td>dispobuddy.netlify.app → dispobuddy.com</td></tr>
+<tr><td><strong>CRM</strong></td><td>GoHighLevel (GHL) — contacts, pipeline, messaging</td></tr>
+<tr><td><strong>Deal Database</strong></td><td>Notion — deal inventory + status tracking</td></tr>
+<tr><td><strong>Functions</strong></td><td>Netlify Functions (Node.js) — form processing, GHL sync</td></tr>
+<tr><td><strong>Cron Jobs</strong></td><td>DigitalOcean Droplet (Paperclip) — automated triage (currently disabled)</td></tr>
+<tr><td><strong>Buyer Network</strong></td><td>Terms For Sale (deals.termsforsale.com) — 2,000+ active buyers</td></tr>
+</table>
+</div>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>2. Deal Submission Flow</h2>
+
+<div class="card">
+<div class="card-title">What Happens When a Partner Submits a Deal</div>
+<ol>
+<li><strong>Form submitted</strong> at <code>/submit-deal</code> — partner enters contact info, property, deal type, numbers, photos, docs</li>
+<li><strong>GHL Contact upserted</strong> — partner's contact created/updated with all custom fields (property address, deal type, prices, terms, photos, docs)</li>
+<li><strong>Tags applied</strong> — <code>dispo-buddy</code>, <code>jv-partner</code>, <code>jv-submitted</code>, + deal type tags (<code>db-cash</code>, <code>db-subto</code>, etc.)</li>
+<li><strong>Opportunity created</strong> — in "3. JV Deals" pipeline, stage "New JV Lead", with monetary value = asking price</li>
+<li><strong>Notion page created</strong> — in deals database with status "New Submission" and all deal data mapped</li>
+<li><strong>Confirmation SMS</strong> — sent to partner: "we got your deal, reviewing in 24-48hrs"</li>
+<li><strong>Confirmation email</strong> — branded email with deal summary + next steps</li>
+<li><strong>Internal SMS alert</strong> — sent to Brooke with deal summary</li>
+<li><strong>Internal email alert</strong> — detailed email with all deal data + GHL link</li>
+<li><strong>Contact note</strong> — full deal summary added to GHL contact notes</li>
+</ol>
+</div>
+
+<div class="important"><strong>Safety:</strong> All SMS/email is gated behind <code>NOTIFICATIONS_LIVE=true</code> env var. CRM writes (contacts, opportunities, tags, Notion) always work regardless. Set to <code>true</code> only after testing.</div>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>3. JV Deals Pipeline — Stage Workflow</h2>
+
+<p>Each deal progresses through these stages in the "3. JV Deals" GHL pipeline:</p>
+
+<table>
+<tr><th>Stage</th><th>What Happens</th><th>Who</th><th>Action Required</th></tr>
+<tr>
+<td><span class="tag tag-blue">New JV Lead</span></td>
+<td>Deal just submitted. Auto-created by the form.</td>
+<td>System</td>
+<td>Review within 24-48 hours</td>
+</tr>
+<tr>
+<td><span class="tag tag-orange">Missing Information</span></td>
+<td>Deal needs more info from partner (missing photos, docs, numbers)</td>
+<td>Team</td>
+<td>Text/call partner, request missing items. Move back to Under Review when received.</td>
+</tr>
+<tr>
+<td><span class="tag tag-purple">Under Review</span></td>
+<td>Team is reviewing the deal — checking comps, numbers, marketability</td>
+<td>Team</td>
+<td>Run underwriting, check ARV, verify contract. Decision: accept or reject.</td>
+</tr>
+<tr>
+<td><span class="tag tag-blue">Ready to Market</span></td>
+<td>Deal accepted. JV agreement sent to partner.</td>
+<td>Brooke</td>
+<td>Send JV agreement. Once signed, move to Actively Marketing.</td>
+</tr>
+<tr>
+<td><span class="tag tag-green">Actively Marketing</span></td>
+<td>Deal is live on Terms For Sale. Buyers are being notified.</td>
+<td>System/Team</td>
+<td>Update Notion status. Monitor buyer interest. Follow up with leads.</td>
+</tr>
+<tr>
+<td><span class="tag tag-orange">Assignment Sent</span></td>
+<td>Buyer found. Assignment contract sent.</td>
+<td>Brooke</td>
+<td>Coordinate with title company. Confirm EMD.</td>
+</tr>
+<tr>
+<td><span class="tag tag-green">Assigned with EMD</span></td>
+<td>Buyer has signed + EMD deposited.</td>
+<td>Brooke</td>
+<td>Monitor closing timeline. Keep partner updated.</td>
+</tr>
+<tr>
+<td><span class="tag tag-green">Closed</span></td>
+<td>Deal closed. Fees disbursed by title.</td>
+<td>Brooke</td>
+<td>Confirm partner payment (50/50 split). Update Notion. Celebrate.</td>
+</tr>
+<tr>
+<td><span class="tag tag-red">Not Accepted</span></td>
+<td>Deal declined — bad numbers, no contract, or not viable.</td>
+<td>Team</td>
+<td>Send partner rejection feedback (stored in <code>rejected_deal_feedback</code> GHL field).</td>
+</tr>
+</table>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>4. Step-by-Step: Processing a New Submission</h2>
+
+<div class="card">
+<div class="card-title">When you get the internal alert SMS/email:</div>
+<ol>
+<li><strong>Open GHL</strong> — Click the "View in GHL" link in the internal email, or search the contact name</li>
+<li><strong>Review contact custom fields:</strong>
+<ul>
+<li>Property address, city, state, ZIP</li>
+<li>Deal type (Cash, SubTo, Seller Finance, Hybrid, etc.)</li>
+<li>Contract price, asking price, ARV, entry fee</li>
+<li>SubTo details (balance, rate, payment) or SF details (amount, rate, term)</li>
+<li>Photos link, documents link</li>
+<li>Important details / notes from partner</li>
+</ul>
+</li>
+<li><strong>Check Notion</strong> — Find the deal in the deals database (status: "New Submission"). All fields should be populated.</li>
+<li><strong>Quick viability check:</strong>
+<ul>
+<li>Is there a real spread? (Asking vs Contract vs ARV)</li>
+<li>Does the partner have the property under contract?</li>
+<li>Are photos and docs provided?</li>
+<li>Is the market viable? (AZ, TX, FL, KY, TN, GA, OH, IN preferred)</li>
+</ul>
+</li>
+<li><strong>Decision:</strong>
+<ul>
+<li><strong>Need more info</strong> → Move to "Missing Information" → Text partner</li>
+<li><strong>Not viable</strong> → Move to "Not Accepted" → Send rejection feedback</li>
+<li><strong>Viable</strong> → Move to "Under Review" → Run full underwriting</li>
+</ul>
+</li>
+</ol>
+</div>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>5. Processing Accepted Deals</h2>
+
+<div class="card">
+<div class="card-title">After underwriting confirms the deal is good:</div>
+<ol>
+<li><strong>Move to "Ready to Market"</strong> in GHL pipeline</li>
+<li><strong>Send JV agreement</strong> to partner (via GHL or DocuSign)</li>
+<li><strong>Wait for signed agreement</strong></li>
+<li><strong>Update Notion</strong> — Change deal status to "Actively Marketing"</li>
+<li><strong>Move to "Actively Marketing"</strong> in GHL pipeline</li>
+<li><strong>Create deal on Terms For Sale</strong> — Add to Notion with status "Actively Marketing" so it appears on the buyer site</li>
+<li><strong>notify-buyers cron</strong> automatically matches to buyer criteria and sends SMS + email alerts</li>
+<li><strong>Monitor buyer interest</strong> — Track views, inquiries, offers</li>
+<li><strong>When buyer found</strong> → Send assignment contract → Move to "Assignment Sent"</li>
+<li><strong>When EMD deposited</strong> → Move to "Assigned with EMD"</li>
+<li><strong>When closed</strong> → Move to "Closed" → Confirm 50/50 split paid through title</li>
+</ol>
+</div>
+
+<div class="important"><strong>Partner communication:</strong> Keep the partner updated at every stage. A quick text when you move stages goes a long way. The dashboard at <code>/dashboard</code> shows them their deal status automatically.</div>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>6. GHL Tags Reference</h2>
+
+<table>
+<tr><th>Tag</th><th>Applied When</th><th>Purpose</th></tr>
+<tr><td><code>dispo-buddy</code></td><td>Deal submission or partner join</td><td>Identifies contact as a DB partner</td></tr>
+<tr><td><code>jv-partner</code></td><td>Deal submission or partner join</td><td>Partner classification</td></tr>
+<tr><td><code>jv-submitted</code></td><td>Deal submission</td><td>Triggers triage automation (currently disabled)</td></tr>
+<tr><td><code>db-cash</code></td><td>Cash deal submitted</td><td>Deal type segmentation</td></tr>
+<tr><td><code>db-subto</code></td><td>SubTo deal submitted</td><td>Deal type segmentation</td></tr>
+<tr><td><code>db-seller-finance</code></td><td>SF deal submitted</td><td>Deal type segmentation</td></tr>
+<tr><td><code>db-hybrid</code></td><td>Hybrid deal submitted</td><td>Deal type segmentation</td></tr>
+<tr><td><code>db-morby</code></td><td>Morby/Stack deal submitted</td><td>Deal type segmentation</td></tr>
+<tr><td><code>db-lease-option</code></td><td>Lease option submitted</td><td>Deal type segmentation</td></tr>
+<tr><td><code>db-novation</code></td><td>Novation deal submitted</td><td>Deal type segmentation</td></tr>
+<tr><td><code>db-first-deal</code></td><td>First deal with DB</td><td>New partner onboarding flow</td></tr>
+<tr><td><code>db-direct-to-seller</code></td><td>Partner has direct seller access</td><td>Deal source classification</td></tr>
+<tr><td><code>db-onboarding</code></td><td>Partner join form</td><td>Onboarding pipeline</td></tr>
+</table>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>7. GHL Custom Fields Reference</h2>
+
+<table>
+<tr><th>Field</th><th>GHL Key</th><th>Type</th></tr>
+<tr><td>JV Partner Name</td><td><code>jv_partner_name</code></td><td>Text</td></tr>
+<tr><td>JV Phone Number</td><td><code>jv_phone_number</code></td><td>Phone</td></tr>
+<tr><td>JV Partner Email</td><td><code>jv_partner_email</code></td><td>Text</td></tr>
+<tr><td>Property Address</td><td><code>property_address</code></td><td>Text</td></tr>
+<tr><td>Deal Type</td><td><code>deal_type</code></td><td>Single Options</td></tr>
+<tr><td>Contracted Price</td><td><code>contracted_price</code></td><td>Monetary</td></tr>
+<tr><td>Desired Asking Price</td><td><code>desired_asking_price</code></td><td>Monetary</td></tr>
+<tr><td>ARV Estimate</td><td><code>arv_estimate</code></td><td>Monetary</td></tr>
+<tr><td>Buyer Entry Fee</td><td><code>what_is_the_buyer_entry_fee</code></td><td>Monetary</td></tr>
+<tr><td>SubTo Loan Balance</td><td><code>subto_loan_balance</code></td><td>Monetary</td></tr>
+<tr><td>SubTo Interest Rate</td><td><code>interest_rate</code></td><td>Text</td></tr>
+<tr><td>SubTo Monthly Payment</td><td><code>monthly_payment</code></td><td>Monetary</td></tr>
+<tr><td>SF Loan Amount</td><td><code>seller_finance_loan_amount</code></td><td>Monetary</td></tr>
+<tr><td>SF Payment</td><td><code>sf_loan_payment</code></td><td>Monetary</td></tr>
+<tr><td>SF Interest Rate</td><td><code>interest_rate_seller_finance</code></td><td>Text</td></tr>
+<tr><td>Important Details</td><td><code>important_details</code></td><td>Large Text</td></tr>
+<tr><td>Link to Photos</td><td><code>link_to_photos</code></td><td>Text</td></tr>
+<tr><td>Link to Documents</td><td><code>link_to_supporting_documents</code></td><td>Text</td></tr>
+</table>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>8. Netlify Functions</h2>
+
+<table>
+<tr><th>Function</th><th>Path</th><th>Purpose</th></tr>
+<tr><td><code>dispo-buddy-submit</code></td><td>/api/dispo-buddy-submit</td><td>Deal submission → GHL + Notion + notifications</td></tr>
+<tr><td><code>partner-onboard</code></td><td>/api/partner-onboard</td><td>Partner join form + contact form</td></tr>
+<tr><td><code>partner-login</code></td><td>/api/partner-login</td><td>Dashboard login (phone/email lookup)</td></tr>
+<tr><td><code>partner-deals</code></td><td>/api/partner-deals</td><td>Fetch partner's deals for dashboard</td></tr>
+<tr><td><code>buyer-demand</code></td><td>/api/buyer-demand</td><td>Buyer demand data for map</td></tr>
+<tr><td><code>sitemap</code></td><td>/sitemap.xml</td><td>Generates sitemap</td></tr>
+</table>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>9. Environment Variables</h2>
+
+<table>
+<tr><th>Var</th><th>Required</th><th>Purpose</th></tr>
+<tr><td><code>GHL_API_KEY</code></td><td><span class="tag tag-green">Yes</span></td><td>GoHighLevel API key</td></tr>
+<tr><td><code>GHL_LOCATION_ID</code></td><td><span class="tag tag-green">Yes</span></td><td>GHL location/sub-account</td></tr>
+<tr><td><code>NOTION_TOKEN</code></td><td><span class="tag tag-green">Yes</span></td><td>Notion integration secret</td></tr>
+<tr><td><code>NOTIFICATIONS_LIVE</code></td><td><span class="tag tag-orange">Optional</span></td><td>Set to "true" to enable SMS/email. Default off.</td></tr>
+<tr><td><code>INTERNAL_ALERT_PHONE</code></td><td><span class="tag tag-orange">Optional</span></td><td>Phone for internal deal alerts</td></tr>
+<tr><td><code>INTERNAL_ALERT_EMAIL</code></td><td><span class="tag tag-orange">Optional</span></td><td>Email for internal deal alerts</td></tr>
+</table>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>10. Troubleshooting</h2>
+
+<div class="card">
+<div class="card-title">Common Issues</div>
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>Custom fields not syncing to GHL</td><td>Function auto-discovers field IDs. Check Netlify function logs for errors. Verify fields exist in GHL Settings > Custom Fields.</td></tr>
+<tr><td>Notion page not created</td><td>Check <code>NOTION_TOKEN</code> is set in Netlify env vars. Check function logs for property name mismatches.</td></tr>
+<tr><td>No confirmation SMS/email</td><td>Check <code>NOTIFICATIONS_LIVE=true</code> is set. Check function logs.</td></tr>
+<tr><td>Partner can't log into dashboard</td><td>Contact must have <code>dispo-buddy</code> or <code>jv-partner</code> tag. Phone search tries +1 prefix variants.</td></tr>
+<tr><td>Unwanted triage SMS</td><td>Disable <code>dispo-buddy-triage</code> cron: <code>ssh root@64.23.204.220</code> → <code>crontab -e</code> → comment the line.</td></tr>
+<tr><td>Deploy not updating</td><td>Netlify → Deploys → Trigger deploy → Clear cache and deploy.</td></tr>
+</table>
+</div>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>11. Important Links</h2>
+
+<div class="card">
+<table>
+<tr><td><strong>Live Site</strong></td><td><a href="https://dispobuddy.netlify.app" target="_blank">dispobuddy.netlify.app</a></td></tr>
+<tr><td><strong>Test Mode</strong></td><td><a href="https://dispobuddy.netlify.app/submit-deal?test" target="_blank">dispobuddy.netlify.app/submit-deal?test</a></td></tr>
+<tr><td><strong>Partner Dashboard</strong></td><td><a href="https://dispobuddy.netlify.app/dashboard" target="_blank">dispobuddy.netlify.app/dashboard</a></td></tr>
+<tr><td><strong>GitHub Repo</strong></td><td><a href="https://github.com/brooke-wq/termsforsale-site" target="_blank">brooke-wq/termsforsale-site</a> (dispobuddy/ folder)</td></tr>
+<tr><td><strong>Netlify Dashboard</strong></td><td><a href="https://app.netlify.com" target="_blank">app.netlify.com</a></td></tr>
+<tr><td><strong>GHL</strong></td><td><a href="https://app.gohighlevel.com" target="_blank">app.gohighlevel.com</a> → 3. JV Deals pipeline</td></tr>
+<tr><td><strong>Droplet</strong></td><td><code>ssh root@64.23.204.220</code></td></tr>
+<tr><td><strong>Terms For Sale SOP</strong></td><td><a href="https://deals.termsforsale.com/admin/paperclip-sop.html" target="_blank">paperclip-sop.html</a></td></tr>
+</table>
+</div>
+
+<div class="danger"><strong>Never</strong> show street addresses in outbound marketing (SMS, email, blog). City/State only. Street address visible only to logged-in users on the deal page.</div>
+
+</div>
+</body>
+</html>
