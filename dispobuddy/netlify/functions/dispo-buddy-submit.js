@@ -588,10 +588,12 @@ async function createNotionDeal(token, dbId, d) {
   // Deal Type = select
   sel('Deal Type', dealTypeMap[d.deal_type] || d.deal_type);
 
-  // Asking Price = number, Entry Fee = number
+  // Asking Price = number, Entry Fee = number, Contracted Entry = number, T&I = number
   num('Asking Price', d.desired_asking_price);
   num('Entry Fee', d.what_is_the_buyer_entry_fee);
   num('Contracted Price', d.contracted_price);
+  num('Contracted Entry', d.contracted_entry_fee);
+  num('Est T&I', d.est_taxes__insurance);
 
   // ARV = rich_text (NOT number)
   text('ARV', d.arv_estimate ? '$' + parseFloat(d.arv_estimate).toLocaleString('en-US') : '');
@@ -619,7 +621,11 @@ async function createNotionDeal(token, dbId, d) {
 
   // SubTo fields — SubTo Loan Balance = number, SubTo Rate (%) = number, PITI = number
   num('SubTo Loan Balance', d.subto_loan_balance);
-  num('SubTo Rate (%)', d.interest_rate ? parseFloat(String(d.interest_rate).replace('%', '')) : '');
+  // Rate comes as 4.5 meaning 4.5% — Notion percent fields store as decimal (0.045)
+  if (d.interest_rate) {
+    const rate = parseFloat(String(d.interest_rate).replace('%', ''));
+    if (!isNaN(rate)) props['SubTo Rate (%)'] = { number: rate / 100 };
+  }
   num('PITI ', d.monthly_payment);  // Note: trailing space in Notion property name
   text('SubTo Loan Maturity', d.loan_maturity);
   text('SubTo Balloon', d.subto_balloon);
@@ -637,12 +643,10 @@ async function createNotionDeal(token, dbId, d) {
   // Lead Source = rich_text
   text('Lead Source', d.how_did_you_hear_about_us || 'Dispo Buddy');
 
-  // Details = rich_text — combine all context
+  // Details = rich_text — context only (entry/T&I now in their own fields)
   const detailLines = [
     `Under Contract: ${d.do_you_have_the_property_under_contract || 'N/A'}`,
     `First Deal: ${d.is_this_your_first_deal_with_dispo_buddy || 'N/A'}`,
-    `Entry Breakdown: Buyer entry ${d.what_is_the_buyer_entry_fee ? '$' + parseFloat(d.what_is_the_buyer_entry_fee).toLocaleString() : 'N/A'} | Contracted entry ${d.contracted_entry_fee ? '$' + parseFloat(d.contracted_entry_fee).toLocaleString() : 'N/A'}`,
-    `Est T&I: ${d.est_taxes__insurance ? '$' + d.est_taxes__insurance + '/mo' : 'N/A'}`,
   ];
   if (d.important_details) detailLines.push(`Notes: ${d.important_details}`);
   text('Details ', detailLines.join('\n'));  // Note: trailing space in Notion property name
