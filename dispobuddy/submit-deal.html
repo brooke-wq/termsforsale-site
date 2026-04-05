@@ -1568,6 +1568,51 @@ img{max-width:100%;display:block}
   restoreProgress();
   setupAutoSave();
 
+  // ── TEST MODE: add ?test to URL to auto-fill and submit ──
+  if (window.location.search.includes('test')) {
+    document.getElementById('jvName').value = 'Test Partner';
+    document.getElementById('jvPhone').value = '(516) 712-0113';
+    document.getElementById('jvEmail').value = 'brooke@mydealpros.com';
+    // Under contract
+    var ucLabel = document.querySelector('#underContractGroup .radio-opt[data-val="Yes"]');
+    if (ucLabel) { selectRadio(ucLabel, 'underContractGroup', 'underContract'); }
+    // First deal = Yes
+    var fdLabel = document.querySelector('#firstDealGroup .radio-opt[data-val="Yes"]');
+    if (fdLabel) { selectRadio(fdLabel, 'firstDealGroup', 'firstDeal'); }
+    document.getElementById('hearAboutUs').value = 'Google search';
+    // Property
+    document.getElementById('propAddress').value = '123 Test St';
+    document.getElementById('propCity').value = 'Phoenix';
+    document.getElementById('propState').value = 'AZ';
+    document.getElementById('propZip').value = '85001';
+    document.getElementById('coe').value = '2026-05-01';
+    var occLabel = document.querySelector('#propOccupancyGroup .radio-opt[data-val="Vacant"]');
+    if (occLabel) { selectRadio(occLabel, 'propOccupancyGroup', 'propOccupancy'); }
+    var accLabel = document.querySelector('#propertyAccessGroup .radio-opt[data-val="Lockbox"]');
+    if (accLabel) { selectRadio(accLabel, 'propertyAccessGroup', 'propertyAccess'); }
+    document.getElementById('photoLink').value = 'https://drive.google.com/test-photos';
+    document.getElementById('docsLink').value = 'https://drive.google.com/test-docs';
+    // Deal type = SubTo
+    var dealCard = document.querySelector('.deal-card[data-val="Subto"]');
+    if (dealCard) selectDealType(dealCard);
+    document.getElementById('contractedPrice').value = '155000';
+    document.getElementById('desiredAskingPrice').value = '175000';
+    document.getElementById('arvEstimate').value = '220000';
+    document.getElementById('buyerEntryFee').value = '20000';
+    document.getElementById('subtoBalance').value = '140000';
+    document.getElementById('subtoRate').value = '4.5';
+    document.getElementById('subtoPayment').value = '1200';
+    document.getElementById('importantDetails').value = 'TEST SUBMISSION — ignore';
+    document.getElementById('consentCheck').checked = true;
+    // Jump to step 4
+    currentStep = 4;
+    document.querySelectorAll('.step-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById('step4').classList.add('active');
+    updateProgress(4);
+    buildReview();
+    console.log('TEST MODE: form pre-filled. Click Submit Deal to send.');
+  }
+
 })();
 </script>
 </body>
