@@ -114,7 +114,33 @@ tr:last-child td{border-bottom:none}
 <div class="important"><strong>Safety:</strong> All SMS/email is gated behind <code>NOTIFICATIONS_LIVE=true</code> env var. CRM writes (contacts, opportunities, tags, Notion) always work regardless. Set to <code>true</code> only after testing.</div>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>3. JV Deals Pipeline — Stage Workflow</h2>
+<h2>3. Fee Split Structure</h2>
+
+<div class="card">
+<div class="card-title">Tiered JV Split</div>
+<p>The fee split is tiered based on partner performance. The JV agreement sent at "Ready to Market" reflects the appropriate tier for each partner.</p>
+
+<table>
+<tr><th>Tier</th><th>Split (Dispo Buddy / Partner)</th><th>Criteria</th></tr>
+<tr>
+<td><span class="tag tag-blue">Core</span></td>
+<td><strong>50 / 50</strong></td>
+<td>Default for all new partners</td>
+</tr>
+<tr>
+<td><span class="tag tag-green">Proven</span></td>
+<td><strong>30 / 70</strong></td>
+<td>Partner has hit <strong>$25K in funded fees</strong> to Dispo Buddy <em>OR</em> closed <strong>3 deals</strong> with us in a single quarter</td>
+</tr>
+</table>
+
+<p><strong>How to track it:</strong> Use the contact tags <code>db-proven-partner</code> (once either threshold is hit) and keep the JV agreement template version matched to the tier when you send it out. Bump happens at the <strong>next deal submission</strong> — not retroactively.</p>
+
+<p><strong>Quarterly reset:</strong> The "3 deals in a quarter" criteria resets each calendar quarter. The $25K lifetime threshold does not reset.</p>
+</div>
+
+<!-- ──────────────────────────────────────────── -->
+<h2>4. JV Deals Pipeline — Stage Workflow</h2>
 
 <p>Each deal progresses through these stages in the "3. JV Deals" GHL pipeline:</p>
 
@@ -166,7 +192,7 @@ tr:last-child td{border-bottom:none}
 <td><span class="tag tag-green">Closed</span></td>
 <td>Deal closed. Fees disbursed by title.</td>
 <td>Brooke</td>
-<td>Confirm partner payment (50/50 split). Update Notion. Celebrate.</td>
+<td>Confirm partner payment per JV agreement split. Update Notion. Celebrate.</td>
 </tr>
 <tr>
 <td><span class="tag tag-red">Not Accepted</span></td>
@@ -228,7 +254,7 @@ tr:last-child td{border-bottom:none}
 <li><strong>Monitor buyer interest</strong> — Track views, inquiries, offers</li>
 <li><strong>When buyer found</strong> → Send assignment contract → Move to "Assignment Sent"</li>
 <li><strong>When EMD deposited</strong> → Move to "Assigned with EMD"</li>
-<li><strong>When closed</strong> → Move to "Closed" → Confirm 50/50 split paid through title</li>
+<li><strong>When closed</strong> → Move to "Closed" → Confirm payout paid through title per JV agreement (50/50 core, 30/70 for proven partners)</li>
 </ol>
 </div>
 

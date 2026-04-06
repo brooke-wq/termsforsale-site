@@ -186,7 +186,7 @@ exports.handler = async (event) => {
           `1. We review your deal within 24-48 hrs\n` +
           `2. If accepted, we send a simple JV agreement\n` +
           `3. We handle packaging, marketing & buyer outreach\n` +
-          `4. 50/50 split paid at close through title\n\n` +
+          `4. Fee split paid at close through title (50/50 core, 30/70 after $25k funded or 3 closed deals/quarter)\n\n` +
           `Questions? Text us anytime.`
         )
         .catch(err => console.warn('First-deal SMS failed:', err.message))
@@ -252,7 +252,7 @@ function buildPartnerConfirmationEmail(d) {
           <div style="margin-bottom:16px"><strong style="color:#F7941D;font-size:20px">01</strong><br><strong>We review & underwrite</strong><br><span style="color:#4A6070;font-size:14px">Our team reviews within 24-48 hours. We check numbers, comps, and marketability.</span></div>
           <div style="margin-bottom:16px"><strong style="color:#F7941D;font-size:20px">02</strong><br><strong>JV agreement</strong><br><span style="color:#4A6070;font-size:14px">If it's a fit, we send a simple, non-exclusive JV agreement.</span></div>
           <div style="margin-bottom:16px"><strong style="color:#F7941D;font-size:20px">03</strong><br><strong>We package & market</strong><br><span style="color:#4A6070;font-size:14px">Professional deal presentation to our national buyer network.</span></div>
-          <div><strong style="color:#F7941D;font-size:20px">04</strong><br><strong>You get paid</strong><br><span style="color:#4A6070;font-size:14px">50/50 split of the net assignment fee, paid at close through title.</span></div>
+          <div><strong style="color:#F7941D;font-size:20px">04</strong><br><strong>You get paid</strong><br><span style="color:#4A6070;font-size:14px">50/50 core split of the net assignment fee, paid at close through title. Bump to 30/70 after $25k funded or 3 closed deals in a quarter.</span></div>
         </div>
         ${d.deal_type ? `<p style="color:#4A6070;font-size:14px;margin-bottom:8px"><strong>Deal Type:</strong> ${d.deal_type}</p>` : ''}
         ${d.desired_asking_price ? `<p style="color:#4A6070;font-size:14px;margin-bottom:8px"><strong>Asking Price:</strong> ${fmtPrice(d.desired_asking_price)}</p>` : ''}
