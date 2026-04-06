@@ -315,7 +315,7 @@ function buildOnboardingWelcomeEmail(d) {
         <div style="background:#F4F6F9;border-radius:12px;padding:24px;margin-bottom:24px">
           <p style="margin-bottom:12px"><strong style="color:#29ABE2">✓</strong> <strong>Submit deals anytime</strong> — your info is saved</p>
           <p style="margin-bottom:12px"><strong style="color:#29ABE2">✓</strong> <strong>24-48 hour review</strong> on every submission</p>
-          <p style="margin-bottom:12px"><strong style="color:#29ABE2">✓</strong> <strong>50/50 split</strong> at close, no upfront fees</p>
+          <p style="margin-bottom:12px"><strong style="color:#29ABE2">✓</strong> <strong>50/50 split</strong> at close — bumps to 30/70 after $25k funded or 3 deals closed/quarter</p>
           <p style="margin-bottom:12px"><strong style="color:#29ABE2">✓</strong> <strong>Non-exclusive</strong> — no lock-in, no commitment</p>
           <p><strong style="color:#29ABE2">✓</strong> <strong>Market updates</strong> on what our buyers want</p>
         </div>
