@@ -156,7 +156,7 @@ tr:last-child td{border-bottom:none}
 <td><span class="tag tag-orange">Missing Information</span></td>
 <td>Deal needs more info from partner (missing photos, docs, numbers)</td>
 <td>Team</td>
-<td>Text/call partner, request missing items. Move back to Under Review when received.</td>
+<td><strong>First</strong> fill in the opportunity "Missing Info" field with exactly what's needed (SMS/email uses this value), <strong>then</strong> move stage. Move back to Under Review when partner responds.</td>
 </tr>
 <tr>
 <td><span class="tag tag-purple">Under Review</span></td>
@@ -198,12 +198,14 @@ tr:last-child td{border-bottom:none}
 <td><span class="tag tag-red">Not Accepted</span></td>
 <td>Deal declined — bad numbers, no contract, or not viable.</td>
 <td>Team</td>
-<td>Send partner rejection feedback (stored in <code>rejected_deal_feedback</code> GHL field).</td>
+<td><strong>First</strong> fill in the contact <code>rejected_deal_feedback</code> custom field with specific feedback, <strong>then</strong> move to this stage. The rejection email auto-sends with that feedback embedded.</td>
 </tr>
 </table>
 
+<div class="success"><strong>Automated notifications:</strong> Moving an opportunity between stages automatically fires SMS + email to the partner via GHL workflows. You don't need to manually notify them — just move the stage and the system handles the rest.</div>
+
 <!-- ──────────────────────────────────────────── -->
-<h2>4. Step-by-Step: Processing a New Submission</h2>
+<h2>5. Step-by-Step: Processing a New Submission</h2>
 
 <div class="card">
 <div class="card-title">When you get the internal alert SMS/email:</div>
@@ -239,35 +241,45 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>5. Processing Accepted Deals</h2>
+<h2>6. Processing Accepted Deals</h2>
 
 <div class="card">
 <div class="card-title">After underwriting confirms the deal is good:</div>
 <ol>
-<li><strong>Move to "Ready to Market"</strong> in GHL pipeline</li>
-<li><strong>Send JV agreement</strong> to partner (via GHL or DocuSign)</li>
-<li><strong>Wait for signed agreement</strong></li>
-<li><strong>Update Notion</strong> — Change deal status to "Actively Marketing"</li>
-<li><strong>Move to "Actively Marketing"</strong> in GHL pipeline</li>
-<li><strong>Create deal on Terms For Sale</strong> — Add to Notion with status "Actively Marketing" so it appears on the buyer site</li>
-<li><strong>notify-buyers cron</strong> automatically matches to buyer criteria and sends SMS + email alerts</li>
-<li><strong>Monitor buyer interest</strong> — Track views, inquiries, offers</li>
-<li><strong>When buyer found</strong> → Send assignment contract → Move to "Assignment Sent"</li>
-<li><strong>When EMD deposited</strong> → Move to "Assigned with EMD"</li>
-<li><strong>When closed</strong> → Move to "Closed" → Confirm payout paid through title per JV agreement (50/50 core, 30/70 for proven partners)</li>
+<li><strong>Check tier</strong> — Does the partner have the <code>db-proven-partner</code> tag? If yes, use the 30/70 JV agreement template. Otherwise use 50/50.</li>
+<li><strong>Move to "Ready to Market"</strong> in GHL pipeline — this triggers the auto-email + SMS with the JV agreement link</li>
+<li><strong>GHL Documents sends the contract</strong> for e-signature automatically (or send via DocuSign if you prefer)</li>
+<li><strong>Wait for signed agreement</strong> — you'll get notified in GHL when signed</li>
+<li><strong>Update Notion</strong> — Change deal status from "New Submission" to "Actively Marketing"</li>
+<li><strong>Move opportunity to "Actively Marketing"</strong> — triggers auto "Your deal is live" email + SMS to partner</li>
+<li><strong>notify-buyers cron</strong> on the Droplet automatically matches the Notion deal to buyer criteria and fires SMS + email alerts to the Terms For Sale buyer network</li>
+<li><strong>Monitor buyer interest</strong> — Track views, inquiries, and offers in GHL</li>
+<li><strong>When buyer found</strong> → Send assignment contract → Move opportunity to "Assignment Sent" (auto-notifies partner)</li>
+<li><strong>When EMD deposited</strong> → Move to "Assigned with EMD" (auto-notifies partner)</li>
+<li><strong>When closed</strong> → Move to "Closed" → Confirm payout paid through title per JV agreement. Check if partner now qualifies for <code>db-proven-partner</code> tag.</li>
 </ol>
 </div>
 
-<div class="important"><strong>Partner communication:</strong> Keep the partner updated at every stage. A quick text when you move stages goes a long way. The dashboard at <code>/dashboard</code> shows them their deal status automatically.</div>
+<div class="important"><strong>Partner communication:</strong> Most partner notifications are automated via GHL workflows that fire on stage changes. The dashboard at <code>/dashboard</code> shows partners their deal status in real time.</div>
+
+<div class="important"><strong>Promoting to Proven Partner:</strong> After a deal closes, check the partner's cumulative funded fees and quarterly deal count. If they hit $25K total funded OR 3 closed deals this quarter, add the <code>db-proven-partner</code> tag. Their next deal gets the 30/70 JV agreement.</div>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>6. GHL Tags Reference</h2>
+<h2>7. GHL Tags Reference</h2>
 
 <table>
 <tr><th>Tag</th><th>Applied When</th><th>Purpose</th></tr>
 <tr><td><code>dispo-buddy</code></td><td>Deal submission or partner join</td><td>Identifies contact as a DB partner</td></tr>
 <tr><td><code>jv-partner</code></td><td>Deal submission or partner join</td><td>Partner classification</td></tr>
 <tr><td><code>jv-submitted</code></td><td>Deal submission</td><td>Triggers triage automation (currently disabled)</td></tr>
+<tr><td><code>db-proven-partner</code></td><td>Manually added after partner hits $25K funded or 3 closed deals/quarter</td><td>Promotes partner to 30/70 JV split on next deal</td></tr>
+<tr><td><code>db-needs-info</code></td><td>Moved to "Missing Information" stage</td><td>Tracks deals waiting on partner input</td></tr>
+<tr><td><code>db-accepted</code></td><td>Moved to "Ready to Market"</td><td>Partner has been sent JV agreement</td></tr>
+<tr><td><code>db-marketing</code></td><td>Moved to "Actively Marketing"</td><td>Deal is live in buyer network</td></tr>
+<tr><td><code>db-assignment-sent</code></td><td>Moved to "Assignment Sent"</td><td>Buyer contract out</td></tr>
+<tr><td><code>db-emd-received</code></td><td>Moved to "Assigned with EMD"</td><td>Earnest money deposited</td></tr>
+<tr><td><code>db-closed-deal</code></td><td>Moved to "Closed"</td><td>Deal funded</td></tr>
+<tr><td><code>db-rejected</code></td><td>Moved to "Not Accepted"</td><td>Deal declined</td></tr>
 <tr><td><code>db-cash</code></td><td>Cash deal submitted</td><td>Deal type segmentation</td></tr>
 <tr><td><code>db-subto</code></td><td>SubTo deal submitted</td><td>Deal type segmentation</td></tr>
 <tr><td><code>db-seller-finance</code></td><td>SF deal submitted</td><td>Deal type segmentation</td></tr>
@@ -281,7 +293,7 @@ tr:last-child td{border-bottom:none}
 </table>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>7. GHL Custom Fields Reference</h2>
+<h2>8. GHL Custom Fields Reference</h2>
 
 <table>
 <tr><th>Field</th><th>GHL Key</th><th>Type</th></tr>
@@ -306,7 +318,7 @@ tr:last-child td{border-bottom:none}
 </table>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>8. Netlify Functions</h2>
+<h2>9. Netlify Functions</h2>
 
 <table>
 <tr><th>Function</th><th>Path</th><th>Purpose</th></tr>
@@ -319,7 +331,7 @@ tr:last-child td{border-bottom:none}
 </table>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>9. Environment Variables</h2>
+<h2>10. Environment Variables</h2>
 
 <table>
 <tr><th>Var</th><th>Required</th><th>Purpose</th></tr>
@@ -332,7 +344,7 @@ tr:last-child td{border-bottom:none}
 </table>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>10. Troubleshooting</h2>
+<h2>11. Troubleshooting</h2>
 
 <div class="card">
 <div class="card-title">Common Issues</div>
@@ -348,7 +360,7 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <!-- ──────────────────────────────────────────── -->
-<h2>11. Important Links</h2>
+<h2>12. Important Links</h2>
 
 <div class="card">
 <table>
