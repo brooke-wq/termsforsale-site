@@ -174,7 +174,11 @@ The VS Code "Deploy to Netlify" task (Cmd+Shift+B) automates this.
   - Seller Finance deals payment → MUST be labeled **"Principal & Interest"** (NOT "SF Payment")
   - Hybrid/Morby deals with SF portion → SF portion uses "Principal & Interest", SubTo portion uses "PITI (est)"
   - **No "Close of Escrow" or "Closes in X days"** anywhere on deal pages or cards
-  - **NEVER show street addresses in outbound marketing** (emails, SMS, deal alerts, blog posts). Only show City, State. Street address is only visible to logged-in users on the deal page itself.
+  - **Street address visibility rules (CRITICAL — DO NOT BREAK):**
+    - **Logged-in users MUST ALWAYS see the full street address** on the deal page (header, map iframe, map badge, sidebar, anywhere it applies). This includes ALL deal types (Cash, SubTo, Seller Finance, Hybrid, Morby, etc.).
+    - **Logged-out users MUST NEVER see street addresses** anywhere on the site (deal cards, map popups, deal page header, map iframe). Only City, State, ZIP.
+    - **Outbound marketing NEVER shows street addresses** — emails, SMS, deal alerts, blog posts show city/state only regardless of user login status.
+    - Do not remove the `loggedIn && d.streetAddress` conditional from deal page display. This rule has been broken twice in development — DO NOT BREAK IT AGAIN.
 - **Photo display rules:**
   - Photos sort by `name` (alphabetical) from Google Drive API
   - Do NOT change photo sort order
