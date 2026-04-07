@@ -46,18 +46,43 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-  // Log everything GHL sent so we can debug template mismatches
+  // Log everything GHL sent so we can debug field-name mismatches
   console.log('🔔 partner-stage-notify received:', JSON.stringify(body));
 
-  const { contactId, opportunityId, stageName } = body;
+  // GHL's webhook payload can use any of these key formats:
+  //   customData["contact id"] / customData["opportunity id "] / customData["stage name "]
+  //   top-level: contact_id / id (= opportunity id) / pipleline_stage (yes, GHL has a typo)
+  //   or the ones we originally expected: contactId / opportunityId / stageName
+  const cd = body.customData || {};
+  const contactId =
+    body.contactId ||
+    cd.contactId || cd['contact id'] ||
+    body.contact_id ||
+    body.contact?.id || null;
+
+  const opportunityId =
+    body.opportunityId ||
+    cd.opportunityId || cd['opportunity id'] || cd['opportunity id '] ||
+    body.id || null;
+
+  const stageName =
+    body.stageName ||
+    cd.stageName || cd['stage name'] || cd['stage name '] ||
+    body.pipleline_stage ||   // GHL typo — they literally spell it "pipleline"
+    body.pipeline_stage || null;
+
   if (!contactId || !stageName) {
     console.warn('Missing required fields — contactId:', contactId, 'stageName:', stageName);
+    console.warn('Tip: in GHL workflow webhook action, use "Custom Data" payload type with these fields:');
+    console.warn('  contactId: {{contact.id}}');
+    console.warn('  opportunityId: {{opportunity.id}}');
+    console.warn('  stageName: {{opportunity.pipeline_stage}}');
     return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'contactId and stageName required' }) };
   }
 
-  // Normalize stageName: strip whitespace, case-insensitive match later
+  // Normalize stageName: strip whitespace
   const normalizedStage = (stageName || '').trim();
-  console.log('Normalized stage:', JSON.stringify(normalizedStage));
+  console.log('✓ Parsed contactId:', contactId, '| stage:', JSON.stringify(normalizedStage));
 
   const isLive = process.env.NOTIFICATIONS_LIVE === 'true';
   if (!isLive) {
