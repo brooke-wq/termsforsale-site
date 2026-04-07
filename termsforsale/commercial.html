@@ -167,7 +167,7 @@ footer a{color:rgba(255,255,255,.8);text-decoration:none}
     <!-- ========== PATCH 1: HERO PROOF BAR — edit numbers here ========== -->
     <div class="hero-proof" aria-label="Trust proof">
       <span class="hero-proof-check">✓</span>
-      <span><strong>Trusted by 75+ active investors.</strong> Over $40M in assignments and JV fees closed nationwide.</span>
+      <span>Backed by the <strong>Deal Pros investor network — 17,000+ active buyers</strong> across residential &amp; creative finance. Now sourcing off-market commercial.</span>
     </div>
     <!-- ========== /PATCH 1 ========== -->
 
@@ -226,7 +226,7 @@ footer a{color:rgba(255,255,255,.8);text-decoration:none}
 
 <!-- ========== PATCH 5a: INVENTORY COUNT LINE (shown when deals exist) ========== -->
 <p id="deals-inventory-line" class="deals-inventory-line" hidden>
-  Currently showing <strong id="deals-inventory-count">0</strong> active commercial &amp; multifamily teasers.
+  Currently showing <strong id="deals-inventory-count">0</strong> active commercial &amp; multifamily <span id="deals-inventory-noun">teasers</span>.
 </p>
 <!-- ========== /PATCH 5a ========== -->
 
@@ -325,9 +325,11 @@ function makeTeaser(d) {
 function updateInventoryLine(n) {
   var line = document.getElementById('deals-inventory-line');
   var count = document.getElementById('deals-inventory-count');
+  var noun = document.getElementById('deals-inventory-noun');
   if (!line || !count) return;
   if (n > 0) {
     count.textContent = n;
+    if (noun) noun.textContent = (n === 1 ? 'teaser' : 'teasers');
     line.hidden = false;
   } else {
     line.hidden = true;
