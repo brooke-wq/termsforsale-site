@@ -382,67 +382,58 @@ All items below were completed and deployed:
 
 ## Commercial / Multifamily Lane
 
-A separate lane for $5M-$20M commercial deals with NDA-gated access. Built April 2026.
+### Session 1 — SHIPPED
+- `termsforsale/commercial.html` — public hub with blind teaser cards
+- `termsforsale/netlify/functions/commercial-deals.js` — returns active deals from Notion (camelCase: `dealCode`, `propertyType`, `metro`, `submarket`, `unitsOrSqft`, `vintageClass`, `noiRange`, `priceRange`, `dealStory`, `structureSummary`, `status`)
+- Notion "Commercial Deals" DB created and populated
+- Env: `NOTION_COMMERCIAL_DB_ID`
 
-### Architecture
-- **Notion database:** "Commercial Deals" — separate from residential. ID stored in `NOTION_COMMERCIAL_DB_ID` env var.
-- **Public hub:** `/commercial.html` — blind teaser cards (NO addresses, NO data room URLs, NO tenant/seller names)
-- **Pipeline:** GHL "Commercial / Multifamily" with stages: Profile Completed → Teaser Inquiry → NDA Requested → NDA Sent → NDA Signed → Data Room Accessed → Soft Offer → LOI In → Under Contract → Dead
-- **E-sign:** GHL native (Documents & Contracts module) — not PandaDoc
-- **Buyer scoring:** A = $5M+ AND <=7 day decision AND proof; B = $3M+ AND <=14 days; C = everything else
+### Session 2 — SHIPPED ✅ (April 7, 2026)
+**Files in repo:**
+- `termsforsale/commercial-buyer.html` — global buyer profile form (name, email, phone, entity, role, website, LinkedIn, deal size min/max, preferred markets, strategy, capital source, proof type, decision speed, notes)
+- `termsforsale/commercial-deal.html` — deal-specific NDA request page; reads `?code=CMF-XXX` and fetches via `/.netlify/functions/commercial-deals` using camelCase fields
+- `termsforsale/netlify/functions/_ghl.js` — shared GHL helper exposing `upsertContact`, `createOpportunity`, `sendSmsToBrooke`, `sendEmailToContact`, `getStageIdByName` (resolves stage IDs by name with in-memory cache), `isTest`. All outbound calls honor `TEST_MODE`.
+- `termsforsale/netlify/functions/commercial-buyer-submit.js` — upserts contact with `buyer-commercial` + `tier-{a|b|c}` + market tags, A/B/C scoring, creates opportunity at "Profile Completed", sends welcome email, SMS to Brooke
+- `termsforsale/netlify/functions/commercial-nda-request.js` — upserts contact with `buyer-commercial` + `nda-requested` + `deal-{code}` tags, creates opportunity at "NDA Requested" with custom fields (`deal_code`, `deal_type`, `price_range`), sends confirmation email, SMS to Brooke
 
-### Notion "Commercial Deals" Schema
-| Field | Type |
-|---|---|
-| Deal Code | Title (e.g. CMF-027) |
-| Status | Select (Active, NDA Only, Under Contract, Closed, Dead) |
-| Metro | Text |
-| Submarket | Text |
-| Property Type | Select (Multifamily, Mixed-Use, Retail, Office, Industrial, Self-Storage, Hotel, Other) |
-| Units or Sqft | Text |
-| Vintage / Class | Text |
-| NOI Range | Text (range only, never exact) |
-| Price Range | Text (range only, never exact) |
-| Deal Story 1/2/3 | Text (no tenant/seller names) |
-| Structure Summary | Text |
-| Address (PRIVATE) | Text — never exposed publicly |
-| Data Room URL (PRIVATE) | URL — only sent post-NDA |
-| CIM URL (PRIVATE) | URL |
+**Buyer A/B/C scoring**
+- Tier A: min size ≥ $5M AND decision ≤ 7 days AND proof_type provided
+- Tier B: min size ≥ $3M AND decision ≤ 14 days
+- Tier C: everything else
 
-### CRITICAL Rules for Commercial Lane
-- **NEVER expose** Address, Data Room URL, CIM URL, tenant names, seller identity in any public API or page
-- `commercial-deals.js` API explicitly omits private fields
-- Data room link only sent via email AFTER NDA signed (webhook-triggered)
-- Each deal has a unique `Deal Code` (CMF-XXX) used as the public identifier — full GHL contact ID never exposed
+**GHL pipeline (live):** Commercial / Multifamily — pipeline ID `HTpFvaMGATSXsECYFhoB`
+Stages (in order): Profile Completed → NDA Requested → NDA Signed → Package Delivered → LOI Submitted → Under Contract → Closed Won / Dead
 
-### Built So Far (Session 1)
-- `commercial-deals.js` — Notion API function returning blind teasers only
-- `commercial.html` — public hub with filters (metro, type, price range)
-- Nav link added to deal.html, deals.html, index.html
-- `/api/commercial-deals` redirect in netlify.toml
+**Netlify env vars added in Session 2:**
+- `GHL_COMMERCIAL_PIPELINE_ID` ✅
+- `BROOKE_CONTACT_ID` ✅
+- `BROOKE_SMS_PHONE` ✅
+- `TEST_MODE` ✅ (toggle `true`/`false` — `true` short-circuits all SMS/email/GHL writes to `[TEST_MODE]` console logs)
+- (Existing from Session 1: `GHL_API_KEY`, `GHL_LOCATION_ID`, `NOTION_COMMERCIAL_DB_ID`)
 
-### TODO for Commercial Lane (next sessions)
-1. **Buyer profile form** (`commercial-buyer.html` + `commercial-buyer-submit.js`) — global buyer onboarding with A/B/C scoring
-2. **Deal-specific NDA request** (`commercial-deal.html` + `commercial-nda-request.js`) — passes deal_code, creates GHL opportunity at "NDA Requested"
-3. **NDA send + webhook** — GHL contract template + webhook receiver for "Document Signed" event → moves opportunity to "NDA Signed" + emails data room link
-4. **Data room tracking redirect** — `/api/commercial-dataroom-track?c=&d=` → logs view + moves opportunity to "Data Room Accessed"
-5. **Admin dashboard** (`/admin/commercial.html`) — VA view of all buyers, NDA statuses, pipeline stages
-6. **GHL pipeline setup** (manual in GHL UI) — create "Commercial / Multifamily" pipeline with 9 stages
-7. **GHL custom fields** — `cmf_deal_code`, `cmf_buyer_score`, `cmf_typical_size_min`, `cmf_typical_size_max`, `cmf_strategy`, `cmf_capital_source`
-8. **Env vars to add:** `NOTION_COMMERCIAL_DB_ID`, `GHL_PIPELINE_ID_CMF`, `GHL_STAGE_CMF_PROFILE`, `GHL_STAGE_CMF_NDA_REQUESTED`, `GHL_STAGE_CMF_NDA_SIGNED`, `GHL_STAGE_CMF_DATAROOM_VIEWED`
+**Important pattern note:** Stage IDs are resolved by NAME at runtime via `getStageIdByName()` — they're NOT stored in env vars. If you rename a stage in GHL, update the string literal in the corresponding function (`'Profile Completed'` in commercial-buyer-submit.js, `'NDA Requested'` in commercial-nda-request.js).
 
----
+**Critical rules (carryover):**
+- NEVER expose street addresses, data room URLs, or CIM URLs on public pages
+- NEVER send live SMS/email without confirming `TEST_MODE=true` first when iterating
+- Logged-in users see addresses on residential deals only
+- Commercial deals use `dealCode` (format `CMF-XXX`) as the public identifier — never the address
 
-## TODO — Next Session
+### Session 3 — TODO
+**Goal:** Close the loop between NDA Requested and Package Delivered. When a buyer signs the NDA, automatically release the data room and advance the opportunity stage.
 
-1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.netlify.app`: set `NOTIFICATIONS_LIVE=true` in Netlify env vars, test one real submission, re-enable `dispo-buddy-triage` cron on Droplet, point `dispobuddy.com` domain.
+**Scope:**
+1. **E-sign integration** for the NDA — pick provider (DocuSign, Dropbox Sign, or GHL native docs) and generate a signed NDA from a template, prefilled with buyer name + entity + deal code
+2. **Webhook receiver** (`netlify/functions/nda-signed-webhook.js`) that:
+   - Validates the e-sign provider's signature
+   - Looks up the buyer's contact in GHL by email
+   - Advances the opportunity from "NDA Requested" → "NDA Signed"
+   - Triggers data room delivery
+3. **Data room delivery function** — emails the buyer a tokenized, expiring link to the full CIM + data room (NEVER the raw URL stored in Notion). Token logged with contact ID + deal code so we can track who accessed what.
+4. **Stage update to "Package Delivered"** after the email send confirms
+5. Update Notion deal record with `nda_signed_at` timestamp + buyer contact ID
 
-2. **GHL Client Portal** — Portal apps configured (Contracts + Shared Files enabled). Set up contract templates with merge fields for assignment contracts. Build automated workflow: Offer Submitted → Contract Sent → Signed → EMD Instructions → Closed.
-
-3. **Deal Photo Management** — Photos sort by name (alphabetical) from Google Drive API. Consider adding a photo reorder UI or requiring Cover Photo field in Notion for all deals.
-
-4. **Dispo Buddy Buyer Interest Metrics** — The deal detail page (`/deal-detail`) is wired to show Views/Inquiries/Showings/Offers from contact custom fields, but the fields don't exist in GHL yet and metrics are hidden until populated. To activate:
-   - Create 4 Number custom fields in GHL contacts: `buyer_views`, `buyer_inquiries`, `buyer_showings`, `buyer_offers`
-   - Option A (manual): team updates counts as buyers engage
-   - Option B (automated): wire up Terms For Sale `/api/track-view` deal clicks to increment these counters on the matching JV partner contact
-   - Once any metric has a value >0 and the deal is in Actively Marketing or later, the metrics section auto-appears on the deal detail page
+**Critical Session 3 rules:**
+- NEVER expose data room URLs or CIM URLs in any client-side response — always wrap in tokenized links
+- Webhook MUST validate provider signature before doing anything
+- All outbound (email + GHL stage move) must honor `TEST_MODE`
