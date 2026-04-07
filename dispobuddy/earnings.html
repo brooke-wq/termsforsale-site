@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deal Detail — Dispo Buddy</title>
+<title>Earnings — Dispo Buddy</title>
+<meta name="description" content="Track your earnings, pending fees, and tier progress.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/deal-detail.css">
+<link rel="stylesheet" href="/earnings.css">
 </head>
 <body>
 
@@ -18,7 +19,7 @@
     <a href="/" class="nav-logo"><img src="/logo-dark.svg" alt="Dispo Buddy"></a>
     <div class="nav-links">
       <a href="/dashboard">Dashboard</a>
-      <a href="/earnings">Earnings</a>
+      <a href="/earnings" class="active">Earnings</a>
       <a href="/process">How It Works</a>
       <a href="/faq">FAQ</a>
     </div>
@@ -33,14 +34,16 @@
   <a href="/earnings">Earnings</a>
   <a href="/process">How It Works</a>
   <a href="/faq">FAQ</a>
-  <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+  <div class="mob-btns">
+    <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+  </div>
 </div>
 
 <div class="page">
   <div id="content">
     <div class="loading">
       <div class="spinner"></div>
-      Loading deal...
+      Loading earnings...
     </div>
   </div>
 </div>
@@ -48,12 +51,13 @@
 <footer class="footer">
   <div class="footer-inner">
     <p>&copy; 2026 Dispo Buddy &mdash; A Deal Pros LLC Brand</p>
-    <div>
+    <div class="footer-links">
       <a href="/dashboard">Dashboard</a>
+      <a href="/earnings">Earnings</a>
     </div>
   </div>
 </footer>
 
-<script src="/deal-detail.js"></script>
+<script src="/earnings.js"></script>
 </body>
 </html>
