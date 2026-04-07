@@ -4,152 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Partner Dashboard — Dispo Buddy</title>
-<meta name="description" content="Track your submitted deals and see their status in real time.">
+<meta name="description" content="Your deals, your money, your status — all in one place.">
 <link rel="canonical" href="https://dispobuddy.com/dashboard">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-:root{
-  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;
-  --orange:#F7941D;--orange-dark:#d97c0e;
-  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--blue-mid:#d0eef9;
-  --green:#22c55e;--green-dark:#16a34a;
-  --white:#fff;--bg:#F4F6F9;--bg-section:#EEF2F6;
-  --text:#0D1F3C;--text-mid:#4A6070;--text-light:#718096;
-  --border:#E2E8F0;--border-light:#EEF2F6;
-  --red:#ef4444;
-  --r:12px;--r-sm:8px;
-  --font:'Poppins',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
-a{text-decoration:none;color:inherit}
-img{max-width:100%;display:block}
-
-/* ── NAV ───────────────────────────── */
-.nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000;transition:box-shadow .3s}
-.nav.scrolled{box-shadow:0 2px 20px rgba(13,31,60,.08)}
-.nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
-.nav-logo img{height:48px;width:auto}
-.nav-links{display:flex;gap:28px}
-.nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
-.nav-links a:hover{color:var(--blue)}
-.nav-right{display:flex;align-items:center;gap:10px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:var(--r-sm);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
-.btn-o{background:var(--orange);color:var(--white);border-color:var(--orange)}
-.btn-o:hover{background:var(--orange-dark);border-color:var(--orange-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,148,29,.35)}
-.btn-ghost{background:transparent;color:var(--blue);border-color:rgba(41,171,226,.3)}
-.btn-ghost:hover{background:var(--blue);color:var(--white);border-color:var(--blue)}
-.btn-sm{padding:8px 18px;font-size:12px}
-.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
-.hamburger span{display:block;width:22px;height:2px;background:var(--navy);border-radius:2px;transition:all .3s}
-.hamburger.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
-.hamburger.on span:nth-child(2){opacity:0}
-.hamburger.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
-.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
-.mob-menu.on{display:flex}
-.mob-menu a{padding:14px 0;font-size:15px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border)}
-.mob-menu .mob-btns{display:flex;flex-direction:column;gap:10px;margin-top:20px}
-.mob-menu .mob-btns .btn{width:100%;text-align:center}
-
-/* ── PAGE LAYOUT ──────────────────── */
-.page{padding:88px 24px 60px;max-width:900px;margin:0 auto}
-
-/* ── LOGIN CARD ───────────────────── */
-.login-wrap{max-width:420px;margin:80px auto 0;text-align:center}
-.login-card{background:var(--white);border-radius:var(--r);padding:40px 32px;border:1px solid var(--border);box-shadow:0 2px 12px rgba(13,31,60,.06)}
-.login-card h1{font-size:24px;font-weight:800;margin-bottom:6px;color:var(--navy)}
-.login-card .sub{font-size:14px;color:var(--text-mid);margin-bottom:28px;line-height:1.6}
-.login-card .fi{
-  width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;
-  font-family:var(--font);font-size:14px;color:var(--navy);outline:none;
-  transition:border .2s,box-shadow .2s;margin-bottom:12px;
-}
-.login-card .fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.1)}
-.login-card .fi::placeholder{color:var(--text-light)}
-.login-btn{
-  width:100%;padding:13px 24px;border-radius:8px;border:none;
-  background:var(--orange);color:var(--white);font-family:var(--font);
-  font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;
-}
-.login-btn:hover{background:var(--orange-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,148,29,.35)}
-.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-.login-err{color:var(--red);font-size:13px;margin-top:12px;display:none}
-.login-err.show{display:block}
-.login-footer{margin-top:24px;font-size:13px;color:var(--text-light)}
-.login-footer a{color:var(--blue);font-weight:600}
-
-/* ── DASHBOARD ────────────────────── */
-.dash{display:none}
-.dash.show{display:block}
-.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px}
-.dash-hello h1{font-size:clamp(22px,4vw,28px);font-weight:800;color:var(--navy)}
-.dash-hello p{font-size:14px;color:var(--text-mid)}
-.dash-actions{display:flex;gap:10px;flex-wrap:wrap}
-
-/* ── STATS ────────────────────────── */
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
-.stat-card{background:var(--white);border-radius:var(--r);padding:20px;border:1px solid var(--border)}
-.stat-num{font-size:28px;font-weight:900;color:var(--navy);line-height:1}
-.stat-label{font-size:12px;color:var(--text-light);font-weight:500;margin-top:4px}
-
-/* ── DEAL CARDS ───────────────────── */
-.deals-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.deals-header h2{font-size:18px;font-weight:700}
-.deals-list{display:flex;flex-direction:column;gap:12px}
-.deal-row{
-  background:var(--white);border-radius:var(--r);padding:20px 24px;
-  border:1px solid var(--border);display:grid;
-  grid-template-columns:1fr auto;gap:16px;align-items:center;
-  transition:all .2s;
-}
-.deal-row:hover{border-color:rgba(41,171,226,.3);box-shadow:0 4px 16px rgba(13,31,60,.06)}
-.deal-info h3{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
-.deal-meta{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
-.deal-meta span{font-size:12px;color:var(--text-mid);display:flex;align-items:center;gap:5px}
-.deal-meta svg{width:14px;height:14px;color:var(--text-light)}
-.deal-badge{
-  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
-  border-radius:50px;font-size:12px;font-weight:600;white-space:nowrap;
-}
-.deal-badge .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.deal-value{font-size:13px;color:var(--text-mid);font-weight:600;margin-top:6px}
-
-/* ── EMPTY STATE ──────────────────── */
-.empty-state{text-align:center;padding:60px 24px;background:var(--white);border-radius:var(--r);border:1px solid var(--border)}
-.empty-icon{width:64px;height:64px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-.empty-state h3{font-size:18px;font-weight:700;margin-bottom:6px}
-.empty-state p{font-size:14px;color:var(--text-mid);max-width:360px;margin:0 auto 24px;line-height:1.7}
-
-/* ── LOADING ──────────────────────── */
-.loading{text-align:center;padding:48px;color:var(--text-light);font-size:14px}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── FOOTER ───────────────────────── */
-.footer{padding:32px 0;background:var(--navy2);margin-top:60px}
-.footer-inner{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-.footer-inner p{font-size:12px;color:rgba(255,255,255,.3)}
-.footer-inner a{font-size:12px;color:rgba(255,255,255,.4);transition:color .15s}
-.footer-inner a:hover{color:var(--white)}
-.footer-links{display:flex;gap:20px}
-
-/* ── RESPONSIVE ───────────────────── */
-@media(max-width:900px){
-  .nav-links,.nav-right{display:none}
-  .hamburger{display:flex}
-}
-@media(max-width:640px){
-  .stat-grid{grid-template-columns:1fr}
-  .deal-row{grid-template-columns:1fr;gap:10px}
-  .deal-badge{align-self:flex-start}
-  .dash-header{flex-direction:column;align-items:flex-start}
-  .login-card{padding:32px 20px}
-}
-</style>
+<link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
 
@@ -197,46 +58,76 @@ img{max-width:100%;display:block}
 
   <!-- ============ DASHBOARD VIEW ============ -->
   <div class="dash" id="dashView">
-    <div class="dash-header">
-      <div class="dash-hello">
-        <h1 id="dashGreeting">Your Deals</h1>
-        <p id="dashSub">Track your submitted deals and their status</p>
-      </div>
-      <div class="dash-actions">
-        <a href="/submit-deal" class="btn btn-o btn-sm">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-          New Deal
-        </a>
-        <button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>
+
+    <!-- Greeting -->
+    <div class="greet">
+      <div class="greet-row">
+        <div>
+          <h1>Hey <span id="greetName">there</span> 👋</h1>
+          <div class="last-update" id="lastUpdate">Loading...</div>
+        </div>
       </div>
     </div>
 
-    <!-- Stats -->
-    <div class="stat-grid" id="statGrid">
-      <div class="stat-card">
-        <div class="stat-num" id="statTotal">0</div>
-        <div class="stat-label">Total Deals</div>
+    <!-- Money Cards -->
+    <div class="money-grid">
+      <div class="money-card lifetime">
+        <div class="label">Lifetime Earned</div>
+        <div class="num" id="moneyLifetime">$0</div>
+        <div class="sub" id="moneyLifetimeSub">No deals closed yet</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statActive">0</div>
-        <div class="stat-label">Active</div>
+      <div class="money-card pending">
+        <div class="label">Pending</div>
+        <div class="num" id="moneyPending">$0</div>
+        <div class="sub" id="moneyPendingSub">In active marketing & negotiation</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statClosed">0</div>
-        <div class="stat-label">Closed / Won</div>
+      <div class="money-card next">
+        <div class="label">Next Expected Payout</div>
+        <div class="num" id="moneyNext">—</div>
+        <div class="sub" id="moneyNextSub">Submit a deal to get started</div>
       </div>
     </div>
 
-    <!-- Deals List -->
-    <div class="deals-header">
-      <h2>Submitted Deals</h2>
+    <!-- Pipeline Snapshot (4 cards) -->
+    <div class="section-head">
+      <h2>Your Pipeline</h2>
     </div>
-    <div id="dealsList">
-      <div class="loading" id="dealsLoading">
+    <div class="pipe-grid">
+      <div class="pipe-card active">
+        <div class="num" id="pipeActive">0</div>
+        <div class="label">Active</div>
+      </div>
+      <div class="pipe-card neg">
+        <div class="num" id="pipeNeg">0</div>
+        <div class="label">Negotiating</div>
+      </div>
+      <div class="pipe-card won">
+        <div class="num" id="pipeWon">0</div>
+        <div class="label">Closed</div>
+      </div>
+      <div class="pipe-card dead">
+        <div class="num" id="pipeDead">0</div>
+        <div class="label">Dead</div>
+      </div>
+    </div>
+
+    <!-- Active Deals -->
+    <div class="section-head">
+      <h2>Active Deals</h2>
+    </div>
+    <div id="pipeListWrap">
+      <div class="loading">
         <div class="spinner"></div>
         Loading your deals...
       </div>
     </div>
+
+    <!-- Tier Progress -->
+    <div class="tier-card" id="tierCard">
+      <div class="label">Tier Progress</div>
+      <h3>Loading...</h3>
+    </div>
+
   </div>
 
 </div>
@@ -253,202 +144,6 @@ img{max-width:100%;display:block}
   </div>
 </footer>
 
-<script>
-// ── State ──
-var partner = null;
-
-// ── Nav scroll + hamburger ──
-window.addEventListener('scroll', function() {
-  document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 10);
-});
-document.getElementById('hamburger').addEventListener('click', function() {
-  this.classList.toggle('on');
-  document.getElementById('mobMenu').classList.toggle('on');
-});
-
-// ── Check for saved session ──
-(function init() {
-  var saved = sessionStorage.getItem('db_partner');
-  if (saved) {
-    try {
-      partner = JSON.parse(saved);
-      showDashboard();
-    } catch(e) {
-      sessionStorage.removeItem('db_partner');
-    }
-  }
-})();
-
-// ── Login ──
-async function doLogin() {
-  var phone = document.getElementById('loginPhone').value.trim();
-  var email = document.getElementById('loginEmail').value.trim();
-  var errEl = document.getElementById('loginErr');
-  var btn   = document.getElementById('loginBtn');
-
-  errEl.classList.remove('show');
-  errEl.textContent = '';
-
-  if (!phone && !email) {
-    errEl.textContent = 'Enter your phone number or email.';
-    errEl.classList.add('show');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Signing in...';
-
-  try {
-    var res = await fetch('/.netlify/functions/partner-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: phone, email: email }),
-    });
-
-    var data = await res.json();
-
-    if (!res.ok) {
-      errEl.textContent = data.error || 'Login failed. Please try again.';
-      errEl.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-      return;
-    }
-
-    partner = data.partner;
-    sessionStorage.setItem('db_partner', JSON.stringify(partner));
-    showDashboard();
-
-  } catch(err) {
-    errEl.textContent = 'Something went wrong. Please try again.';
-    errEl.classList.add('show');
-    btn.disabled = false;
-    btn.textContent = 'Sign In';
-  }
-}
-
-// ── Enter key support ──
-document.getElementById('loginPhone').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-document.getElementById('loginEmail').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-
-// ── Show Dashboard ──
-function showDashboard() {
-  document.getElementById('loginView').style.display = 'none';
-  document.getElementById('dashView').classList.add('show');
-
-  var first = partner.firstName || partner.name.split(' ')[0] || 'Partner';
-  document.getElementById('dashGreeting').textContent = 'Hey, ' + first;
-  document.getElementById('dashSub').textContent = 'Here are your submitted deals';
-
-  // Update nav
-  var navRight = document.getElementById('navRight');
-  navRight.innerHTML =
-    '<a href="/submit-deal" class="btn btn-o btn-sm">New Deal</a>' +
-    '<button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>';
-
-  loadDeals();
-}
-
-// ── Load Deals ──
-async function loadDeals() {
-  var list = document.getElementById('dealsList');
-
-  try {
-    var res = await fetch('/.netlify/functions/partner-deals?contactId=' + encodeURIComponent(partner.id));
-    var data = await res.json();
-
-    if (!res.ok) {
-      list.innerHTML = '<div class="loading" style="color:var(--red)">Failed to load deals. Please try again.</div>';
-      return;
-    }
-
-    var deals = data.deals || [];
-
-    // Update stats
-    document.getElementById('statTotal').textContent = deals.length;
-    document.getElementById('statActive').textContent = deals.filter(function(d) { return d.status === 'open'; }).length;
-    document.getElementById('statClosed').textContent = deals.filter(function(d) { return d.status === 'won'; }).length;
-
-    if (deals.length === 0) {
-      list.innerHTML =
-        '<div class="empty-state">' +
-          '<div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>' +
-          '<h3>No deals yet</h3>' +
-          '<p>Submit your first deal and it will show up here. We review every submission within 24-48 hours.</p>' +
-          '<a href="/submit-deal" class="btn btn-o">Submit a Deal</a>' +
-        '</div>';
-      return;
-    }
-
-    list.innerHTML = '<div class="deals-list">' + deals.map(renderDeal).join('') + '</div>';
-
-  } catch(err) {
-    list.innerHTML = '<div class="loading" style="color:var(--red)">Connection error. Please refresh the page.</div>';
-  }
-}
-
-// ── Render Deal Card ──
-function renderDeal(deal) {
-  var stageColor = deal.stageColor || '#718096';
-  var bgColor = hexToRgba(stageColor, 0.08);
-  var date = deal.createdAt ? formatDate(deal.createdAt) : '';
-  var value = deal.monetaryValue ? '$' + Number(deal.monetaryValue).toLocaleString('en-US') : '';
-  var statusLabel = deal.status === 'won' ? 'Closed' : deal.status === 'lost' ? 'Declined' : deal.status === 'abandoned' ? 'Withdrawn' : deal.stage || 'Processing';
-
-  if (deal.status === 'won') { stageColor = '#22c55e'; bgColor = hexToRgba(stageColor, 0.08); }
-  if (deal.status === 'lost') { stageColor = '#ef4444'; bgColor = hexToRgba(stageColor, 0.08); }
-  if (deal.status === 'abandoned') { stageColor = '#718096'; bgColor = hexToRgba(stageColor, 0.08); }
-
-  return '<div class="deal-row">' +
-    '<div class="deal-info">' +
-      '<h3>' + escHtml(deal.dealType || 'Deal') + (deal.location ? ' &mdash; ' + escHtml(deal.location) : '') + '</h3>' +
-      '<div class="deal-meta">' +
-        (date ? '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + date + '</span>' : '') +
-        (value ? '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + value + '</span>' : '') +
-      '</div>' +
-    '</div>' +
-    '<div class="deal-badge" style="background:' + bgColor + ';color:' + stageColor + '">' +
-      '<span class="dot" style="background:' + stageColor + '"></span>' +
-      escHtml(statusLabel) +
-    '</div>' +
-  '</div>';
-}
-
-// ── Logout ──
-function logout() {
-  partner = null;
-  sessionStorage.removeItem('db_partner');
-  document.getElementById('dashView').classList.remove('show');
-  document.getElementById('loginView').style.display = '';
-  document.getElementById('loginPhone').value = '';
-  document.getElementById('loginEmail').value = '';
-
-  // Reset nav
-  var navRight = document.getElementById('navRight');
-  navRight.innerHTML = '<a href="/submit-deal" class="btn btn-o btn-sm">Submit a Deal</a>';
-}
-
-// ── Helpers ──
-function formatDate(iso) {
-  var d = new Date(iso);
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-}
-
-function hexToRgba(hex, alpha) {
-  hex = hex.replace('#', '');
-  if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-  var r = parseInt(hex.substring(0,2), 16);
-  var g = parseInt(hex.substring(2,4), 16);
-  var b = parseInt(hex.substring(4,6), 16);
-  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
-}
-
-function escHtml(s) {
-  var div = document.createElement('div');
-  div.appendChild(document.createTextNode(s || ''));
-  return div.innerHTML;
-}
-</script>
+<script src="/dashboard.js"></script>
 </body>
 </html>
