@@ -75,6 +75,9 @@ exports.handler = async (event) => {
       if (f.name) cf[f.name] = f.value;
     });
 
+    // Live listing URL — populated when deal is published to Terms For Sale
+    const liveListingUrl = cf.deal_website_link || cf.tfs_deal_url || '';
+
     // Fetch pipeline stage info to get stage name from id
     let stageName = '';
     try {
@@ -146,6 +149,7 @@ exports.handler = async (event) => {
       split: split,
       daysSinceSubmit: daysSinceSubmit,
       metrics: showMetrics ? metrics : null,
+      liveListingUrl: liveListingUrl,
       createdAt: created,
       updatedAt: opp.updatedAt || opp.lastUpdated,
     };
