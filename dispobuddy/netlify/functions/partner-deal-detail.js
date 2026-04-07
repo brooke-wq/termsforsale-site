@@ -107,6 +107,19 @@ exports.handler = async (event) => {
     // Action needed (from opportunity custom field)
     const actionNeeded = cf.missing_info || cf.what_we_need || '';
 
+    // Buyer interest metrics (from custom fields or defaults)
+    // These fields can be populated by the team or by an automation that
+    // tallies deal page views / inquiries from Terms For Sale tracking.
+    const metrics = {
+      views: parseInt(cf.buyer_views || cf.deal_views || 0, 10) || 0,
+      inquiries: parseInt(cf.buyer_inquiries || 0, 10) || 0,
+      showings: parseInt(cf.buyer_showings || 0, 10) || 0,
+      offers: parseInt(cf.buyer_offers || 0, 10) || 0,
+    };
+    // Only show metrics if deal is in marketing or later stages
+    const marketingStages = ['Actively Marketing', 'Assignment Sent', 'Assigned with EMD', 'Closed'];
+    const showMetrics = marketingStages.indexOf(stageName) !== -1;
+
     // Projected fee = monetary value × split
     const monetary = parseFloat(opp.monetaryValue) || 0;
     const projectedFee = monetary * split;
@@ -131,6 +144,7 @@ exports.handler = async (event) => {
       projectedFee: projectedFee,
       split: split,
       daysSinceSubmit: daysSinceSubmit,
+      metrics: showMetrics ? metrics : null,
       createdAt: created,
       updatedAt: opp.updatedAt || opp.lastUpdated,
     };

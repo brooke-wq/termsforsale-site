@@ -114,8 +114,30 @@
 
     <!-- Active Deals -->
     <div class="section-head">
-      <h2>Active Deals</h2>
+      <h2>Your Deals</h2>
     </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="dealSearch" placeholder="Search by address or type..." oninput="setDealSearch(this.value)">
+      </div>
+      <select id="dealSort" class="sort-select" onchange="setDealSort(this.value)">
+        <option value="recent">Most recent</option>
+        <option value="oldest">Oldest first</option>
+        <option value="value">Highest value</option>
+      </select>
+    </div>
+
+    <div class="filter-chips">
+      <button class="filter-chip active" data-val="all" onclick="setDealFilter('status','all')">All</button>
+      <button class="filter-chip" data-val="active" onclick="setDealFilter('status','active')">Active</button>
+      <button class="filter-chip" data-val="negotiating" onclick="setDealFilter('status','negotiating')">Negotiating</button>
+      <button class="filter-chip" data-val="closed" onclick="setDealFilter('status','closed')">Closed</button>
+      <button class="filter-chip" data-val="dead" onclick="setDealFilter('status','dead')">Dead</button>
+    </div>
+
     <div id="pipeListWrap">
       <div class="loading">
         <div class="spinner"></div>

@@ -39,6 +39,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/partner-stage-notify"
+  to = "/.netlify/functions/partner-stage-notify"
+  status = 200
+
+[[redirects]]
   from = "/api/buyer-demand"
   to = "/.netlify/functions/buyer-demand"
   status = 200
