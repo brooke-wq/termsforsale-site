@@ -387,3 +387,9 @@ All items below were completed and deployed:
 2. **GHL Client Portal** — Portal apps configured (Contracts + Shared Files enabled). Set up contract templates with merge fields for assignment contracts. Build automated workflow: Offer Submitted → Contract Sent → Signed → EMD Instructions → Closed.
 
 3. **Deal Photo Management** — Photos sort by name (alphabetical) from Google Drive API. Consider adding a photo reorder UI or requiring Cover Photo field in Notion for all deals.
+
+4. **Dispo Buddy Buyer Interest Metrics** — The deal detail page (`/deal-detail`) is wired to show Views/Inquiries/Showings/Offers from contact custom fields, but the fields don't exist in GHL yet and metrics are hidden until populated. To activate:
+   - Create 4 Number custom fields in GHL contacts: `buyer_views`, `buyer_inquiries`, `buyer_showings`, `buyer_offers`
+   - Option A (manual): team updates counts as buyers engage
+   - Option B (automated): wire up Terms For Sale `/api/track-view` deal clicks to increment these counters on the matching JV partner contact
+   - Once any metric has a value >0 and the deal is in Actively Marketing or later, the metrics section auto-appears on the deal detail page
