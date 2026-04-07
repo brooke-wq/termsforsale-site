@@ -72,28 +72,28 @@ async function loadDeal(){
   try{
     const r = await fetch('/.netlify/functions/commercial-deals');
     const j = await r.json();
-    const deal = (j.deals || []).find(d => d.deal_code === code);
+    const deal = (j.deals || []).find(d => d.dealCode === code);
     if(!deal){ dealEl.innerHTML = `<h1>Deal not found</h1><p>Code ${code} is no longer available.</p>`; return; }
     dealEl.classList.remove('loading');
+    const story = Array.isArray(deal.dealStory) ? deal.dealStory : (deal.dealStory ? [deal.dealStory] : []);
     dealEl.innerHTML = `
-      <span class="code">${deal.deal_code}</span>
-      <h1>${deal.headline || deal.asset_type || 'Commercial Opportunity'}</h1>
-      <p style="color:var(--muted);margin:6px 0 0">${deal.summary || ''}</p>
+      <span class="code">${deal.dealCode}</span>
+      <h1>${deal.propertyType || 'Commercial Opportunity'}${deal.metro ? ' — ' + deal.metro : ''}</h1>
       <div class="grid">
-        <div class="kv"><b>Asset Type</b>${deal.asset_type || '—'}</div>
-        <div class="kv"><b>Market</b>${deal.market || '—'}</div>
-        <div class="kv"><b>Units / SF</b>${deal.units_sf || '—'}</div>
-        <div class="kv"><b>Year Built</b>${deal.year_built || '—'}</div>
-        <div class="kv"><b>Price Range</b>${deal.price_range || '—'}</div>
-        <div class="kv"><b>Cap Rate</b>${deal.cap_rate || '—'}</div>
-        <div class="kv"><b>Occupancy</b>${deal.occupancy || '—'}</div>
-        <div class="kv"><b>Strategy</b>${deal.strategy || '—'}</div>
+        <div class="kv"><b>Property Type</b>${deal.propertyType || '—'}</div>
+        <div class="kv"><b>Metro</b>${deal.metro || '—'}</div>
+        <div class="kv"><b>Submarket</b>${deal.submarket || '—'}</div>
+        <div class="kv"><b>Units / SF</b>${deal.unitsOrSqft || '—'}</div>
+        <div class="kv"><b>Vintage / Class</b>${deal.vintageClass || '—'}</div>
+        <div class="kv"><b>NOI Range</b>${deal.noiRange || '—'}</div>
+        <div class="kv"><b>Price Range</b>${deal.priceRange || '—'}</div>
+        <div class="kv"><b>Structure</b>${deal.structureSummary || '—'}</div>
       </div>
-      ${deal.highlights ? `<p style="margin-top:14px"><b>Highlights:</b> ${deal.highlights}</p>` : ''}
+      ${story.length ? `<div style="margin-top:14px"><b>Deal Story:</b><ul style="margin:6px 0 0 18px;color:var(--muted)">${story.map(s=>`<li>${s}</li>`).join('')}</ul></div>` : ''}
     `;
     formCard.style.display = 'block';
     formCard.dataset.deal = JSON.stringify({
-      deal_code: deal.deal_code, asset_type: deal.asset_type, price_range: deal.price_range
+      deal_code: deal.dealCode, asset_type: deal.propertyType, price_range: deal.priceRange
     });
   }catch(e){
     dealEl.innerHTML = `<h1>Unable to load</h1><p>Please try again shortly.</p>`;
