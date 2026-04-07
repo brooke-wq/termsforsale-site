@@ -29,6 +29,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/partner-deal-detail"
+  to = "/.netlify/functions/partner-deal-detail"
+  status = 200
+
+[[redirects]]
   from = "/api/buyer-demand"
   to = "/.netlify/functions/buyer-demand"
   status = 200
@@ -72,6 +77,11 @@
 [[redirects]]
   from = "/dashboard"
   to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/deal-detail"
+  to = "/deal-detail.html"
   status = 200
 
 [[redirects]]

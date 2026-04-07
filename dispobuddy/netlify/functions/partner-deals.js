@@ -13,17 +13,19 @@
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 const JV_PIPELINE_ID = 'XbZojO2rHmYtYa8C0yUP';
 
-// Map GHL stage IDs to human-readable statuses
-const STAGE_MAP = {
-  'cf2388f0-fdbf-4fb1-b633-86569034fcce': { label: 'Submitted', color: '#29ABE2', icon: 'inbox' },
-  // Add more stage mappings as pipeline evolves:
-  // 'stage-id': { label: 'Under Review', color: '#F7941D', icon: 'search' },
-  // 'stage-id': { label: 'JV Agreement Sent', color: '#8B5CF6', icon: 'file' },
-  // 'stage-id': { label: 'Marketing', color: '#29ABE2', icon: 'megaphone' },
-  // 'stage-id': { label: 'Offer Received', color: '#F7941D', icon: 'dollar' },
-  // 'stage-id': { label: 'Under Contract', color: '#22c55e', icon: 'check' },
-  // 'stage-id': { label: 'Closed', color: '#22c55e', icon: 'trophy' },
-  // 'stage-id': { label: 'Declined', color: '#ef4444', icon: 'x' },
+// Stage display config — use actual GHL stage names as keys, mapped to colors
+// The dashboard uses the raw stage name (e.g. "Actively Marketing") to look up
+// progress step + colors, so we return the real stage name from the pipeline API.
+const STAGE_COLORS = {
+  'New JV Lead':         '#718096',
+  'Missing Information': '#ef4444',
+  'Under Review':        '#8b5cf6',
+  'Ready to Market':     '#29ABE2',
+  'Actively Marketing':  '#F7941D',
+  'Assignment Sent':     '#a855f7',
+  'Assigned with EMD':   '#a855f7',
+  'Closed':              '#22c55e',
+  'Not Accepted':        '#94a3b8',
 };
 
 exports.handler = async (event) => {
@@ -60,8 +62,8 @@ exports.handler = async (event) => {
   };
 
   try {
-    // Fetch pipeline stages for label mapping
-    let stageLabels = { ...STAGE_MAP };
+    // Fetch pipeline stages → build map of stageId → { name, color }
+    let stageLabels = {};
     try {
       const pipelineRes = await fetch(
         `${GHL_BASE}/opportunities/pipelines/${JV_PIPELINE_ID}?locationId=${locationId}`,
@@ -71,9 +73,11 @@ exports.handler = async (event) => {
         const pipelineData = await pipelineRes.json();
         const stages = pipelineData.pipeline?.stages || pipelineData.stages || [];
         for (const stage of stages) {
-          if (!stageLabels[stage.id]) {
-            stageLabels[stage.id] = { label: stage.name, color: '#718096', icon: 'circle' };
-          }
+          stageLabels[stage.id] = {
+            label: stage.name,
+            color: STAGE_COLORS[stage.name] || '#718096',
+            icon: 'circle',
+          };
         }
       }
     } catch (err) {
@@ -105,16 +109,30 @@ exports.handler = async (event) => {
       const dealType = parts[0] || '';
       const location = parts[1] || '';
 
+      // Try to find a partner status note in opportunity custom fields
+      let partnerNote = '';
+      if (opp.customFields && Array.isArray(opp.customFields)) {
+        for (const f of opp.customFields) {
+          const k = (f.fieldKey || f.key || f.name || '').toLowerCase();
+          if (k === 'partner_status_note' || k === 'next_step' || k === 'partner_note') {
+            partnerNote = f.fieldValue || f.value || '';
+            break;
+          }
+        }
+      }
+
       return {
         id: opp.id,
         name: opp.name,
         dealType,
         location,
         status: opp.status, // open, won, lost, abandoned
-        stage: stageInfo.label,
+        stage: stageInfo.label,            // raw stage name (e.g. "Actively Marketing")
+        stageLabel: stageInfo.label,       // alias kept for compatibility
         stageColor: stageInfo.color,
         stageIcon: stageInfo.icon,
         monetaryValue: opp.monetaryValue || 0,
+        partnerNote: partnerNote,
         createdAt: opp.createdAt || opp.dateAdded,
         updatedAt: opp.updatedAt || opp.lastUpdated,
       };
