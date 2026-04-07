@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commercial &amp; Multifamily Deals — Terms For Sale</title>
+<meta name="description" content="Off-market commercial and multifamily investment opportunities. Blind teasers — request NDA for full details.">
+<link rel="canonical" href="https://deals.termsforsale.com/commercial.html">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0D1F3C;--blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--orange:#F7941D;--green:#10B981;--white:#fff;--bg:#F4F6F9;--text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;--border:#E2E8F0;--font:'Poppins',sans-serif;--r:10px}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+nav{background:var(--navy);height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100}
+nav a.logo img{height:40px}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+.nav-links a:hover{color:#fff}
+
+/* HERO */
+.hero{background:var(--navy);padding:60px 48px 80px;color:#fff;text-align:center}
+.hero-inner{max-width:900px;margin:0 auto}
+.hero-eyebrow{display:inline-block;padding:6px 16px;background:rgba(247,148,29,.15);color:var(--orange);border:1px solid rgba(247,148,29,.3);border-radius:50px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px}
+.hero h1{font-size:42px;font-weight:900;margin-bottom:16px;letter-spacing:-.5px;line-height:1.1}
+.hero p{font-size:17px;color:rgba(255,255,255,.7);max-width:680px;margin:0 auto 32px;line-height:1.6}
+.hero-cta{display:inline-block;padding:14px 32px;background:var(--orange);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;transition:background .15s}
+.hero-cta:hover{background:#d97c0e}
+
+/* FILTER BAR */
+.filter-bar{background:#fff;border-bottom:1px solid var(--border);padding:20px 48px;position:sticky;top:70px;z-index:90}
+.filter-inner{max-width:1200px;margin:0 auto;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.filter-select{padding:9px 32px 9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border .15s}
+.filter-select:focus{border-color:var(--blue)}
+.filter-count{margin-left:auto;font-size:12px;color:var(--text-light);font-weight:600}
+
+/* TEASER GRID */
+.deals-section{padding:40px 48px 80px;max-width:1200px;margin:0 auto}
+.deals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px}
+
+/* TEASER CARD */
+.teaser{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .2s;position:relative;overflow:hidden}
+.teaser:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.08);border-color:var(--blue)}
+.teaser-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.teaser-code{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:1px}
+.teaser-type{display:inline-block;padding:4px 10px;border-radius:4px;background:var(--blue-light);color:var(--blue-dark);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.teaser-metro{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px;line-height:1.2}
+.teaser-submarket{font-size:13px;color:var(--text-light);margin-bottom:20px}
+.teaser-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;padding:16px;background:var(--bg);border-radius:8px}
+.teaser-stat-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.teaser-stat-value{font-size:14px;font-weight:700;color:var(--navy)}
+.teaser-stat-value.price{color:var(--orange);font-size:15px}
+.teaser-stat-value.noi{color:var(--green)}
+.teaser-story{margin-bottom:20px}
+.teaser-story-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;color:var(--text-mid);line-height:1.5}
+.teaser-story-bullet{color:var(--blue);font-weight:800;flex-shrink:0;margin-top:2px}
+.teaser-structure{padding:10px 14px;background:rgba(41,171,226,.08);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;font-size:12px;color:var(--navy);font-weight:600;margin-bottom:20px}
+.teaser-cta{display:block;width:100%;padding:13px;background:var(--navy);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:13px;text-align:center;transition:background .15s;border:none;cursor:pointer;font-family:var(--font)}
+.teaser-cta:hover{background:#1a3163}
+.teaser-confidential{position:absolute;top:14px;right:14px;font-size:9px;font-weight:700;color:var(--orange);background:rgba(247,148,29,.1);padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:80px 20px}
+.empty h3{font-size:18px;color:var(--text);margin-bottom:8px}
+.empty p{color:var(--text-light);font-size:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:60px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* HOW IT WORKS */
+.process{background:#fff;padding:60px 48px;border-top:1px solid var(--border)}
+.process-inner{max-width:1100px;margin:0 auto;text-align:center}
+.process h2{font-size:32px;font-weight:900;color:var(--navy);margin-bottom:12px}
+.process p.sub{color:var(--text-light);font-size:15px;margin-bottom:48px}
+.process-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:left}
+.process-step{padding:24px;background:var(--bg);border-radius:12px}
+.process-num{width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:14px}
+.process-step h4{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.process-step p{font-size:13px;color:var(--text-mid);line-height:1.55}
+
+footer{background:var(--navy);color:rgba(255,255,255,.6);padding:32px 48px;text-align:center;font-size:12px}
+footer a{color:rgba(255,255,255,.8);text-decoration:none}
+
+@media(max-width:768px){
+  nav{padding:0 16px;height:60px}
+  nav a.logo img{height:32px}
+  .nav-links{gap:14px}
+  .nav-links a{font-size:12px}
+  .hero{padding:40px 20px 60px}
+  .hero h1{font-size:28px}
+  .hero p{font-size:14px}
+  .filter-bar{padding:14px 16px;top:60px}
+  .deals-section{padding:24px 16px 60px}
+  .deals-grid{grid-template-columns:1fr;gap:16px}
+  .process{padding:40px 16px}
+  .process-steps{grid-template-columns:1fr;gap:14px}
+  .process h2{font-size:24px}
+  footer{padding:24px 16px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
+  <div class="nav-links">
+    <a href="/deals.html">Residential</a>
+    <a href="/commercial.html" style="color:#fff">Commercial</a>
+    <a href="/buying-criteria.html">Buy Box</a>
+    <a href="mailto:info@termsforsale.com">Contact</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Commercial &amp; Multifamily</div>
+    <h1>Off-Market Commercial Deals — $5M to $20M</h1>
+    <p>Multifamily, mixed-use, and commercial opportunities sourced directly from sellers. Blind teasers below — sign an NDA to access full CIM, T-12, rent roll, and data room.</p>
+    <a href="#deals" class="hero-cta">Browse Active Teasers ↓</a>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-inner">
+    <span class="filter-label">Filter:</span>
+    <select class="filter-select" id="f-metro" onchange="applyFilters()"><option value="">All Metros</option></select>
+    <select class="filter-select" id="f-type" onchange="applyFilters()">
+      <option value="">All Property Types</option>
+      <option>Multifamily</option>
+      <option>Mixed-Use</option>
+      <option>Retail</option>
+      <option>Office</option>
+      <option>Industrial</option>
+      <option>Self-Storage</option>
+      <option>Hotel</option>
+      <option>Other</option>
+    </select>
+    <select class="filter-select" id="f-price" onchange="applyFilters()">
+      <option value="">All Price Ranges</option>
+      <option>Under $5M</option>
+      <option>$5M - $10M</option>
+      <option>$10M - $20M</option>
+      <option>$20M+</option>
+    </select>
+    <span class="filter-count" id="filter-count"></span>
+  </div>
+</div>
+
+<section class="deals-section" id="deals">
+  <div id="deals-grid"><div class="spinner"></div></div>
+</section>
+
+<section class="process">
+  <div class="process-inner">
+    <h2>How It Works</h2>
+    <p class="sub">Four steps from teaser to data room.</p>
+    <div class="process-steps">
+      <div class="process-step">
+        <div class="process-num">1</div>
+        <h4>Browse Blind Teasers</h4>
+        <p>Review market, property type, NOI/price ranges, and structure. No addresses or seller info exposed.</p>
+      </div>
+      <div class="process-step">
+        <div class="process-num">2</div>
+        <h4>Request NDA</h4>
+        <p>Click "Request NDA &amp; Full Package" on any deal. Tell us about your firm and capital source.</p>
+      </div>
+      <div class="process-step">
+        <div class="process-num">3</div>
+        <h4>Sign &amp; Unlock</h4>
+        <p>Sign the NDA electronically. We send you the CIM, T-12, rent roll, and data room link.</p>
+      </div>
+      <div class="process-step">
+        <div class="process-num">4</div>
+        <h4>Submit LOI</h4>
+        <p>Review the data room. Submit a soft offer or LOI. Our team coordinates with the seller.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>&copy; 2026 Deal Pros LLC &middot; <a href="mailto:info@termsforsale.com">info@termsforsale.com</a> &middot; <a href="tel:4806373117">(480) 637-3117</a></p>
+  <p style="margin-top:8px;font-size:11px;opacity:.6">All commercial deals are subject to NDA. Information shown is summary only and does not constitute an offering.</p>
+</footer>
+
+<script>
+var ALL_DEALS = [];
+
+function fc(s) { return s ? s : '—'; }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function makeTeaser(d) {
+  var stories = (d.dealStory || []).filter(Boolean);
+  return '<div class="teaser">'
+    + '<div class="teaser-confidential">Confidential</div>'
+    + '<div class="teaser-header">'
+      + '<div>'
+        + '<div class="teaser-code">' + escHtml(d.dealCode || 'CMF') + '</div>'
+      + '</div>'
+      + '<div class="teaser-type">' + escHtml(d.propertyType || 'Commercial') + '</div>'
+    + '</div>'
+    + '<div class="teaser-metro">' + escHtml(d.metro || '—') + '</div>'
+    + (d.submarket ? '<div class="teaser-submarket">' + escHtml(d.submarket) + '</div>' : '')
+    + '<div class="teaser-stats">'
+      + '<div><div class="teaser-stat-label">Size</div><div class="teaser-stat-value">' + escHtml(fc(d.unitsOrSqft)) + '</div></div>'
+      + '<div><div class="teaser-stat-label">Vintage / Class</div><div class="teaser-stat-value">' + escHtml(fc(d.vintageClass)) + '</div></div>'
+      + '<div><div class="teaser-stat-label">Price Range</div><div class="teaser-stat-value price">' + escHtml(fc(d.priceRange)) + '</div></div>'
+      + '<div><div class="teaser-stat-label">NOI Range</div><div class="teaser-stat-value noi">' + escHtml(fc(d.noiRange)) + '</div></div>'
+    + '</div>'
+    + (stories.length ? '<div class="teaser-story">' + stories.map(function(s) {
+        return '<div class="teaser-story-item"><span class="teaser-story-bullet">→</span><span>' + escHtml(s) + '</span></div>';
+      }).join('') + '</div>' : '')
+    + (d.structureSummary ? '<div class="teaser-structure">' + escHtml(d.structureSummary) + '</div>' : '')
+    + '<a class="teaser-cta" href="/commercial-deal.html?code=' + encodeURIComponent(d.dealCode || '') + '">Request NDA &amp; Full Package →</a>'
+  + '</div>';
+}
+
+function applyFilters() {
+  var metro = document.getElementById('f-metro').value;
+  var type = document.getElementById('f-type').value;
+  var price = document.getElementById('f-price').value;
+
+  var filtered = ALL_DEALS.filter(function(d) {
+    if (metro && d.metro !== metro) return false;
+    if (type && d.propertyType !== type) return false;
+    if (price) {
+      var pr = (d.priceRange || '').toLowerCase();
+      if (price === 'Under $5M' && !pr.match(/[<\b][1-4]m/)) return false;
+      if (price === '$5M - $10M' && !pr.match(/[5-9]m/)) return false;
+      if (price === '$10M - $20M' && !pr.match(/1[0-9]m/)) return false;
+      if (price === '$20M+' && !pr.match(/[2-9][0-9]m/)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('filter-count').textContent = filtered.length + ' deal' + (filtered.length !== 1 ? 's' : '');
+
+  var grid = document.getElementById('deals-grid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty"><h3>No deals match your filters</h3><p>Try broadening your criteria or check back soon.</p></div>';
+    return;
+  }
+  grid.innerHTML = '<div class="deals-grid">' + filtered.map(makeTeaser).join('') + '</div>';
+}
+
+function populateMetros() {
+  var metros = [];
+  var seen = {};
+  ALL_DEALS.forEach(function(d) { if (d.metro && !seen[d.metro]) { seen[d.metro] = true; metros.push(d.metro); }});
+  metros.sort();
+  var sel = document.getElementById('f-metro');
+  metros.forEach(function(m) {
+    var o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  });
+}
+
+(async function() {
+  try {
+    var r = await fetch('/api/commercial-deals');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var data = await r.json();
+    ALL_DEALS = data.deals || [];
+    if (!ALL_DEALS.length) {
+      document.getElementById('deals-grid').innerHTML = '<div class="empty"><h3>No active commercial deals right now</h3><p>New opportunities posted weekly. Check back soon or <a href="mailto:info@termsforsale.com" style="color:var(--blue);font-weight:600">request to be notified</a>.</p></div>';
+      return;
+    }
+    populateMetros();
+    applyFilters();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('deals-grid').innerHTML = '<div class="empty"><h3>Could not load deals</h3><p>' + e.message + '</p></div>';
+  }
+})();
+</script>
+</body>
+</html>
