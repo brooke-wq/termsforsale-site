@@ -193,27 +193,104 @@ function renderPipelineSnapshot() {
   document.getElementById('pipeDead').textContent = dead;
 }
 
+// ── Filter state ──
+var dealFilter = { search: '', status: 'all', sort: 'recent' };
+
+window.setDealFilter = function(key, val) {
+  dealFilter[key] = val;
+  // Update active chip
+  if (key === 'status') {
+    document.querySelectorAll('.filter-chip').forEach(function(c) {
+      c.classList.toggle('active', c.dataset.val === val);
+    });
+  }
+  renderActiveDeals();
+};
+
+window.setDealSearch = function(val) {
+  dealFilter.search = (val || '').toLowerCase();
+  renderActiveDeals();
+};
+
+window.setDealSort = function(val) {
+  dealFilter.sort = val;
+  renderActiveDeals();
+};
+
 // ── Active Deals List ──
 function renderActiveDeals() {
   var wrap = document.getElementById('pipeListWrap');
-  var active = allDeals.filter(function(d) {
-    return d.status === 'open';
-  });
+  var deals = allDeals.slice();
 
-  if (active.length === 0) {
-    wrap.innerHTML =
-      '<div class="empty-state">' +
-        '<div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>' +
-        '<h3>No active deals</h3>' +
-        '<p>Submit a deal and we\'ll review within 24-48 hours.</p>' +
-        '<a href="/submit-deal" class="btn btn-o">Submit a Deal</a>' +
-      '</div>';
+  // Filter by status chip
+  if (dealFilter.status === 'all') {
+    // Show all non-dead
+    deals = deals.filter(function(d) { return d.status === 'open' || d.status === 'won'; });
+  } else if (dealFilter.status === 'active') {
+    deals = deals.filter(function(d) {
+      var stage = (d.stage || '').toLowerCase();
+      return d.status === 'open' && stage.indexOf('assignment') === -1 && stage.indexOf('emd') === -1;
+    });
+  } else if (dealFilter.status === 'negotiating') {
+    deals = deals.filter(function(d) {
+      var stage = (d.stage || '').toLowerCase();
+      return d.status === 'open' && (stage.indexOf('assignment') !== -1 || stage.indexOf('emd') !== -1 || stage.indexOf('negotiation') !== -1);
+    });
+  } else if (dealFilter.status === 'closed') {
+    deals = deals.filter(function(d) { return d.status === 'won'; });
+  } else if (dealFilter.status === 'dead') {
+    deals = deals.filter(function(d) { return d.status === 'lost' || d.status === 'abandoned'; });
+  }
+
+  // Search filter
+  if (dealFilter.search) {
+    deals = deals.filter(function(d) {
+      var hay = ((d.location || '') + ' ' + (d.dealType || '') + ' ' + (d.name || '')).toLowerCase();
+      return hay.indexOf(dealFilter.search) !== -1;
+    });
+  }
+
+  // Sort
+  if (dealFilter.sort === 'recent') {
+    deals.sort(function(a, b) { return new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0); });
+  } else if (dealFilter.sort === 'oldest') {
+    deals.sort(function(a, b) { return new Date(a.createdAt || 0) - new Date(b.createdAt || 0); });
+  } else if (dealFilter.sort === 'value') {
+    deals.sort(function(a, b) { return (parseFloat(b.monetaryValue) || 0) - (parseFloat(a.monetaryValue) || 0); });
+  }
+
+  if (deals.length === 0) {
+    if (dealFilter.search || dealFilter.status !== 'all') {
+      wrap.innerHTML =
+        '<div class="empty-state">' +
+          '<h3>No deals match your filters</h3>' +
+          '<p>Try a different filter or clear your search.</p>' +
+          '<button class="btn btn-ghost" onclick="clearFilters()">Clear filters</button>' +
+        '</div>';
+    } else {
+      wrap.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>' +
+          '<h3>No deals yet</h3>' +
+          '<p>Submit a deal and we\'ll review within 24-48 hours.</p>' +
+          '<a href="/submit-deal" class="btn btn-o">Submit a Deal</a>' +
+        '</div>';
+    }
     return;
   }
 
-  var top = active.slice(0, 5);
-  wrap.innerHTML = top.map(renderActiveRow).join('');
+  wrap.innerHTML = deals.map(renderActiveRow).join('');
 }
+
+window.clearFilters = function() {
+  dealFilter = { search: '', status: 'all', sort: 'recent' };
+  var searchInput = document.getElementById('dealSearch');
+  if (searchInput) searchInput.value = '';
+  document.querySelectorAll('.filter-chip').forEach(function(c) {
+    c.classList.toggle('active', c.dataset.val === 'all');
+  });
+  renderActiveDeals();
+};
 
 function renderActiveRow(deal) {
   var cfg = STAGE_CONFIG[deal.stage] || { label: deal.stage || 'Processing', color: '#718096', step: 1 };

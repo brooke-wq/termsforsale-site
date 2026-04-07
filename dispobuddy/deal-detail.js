@@ -169,6 +169,20 @@ function renderDeal() {
   }
   html += '</div>';
 
+  // Buyer Interest Metrics (only if deal is actively marketing or later)
+  if (deal.metrics) {
+    html += '<div class="section">';
+    html += '<div class="section-head">Buyer Interest</div>';
+    html += '<div class="metrics-grid">';
+    html += '<div class="metric-card"><div class="num">' + (deal.metrics.views || 0) + '</div><div class="label">Views</div></div>';
+    html += '<div class="metric-card"><div class="num">' + (deal.metrics.inquiries || 0) + '</div><div class="label">Inquiries</div></div>';
+    html += '<div class="metric-card"><div class="num">' + (deal.metrics.showings || 0) + '</div><div class="label">Showings</div></div>';
+    html += '<div class="metric-card"><div class="num">' + (deal.metrics.offers || 0) + '</div><div class="label">Offers</div></div>';
+    html += '</div>';
+    html += '<p style="font-size:11px;color:var(--text-light);margin-top:12px;text-align:center">Updated as we hear from buyers</p>';
+    html += '</div>';
+  }
+
   // Timeline
   html += '<div class="section">';
   html += '<div class="section-head">Timeline</div>';
