@@ -118,6 +118,25 @@ function renderDeal() {
   html += '</div>';
   html += '</div>';
 
+  // Live listing CTA (only if deal is marketing+ and has a URL)
+  var marketingStages = ['Actively Marketing', 'Assignment Sent', 'Assigned with EMD', 'Closed'];
+  if (deal.liveListingUrl && marketingStages.indexOf(deal.stage) !== -1) {
+    html += '<a href="' + escAttr(deal.liveListingUrl) + '" target="_blank" rel="noopener" ' +
+      'style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#EBF8FF,#d0eef9);' +
+      'border:1px solid #29ABE2;border-radius:12px;padding:16px 20px;margin-bottom:20px;' +
+      'color:#0D1F3C;transition:transform .15s" onmouseover="this.style.transform=\'translateY(-1px)\'" ' +
+      'onmouseout="this.style.transform=\'translateY(0)\'">' +
+      '<div style="width:40px;height:40px;border-radius:10px;background:#29ABE2;display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M15 3h6v6M14 10l7-7M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>' +
+      '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:14px;font-weight:700;color:#0D1F3C">View Live Listing</div>' +
+        '<div style="font-size:12px;color:#4A6070;margin-top:2px">See what buyers see on Terms For Sale</div>' +
+      '</div>' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>' +
+    '</a>';
+  }
+
   // Progress dots
   html += '<div class="progress-wrap">';
   html += '<div class="progress-dots">';
@@ -205,15 +224,46 @@ function renderDeal() {
   html += '</div>';
 
   // Files
-  if (deal.photoLink || deal.docsLink) {
-    html += '<div class="section">';
-    html += '<div class="section-head">Files & Docs</div>';
-    html += '<div class="files-list">';
-    if (deal.photoLink) html += fileRow(deal.photoLink, 'Property Photos', 'photo');
-    if (deal.docsLink) html += fileRow(deal.docsLink, 'Supporting Documents', 'doc');
-    html += '</div>';
-    html += '</div>';
+  html += '<div class="section">';
+  html += '<div class="section-head">Files & Docs</div>';
+  html += '<div class="files-list">';
+  if (deal.photoLink) html += fileRow(deal.photoLink, 'Property Photos', 'photo');
+  if (deal.docsLink) html += fileRow(deal.docsLink, 'Supporting Documents', 'doc');
+  if (!deal.photoLink && !deal.docsLink) {
+    html += '<div style="font-size:13px;color:var(--text-light);padding:8px 0">No files attached yet.</div>';
   }
+  html += '</div>';
+
+  // Add-link form
+  html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-light)">';
+  html += '<div style="font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:10px">Add a new link (Google Drive, Dropbox, etc.)</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">';
+  html += '<select id="linkType" class="fi" style="flex:0 0 140px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:var(--white);outline:none">';
+  html += '<option value="photos">Photos</option>';
+  html += '<option value="documents">Documents</option>';
+  html += '<option value="other">Other</option>';
+  html += '</select>';
+  html += '<input type="url" id="linkUrl" class="fi" placeholder="https://drive.google.com/..." style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;outline:none">';
+  html += '</div>';
+  html += '<button class="btn btn-o" onclick="addLink()" id="addLinkBtn" style="width:100%">Add Link</button>';
+  html += '<div id="addLinkMsg" style="font-size:12px;margin-top:8px;display:none"></div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  // Messages (per-deal thread)
+  html += '<div class="section">';
+  html += '<div class="section-head">Messages</div>';
+  html += '<div id="dealMsgList" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;margin-bottom:14px;padding-right:4px">';
+  html += '<div style="font-size:12px;color:var(--text-light);text-align:center;padding:20px">Loading...</div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:8px;border-top:1px solid var(--border-light);padding-top:14px">';
+  html += '<textarea id="dealMsgInput" placeholder="Message the team about this deal..." rows="1" ' +
+    'style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--navy);outline:none;resize:none;min-height:40px;max-height:120px"></textarea>';
+  html += '<button class="btn btn-o" onclick="sendDealMessage()" id="dealMsgBtn" style="padding:10px 18px">Send</button>';
+  html += '</div>';
+  html += '<div id="dealMsgStatus" style="font-size:12px;margin-top:8px;display:none"></div>';
+  html += '</div>';
 
   // Contact actions
   html += '<div class="section">';
@@ -225,6 +275,110 @@ function renderDeal() {
   html += '</div>';
 
   content.innerHTML = html;
+
+  // Load deal-scoped messages
+  loadDealMessages();
+}
+
+async function loadDealMessages() {
+  var list = document.getElementById('dealMsgList');
+  if (!list) return;
+  try {
+    var res = await fetch('/.netlify/functions/partner-messages?contactId=' + encodeURIComponent(partner.id));
+    var data = await res.json();
+    if (!res.ok) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--red);text-align:center;padding:20px">Could not load messages</div>';
+      return;
+    }
+    var messages = data.messages || [];
+    // Filter to messages that reference this deal's address (best-effort scoping)
+    var addrKey = (deal.address || '').split(',')[0].toLowerCase().trim();
+    if (addrKey) {
+      var filtered = messages.filter(function(m) {
+        var body = ((m.body || '') + ' ' + (m.subject || '')).toLowerCase();
+        return body.indexOf(addrKey) !== -1;
+      });
+      if (filtered.length > 0) messages = filtered;
+      else messages = messages.slice(-5); // fallback: show last 5 of all messages
+    }
+
+    if (messages.length === 0) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--text-light);text-align:center;padding:20px">No messages yet. Send one to start the conversation.</div>';
+      return;
+    }
+
+    var html = '';
+    messages.forEach(function(m) {
+      var dir = m.direction === 'outbound' ? 'outbound' : 'inbound';
+      var bg = dir === 'outbound' ? 'background:#29ABE2;color:#fff' : 'background:#F4F6F9;color:#0D1F3C';
+      var align = dir === 'outbound' ? 'align-self:flex-end' : 'align-self:flex-start';
+      var time = m.createdAt ? timeOnly(m.createdAt) : '';
+      html += '<div style="' + align + ';max-width:85%;padding:10px 14px;border-radius:14px;' + bg + ';font-size:13px;line-height:1.5">' +
+        escHtml(m.body || m.subject || '') +
+        '<div style="font-size:10px;opacity:.7;margin-top:3px">' + escHtml(time) + '</div>' +
+      '</div>';
+    });
+    list.innerHTML = html;
+    list.scrollTop = list.scrollHeight;
+  } catch(err) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--red);text-align:center;padding:20px">Connection error</div>';
+  }
+}
+
+window.sendDealMessage = async function() {
+  var ta = document.getElementById('dealMsgInput');
+  var btn = document.getElementById('dealMsgBtn');
+  var status = document.getElementById('dealMsgStatus');
+  var msg = (ta.value || '').trim();
+  if (!msg) return;
+
+  // Prefix with deal address so team and threading know context
+  var addrPrefix = deal.address ? '[RE: ' + deal.address + '] ' : '';
+  var fullMsg = addrPrefix + msg;
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    var res = await fetch('/.netlify/functions/partner-messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contactId: partner.id, message: fullMsg }),
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || 'Failed to send';
+      status.style.cssText = 'font-size:12px;margin-top:8px;color:#ef4444';
+      status.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Send';
+      return;
+    }
+    ta.value = '';
+    status.textContent = data.testMode ? 'Saved (test mode)' : 'Sent';
+    status.style.cssText = 'font-size:12px;margin-top:8px;color:#16a34a';
+    status.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Send';
+    setTimeout(loadDealMessages, 800);
+    setTimeout(function() { status.style.display = 'none'; }, 3000);
+  } catch(err) {
+    status.textContent = 'Connection error';
+    status.style.cssText = 'font-size:12px;margin-top:8px;color:#ef4444';
+    status.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Send';
+  }
+};
+
+function timeOnly(iso) {
+  var d = new Date(iso);
+  var h = d.getHours();
+  var m = d.getMinutes();
+  var ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return h + ':' + (m < 10 ? '0' : '') + m + ampm;
 }
 
 function propItem(key, val) {
@@ -243,6 +397,68 @@ function fileRow(url, label, type) {
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
   '</a>';
 }
+
+window.addLink = async function() {
+  var linkType = document.getElementById('linkType').value;
+  var url = document.getElementById('linkUrl').value.trim();
+  var msgEl = document.getElementById('addLinkMsg');
+  var btn = document.getElementById('addLinkBtn');
+
+  msgEl.style.display = 'none';
+  msgEl.className = '';
+
+  if (!url) {
+    msgEl.textContent = 'Paste a link first.';
+    msgEl.style.cssText = 'font-size:12px;margin-top:8px;color:#ef4444';
+    msgEl.style.display = 'block';
+    return;
+  }
+  if (!/^https?:\/\/.+\..+/.test(url)) {
+    msgEl.textContent = 'Please enter a valid URL.';
+    msgEl.style.cssText = 'font-size:12px;margin-top:8px;color:#ef4444';
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Adding...';
+
+  try {
+    var res = await fetch('/.netlify/functions/partner-add-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contactId: partner.id,
+        opportunityId: deal.id,
+        linkType: linkType,
+        url: url,
+      }),
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      msgEl.textContent = data.error || 'Failed to add link.';
+      msgEl.style.cssText = 'font-size:12px;margin-top:8px;color:#ef4444';
+      msgEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Add Link';
+      return;
+    }
+    msgEl.textContent = '✓ Link added — our team will review it.';
+    msgEl.style.cssText = 'font-size:12px;margin-top:8px;color:#16a34a';
+    msgEl.style.display = 'block';
+    document.getElementById('linkUrl').value = '';
+    btn.disabled = false;
+    btn.textContent = 'Add Link';
+    // Refresh the deal after short delay
+    setTimeout(function() { loadDeal(deal.id); }, 1200);
+  } catch(err) {
+    msgEl.textContent = 'Connection error. Please try again.';
+    msgEl.style.cssText = 'font-size:12px;margin-top:8px;color:#ef4444';
+    msgEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Add Link';
+  }
+};
 
 function hexToRgba(hex, alpha) {
   hex = hex.replace('#', '');

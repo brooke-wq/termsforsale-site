@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/dashboard.css">
+<link rel="stylesheet" href="/portal-tabs.css">
 </head>
 <body>
 
@@ -47,13 +48,30 @@
   <!-- ============ LOGIN VIEW ============ -->
   <div class="login-wrap" id="loginView">
     <div class="login-card">
-      <h1>Partner Dashboard</h1>
-      <p class="sub">Sign in with the phone or email you used when submitting a deal.</p>
-      <input class="fi" type="tel" id="loginPhone" placeholder="Phone number" autocomplete="tel">
-      <input class="fi" type="email" id="loginEmail" placeholder="or email address" autocomplete="email">
-      <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
-      <div class="login-err" id="loginErr"></div>
-      <p class="login-footer">New here? <a href="/submit-deal">Submit your first deal</a></p>
+
+      <!-- Step 1: request code -->
+      <div id="loginStep1">
+        <h1>Partner Portal</h1>
+        <p class="sub">Enter the phone or email you used when submitting a deal. We'll text you a 6-digit code.</p>
+        <input class="fi" type="tel" id="loginPhone" placeholder="Phone number" autocomplete="tel">
+        <input class="fi" type="email" id="loginEmail" placeholder="or email address" autocomplete="email">
+        <button class="login-btn" id="loginBtn" onclick="requestCode()">Send me a code</button>
+        <div class="login-err" id="loginErr"></div>
+        <p class="login-footer">New here? <a href="/submit-deal">Submit your first deal</a></p>
+      </div>
+
+      <!-- Step 2: verify code -->
+      <div id="loginStep2" style="display:none">
+        <h1>Check your phone</h1>
+        <p class="sub">We sent a 6-digit code to <strong id="maskedPhone">your phone</strong>. Enter it below.</p>
+        <input class="fi" type="text" id="loginCode" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="text-align:center;font-size:22px;letter-spacing:6px;font-weight:700">
+        <button class="login-btn" id="verifyBtn" onclick="verifyCode()">Sign In</button>
+        <div class="login-err" id="verifyErr"></div>
+        <p class="login-footer">
+          <a href="#" onclick="backToStep1(event)">← Use a different number</a> · <a href="#" onclick="resendCode(event)">Resend code</a>
+        </p>
+      </div>
+
     </div>
   </div>
 
@@ -154,6 +172,31 @@
   </div>
 
 </div>
+
+<!-- MOBILE TAB BAR -->
+<nav class="tab-bar">
+  <div class="tab-bar-inner">
+    <a href="/dashboard" class="tab-btn active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="/earnings" class="tab-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Earnings
+    </a>
+    <a href="/submit-deal" class="tab-btn-fab" aria-label="Submit a deal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    </a>
+    <a href="/messages" class="tab-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Messages
+    </a>
+    <a href="/profile" class="tab-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </div>
+</nav>
 
 <!-- FOOTER -->
 <footer class="footer">

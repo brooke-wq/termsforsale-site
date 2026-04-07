@@ -1,0 +1,50 @@
+/* ============================================
+   DISPO BUDDY — MOBILE BOTTOM TAB BAR
+   Shared across all authenticated portal pages
+   ============================================ */
+
+/* Bottom tab bar (mobile only) */
+.tab-bar{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid #E2E8F0;
+  padding:8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index:1000;
+  box-shadow:0 -2px 20px rgba(13,31,60,.06);
+}
+.tab-bar-inner{
+  display:flex;align-items:center;justify-content:space-around;
+  max-width:600px;margin:0 auto;padding:0 8px;
+}
+.tab-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;padding:6px 4px;min-width:56px;
+  color:#718096;font-family:'Poppins',sans-serif;
+  font-size:10px;font-weight:600;text-decoration:none;
+  transition:color .15s;flex:1;
+}
+.tab-btn svg{width:22px;height:22px;transition:transform .15s}
+.tab-btn:hover,.tab-btn.active{color:#29ABE2}
+.tab-btn.active svg{transform:scale(1.1)}
+
+/* Center FAB (Submit) */
+.tab-btn-fab{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  width:54px;height:54px;min-width:54px;border-radius:50%;
+  background:linear-gradient(135deg,#F7941D,#d97c0e);
+  color:#fff;flex:0 0 auto;margin:-14px 4px 0;
+  box-shadow:0 6px 18px rgba(247,148,29,.4);
+  transition:all .2s;text-decoration:none;
+}
+.tab-btn-fab:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(247,148,29,.5);color:#fff}
+.tab-btn-fab svg{width:26px;height:26px}
+
+/* Only show on mobile */
+@media(max-width:900px){
+  .tab-bar{display:block}
+  /* Add bottom padding to body so content isn't hidden behind tab bar */
+  body{padding-bottom:72px}
+}

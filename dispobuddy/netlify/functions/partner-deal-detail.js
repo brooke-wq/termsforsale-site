@@ -75,6 +75,9 @@ exports.handler = async (event) => {
       if (f.name) cf[f.name] = f.value;
     });
 
+    // Live listing URL — populated when deal is published to Terms For Sale
+    const liveListingUrl = cf.deal_website_link || cf.tfs_deal_url || '';
+
     // Fetch pipeline stage info to get stage name from id
     let stageName = '';
     try {
@@ -116,9 +119,10 @@ exports.handler = async (event) => {
       showings: parseInt(cf.buyer_showings || 0, 10) || 0,
       offers: parseInt(cf.buyer_offers || 0, 10) || 0,
     };
-    // Only show metrics if deal is in marketing or later stages
+    // Only show metrics if deal is in marketing or later stages AND at least one metric has a value
     const marketingStages = ['Actively Marketing', 'Assignment Sent', 'Assigned with EMD', 'Closed'];
-    const showMetrics = marketingStages.indexOf(stageName) !== -1;
+    const hasMetricData = metrics.views > 0 || metrics.inquiries > 0 || metrics.showings > 0 || metrics.offers > 0;
+    const showMetrics = marketingStages.indexOf(stageName) !== -1 && hasMetricData;
 
     // Projected fee = monetary value × split
     const monetary = parseFloat(opp.monetaryValue) || 0;
@@ -145,6 +149,7 @@ exports.handler = async (event) => {
       split: split,
       daysSinceSubmit: daysSinceSubmit,
       metrics: showMetrics ? metrics : null,
+      liveListingUrl: liveListingUrl,
       createdAt: created,
       updatedAt: opp.updatedAt || opp.lastUpdated,
     };
