@@ -23,9 +23,26 @@ nav a.logo img{height:40px}
 .hero-inner{max-width:900px;margin:0 auto}
 .hero-eyebrow{display:inline-block;padding:6px 16px;background:rgba(247,148,29,.15);color:var(--orange);border:1px solid rgba(247,148,29,.3);border-radius:50px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px}
 .hero h1{font-size:42px;font-weight:900;margin-bottom:16px;letter-spacing:-.5px;line-height:1.1}
-.hero p{font-size:17px;color:rgba(255,255,255,.7);max-width:680px;margin:0 auto 32px;line-height:1.6}
+.hero p{font-size:17px;color:rgba(255,255,255,.7);max-width:680px;margin:0 auto 24px;line-height:1.6}
 .hero-cta{display:inline-block;padding:14px 32px;background:var(--orange);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;transition:background .15s}
 .hero-cta:hover{background:#d97c0e}
+
+/* ========== PATCH 1: HERO PROOF BAR (edit numbers below) ========== */
+.hero-proof{display:inline-flex;align-items:center;gap:10px;margin:0 auto 24px;padding:10px 18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:999px;color:rgba(255,255,255,.85);font-size:14px;line-height:1.4;max-width:680px}
+.hero-proof strong{color:#fff;font-weight:700}
+.hero-proof-check{color:var(--green);font-weight:800;font-size:15px}
+/* ========== /PATCH 1 ========== */
+
+/* ========== PATCH 2: WHO THIS IS FOR ========== */
+.audience-section{background:var(--bg);padding:36px 48px 8px}
+.audience-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.audience-col{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;box-shadow:0 1px 2px rgba(13,31,60,.04)}
+.audience-col h3{font-size:16px;margin-bottom:10px;font-weight:800}
+.audience-col.yes h3{color:var(--green)}
+.audience-col.no h3{color:#E53E3E}
+.audience-col ul{margin:0;padding-left:20px;color:var(--text-mid);font-size:14.5px;line-height:1.55}
+.audience-col li{margin:6px 0}
+/* ========== /PATCH 2 ========== */
 
 /* FILTER BAR */
 .filter-bar{background:#fff;border-bottom:1px solid var(--border);padding:20px 48px;position:sticky;top:70px;z-index:90}
@@ -35,8 +52,13 @@ nav a.logo img{height:40px}
 .filter-select:focus{border-color:var(--blue)}
 .filter-count{margin-left:auto;font-size:12px;color:var(--text-light);font-weight:600}
 
+/* ========== PATCH 5a: INVENTORY LINE ========== */
+.deals-inventory-line{max-width:1200px;margin:16px auto 0;padding:0 48px;color:var(--text-mid);font-size:14px}
+.deals-inventory-line strong{color:var(--navy);font-weight:800}
+/* ========== /PATCH 5a ========== */
+
 /* TEASER GRID */
-.deals-section{padding:40px 48px 80px;max-width:1200px;margin:0 auto}
+.deals-section{padding:24px 48px 80px;max-width:1200px;margin:0 auto}
 .deals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px}
 
 /* TEASER CARD */
@@ -60,20 +82,38 @@ nav a.logo img{height:40px}
 .teaser-cta:hover{background:#1a3163}
 .teaser-confidential{position:absolute;top:14px;right:14px;font-size:9px;font-weight:700;color:var(--orange);background:rgba(247,148,29,.1);padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
 
+/* ========== PATCH 6: CTA MICROCOPY FOOTNOTE ========== */
+.teaser-cta-foot{text-align:center;color:var(--text-light);font-size:11px;font-weight:500;margin-top:6px;letter-spacing:.2px}
+/* ========== /PATCH 6 ========== */
+
 /* EMPTY / LOADING */
 .empty{text-align:center;padding:80px 20px}
 .empty h3{font-size:18px;color:var(--text);margin-bottom:8px}
-.empty p{color:var(--text-light);font-size:14px}
+.empty p{color:var(--text-light);font-size:14px;margin-bottom:20px}
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:60px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ========== PATCH 5b: ZERO-STATE CTA BUTTON ========== */
+.empty-cta{display:inline-block;padding:14px 28px;background:var(--orange);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;transition:background .15s;margin-top:8px}
+.empty-cta:hover{background:#d97c0e}
+/* ========== /PATCH 5b ========== */
+
+/* ========== PATCH 3: WHAT YOU UNLOCK UNDER NDA ========== */
+.unlock-section{background:#fff;padding:56px 48px;border-top:1px solid var(--border)}
+.unlock-inner{max-width:860px;margin:0 auto;background:linear-gradient(180deg,rgba(247,148,29,.07),rgba(247,148,29,.01));border:1px solid rgba(247,148,29,.3);border-radius:var(--r);padding:28px 32px}
+.unlock-inner h2{font-size:22px;font-weight:900;color:var(--navy);margin-bottom:14px}
+.unlock-list{margin:0;padding-left:22px;color:var(--text);font-size:15px;line-height:1.75}
+.unlock-list li{margin:4px 0}
+.unlock-reassure{margin-top:14px;color:var(--text-mid);font-size:13.5px;font-style:italic}
+/* ========== /PATCH 3 ========== */
+
 /* HOW IT WORKS */
-.process{background:#fff;padding:60px 48px;border-top:1px solid var(--border)}
+.process{background:var(--bg);padding:60px 48px;border-top:1px solid var(--border)}
 .process-inner{max-width:1100px;margin:0 auto;text-align:center}
 .process h2{font-size:32px;font-weight:900;color:var(--navy);margin-bottom:12px}
 .process p.sub{color:var(--text-light);font-size:15px;margin-bottom:48px}
 .process-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:left}
-.process-step{padding:24px;background:var(--bg);border-radius:12px}
+.process-step{padding:24px;background:#fff;border:1px solid var(--border);border-radius:12px}
 .process-num{width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:14px}
 .process-step h4{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px}
 .process-step p{font-size:13px;color:var(--text-mid);line-height:1.55}
@@ -89,9 +129,16 @@ footer a{color:rgba(255,255,255,.8);text-decoration:none}
   .hero{padding:40px 20px 60px}
   .hero h1{font-size:28px}
   .hero p{font-size:14px}
+  .hero-proof{font-size:12.5px;padding:9px 14px}
+  .audience-section{padding:24px 16px 4px}
+  .audience-inner{grid-template-columns:1fr;gap:14px}
   .filter-bar{padding:14px 16px;top:60px}
-  .deals-section{padding:24px 16px 60px}
+  .deals-inventory-line{padding:0 16px}
+  .deals-section{padding:16px 16px 60px}
   .deals-grid{grid-template-columns:1fr;gap:16px}
+  .unlock-section{padding:36px 16px}
+  .unlock-inner{padding:22px 20px}
+  .unlock-inner h2{font-size:19px}
   .process{padding:40px 16px}
   .process-steps{grid-template-columns:1fr;gap:14px}
   .process h2{font-size:24px}
@@ -104,9 +151,9 @@ footer a{color:rgba(255,255,255,.8);text-decoration:none}
 <nav>
   <a href="/" class="logo"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
   <div class="nav-links">
-    <a href="/deals.html">Residential</a>
-    <a href="/commercial.html" style="color:#fff">Commercial</a>
-    <a href="/buying-criteria.html">Buy Box</a>
+    <a href='/deals'>Residential</a>
+    <a href='/commercial' style='color:#fff'>Commercial</a>
+    <a href='/buying-criteria'>Buy Box</a>
     <a href="mailto:info@termsforsale.com">Contact</a>
   </div>
 </nav>
@@ -116,9 +163,40 @@ footer a{color:rgba(255,255,255,.8);text-decoration:none}
     <div class="hero-eyebrow">Commercial &amp; Multifamily</div>
     <h1>Off-Market Commercial Deals — $5M to $20M</h1>
     <p>Multifamily, mixed-use, and commercial opportunities sourced directly from sellers. Blind teasers below — sign an NDA to access full CIM, T-12, rent roll, and data room.</p>
+
+    <!-- ========== PATCH 1: HERO PROOF BAR — edit numbers here ========== -->
+    <div class="hero-proof" aria-label="Trust proof">
+      <span class="hero-proof-check">✓</span>
+      <span><strong>Trusted by 75+ active investors.</strong> Over $40M in assignments and JV fees closed nationwide.</span>
+    </div>
+    <!-- ========== /PATCH 1 ========== -->
+
     <a href="#deals" class="hero-cta">Browse Active Teasers ↓</a>
   </div>
 </div>
+
+<!-- ========== PATCH 2: WHO THIS IS FOR / NOT FOR ========== -->
+<section class="audience-section" aria-labelledby="audience-heading">
+  <div class="audience-inner">
+    <div class="audience-col yes">
+      <h3 id="audience-heading">Who This Is For</h3>
+      <ul>
+        <li>Principals, GPs, and family offices actively buying $5M–$20M deals</li>
+        <li>Serious operators with defined buy boxes and access to capital</li>
+        <li>Buyers comfortable with NDAs and real underwriting</li>
+      </ul>
+    </div>
+    <div class="audience-col no">
+      <h3>Who This Is Not For</h3>
+      <ul>
+        <li>"Just curious" lookers and list-builders</li>
+        <li>Brokers fishing without a real mandate</li>
+        <li>Anyone unwilling to verify capacity to close</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<!-- ========== /PATCH 2 ========== -->
 
 <div class="filter-bar">
   <div class="filter-inner">
@@ -146,35 +224,59 @@ footer a{color:rgba(255,255,255,.8);text-decoration:none}
   </div>
 </div>
 
+<!-- ========== PATCH 5a: INVENTORY COUNT LINE (shown when deals exist) ========== -->
+<p id="deals-inventory-line" class="deals-inventory-line" hidden>
+  Currently showing <strong id="deals-inventory-count">0</strong> active commercial &amp; multifamily teasers.
+</p>
+<!-- ========== /PATCH 5a ========== -->
+
 <section class="deals-section" id="deals">
   <div id="deals-grid"><div class="spinner"></div></div>
 </section>
+
+<!-- ========== PATCH 3: WHAT YOU UNLOCK UNDER NDA ========== -->
+<section class="unlock-section" aria-labelledby="unlock-heading">
+  <div class="unlock-inner">
+    <h2 id="unlock-heading">What You Unlock Under NDA</h2>
+    <ul class="unlock-list">
+      <li>Exact property address and map</li>
+      <li>Full CIM / OM and photos</li>
+      <li>T-12, rent roll, and key leases</li>
+      <li>Capital stack and any creative terms</li>
+      <li>Secure data room with supporting docs</li>
+    </ul>
+    <p class="unlock-reassure">One NDA covers all current and future commercial deals for 12 months. No fees, no obligation to submit offers.</p>
+  </div>
+</section>
+<!-- ========== /PATCH 3 ========== -->
 
 <section class="process">
   <div class="process-inner">
     <h2>How It Works</h2>
     <p class="sub">Four steps from teaser to data room.</p>
     <div class="process-steps">
+      <!-- ========== PATCH 4: HOW IT WORKS — updated copy ========== -->
       <div class="process-step">
         <div class="process-num">1</div>
         <h4>Browse Blind Teasers</h4>
-        <p>Review market, property type, NOI/price ranges, and structure. No addresses or seller info exposed.</p>
+        <p>Filter by metro, property type, and price band. We only show non-identifying deal snapshots.</p>
       </div>
       <div class="process-step">
         <div class="process-num">2</div>
-        <h4>Request NDA</h4>
-        <p>Click "Request NDA &amp; Full Package" on any deal. Tell us about your firm and capital source.</p>
+        <h4>Request NDA &amp; Profile</h4>
+        <p>Click "Request NDA &amp; Full Package" on any deal. Share your firm, capital source, and buy box once so we can match you to future deals too.</p>
       </div>
       <div class="process-step">
         <div class="process-num">3</div>
-        <h4>Sign &amp; Unlock</h4>
-        <p>Sign the NDA electronically. We send you the CIM, T-12, rent roll, and data room link.</p>
+        <h4>Sign &amp; Unlock Data Room</h4>
+        <p>Sign our one-time NDA electronically. We send you the full CIM, T-12, rent roll, and data room link.</p>
       </div>
       <div class="process-step">
         <div class="process-num">4</div>
-        <h4>Submit LOI</h4>
-        <p>Review the data room. Submit a soft offer or LOI. Our team coordinates with the seller.</p>
+        <h4>Review &amp; Submit LOI</h4>
+        <p>Underwrite on your own terms. Submit a soft offer or formal LOI; our team coordinates directly with the seller.</p>
       </div>
+      <!-- ========== /PATCH 4 ========== -->
     </div>
   </div>
 </section>
@@ -192,35 +294,51 @@ function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&
 
 function makeTeaser(d) {
   var stories = (d.dealStory || []).filter(Boolean);
-  return '<div class="teaser">'
-    + '<div class="teaser-confidential">Confidential</div>'
-    + '<div class="teaser-header">'
-      + '<div>'
-        + '<div class="teaser-code">' + escHtml(d.dealCode || 'CMF') + '</div>'
-      + '</div>'
-      + '<div class="teaser-type">' + escHtml(d.propertyType || 'Commercial') + '</div>'
-    + '</div>'
-    + '<div class="teaser-metro">' + escHtml(d.metro || '—') + '</div>'
-    + (d.submarket ? '<div class="teaser-submarket">' + escHtml(d.submarket) + '</div>' : '')
-    + '<div class="teaser-stats">'
-      + '<div><div class="teaser-stat-label">Size</div><div class="teaser-stat-value">' + escHtml(fc(d.unitsOrSqft)) + '</div></div>'
-      + '<div><div class="teaser-stat-label">Vintage / Class</div><div class="teaser-stat-value">' + escHtml(fc(d.vintageClass)) + '</div></div>'
-      + '<div><div class="teaser-stat-label">Price Range</div><div class="teaser-stat-value price">' + escHtml(fc(d.priceRange)) + '</div></div>'
-      + '<div><div class="teaser-stat-label">NOI Range</div><div class="teaser-stat-value noi">' + escHtml(fc(d.noiRange)) + '</div></div>'
-    + '</div>'
-    + (stories.length ? '<div class="teaser-story">' + stories.map(function(s) {
-        return '<div class="teaser-story-item"><span class="teaser-story-bullet">→</span><span>' + escHtml(s) + '</span></div>';
-      }).join('') + '</div>' : '')
-    + (d.structureSummary ? '<div class="teaser-structure">' + escHtml(d.structureSummary) + '</div>' : '')
-    + '<a class="teaser-cta" href="/commercial-deal.html?code=' + encodeURIComponent(d.dealCode || '') + '">Request NDA &amp; Full Package →</a>'
-  + '</div>';
+  return '<div class="teaser">' +
+    '<div class="teaser-confidential">Confidential</div>' +
+    '<div class="teaser-header">' +
+      '<div>' +
+        '<div class="teaser-code">' + escHtml(d.dealCode || 'CMF') + '</div>' +
+      '</div>' +
+      '<div class="teaser-type">' + escHtml(d.propertyType || 'Commercial') + '</div>' +
+    '</div>' +
+    '<div class="teaser-metro">' + escHtml(d.metro || '—') + '</div>' +
+    (d.submarket ? '<div class="teaser-submarket">' + escHtml(d.submarket) + '</div>' : '') +
+    '<div class="teaser-stats">' +
+      '<div><div class="teaser-stat-label">Size</div><div class="teaser-stat-value">' + escHtml(fc(d.unitsOrSqft)) + '</div></div>' +
+      '<div><div class="teaser-stat-label">Vintage / Class</div><div class="teaser-stat-value">' + escHtml(fc(d.vintageClass)) + '</div></div>' +
+      '<div><div class="teaser-stat-label">Price Range</div><div class="teaser-stat-value price">' + escHtml(fc(d.priceRange)) + '</div></div>' +
+      '<div><div class="teaser-stat-label">NOI Range</div><div class="teaser-stat-value noi">' + escHtml(fc(d.noiRange)) + '</div></div>' +
+    '</div>' +
+    (stories.length ? '<div class="teaser-story">' + stories.map(function(s) {
+      return '<div class="teaser-story-item"><span class="teaser-story-bullet">→</span><span>' + escHtml(s) + '</span></div>';
+    }).join('') + '</div>' : '') +
+    (d.structureSummary ? '<div class="teaser-structure">' + escHtml(d.structureSummary) + '</div>' : '') +
+    '<a class="teaser-cta" href="/commercial-deal.html?code=' + encodeURIComponent(d.dealCode || '') + '">Request NDA &amp; Full Package →</a>' +
+    /* ========== PATCH 6: CTA microcopy footnote ========== */
+    '<div class="teaser-cta-foot">One NDA, all deals. No fees, no obligation.</div>' +
+    /* ========== /PATCH 6 ========== */
+  '</div>';
 }
+
+/* ========== PATCH 5c: inventory line helper ========== */
+function updateInventoryLine(n) {
+  var line = document.getElementById('deals-inventory-line');
+  var count = document.getElementById('deals-inventory-count');
+  if (!line || !count) return;
+  if (n > 0) {
+    count.textContent = n;
+    line.hidden = false;
+  } else {
+    line.hidden = true;
+  }
+}
+/* ========== /PATCH 5c ========== */
 
 function applyFilters() {
   var metro = document.getElementById('f-metro').value;
   var type = document.getElementById('f-type').value;
   var price = document.getElementById('f-price').value;
-
   var filtered = ALL_DEALS.filter(function(d) {
     if (metro && d.metro !== metro) return false;
     if (type && d.propertyType !== type) return false;
@@ -233,9 +351,8 @@ function applyFilters() {
     }
     return true;
   });
-
   document.getElementById('filter-count').textContent = filtered.length + ' deal' + (filtered.length !== 1 ? 's' : '');
-
+  updateInventoryLine(filtered.length);
   var grid = document.getElementById('deals-grid');
   if (!filtered.length) {
     grid.innerHTML = '<div class="empty"><h3>No deals match your filters</h3><p>Try broadening your criteria or check back soon.</p></div>';
@@ -245,15 +362,15 @@ function applyFilters() {
 }
 
 function populateMetros() {
-  var metros = [];
-  var seen = {};
-  ALL_DEALS.forEach(function(d) { if (d.metro && !seen[d.metro]) { seen[d.metro] = true; metros.push(d.metro); }});
+  var metros = []; var seen = {};
+  ALL_DEALS.forEach(function(d) {
+    if (d.metro && !seen[d.metro]) { seen[d.metro] = true; metros.push(d.metro); }
+  });
   metros.sort();
   var sel = document.getElementById('f-metro');
   metros.forEach(function(m) {
     var o = document.createElement('option');
-    o.value = m; o.textContent = m;
-    sel.appendChild(o);
+    o.value = m; o.textContent = m; sel.appendChild(o);
   });
 }
 
@@ -264,14 +381,23 @@ function populateMetros() {
     var data = await r.json();
     ALL_DEALS = data.deals || [];
     if (!ALL_DEALS.length) {
-      document.getElementById('deals-grid').innerHTML = '<div class="empty"><h3>No active commercial deals right now</h3><p>New opportunities posted weekly. Check back soon or <a href="mailto:info@termsforsale.com" style="color:var(--blue);font-weight:600">request to be notified</a>.</p></div>';
+      /* ========== PATCH 5d: Zero-state — no active inventory ========== */
+      updateInventoryLine(0);
+      document.getElementById('deals-grid').innerHTML =
+        '<div class="empty">' +
+          '<h3>No active commercial teasers today.</h3>' +
+          '<p>Deals move fast at this price point.</p>' +
+          '<a class="empty-cta" href="/buying-criteria">Share Your Buy Box To Be Notified First</a>' +
+        '</div>';
+      /* ========== /PATCH 5d ========== */
       return;
     }
     populateMetros();
     applyFilters();
   } catch (e) {
     console.error(e);
-    document.getElementById('deals-grid').innerHTML = '<div class="empty"><h3>Could not load deals</h3><p>' + e.message + '</p></div>';
+    document.getElementById('deals-grid').innerHTML =
+      '<div class="empty"><h3>Could not load deals</h3><p>' + e.message + '</p></div>';
   }
 })();
 </script>
