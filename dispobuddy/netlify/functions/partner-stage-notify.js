@@ -208,9 +208,9 @@ function getStageTemplate(stage, ctx) {
       },
     },
     'Actively Marketing': {
-      sms: `🚀 ${firstName}, your deal at ${address} is now LIVE and being marketed to our 2,000+ buyer network. Track it: dispobuddy.com/dashboard`,
+      sms: `🚀 ${firstName}, your deal at ${address} is now LIVE and being marketed to our buyer network. Track it: dispobuddy.com/dashboard`,
       email: {
-        subject: 'Your deal is live on the market',
+        subject: 'Your deal is live',
         html: buildMarketingEmail(firstName, address, dealType),
       },
     },
@@ -330,7 +330,7 @@ function buildMarketingEmail(firstName, address, dealType) {
     <div style="background:#EBF8FF;border-radius:12px;padding:24px;margin-bottom:24px">
       <h2 style="font-size:16px;font-weight:700;margin-bottom:12px;color:#1a8bbf">What's happening now</h2>
       <ul style="color:#4A6070;line-height:1.8;padding-left:20px">
-        <li><strong>SMS + email blast</strong> — 2,000+ active investors notified</li>
+        <li><strong>SMS + email blast</strong> — active investors notified</li>
         <li><strong>Buyer Q&A</strong> — We field questions and schedule showings</li>
         <li><strong>Offer negotiation</strong> — We secure the best price and terms</li>
       </ul>
@@ -373,7 +373,6 @@ function buildEmdEmail(firstName, address) {
       <strong style="color:#276749">Your payout is locked in</strong><br>
       <span style="color:#4A6070;font-size:14px">Payment disbursed by title at close per your JV agreement.</span>
     </div>
-    <p style="color:#4A6070;line-height:1.7"><strong>Typical timeline:</strong> 14-21 days from EMD to close.</p>
     <p style="color:#4A6070;line-height:1.7;margin-top:24px">— The Dispo Buddy Team</p>
   `);
 }
