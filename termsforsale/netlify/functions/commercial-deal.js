@@ -1,174 +1,144 @@
-const { Client } = require("@notionhq/client");
+// Netlify function: commercial-deal
+// Returns a single commercial deal by code. Public fields always,
+// private fields (address, CIM URL, Data Room URL) only when a valid
+// HMAC NDA token is presented via Authorization: Bearer <token>.
+// Uses plain fetch against Notion REST API — no npm dependencies.
+
 const crypto = require("crypto");
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-const COMMERCIAL_DEALS_DB_ID = process.env.NOTION_COMMERCIAL_DEALS_DB_ID;
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
+const DEALS_DB_ID = process.env.NOTION_COMMERCIAL_DB_ID;
 const HMAC_SECRET = process.env.NDA_HMAC_SECRET;
+const NOTION_VERSION = "2022-06-28";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "https://deals.termsforsale.com",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+  "Content-Type": "application/json",
+};
 
 function constantTimeCompare(a, b) {
-  if (a.length !== b.length) return false;
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
   let mismatch = 0;
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return mismatch === 0;
 }
 
+function b64urlDecode(str) {
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  return Buffer.from(str, "base64").toString();
+}
+
 function verifyToken(token) {
-  if (!token) return null;
-
+  if (!token || !HMAC_SECRET) return null;
   try {
-    const [payloadStr, signature] = token.split(".");
-    if (!payloadStr || !signature) return null;
-
-    // Verify HMAC
-    const expectedHmac = crypto
-      .createHmac("sha256", HMAC_SECRET)
-      .update(payloadStr)
-      .digest("hex");
-
-    if (!constantTimeCompare(signature, expectedHmac)) {
-      return null;
-    }
-
-    // Decode and validate
-    const payload = JSON.parse(Buffer.from(payloadStr, "base64url").toString());
-    const now = Math.floor(Date.now() / 1000);
-
-    if (payload.exp <= now) {
-      return null; // Expired
-    }
-
+    const parts = token.split(".");
+    if (parts.length !== 2) return null;
+    const [payloadStr, signature] = parts;
+    const expected = crypto.createHmac("sha256", HMAC_SECRET).update(payloadStr).digest("hex");
+    if (!constantTimeCompare(signature, expected)) return null;
+    const payload = JSON.parse(b64urlDecode(payloadStr));
+    if (payload.exp <= Math.floor(Date.now() / 1000)) return null;
     return payload;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
+function pickRichText(prop) {
+  if (!prop) return "";
+  if (prop.rich_text?.length) return prop.rich_text.map(t => t.plain_text).join("");
+  if (prop.title?.length) return prop.title.map(t => t.plain_text).join("");
+  return "";
+}
+function pickSelect(prop) { return prop?.select?.name || ""; }
+function pickUrl(prop) { return prop?.url || null; }
+
 async function queryDealByCode(code) {
-  try {
-    const response = await notion.databases.query({
-      database_id: COMMERCIAL_DEALS_DB_ID,
-      filter: {
-        property: "Deal Code",
-        title: { equals: code },
-      },
-    });
-
-    if (response.results.length === 0) return null;
-
-    const page = response.results[0];
-    const props = page.properties;
-
-    // Extract public fields
-    const deal = {
-      code,
-      headline:
-        props["Metro"]?.rich_text?.[0]?.plain_text || "—",
-      metro: props["Metro"]?.rich_text?.[0]?.plain_text || "—",
-      type: props["Property Type"]?.select?.name || "—",
-      priceRange: props["Price Range"]?.rich_text?.[0]?.plain_text || "—",
-      noiRange: props["NOI Range"]?.rich_text?.[0]?.plain_text || "—",
-      units: props["Units or Sqft"]?.rich_text?.[0]?.plain_text || "—",
-      vintage: props["Vintage / Class"]?.rich_text?.[0]?.plain_text || "—",
-      submarket: props["Submarket"]?.rich_text?.[0]?.plain_text || "—",
-      notes:
-        (props["Deal Story 1"]?.rich_text?.[0]?.plain_text || "") +
-        (props["Deal Story 2"]?.rich_text?.[0]?.plain_text
-          ? " " + props["Deal Story 2"]?.rich_text?.[0]?.plain_text
-          : "") +
-        (props["Deal Story 3"]?.rich_text?.[0]?.plain_text
-          ? " " + props["Deal Story 3"]?.rich_text?.[0]?.plain_text
-          : ""),
-      structure: props["Structure Summary"]?.rich_text?.[0]?.plain_text || "—",
-      photos: [], // TODO: pull from gallery property if available
-    };
-
-    return { page, deal };
-  } catch (e) {
-    console.error("Query error:", e);
+  const res = await fetch(`https://api.notion.com/v1/databases/${DEALS_DB_ID}/query`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${NOTION_TOKEN}`,
+      "Notion-Version": NOTION_VERSION,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      filter: { property: "Deal Code", title: { equals: code } },
+      page_size: 1,
+    }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Notion query failed:", res.status, errText);
     return null;
   }
+  const data = await res.json();
+  if (!data.results?.length) return null;
+  return data.results[0];
+}
+
+function buildPublicDeal(page) {
+  const p = page.properties || {};
+  return {
+    code: pickRichText(p["Deal Code"]),
+    headline: pickRichText(p["Headline"]) || pickRichText(p["Metro"]) || "Commercial Deal",
+    metro: pickRichText(p["Metro"]),
+    submarket: pickRichText(p["Submarket"]),
+    propertyType: pickSelect(p["Property Type"]) || pickRichText(p["Property Type"]),
+    priceRange: pickRichText(p["Price Range"]),
+    noiRange: pickRichText(p["NOI Range"]),
+    capRate: pickRichText(p["Cap Rate"]) || pickRichText(p["Cap Rate Range"]),
+    unitsOrSqft: pickRichText(p["Units or Sqft"]),
+    vintageClass: pickRichText(p["Vintage / Class"]) || pickRichText(p["Vintage Class"]),
+    dealStory: [
+      pickRichText(p["Deal Story 1"]),
+      pickRichText(p["Deal Story 2"]),
+      pickRichText(p["Deal Story 3"]),
+    ].filter(Boolean),
+    structureSummary: pickRichText(p["Structure Summary"]),
+  };
 }
 
 exports.handler = async (event) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "https://deals.termsforsale.com",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type",
-    "Content-Type": "application/json",
-  };
-
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers };
-  }
-
+  if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: CORS };
   if (event.httpMethod !== "GET") {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed" }),
-    };
+    return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: "method not allowed" }) };
+  }
+  if (!NOTION_TOKEN || !DEALS_DB_ID) {
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: "server not configured" }) };
   }
 
   try {
-    const queryParams = event.queryStringParameters || {};
-    const code = queryParams.code;
-
+    const code = (event.queryStringParameters || {}).code;
     if (!code) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "code query parameter required" }),
-      };
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "code query parameter required" }) };
     }
 
-    const result = await queryDealByCode(code);
-    if (!result) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({ error: "deal not found" }),
-      };
+    const page = await queryDealByCode(code);
+    if (!page) {
+      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "deal not found" }) };
     }
 
-    const { page, deal } = result;
-    const props = page.properties;
+    const deal = buildPublicDeal(page);
 
-    // Check for valid token
-    const authHeader = event.headers.authorization || "";
-    const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/);
+    const authHeader = event.headers.authorization || event.headers.Authorization || "";
+    const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
     const token = tokenMatch ? tokenMatch[1] : null;
-    const tokenPayload = token ? verifyToken(token) : null;
-    const unlocked = !!tokenPayload;
+    const payload = token ? verifyToken(token) : null;
+    const unlocked = !!payload;
 
-    // Build response
-    const response = {
-      deal: { ...deal },
-      unlocked,
-    };
-
-    // Add private fields if unlocked
     if (unlocked) {
-      response.deal.address =
-        props["Address (PRIVATE)"]?.rich_text?.[0]?.plain_text || "—";
-      response.deal.cimUrl =
-        props["CIM URL (PRIVATE)"]?.url || null;
-      response.deal.dataRoomUrl =
-        props["Data Room URL (PRIVATE)"]?.url || null;
+      const p = page.properties || {};
+      deal.address = pickRichText(p["Address PRIVATE"]) || pickRichText(p["Address (PRIVATE)"]);
+      deal.cimUrl = pickUrl(p["CIM URL PRIVATE"]) || pickUrl(p["CIM URL (PRIVATE)"]);
+      deal.dataRoomUrl = pickUrl(p["Data Room URL PRIVATE"]) || pickUrl(p["Data Room URL (PRIVATE)"]);
     }
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(response),
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message }),
-    };
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ deal, unlocked }) };
+  } catch (err) {
+    console.error(err);
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: err.message }) };
   }
 };
