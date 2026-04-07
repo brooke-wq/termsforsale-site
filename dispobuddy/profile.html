@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — Dispo Buddy</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/profile.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><img src="/logo-dark.svg" alt="Dispo Buddy"></a>
+    <div class="nav-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/earnings">Earnings</a>
+      <a href="/resources">Resources</a>
+      <a href="/profile" class="active">Profile</a>
+    </div>
+    <div class="nav-right">
+      <a href="/submit-deal" class="btn btn-o btn-sm">+ New Deal</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mob-menu" id="mobMenu">
+  <a href="/dashboard">Dashboard</a>
+  <a href="/earnings">Earnings</a>
+  <a href="/resources">Resources</a>
+  <a href="/profile">Profile</a>
+  <div class="mob-btns">
+    <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>Profile</h1>
+    <div class="sub">Your info, notification preferences, and account actions.</div>
+  </div>
+
+  <!-- Avatar -->
+  <div class="avatar-block">
+    <div class="avatar-circle" id="avatarInitials">—</div>
+    <div class="avatar-info">
+      <h2 id="avatarName">Loading...</h2>
+      <p id="avatarEmail"></p>
+      <span class="tier-pill" id="tierPill">—</span>
+    </div>
+  </div>
+
+  <!-- Account Info -->
+  <div class="section">
+    <h3>Account Info</h3>
+    <div class="info-row">
+      <div class="key">Name</div>
+      <div class="val" id="infoName">—</div>
+    </div>
+    <div class="info-row">
+      <div class="key">Phone</div>
+      <div class="val" id="infoPhone">—</div>
+    </div>
+    <div class="info-row">
+      <div class="key">Email</div>
+      <div class="val" id="infoEmail">—</div>
+    </div>
+    <p style="font-size:12px;color:var(--text-light);margin-top:12px">Need to update? Text us at (480) 842-5332 and we'll update it in GHL.</p>
+  </div>
+
+  <!-- Notification Preferences -->
+  <div class="section">
+    <h3>Notification Preferences</h3>
+
+    <div class="toggle-row">
+      <div class="toggle-row-info">
+        <h4>SMS notifications</h4>
+        <p>Get text messages when your deal status changes</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="prefSms">
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-row-info">
+        <h4>Email notifications</h4>
+        <p>Get branded emails for major updates</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="prefEmail">
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-row-info">
+        <h4>Stage change alerts</h4>
+        <p>Notified when a deal moves between pipeline stages</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="prefStage">
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-row-info">
+        <h4>Offer alerts</h4>
+        <p>Get notified immediately when buyers make offers</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="prefOffers">
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-row-info">
+        <h4>Payout notifications</h4>
+        <p>Know when money is disbursed from title</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="prefPayouts">
+        <span class="track"></span>
+        <span class="thumb"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Danger zone -->
+  <div class="section danger-zone">
+    <h3>Account Actions</h3>
+    <p class="sub">Sign out of this device.</p>
+    <button class="btn btn-danger" onclick="logout()">Sign Out</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Dispo Buddy &mdash; A Deal Pros LLC Brand</p>
+    <div class="footer-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/profile.js"></script>
+</body>
+</html>

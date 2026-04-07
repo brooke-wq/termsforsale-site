@@ -34,6 +34,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/partner-messages"
+  to = "/.netlify/functions/partner-messages"
+  status = 200
+
+[[redirects]]
   from = "/api/buyer-demand"
   to = "/.netlify/functions/buyer-demand"
   status = 200
@@ -87,6 +92,21 @@
 [[redirects]]
   from = "/earnings"
   to = "/earnings.html"
+  status = 200
+
+[[redirects]]
+  from = "/messages"
+  to = "/messages.html"
+  status = 200
+
+[[redirects]]
+  from = "/resources"
+  to = "/resources.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile"
+  to = "/profile.html"
   status = 200
 
 [[redirects]]

@@ -3,25 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deal Detail — Dispo Buddy</title>
+<title>Messages — Dispo Buddy</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/deal-detail.css">
+<link rel="stylesheet" href="/messages.css">
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-logo"><img src="/logo-dark.svg" alt="Dispo Buddy"></a>
     <div class="nav-links">
       <a href="/dashboard">Dashboard</a>
       <a href="/earnings">Earnings</a>
-      <a href="/messages">Messages</a>
+      <a href="/messages" class="active">Messages</a>
       <a href="/resources">Resources</a>
-      <a href="/profile">Profile</a>
     </div>
     <div class="nav-right">
       <a href="/submit-deal" class="btn btn-o btn-sm">+ New Deal</a>
@@ -41,23 +39,41 @@
 </div>
 
 <div class="page">
-  <div id="content">
-    <div class="loading">
-      <div class="spinner"></div>
-      Loading deal...
+
+  <div class="page-header">
+    <h1>Messages</h1>
+    <div class="sub">Talk directly to the Dispo Buddy team.</div>
+  </div>
+
+  <div class="msg-wrap">
+    <div class="msg-list" id="msgList">
+      <div class="loading">
+        <div class="spinner"></div>
+        Loading messages...
+      </div>
+    </div>
+    <div class="compose">
+      <textarea id="composeInput" placeholder="Type a message..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
     </div>
   </div>
+
 </div>
+
+<div class="toast" id="toast">Sent</div>
 
 <footer class="footer">
   <div class="footer-inner">
     <p>&copy; 2026 Dispo Buddy &mdash; A Deal Pros LLC Brand</p>
-    <div>
+    <div class="footer-links">
       <a href="/dashboard">Dashboard</a>
+      <a href="/messages">Messages</a>
     </div>
   </div>
 </footer>
 
-<script src="/deal-detail.js"></script>
+<script src="/messages.js"></script>
 </body>
 </html>
