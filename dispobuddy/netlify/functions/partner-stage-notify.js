@@ -46,10 +46,18 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
+  // Log everything GHL sent so we can debug template mismatches
+  console.log('🔔 partner-stage-notify received:', JSON.stringify(body));
+
   const { contactId, opportunityId, stageName } = body;
   if (!contactId || !stageName) {
+    console.warn('Missing required fields — contactId:', contactId, 'stageName:', stageName);
     return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'contactId and stageName required' }) };
   }
+
+  // Normalize stageName: strip whitespace, case-insensitive match later
+  const normalizedStage = (stageName || '').trim();
+  console.log('Normalized stage:', JSON.stringify(normalizedStage));
 
   const isLive = process.env.NOTIFICATIONS_LIVE === 'true';
   if (!isLive) {
@@ -93,8 +101,8 @@ exports.handler = async (event) => {
     const address = cf.property_address || 'your property';
     const dealType = cf.deal_type || 'deal';
 
-    // Get the template for this stage
-    const template = getStageTemplate(stageName, {
+    // Get the template for this stage (try normalized name, then fallback)
+    const template = getStageTemplate(normalizedStage, {
       firstName,
       address,
       dealType,
@@ -103,9 +111,12 @@ exports.handler = async (event) => {
     });
 
     if (!template) {
-      console.log('No template for stage:', stageName, '— skipping');
-      return { statusCode: 200, headers: respHeaders, body: JSON.stringify({ success: true, sent: false, reason: 'no template' }) };
+      console.warn('⚠ No template found for stage:', JSON.stringify(normalizedStage));
+      console.warn('Available template keys: Missing Information, Ready to Market, Actively Marketing, Assignment Sent, Assigned with EMD, Closed, Not Accepted');
+      return { statusCode: 200, headers: respHeaders, body: JSON.stringify({ success: true, sent: false, reason: 'no template', stageReceived: normalizedStage }) };
     }
+
+    console.log('✓ Template matched for stage:', normalizedStage, '— SMS:', !!template.sms, 'email:', !!template.email, 'internal:', !!template.internal);
 
     const notifs = [];
 
@@ -125,13 +136,24 @@ exports.handler = async (event) => {
       }
     }
 
-    await Promise.race([
-      Promise.allSettled(notifs),
-      new Promise(r => setTimeout(r, 5000)),
-    ]);
+    // Wait for ALL notifications to complete (no race timeout — let them finish)
+    // Netlify functions have a 10s timeout anyway, so we have headroom
+    const results = await Promise.allSettled(notifs);
+    const sentCount = results.filter(r => r.status === 'fulfilled').length;
+    const failedCount = results.filter(r => r.status === 'rejected').length;
 
-    console.log('Stage notify sent:', stageName, 'for', contactId);
-    return { statusCode: 200, headers: respHeaders, body: JSON.stringify({ success: true, sent: true, stage: stageName }) };
+    console.log('Stage notify done:', normalizedStage, 'for', contactId, '— sent:', sentCount, 'failed:', failedCount);
+    return {
+      statusCode: 200,
+      headers: respHeaders,
+      body: JSON.stringify({
+        success: true,
+        sent: sentCount > 0,
+        stage: normalizedStage,
+        sentCount,
+        failedCount,
+      }),
+    };
 
   } catch (err) {
     console.error('Stage notify error:', err);
@@ -199,7 +221,25 @@ function getStageTemplate(stage, ctx) {
     },
   };
 
-  return templates[stage] || null;
+  // Try exact match first
+  if (templates[stage]) return templates[stage];
+
+  // Fallback: case-insensitive match
+  const stageLower = (stage || '').toLowerCase().trim();
+  for (const key of Object.keys(templates)) {
+    if (key.toLowerCase() === stageLower) return templates[key];
+  }
+
+  // Fallback: fuzzy keyword match
+  if (stageLower.indexOf('missing') !== -1) return templates['Missing Information'];
+  if (stageLower.indexOf('ready') !== -1 || stageLower.indexOf('accepted') !== -1) return templates['Ready to Market'];
+  if (stageLower.indexOf('actively') !== -1 || stageLower.indexOf('marketing') !== -1) return templates['Actively Marketing'];
+  if (stageLower.indexOf('assignment sent') !== -1) return templates['Assignment Sent'];
+  if (stageLower.indexOf('emd') !== -1) return templates['Assigned with EMD'];
+  if (stageLower.indexOf('closed') !== -1) return templates['Closed'];
+  if (stageLower.indexOf('not accepted') !== -1 || stageLower.indexOf('rejected') !== -1 || stageLower.indexOf('declined') !== -1) return templates['Not Accepted'];
+
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -360,28 +400,36 @@ async function sendSMS(contactId, headers, message) {
     headers,
     body: JSON.stringify({ type: 'SMS', contactId, message }),
   });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    console.warn('SMS send response:', JSON.stringify(data).substring(0, 200));
+    console.error('❌ SMS send FAILED status:', res.status, 'response:', JSON.stringify(data).substring(0, 400));
+  } else {
+    console.log('✓ SMS sent, msgId:', data.messageId || data.id || 'unknown');
   }
+  return data;
 }
 
 async function sendEmail(contactId, headers, { subject, html }) {
+  // Try without emailFrom first (GHL falls back to account default)
+  const payload = {
+    type: 'Email',
+    contactId,
+    subject,
+    html,
+  };
   const res = await fetch(`${GHL_BASE}/conversations/messages`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      type: 'Email',
-      contactId,
-      subject,
-      html,
-      emailFrom: 'Dispo Buddy <info@dispobuddy.com>',
-    }),
+    body: JSON.stringify(payload),
   });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    console.warn('Email send response:', JSON.stringify(data).substring(0, 200));
+    console.error('❌ Email send FAILED status:', res.status, 'response:', JSON.stringify(data).substring(0, 400));
+    console.error('Email payload was:', JSON.stringify({ type: 'Email', contactId, subject, htmlLen: (html || '').length }));
+  } else {
+    console.log('✓ Email sent, msgId:', data.messageId || data.id || 'unknown');
   }
+  return data;
 }
 
 async function sendInternalSMS(phone, headers, locationId, message) {
