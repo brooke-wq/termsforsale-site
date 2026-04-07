@@ -47,13 +47,30 @@
   <!-- ============ LOGIN VIEW ============ -->
   <div class="login-wrap" id="loginView">
     <div class="login-card">
-      <h1>Partner Dashboard</h1>
-      <p class="sub">Sign in with the phone or email you used when submitting a deal.</p>
-      <input class="fi" type="tel" id="loginPhone" placeholder="Phone number" autocomplete="tel">
-      <input class="fi" type="email" id="loginEmail" placeholder="or email address" autocomplete="email">
-      <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
-      <div class="login-err" id="loginErr"></div>
-      <p class="login-footer">New here? <a href="/submit-deal">Submit your first deal</a></p>
+
+      <!-- Step 1: request code -->
+      <div id="loginStep1">
+        <h1>Partner Portal</h1>
+        <p class="sub">Enter the phone or email you used when submitting a deal. We'll text you a 6-digit code.</p>
+        <input class="fi" type="tel" id="loginPhone" placeholder="Phone number" autocomplete="tel">
+        <input class="fi" type="email" id="loginEmail" placeholder="or email address" autocomplete="email">
+        <button class="login-btn" id="loginBtn" onclick="requestCode()">Send me a code</button>
+        <div class="login-err" id="loginErr"></div>
+        <p class="login-footer">New here? <a href="/submit-deal">Submit your first deal</a></p>
+      </div>
+
+      <!-- Step 2: verify code -->
+      <div id="loginStep2" style="display:none">
+        <h1>Check your phone</h1>
+        <p class="sub">We sent a 6-digit code to <strong id="maskedPhone">your phone</strong>. Enter it below.</p>
+        <input class="fi" type="text" id="loginCode" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="text-align:center;font-size:22px;letter-spacing:6px;font-weight:700">
+        <button class="login-btn" id="verifyBtn" onclick="verifyCode()">Sign In</button>
+        <div class="login-err" id="verifyErr"></div>
+        <p class="login-footer">
+          <a href="#" onclick="backToStep1(event)">← Use a different number</a> · <a href="#" onclick="resendCode(event)">Resend code</a>
+        </p>
+      </div>
+
     </div>
   </div>
 

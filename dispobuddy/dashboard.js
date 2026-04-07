@@ -41,8 +41,10 @@ document.getElementById('hamburger').addEventListener('click', function() {
   }
 })();
 
-// ── Login ──
-async function doLogin() {
+// ── OTP Login Flow ──
+var otpState = { phone: '', email: '' };
+
+window.requestCode = async function() {
   var phone = document.getElementById('loginPhone').value.trim();
   var email = document.getElementById('loginEmail').value.trim();
   var errEl = document.getElementById('loginErr');
@@ -58,19 +60,81 @@ async function doLogin() {
   }
 
   btn.disabled = true;
-  btn.textContent = 'Signing in...';
+  btn.textContent = 'Sending code...';
 
   try {
     var res = await fetch('/.netlify/functions/partner-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: phone, email: email }),
+      body: JSON.stringify({ action: 'request', phone: phone, email: email }),
     });
-
     var data = await res.json();
 
     if (!res.ok) {
-      errEl.textContent = data.error || 'Login failed. Please try again.';
+      errEl.textContent = data.error || 'Could not send code. Please try again.';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Send me a code';
+      return;
+    }
+
+    // Store for the verify step
+    otpState.phone = phone;
+    otpState.email = email;
+
+    // Show step 2
+    document.getElementById('loginStep1').style.display = 'none';
+    document.getElementById('loginStep2').style.display = 'block';
+    document.getElementById('maskedPhone').textContent = data.maskedPhone || 'your phone';
+    document.getElementById('loginCode').focus();
+
+    // Dev mode: show the code so dev can log in without live SMS
+    if (data.testMode && data.devCode) {
+      console.log('🔑 Test-mode OTP code:', data.devCode);
+      var hint = document.createElement('div');
+      hint.style.cssText = 'margin-top:12px;padding:10px 14px;background:#FFF3E0;border-radius:8px;font-size:11px;color:#92400e;text-align:center';
+      hint.innerHTML = '<strong>Test mode:</strong> Code is <strong style="font-family:monospace;font-size:14px">' + data.devCode + '</strong>';
+      document.getElementById('loginStep2').appendChild(hint);
+    }
+  } catch(err) {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Send me a code';
+  }
+};
+
+window.verifyCode = async function() {
+  var code = document.getElementById('loginCode').value.trim();
+  var errEl = document.getElementById('verifyErr');
+  var btn   = document.getElementById('verifyBtn');
+
+  errEl.classList.remove('show');
+
+  if (!/^\d{6}$/.test(code)) {
+    errEl.textContent = 'Enter the 6-digit code.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  try {
+    var res = await fetch('/.netlify/functions/partner-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'verify',
+        phone: otpState.phone,
+        email: otpState.email,
+        code: code,
+      }),
+    });
+    var data = await res.json();
+
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Invalid code. Try again.';
       errEl.classList.add('show');
       btn.disabled = false;
       btn.textContent = 'Sign In';
@@ -80,17 +144,41 @@ async function doLogin() {
     partner = data.partner;
     sessionStorage.setItem('db_partner', JSON.stringify(partner));
     showDashboard();
-
   } catch(err) {
     errEl.textContent = 'Something went wrong. Please try again.';
     errEl.classList.add('show');
     btn.disabled = false;
     btn.textContent = 'Sign In';
   }
-}
+};
 
-document.getElementById('loginPhone').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-document.getElementById('loginEmail').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+window.backToStep1 = function(e) {
+  if (e) e.preventDefault();
+  document.getElementById('loginStep2').style.display = 'none';
+  document.getElementById('loginStep1').style.display = 'block';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtn').textContent = 'Send me a code';
+  document.getElementById('loginCode').value = '';
+  // Remove any dev hint
+  var hints = document.querySelectorAll('#loginStep2 > div[style*="Test mode"]');
+  hints.forEach(function(h) { h.remove(); });
+};
+
+window.resendCode = function(e) {
+  if (e) e.preventDefault();
+  window.requestCode();
+};
+
+// Enter key support
+document.getElementById('loginPhone').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.requestCode(); });
+document.getElementById('loginEmail').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.requestCode(); });
+document.getElementById('loginCode').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.verifyCode(); });
+// Auto-submit when 6 digits entered
+document.getElementById('loginCode').addEventListener('input', function(e) {
+  var v = e.target.value.replace(/\D/g, '').slice(0, 6);
+  e.target.value = v;
+  if (v.length === 6) window.verifyCode();
+});
 
 // ── Show Dashboard ──
 function showDashboard() {
