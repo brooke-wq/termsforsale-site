@@ -1,0 +1,155 @@
+/* ============================================
+   DISPO BUDDY — DEAL DETAIL STYLES
+   ============================================ */
+
+:root{
+  --navy:#0D1F3C;--navy2:#0a1828;--navy3:#132848;
+  --orange:#F7941D;--orange-dark:#d97c0e;
+  --blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;
+  --green:#22c55e;--green-dark:#16a34a;
+  --purple:#8b5cf6;--red:#ef4444;
+  --white:#fff;--bg:#F4F6F9;--bg-section:#EEF2F6;
+  --text:#0D1F3C;--text-mid:#4A6070;--text-light:#718096;
+  --border:#E2E8F0;--border-light:#EEF2F6;
+  --r:14px;--r-sm:8px;
+  --font:'Poppins',sans-serif;
+  --shadow-sm:0 1px 3px rgba(13,31,60,.06);
+  --shadow-md:0 4px 16px rgba(13,31,60,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+button{font-family:var(--font);cursor:pointer}
+
+/* ── NAV ───────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000;transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 2px 20px rgba(13,31,60,.08)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
+.nav-logo img{height:48px;width:auto}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
+.nav-links a:hover{color:var(--blue)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:var(--r-sm);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
+.btn-o{background:var(--orange);color:var(--white);border-color:var(--orange)}
+.btn-o:hover{background:var(--orange-dark);border-color:var(--orange-dark)}
+.btn-ghost{background:transparent;color:var(--blue);border-color:rgba(41,171,226,.3)}
+.btn-ghost:hover{background:var(--blue);color:var(--white)}
+.btn-sm{padding:8px 18px;font-size:12px}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+.hamburger span{display:block;width:22px;height:2px;background:var(--navy);border-radius:2px;transition:all .3s}
+.hamburger.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.on span:nth-child(2){opacity:0}
+.hamburger.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+/* ── PAGE LAYOUT ──────────────────── */
+.page{padding:88px 24px 80px;max-width:760px;margin:0 auto}
+
+/* ── BACK LINK ────────────────────── */
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-mid);font-weight:500;margin-bottom:16px;transition:color .15s}
+.back-link:hover{color:var(--blue)}
+.back-link svg{width:14px;height:14px}
+
+/* ── DEAL HEADER ──────────────────── */
+.deal-header{margin-bottom:24px}
+.deal-header h1{font-size:clamp(22px,4vw,28px);font-weight:800;color:var(--navy);line-height:1.2;margin-bottom:6px}
+.deal-header .deal-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--text-mid)}
+.deal-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.deal-tag .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── PROGRESS BAR ─────────────────── */
+.progress-wrap{margin:18px 0 24px}
+.progress-dots{display:flex;gap:4px}
+.progress-dots .dot{flex:1;height:6px;border-radius:3px;background:var(--border)}
+.progress-dots .dot.done{background:var(--blue)}
+.progress-dots .dot.current{background:var(--orange);box-shadow:0 0 0 2px rgba(247,148,29,.2)}
+.progress-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text-light);font-weight:500}
+
+/* ── ACTION CARD (Action Needed) ──── */
+.action-card{
+  background:linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%);
+  border:1.5px solid #fb923c;border-radius:var(--r);padding:20px 24px;
+  margin-bottom:24px;
+}
+.action-card .label{font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.action-card .label svg{width:14px;height:14px}
+.action-card h3{font-size:15px;font-weight:700;color:#9a3412;margin-bottom:10px}
+.action-card .body{font-size:13px;color:#7c2d12;line-height:1.7;white-space:pre-wrap;margin-bottom:14px}
+.action-card .actions{display:flex;gap:8px;flex-wrap:wrap}
+.action-card .btn{font-size:12px;padding:8px 16px}
+.action-card .btn-action{background:#ea580c;color:#fff;border:1.5px solid #ea580c}
+.action-card .btn-action:hover{background:#c2410c;border-color:#c2410c}
+
+/* ── SECTION ──────────────────────── */
+.section{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.section-head{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px}
+
+/* ── PROPERTY SNAPSHOT ────────────── */
+.property-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.property-item{display:flex;flex-direction:column;gap:2px}
+.property-item .key{font-size:11px;color:var(--text-light);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.property-item .val{font-size:15px;color:var(--navy);font-weight:700}
+.property-item.full{grid-column:1/-1}
+
+.your-fee-card{
+  margin-top:18px;padding:16px 20px;
+  background:linear-gradient(135deg,#dcfce7,#bbf7d0);
+  border-radius:10px;border:1px solid #22c55e;
+}
+.your-fee-card .label{font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.your-fee-card .num{font-size:24px;font-weight:900;color:#14532d}
+.your-fee-card .sub{font-size:12px;color:#15803d;margin-top:2px}
+
+/* ── TIMELINE ─────────────────────── */
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;top:8px;bottom:8px;left:7px;width:2px;background:var(--border)}
+.tl-event{position:relative;padding-bottom:20px}
+.tl-event:last-child{padding-bottom:0}
+.tl-event::before{content:'';position:absolute;left:-22px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--white);border:3px solid var(--border);z-index:1}
+.tl-event.done::before{background:var(--blue);border-color:var(--blue)}
+.tl-event.current::before{background:var(--orange);border-color:var(--orange);box-shadow:0 0 0 4px rgba(247,148,29,.2)}
+.tl-event .stage{font-size:14px;font-weight:700;color:var(--navy)}
+.tl-event.pending .stage{color:var(--text-light);font-weight:500}
+.tl-event .when{font-size:12px;color:var(--text-light);margin-top:2px}
+.tl-event .note{font-size:13px;color:var(--text-mid);margin-top:6px;line-height:1.6;background:var(--bg-section);padding:10px 14px;border-radius:8px}
+
+/* ── BUYER METRICS ────────────────── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.metric-card{background:var(--bg-section);border-radius:10px;padding:16px;text-align:center}
+.metric-card .num{font-size:22px;font-weight:900;color:var(--navy);line-height:1}
+.metric-card .label{font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+
+/* ── FILES ────────────────────────── */
+.files-list{display:flex;flex-direction:column;gap:8px}
+.file-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-section);border-radius:8px;font-size:13px;color:var(--text-mid);transition:background .15s}
+.file-row:hover{background:var(--blue-light)}
+.file-row svg{width:18px;height:18px;color:var(--blue);flex-shrink:0}
+.file-row span{flex:1;color:var(--navy);font-weight:600}
+
+/* ── CONTACT ACTIONS ──────────────── */
+.contact-row{display:flex;gap:8px;flex-wrap:wrap}
+.contact-row .btn{flex:1;min-width:140px}
+
+/* ── LOADING ──────────────────────── */
+.loading{text-align:center;padding:48px;color:var(--text-light);font-size:14px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── FOOTER ───────────────────────── */
+.footer{padding:32px 0;background:var(--navy2);margin-top:60px}
+.footer-inner{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-inner p{font-size:12px;color:rgba(255,255,255,.3)}
+.footer-inner a{font-size:12px;color:rgba(255,255,255,.4)}
+
+/* ── RESPONSIVE ───────────────────── */
+@media(max-width:900px){
+  .nav-links,.nav-right{display:none}
+  .hamburger{display:flex}
+}
+@media(max-width:640px){
+  .page{padding:80px 16px 60px}
+  .property-grid{grid-template-columns:1fr}
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
+  .progress-labels{font-size:9px}
+}

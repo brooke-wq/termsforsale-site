@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Detail — Dispo Buddy</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/deal-detail.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><img src="/logo-dark.svg" alt="Dispo Buddy"></a>
+    <div class="nav-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/process">How It Works</a>
+      <a href="/faq">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <a href="/submit-deal" class="btn btn-o btn-sm">+ New Deal</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mob-menu" id="mobMenu">
+  <a href="/dashboard">Dashboard</a>
+  <a href="/process">How It Works</a>
+  <a href="/faq">FAQ</a>
+  <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+</div>
+
+<div class="page">
+  <div id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading deal...
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Dispo Buddy &mdash; A Deal Pros LLC Brand</p>
+    <div>
+      <a href="/dashboard">Dashboard</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/deal-detail.js"></script>
+</body>
+</html>
