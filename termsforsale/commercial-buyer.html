@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Commercial Buyer Profile — Deal Pros</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root { --bg:#0b1220; --card:#111a2e; --ink:#e8eefc; --muted:#9fb0d0; --accent:#f5b301; --line:#1f2a44; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px}
+  h1{margin:0 0 6px;font-size:28px}
+  p.lead{color:var(--muted);margin:0 0 24px}
+  form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:640px){.row{grid-template-columns:1fr}}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+  input,select,textarea{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0d1628;color:var(--ink);font:inherit}
+  textarea{min-height:90px;resize:vertical}
+  .chk{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .chk label{display:inline-flex;align-items:center;gap:6px;background:#0d1628;border:1px solid var(--line);padding:8px 12px;border-radius:999px;margin:0;color:var(--ink);cursor:pointer;font-size:13px}
+  .chk input{width:auto}
+  button{margin-top:22px;width:100%;padding:14px;border-radius:12px;border:0;background:var(--accent);color:#111;font-weight:700;font-size:16px;cursor:pointer}
+  .msg{margin-top:14px;padding:12px;border-radius:10px;display:none}
+  .ok{background:#123a1f;color:#a4f0b3;display:block}
+  .err{background:#3a1212;color:#f5a3a3;display:block}
+  small{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Commercial / Multifamily Buyer Profile</h1>
+  <p class="lead">Complete this once — we'll match you to off-market deals that fit your box. Your information stays private.</p>
+  <form id="f">
+    <div class="row">
+      <div><label>Full name *</label><input name="name" required /></div>
+      <div><label>Email *</label><input type="email" name="email" required /></div>
+    </div>
+    <div class="row">
+      <div><label>Phone *</label><input name="phone" required /></div>
+      <div><label>Entity / fund name</label><input name="entity_name" /></div>
+    </div>
+    <div class="row">
+      <div><label>Role *</label>
+        <select name="role" required>
+          <option value="">Select…</option>
+          <option>Principal</option><option>GP / Sponsor</option>
+          <option>Family Office</option><option>Broker</option><option>Fund</option>
+        </select>
+      </div>
+      <div><label>Website</label><input name="website" placeholder="https://" /></div>
+    </div>
+    <label>LinkedIn</label><input name="linkedin" placeholder="https://linkedin.com/in/…" />
+
+    <div class="row">
+      <div><label>Typical deal size — min (USD) *</label><input type="number" name="typical_deal_size_min" min="0" required /></div>
+      <div><label>Typical deal size — max (USD) *</label><input type="number" name="typical_deal_size_max" min="0" required /></div>
+    </div>
+
+    <label>Preferred markets (select all that apply)</label>
+    <div class="chk">
+      <label><input type="checkbox" name="preferred_markets" value="TX"/>TX</label>
+      <label><input type="checkbox" name="preferred_markets" value="FL"/>FL</label>
+      <label><input type="checkbox" name="preferred_markets" value="GA"/>GA</label>
+      <label><input type="checkbox" name="preferred_markets" value="NC"/>NC</label>
+      <label><input type="checkbox" name="preferred_markets" value="SC"/>SC</label>
+      <label><input type="checkbox" name="preferred_markets" value="TN"/>TN</label>
+      <label><input type="checkbox" name="preferred_markets" value="AZ"/>AZ</label>
+      <label><input type="checkbox" name="preferred_markets" value="Other"/>Other</label>
+    </div>
+
+    <div class="row">
+      <div><label>Strategy *</label>
+        <select name="strategy" required>
+          <option value="">Select…</option>
+          <option>Core</option><option>Value-Add</option>
+          <option>Opportunistic</option><option>Development</option>
+        </select>
+      </div>
+      <div><label>Capital source *</label>
+        <select name="capital_source" required>
+          <option value="">Select…</option>
+          <option>Own Equity</option><option>Syndication</option>
+          <option>Fund</option><option>JV</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div><label>Proof of funds type</label>
+        <select name="proof_type">
+          <option value="">None provided</option>
+          <option>Bank Statement</option><option>POF Letter</option>
+          <option>Fund Commitment</option><option>Track Record</option>
+        </select>
+      </div>
+      <div><label>Decision speed (days) *</label><input type="number" name="decision_speed_days" min="1" required /></div>
+    </div>
+
+    <label>Notes</label><textarea name="notes" placeholder="Anything else we should know about your buy box."></textarea>
+
+    <button type="submit">Submit Buyer Profile</button>
+    <div id="msg" class="msg"></div>
+    <small>By submitting you agree to be contacted about matching deal opportunities.</small>
+  </form>
+</div>
+<script>
+const f = document.getElementById('f');
+const msg = document.getElementById('msg');
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  msg.className = 'msg'; msg.textContent = 'Submitting…'; msg.classList.add('ok');
+  const fd = new FormData(f);
+  const data = {};
+  for (const [k,v] of fd.entries()) {
+    if (k === 'preferred_markets') { (data[k] = data[k] || []).push(v); }
+    else data[k] = v;
+  }
+  try {
+    const r = await fetch('/.netlify/functions/commercial-buyer-submit', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.error || 'Submit failed');
+    msg.className = 'msg ok';
+    msg.innerHTML = '✅ Profile received. Check your email — we\'ll send matching deals as they come up.';
+    f.reset();
+  } catch(err) {
+    msg.className = 'msg err';
+    msg.textContent = '⚠️ ' + err.message;
+  }
+});
+</script>
+</body></html>

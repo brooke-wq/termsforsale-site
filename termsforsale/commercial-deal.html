@@ -1,416 +1,127 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Commercial Deal — Terms For Sale</title>
-<meta name="description" content="Off-market commercial investment opportunity. Sign NDA to unlock full details.">
-<link rel="canonical" href="https://deals.termsforsale.com/commercial-deal.html">
-<link rel="icon" href="/favicon.png" type="image/png">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Commercial Deal — Deal Pros</title>
+<meta name="robots" content="noindex" />
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--navy:#0D1F3C;--blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--orange:#F7941D;--green:#10B981;--white:#fff;--bg:#F4F6F9;--text:#0D1F3C;--text-mid:#4A5568;--text-light:#718096;--border:#E2E8F0;--font:'Poppins',sans-serif;--r:10px}
-body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
-
-/* NAV */
-nav{background:var(--navy);height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;position:sticky;top:0;z-index:100}
-nav a.logo img{height:40px}
-.nav-links{display:flex;gap:24px;align-items:center}
-.nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
-.nav-links a:hover{color:#fff}
-
-/* HERO */
-.hero{background:var(--navy);padding:60px 48px;color:#fff}
-.hero-inner{max-width:1200px;margin:0 auto}
-.hero h1{font-size:36px;font-weight:900;margin-bottom:16px;letter-spacing:-.5px}
-.hero-meta{display:flex;gap:16px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
-.metro-badge{display:inline-block;padding:6px 14px;background:rgba(247,148,29,.15);color:var(--orange);border:1px solid rgba(247,148,29,.3);border-radius:50px;font-size:12px;font-weight:700;text-transform:uppercase}
-.price-badge{display:inline-block;padding:6px 14px;background:rgba(41,171,226,.15);color:var(--blue);border:1px solid rgba(41,171,226,.3);border-radius:50px;font-size:12px;font-weight:700}
-
-/* MAIN CONTENT */
-.container{max-width:1200px;margin:0 auto;padding:40px 48px}
-.deal-layout{display:grid;grid-template-columns:2fr 1fr;gap:40px}
-.deal-left h2{font-size:24px;font-weight:900;margin-bottom:24px;color:var(--navy)}
-.deal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:32px}
-.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px}
-.stat-label{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.stat-value{font-size:16px;font-weight:800;color:var(--navy)}
-.stat-value.accent{color:var(--orange)}
-
-.deal-section{margin-bottom:32px;background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:20px}
-.deal-section h3{font-size:16px;font-weight:800;margin-bottom:12px;color:var(--navy)}
-.deal-section p{color:var(--text-mid);font-size:14px;line-height:1.6;margin-bottom:8px}
-
-/* NDA BOX */
-.nda-box{background:#fff;border:2px solid var(--border);border-radius:var(--r);padding:28px;position:sticky;top:90px}
-.nda-box h3{font-size:18px;font-weight:900;margin-bottom:6px;color:var(--navy)}
-.nda-box.unlocked{border-color:var(--green);background:rgba(16,185,129,.02)}
-.nda-box.unlocked h3{color:var(--green)}
-.nda-box .subtitle{font-size:12px;color:var(--text-light);margin-bottom:18px;font-weight:600}
-
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.form-group input,
-.form-group select,
-.form-group textarea{width:100%;padding:11px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font);font-size:13px;color:var(--text)}
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.1)}
-.form-group textarea{resize:vertical;min-height:80px}
-
-.form-group-checkbox{display:flex;gap:10px;align-items:flex-start}
-.form-group-checkbox input{width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer}
-.form-group-checkbox label{margin:0;font-size:13px;color:var(--text-mid);text-transform:none;letter-spacing:normal}
-
-.form-submit{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s;font-family:var(--font)}
-.form-submit:hover{background:#1a3163}
-.form-submit:disabled{opacity:.6;cursor:not-allowed}
-
-.unlock-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);padding:8px 12px;border-radius:50px;font-size:12px;font-weight:600;margin-bottom:16px}
-.unlock-pill-check{color:var(--green);font-weight:800}
-
-.unlock-links{display:flex;flex-direction:column;gap:12px;margin-top:18px}
-.unlock-link{display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(41,171,226,.05);border:1px solid rgba(41,171,226,.2);border-radius:6px;text-decoration:none;color:var(--blue);font-weight:600;font-size:13px;transition:all .15s}
-.unlock-link:hover{background:rgba(41,171,226,.1);border-color:var(--blue)}
-.unlock-link-arrow{font-size:16px}
-
-.error-message{color:#E53E3E;font-size:12px;margin-top:6px;display:none}
-.error-message.show{display:block}
-.success-message{color:var(--green);font-size:13px;margin-bottom:12px;padding:10px;background:rgba(16,185,129,.1);border-radius:6px;display:none}
-.success-message.show{display:block}
-
-.loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(13,31,60,.2);border-top-color:var(--navy);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* RESPONSIVE */
-@media(max-width:768px){
-  nav{padding:0 16px;height:60px}
-  nav a.logo img{height:32px}
-  .nav-links{gap:12px}
-  .nav-links a{font-size:12px}
-  .hero{padding:40px 20px}
-  .hero h1{font-size:24px}
-  .container{padding:24px 16px}
-  .deal-layout{grid-template-columns:1fr;gap:24px}
-  .nda-box{position:static;margin-top:24px}
-  .deal-grid{grid-template-columns:1fr}
-  .hero-meta{gap:8px}
-}
+  :root{--bg:#0b1220;--card:#111a2e;--ink:#e8eefc;--muted:#9fb0d0;--accent:#f5b301;--line:#1f2a44}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:860px;margin:0 auto;padding:40px 20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;margin-bottom:20px}
+  h1{margin:0 0 6px;font-size:26px}
+  .code{display:inline-block;background:#0d1628;border:1px solid var(--line);color:var(--accent);padding:4px 10px;border-radius:999px;font-size:12px;letter-spacing:1px;margin-bottom:10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .kv{background:#0d1628;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .kv b{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+  input,textarea,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0d1628;color:var(--ink);font:inherit}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.row{grid-template-columns:1fr}}
+  button{margin-top:18px;width:100%;padding:14px;border-radius:12px;border:0;background:var(--accent);color:#111;font-weight:700;font-size:16px;cursor:pointer}
+  .nda{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px;color:var(--muted)}
+  .nda input{width:auto;margin-top:3px}
+  .msg{margin-top:14px;padding:12px;border-radius:10px;display:none}
+  .ok{background:#123a1f;color:#a4f0b3;display:block}
+  .err{background:#3a1212;color:#f5a3a3;display:block}
+  .loading{color:var(--muted)}
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div id="deal" class="card loading">Loading deal…</div>
 
-<nav>
-  <a href="/" class="logo"><img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale"></a>
-  <div class="nav-links">
-    <a href='/deals'>Residential</a>
-    <a href='/commercial'>Commercial</a>
-    <a href='/buying-criteria'>Buy Box</a>
-    <a href="mailto:info@termsforsale.com">Contact</a>
-  </div>
-</nav>
-
-<div class="hero">
-  <div class="hero-inner" id="hero-content">
-    <div style="min-height:100px;display:flex;align-items:center;justify-content:center">
-      <div class="loading-spinner"></div> Loading deal...
-    </div>
-  </div>
-</div>
-
-<div class="container" id="main-content" style="display:none">
-  <div class="deal-layout">
-    <div class="deal-left">
-      <h2>Deal Summary</h2>
-
-      <div class="deal-grid" id="stats-grid"></div>
-
-      <div class="deal-section">
-        <h3>Property Overview</h3>
-        <div id="overview-content"></div>
+  <div class="card" id="formCard" style="display:none">
+    <h2 style="margin:0 0 6px">Request NDA & Full Package</h2>
+    <p style="color:var(--muted);margin:0 0 6px">We'll send the NDA for signature, then release the full CIM and data room.</p>
+    <form id="f">
+      <div class="row">
+        <div><label>Full name *</label><input name="name" required /></div>
+        <div><label>Email *</label><input type="email" name="email" required /></div>
       </div>
-
-      <div class="deal-section">
-        <h3>Key Details</h3>
-        <div id="details-content"></div>
+      <div class="row">
+        <div><label>Phone *</label><input name="phone" required /></div>
+        <div><label>Entity *</label><input name="entity_name" required /></div>
       </div>
-    </div>
-
-    <div id="nda-container"></div>
+      <label>Role *</label>
+      <select name="role" required>
+        <option value="">Select…</option>
+        <option>Principal</option><option>GP / Sponsor</option>
+        <option>Family Office</option><option>Broker</option><option>Fund</option>
+      </select>
+      <label class="nda"><input type="checkbox" name="nda_ack" required />
+        I acknowledge the information is confidential and I will execute the NDA before receiving the full package.
+      </label>
+      <button type="submit">Request NDA & Package</button>
+      <div id="msg" class="msg"></div>
+    </form>
   </div>
 </div>
 
 <script>
-const urlParams = new URLSearchParams(window.location.search);
-const dealCode = urlParams.get('code');
+const params = new URLSearchParams(location.search);
+const code = params.get('code');
+const dealEl = document.getElementById('deal');
+const formCard = document.getElementById('formCard');
 
-async function fetchDeal(token = null) {
-  try {
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const url = `/api/commercial-deal?code=${encodeURIComponent(dealCode)}`;
-    const response = await fetch(url, { headers });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (e) {
-    console.error('Deal fetch error:', e);
-    throw e;
-  }
-}
-
-function renderDealHero(deal) {
-  const html = `
-    <h1>${deal.headline || '—'}</h1>
-    <div class="hero-meta">
-      <span class="metro-badge">${deal.metro || '—'}</span>
-      <span class="price-badge">${deal.priceRange || '—'}</span>
-    </div>
-  `;
-  document.getElementById('hero-content').innerHTML = html;
-}
-
-function renderDealSummary(deal) {
-  const stats = `
-    <div class="stat-card">
-      <div class="stat-label">Property Type</div>
-      <div class="stat-value">${deal.type || '—'}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Units / Sqft</div>
-      <div class="stat-value">${deal.units || '—'}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Vintage / Class</div>
-      <div class="stat-value">${deal.vintage || '—'}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">NOI Range</div>
-      <div class="stat-value accent">${deal.noiRange || '—'}</div>
-    </div>
-  `;
-  document.getElementById('stats-grid').innerHTML = stats;
-
-  const overview = `
-    ${deal.submarket ? `<p><strong>Submarket:</strong> ${deal.submarket}</p>` : ''}
-    ${deal.notes ? `<p>${deal.notes}</p>` : '<p>No additional notes available.</p>'}
-  `;
-  document.getElementById('overview-content').innerHTML = overview;
-
-  const details = `
-    ${deal.structure ? `<p><strong>Structure:</strong> ${deal.structure}</p>` : ''}
-    <p><strong>Cap Rate Range:</strong> ${deal.noiRange || '—'}</p>
-  `;
-  document.getElementById('details-content').innerHTML = details;
-}
-
-function renderNDABox(deal, unlocked, tokenExpiry) {
-  let html = '';
-
-  if (unlocked && tokenExpiry) {
-    const expiryDate = new Date(tokenExpiry);
-    const formattedDate = expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-    html = `
-      <div class="nda-box unlocked">
-        <div class="unlock-pill">
-          <span class="unlock-pill-check">✓</span>
-          You're verified through ${formattedDate}
-        </div>
-        <h3>Full Details Unlocked</h3>
-        <p class="subtitle">One NDA covers all deals for 12 months.</p>
-
-        <div class="deal-section" style="margin:0;border:1px solid rgba(16,185,129,.3)">
-          <h3 style="color:var(--navy)">Private Details</h3>
-          ${deal.address ? `<p><strong>Address:</strong> ${deal.address}</p>` : ''}
-          ${deal.cimUrl ? `<p><strong>CIM / OM:</strong> <a href="${deal.cimUrl}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600">Download →</a></p>` : ''}
-          ${deal.dataRoomUrl ? `<p><strong>Data Room:</strong> <a href="${deal.dataRoomUrl}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600">Access →</a></p>` : ''}
-        </div>
+async function loadDeal(){
+  if(!code){ dealEl.innerHTML = '<h1>Missing deal code</h1><p>This link is incomplete.</p>'; return; }
+  try{
+    const r = await fetch('/.netlify/functions/commercial-deals');
+    const j = await r.json();
+    const deal = (j.deals || []).find(d => d.deal_code === code);
+    if(!deal){ dealEl.innerHTML = `<h1>Deal not found</h1><p>Code ${code} is no longer available.</p>`; return; }
+    dealEl.classList.remove('loading');
+    dealEl.innerHTML = `
+      <span class="code">${deal.deal_code}</span>
+      <h1>${deal.headline || deal.asset_type || 'Commercial Opportunity'}</h1>
+      <p style="color:var(--muted);margin:6px 0 0">${deal.summary || ''}</p>
+      <div class="grid">
+        <div class="kv"><b>Asset Type</b>${deal.asset_type || '—'}</div>
+        <div class="kv"><b>Market</b>${deal.market || '—'}</div>
+        <div class="kv"><b>Units / SF</b>${deal.units_sf || '—'}</div>
+        <div class="kv"><b>Year Built</b>${deal.year_built || '—'}</div>
+        <div class="kv"><b>Price Range</b>${deal.price_range || '—'}</div>
+        <div class="kv"><b>Cap Rate</b>${deal.cap_rate || '—'}</div>
+        <div class="kv"><b>Occupancy</b>${deal.occupancy || '—'}</div>
+        <div class="kv"><b>Strategy</b>${deal.strategy || '—'}</div>
       </div>
+      ${deal.highlights ? `<p style="margin-top:14px"><b>Highlights:</b> ${deal.highlights}</p>` : ''}
     `;
-  } else {
-    html = `
-      <div class="nda-box">
-        <h3>Request NDA &amp; Unlock</h3>
-        <p class="subtitle">One-time NDA covers all deals for 12 months. No fees.</p>
-        <form id="nda-form">
-          <div class="success-message" id="success-msg"></div>
-
-          <div class="form-group">
-            <label>Your Full Name *</label>
-            <input type="text" name="name" required>
-            <div class="error-message"></div>
-          </div>
-
-          <div class="form-group">
-            <label>Email Address *</label>
-            <input type="email" name="email" required>
-            <div class="error-message"></div>
-          </div>
-
-          <div class="form-group">
-            <label>Firm / Company</label>
-            <input type="text" name="firm">
-            <div class="error-message"></div>
-          </div>
-
-          <div class="form-group">
-            <label>Capital Source</label>
-            <select name="capital_source">
-              <option value="">Select...</option>
-              <option value="Cash">Cash</option>
-              <option value="Bank/Agency">Bank / Agency</option>
-              <option value="Bridge">Bridge</option>
-              <option value="Private">Private</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Buy Box / Target Profile</label>
-            <textarea name="buy_box" placeholder="E.g., Multifamily, 50+ units, $5M-$20M, value-add"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Type Your Full Name to Sign *</label>
-            <input type="text" name="signature_name" placeholder="Must match your full name above" required>
-            <div class="error-message"></div>
-          </div>
-
-          <div class="form-group-checkbox">
-            <input type="checkbox" id="agree-nda" name="agreed" required>
-            <label for="agree-nda">I agree to the Terms For Sale NDA and confirm I have capacity to close in this price range.</label>
-          </div>
-
-          <button type="submit" class="form-submit">Sign &amp; Unlock Full Details</button>
-        </form>
-      </div>
-    `;
-  }
-
-  document.getElementById('nda-container').innerHTML = html;
-
-  if (!unlocked) {
-    document.getElementById('nda-form').addEventListener('submit', handleNDASubmit);
-  }
-}
-
-async function handleNDASubmit(e) {
-  e.preventDefault();
-  const form = e.target;
-  const submitBtn = form.querySelector('[type="submit"]');
-  const successMsg = document.getElementById('success-msg');
-
-  // Clear previous errors
-  document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
-  successMsg.classList.remove('show');
-
-  const formData = {
-    name: form.name.value.trim(),
-    email: form.email.value.trim(),
-    firm: form.firm.value.trim() || undefined,
-    capital_source: form.capital_source.value || undefined,
-    buy_box: form.buy_box.value.trim() || undefined,
-    signature_name: form.signature_name.value.trim(),
-    agreed: form.agreed.checked,
-  };
-
-  if (formData.name !== formData.signature_name) {
-    form.signature_name.parentElement.querySelector('.error-message').textContent = 'Must match your full name';
-    form.signature_name.parentElement.querySelector('.error-message').classList.add('show');
-    return;
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="loading-spinner"></span>Signing...';
-
-  try {
-    const response = await fetch('/api/sign-commercial-nda', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
+    formCard.style.display = 'block';
+    formCard.dataset.deal = JSON.stringify({
+      deal_code: deal.deal_code, asset_type: deal.asset_type, price_range: deal.price_range
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to sign NDA');
-    }
-
-    const { token, expires_at } = await response.json();
-
-    // Store token
-    localStorage.setItem('tfs_nda_token', token);
-    localStorage.setItem('tfs_nda_expires', expires_at);
-
-    successMsg.textContent = 'NDA signed! Loading full details...';
-    successMsg.classList.add('show');
-
-    // Reload page to show unlocked content
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
-  } catch (error) {
-    console.error('Sign error:', error);
-    successMsg.textContent = 'Error: ' + error.message;
-    successMsg.style.color = '#E53E3E';
-    successMsg.style.background = 'rgba(229,62,62,.1)';
-    successMsg.classList.add('show');
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = 'Sign &amp; Unlock Full Details';
+  }catch(e){
+    dealEl.innerHTML = `<h1>Unable to load</h1><p>Please try again shortly.</p>`;
   }
 }
+loadDeal();
 
-async function init() {
-  if (!dealCode) {
-    document.getElementById('hero-content').innerHTML = `
-      <h1>Deal Not Found</h1>
-      <p style="color:rgba(255,255,255,.7);margin:16px 0">No deal code provided.</p>
-      <a href="/commercial.html" style="display:inline-block;padding:12px 24px;background:var(--orange);color:#fff;text-decoration:none;border-radius:6px;font-weight:600">Back to Commercial Deals</a>
-    `;
-    return;
+const f = document.getElementById('f');
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('msg');
+  msg.className = 'msg ok'; msg.textContent = 'Submitting request…';
+  const fd = new FormData(f);
+  const data = Object.fromEntries(fd.entries());
+  data.nda_ack = !!data.nda_ack;
+  const meta = JSON.parse(formCard.dataset.deal || '{}');
+  Object.assign(data, meta);
+  try{
+    const r = await fetch('/.netlify/functions/commercial-nda-request',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if(!r.ok || !j.ok) throw new Error(j.error || 'Submit failed');
+    formCard.innerHTML = `<h2>✅ Check your email</h2>
+      <p style="color:var(--muted)">We received your request for <b>${meta.deal_code}</b>. The NDA is on its way to <b>${data.email}</b>. Once executed, we'll release the full package.</p>`;
+  }catch(err){
+    msg.className = 'msg err'; msg.textContent = '⚠️ ' + err.message;
   }
-
-  try {
-    // Check for stored token
-    const storedToken = localStorage.getItem('tfs_nda_token');
-    const storedExpiry = localStorage.getItem('tfs_nda_expires');
-    let validToken = null;
-
-    if (storedToken && storedExpiry) {
-      const expiryTime = new Date(storedExpiry).getTime();
-      if (expiryTime > Date.now()) {
-        validToken = storedToken;
-      } else {
-        localStorage.removeItem('tfs_nda_token');
-        localStorage.removeItem('tfs_nda_expires');
-      }
-    }
-
-    const result = await fetchDeal(validToken);
-    const { deal, unlocked } = result;
-
-    renderDealHero(deal);
-    document.getElementById('main-content').style.display = 'block';
-    renderDealSummary(deal);
-    renderNDABox(deal, unlocked, storedExpiry);
-  } catch (error) {
-    console.error('Init error:', error);
-    document.getElementById('hero-content').innerHTML = `
-      <h1>Error Loading Deal</h1>
-      <p style="color:rgba(255,255,255,.7);margin:16px 0">${error.message}</p>
-      <a href="/commercial.html" style="display:inline-block;padding:12px 24px;background:var(--orange);color:#fff;text-decoration:none;border-radius:6px;font-weight:600">Back to Commercial Deals</a>
-    `;
-  }
-}
-
-init();
+});
 </script>
-
-</body>
-</html>
+</body></html>
