@@ -396,3 +396,60 @@ All items below were completed and deployed:
    - Option A (manual): team updates counts as buyers engage
    - Option B (automated): wire up Terms For Sale `/api/track-view` deal clicks to increment these counters on the matching JV partner contact
    - Once any metric has a value >0 and the deal is in Actively Marketing or later, the metrics section auto-appears on the deal detail page
+## Commercial / Multifamily Lane
+
+### Session 1 — SHIPPED
+- `termsforsale/commercial.html` — public hub with blind teaser cards
+- `termsforsale/netlify/functions/commercial-deals.js` — returns active deals from Notion (camelCase: `dealCode`, `propertyType`, `metro`, `submarket`, `unitsOrSqft`, `vintageClass`, `noiRange`, `priceRange`, `dealStory`, `structureSummary`, `status`)
+- Notion "Commercial Deals" DB created and populated
+- Env: `NOTION_COMMERCIAL_DB_ID`
+
+### Session 2 — SHIPPED ✅ (April 7, 2026)
+**Files in repo:**
+- `termsforsale/commercial-buyer.html` — global buyer profile form (name, email, phone, entity, role, website, LinkedIn, deal size min/max, preferred markets, strategy, capital source, proof type, decision speed, notes)
+- `termsforsale/commercial-deal.html` — deal-specific NDA request page; reads `?code=CMF-XXX` and fetches via `/.netlify/functions/commercial-deals` using camelCase fields
+- `termsforsale/netlify/functions/_ghl.js` — shared GHL helper exposing `upsertContact`, `createOpportunity`, `sendSmsToBrooke`, `sendEmailToContact`, `getStageIdByName` (resolves stage IDs by name with in-memory cache), `isTest`. All outbound calls honor `TEST_MODE`.
+- `termsforsale/netlify/functions/commercial-buyer-submit.js` — upserts contact with `buyer-commercial` + `tier-{a|b|c}` + market tags, A/B/C scoring, creates opportunity at "Profile Completed", sends welcome email, SMS to Brooke
+- `termsforsale/netlify/functions/commercial-nda-request.js` — upserts contact with `buyer-commercial` + `nda-requested` + `deal-{code}` tags, creates opportunity at "NDA Requested" with custom fields (`deal_code`, `deal_type`, `price_range`), sends confirmation email, SMS to Brooke
+
+**Buyer A/B/C scoring**
+- Tier A: min size ≥ $5M AND decision ≤ 7 days AND proof_type provided
+- Tier B: min size ≥ $3M AND decision ≤ 14 days
+- Tier C: everything else
+
+**GHL pipeline (live):** Commercial / Multifamily — pipeline ID `HTpFvaMGATSXsECYFhoB`
+Stages (in order): Profile Completed → NDA Requested → NDA Signed → Package Delivered → LOI Submitted → Under Contract → Closed Won / Dead
+
+**Netlify env vars added in Session 2:**
+- `GHL_COMMERCIAL_PIPELINE_ID` ✅
+- `BROOKE_CONTACT_ID` ✅
+- `BROOKE_SMS_PHONE` ✅
+- `TEST_MODE` ✅ (toggle `true`/`false` — `true` short-circuits all SMS/email/GHL writes to `[TEST_MODE]` console logs)
+- (Existing from Session 1: `GHL_API_KEY`, `GHL_LOCATION_ID`, `NOTION_COMMERCIAL_DB_ID`)
+
+**Important pattern note:** Stage IDs are resolved by NAME at runtime via `getStageIdByName()` — they're NOT stored in env vars. If you rename a stage in GHL, update the string literal in the corresponding function (`'Profile Completed'` in commercial-buyer-submit.js, `'NDA Requested'` in commercial-nda-request.js).
+
+**Critical rules (carryover):**
+- NEVER expose street addresses, data room URLs, or CIM URLs on public pages
+- NEVER send live SMS/email without confirming `TEST_MODE=true` first when iterating
+- Logged-in users see addresses on residential deals only
+- Commercial deals use `dealCode` (format `CMF-XXX`) as the public identifier — never the address
+
+### Session 3 — TODO
+**Goal:** Close the loop between NDA Requested and Package Delivered. When a buyer signs the NDA, automatically release the data room and advance the opportunity stage.
+
+**Scope:**
+1. **E-sign integration** for the NDA — pick provider (DocuSign, Dropbox Sign, or GHL native docs) and generate a signed NDA from a template, prefilled with buyer name + entity + deal code
+2. **Webhook receiver** (`netlify/functions/nda-signed-webhook.js`) that:
+   - Validates the e-sign provider's signature
+   - Looks up the buyer's contact in GHL by email
+   - Advances the opportunity from "NDA Requested" → "NDA Signed"
+   - Triggers data room delivery
+3. **Data room delivery function** — emails the buyer a tokenized, expiring link to the full CIM + data room (NEVER the raw URL stored in Notion). Token logged with contact ID + deal code so we can track who accessed what.
+4. **Stage update to "Package Delivered"** after the email send confirms
+5. Update Notion deal record with `nda_signed_at` timestamp + buyer contact ID
+
+**Critical Session 3 rules:**
+- NEVER expose data room URLs or CIM URLs in any client-side response — always wrap in tokenized links
+- Webhook MUST validate provider signature before doing anything
+- All outbound (email + GHL stage move) must honor `TEST_MODE`

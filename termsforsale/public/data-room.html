@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Data Room — Deal Pros</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root{--bg:#0b1220;--card:#111a2e;--ink:#e8eefc;--muted:#9fb0d0;--accent:#f5b301;--line:#1f2a44}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .wrap{max-width:560px;width:100%;padding:30px 20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:32px;text-align:center}
+  h1{margin:0 0 10px;font-size:24px}
+  p{color:var(--muted);margin:8px 0}
+  .spinner{border:3px solid #1f2a44;border-top-color:var(--accent);border-radius:50%;width:36px;height:36px;animation:spin 1s linear infinite;margin:20px auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  button{margin-top:18px;padding:13px 28px;border-radius:10px;border:0;background:var(--accent);color:#111;font-weight:700;font-size:15px;cursor:pointer}
+  button[disabled]{opacity:.6;cursor:wait}
+  .err{color:#f5a3a3}
+  .ok{color:#a4f0b3}
+  small{color:var(--muted);display:block;margin-top:14px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="card">
+    <div class="spinner"></div>
+    <h1>Validating your access…</h1>
+    <p>One moment.</p>
+  </div>
+</div>
+<script>
+const card = document.getElementById('card');
+const params = new URLSearchParams(location.search);
+const token = params.get('token');
+
+function render(html) { card.innerHTML = html; }
+
+async function init() {
+  if (!token) {
+    return render(`<h1>Missing link</h1><p>This page needs a valid access link.</p>`);
+  }
+  try {
+    const r = await fetch('/.netlify/functions/data-room-resolve?token=' + encodeURIComponent(token));
+    const j = await r.json();
+
+    if (j.ok && j.url) {
+      render(`
+        <h1 class="ok">✅ Access verified</h1>
+        <p>Opening the data room for <b>${j.dealCode}</b>…</p>
+        <p><a href="${j.url}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">Click here if you're not redirected</a></p>
+      `);
+      setTimeout(() => { window.location.href = j.url; }, 1200);
+      return;
+    }
+
+    if (j.expired) {
+      render(`
+        <h1>Link expired</h1>
+        <p>Your access link for <b>${j.dealCode || 'this deal'}</b> has expired.</p>
+        <p>If your NDA is still on file, you can get a fresh link instantly.</p>
+        <button id="reissue">Send me a new link</button>
+        <small>It'll arrive at the email you originally signed the NDA with.</small>
+      `);
+      document.getElementById('reissue').addEventListener('click', reissue);
+      return;
+    }
+
+    render(`<h1 class="err">Access denied</h1><p>${j.error || 'This link is not valid.'}</p>`);
+  } catch (e) {
+    render(`<h1 class="err">Something went wrong</h1><p>${e.message}</p>`);
+  }
+}
+
+async function reissue() {
+  const btn = document.getElementById('reissue');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await fetch('/.netlify/functions/reissue-data-room-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      render(`<h1 class="ok">✅ Check your email</h1><p>A fresh access link is on its way. The link is valid for 7 days.</p>`);
+    } else {
+      render(`<h1 class="err">Couldn't reissue</h1><p>${j.error || 'Please contact Brooke for assistance.'}</p>`);
+    }
+  } catch (e) {
+    render(`<h1 class="err">Something went wrong</h1><p>${e.message}</p>`);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

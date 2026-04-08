@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Commercial Deal — Deal Pros</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root{--bg:#0b1220;--card:#111a2e;--ink:#e8eefc;--muted:#9fb0d0;--accent:#f5b301;--line:#1f2a44}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:860px;margin:0 auto;padding:40px 20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;margin-bottom:20px}
+  h1{margin:0 0 6px;font-size:26px}
+  .code{display:inline-block;background:#0d1628;border:1px solid var(--line);color:var(--accent);padding:4px 10px;border-radius:999px;font-size:12px;letter-spacing:1px;margin-bottom:10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .kv{background:#0d1628;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .kv b{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+  input,textarea,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0d1628;color:var(--ink);font:inherit}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.row{grid-template-columns:1fr}}
+  button{margin-top:18px;width:100%;padding:14px;border-radius:12px;border:0;background:var(--accent);color:#111;font-weight:700;font-size:16px;cursor:pointer}
+  .nda{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px;color:var(--muted)}
+  .nda input{width:auto;margin-top:3px}
+  .msg{margin-top:14px;padding:12px;border-radius:10px;display:none}
+  .ok{background:#123a1f;color:#a4f0b3;display:block}
+  .err{background:#3a1212;color:#f5a3a3;display:block}
+  .loading{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="deal" class="card loading">Loading deal…</div>
+
+  <div class="card" id="formCard" style="display:none">
+    <h2 style="margin:0 0 6px">Request NDA & Full Package</h2>
+    <p style="color:var(--muted);margin:0 0 6px">We'll send the NDA for signature, then release the full CIM and data room.</p>
+    <form id="f">
+      <div class="row">
+        <div><label>Full name *</label><input name="name" required /></div>
+        <div><label>Email *</label><input type="email" name="email" required /></div>
+      </div>
+      <div class="row">
+        <div><label>Phone *</label><input name="phone" required /></div>
+        <div><label>Entity *</label><input name="entity_name" required /></div>
+      </div>
+      <label>Role *</label>
+      <select name="role" required>
+        <option value="">Select…</option>
+        <option>Principal</option><option>GP / Sponsor</option>
+        <option>Family Office</option><option>Broker</option><option>Fund</option>
+      </select>
+      <label class="nda"><input type="checkbox" name="nda_ack" required />
+        I acknowledge the information is confidential and I will execute the NDA before receiving the full package.
+      </label>
+      <button type="submit">Request NDA & Package</button>
+      <div id="msg" class="msg"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const code = params.get('code');
+const dealEl = document.getElementById('deal');
+const formCard = document.getElementById('formCard');
+
+async function loadDeal(){
+  if(!code){ dealEl.innerHTML = '<h1>Missing deal code</h1><p>This link is incomplete.</p>'; return; }
+  try{
+    const r = await fetch('/.netlify/functions/commercial-deals');
+    const j = await r.json();
+    const deal = (j.deals || []).find(d => d.dealCode === code);
+    if(!deal){ dealEl.innerHTML = `<h1>Deal not found</h1><p>Code ${code} is no longer available.</p>`; return; }
+    dealEl.classList.remove('loading');
+    const story = Array.isArray(deal.dealStory) ? deal.dealStory : (deal.dealStory ? [deal.dealStory] : []);
+    dealEl.innerHTML = `
+      <span class="code">${deal.dealCode}</span>
+      <h1>${deal.propertyType || 'Commercial Opportunity'}${deal.metro ? ' — ' + deal.metro : ''}</h1>
+      <div class="grid">
+        <div class="kv"><b>Property Type</b>${deal.propertyType || '—'}</div>
+        <div class="kv"><b>Metro</b>${deal.metro || '—'}</div>
+        <div class="kv"><b>Submarket</b>${deal.submarket || '—'}</div>
+        <div class="kv"><b>Units / SF</b>${deal.unitsOrSqft || '—'}</div>
+        <div class="kv"><b>Vintage / Class</b>${deal.vintageClass || '—'}</div>
+        <div class="kv"><b>NOI Range</b>${deal.noiRange || '—'}</div>
+        <div class="kv"><b>Price Range</b>${deal.priceRange || '—'}</div>
+        <div class="kv"><b>Structure</b>${deal.structureSummary || '—'}</div>
+      </div>
+      ${story.length ? `<div style="margin-top:14px"><b>Deal Story:</b><ul style="margin:6px 0 0 18px;color:var(--muted)">${story.map(s=>`<li>${s}</li>`).join('')}</ul></div>` : ''}
+    `;
+    formCard.style.display = 'block';
+    formCard.dataset.deal = JSON.stringify({
+      deal_code: deal.dealCode, asset_type: deal.propertyType, price_range: deal.priceRange
+    });
+  }catch(e){
+    dealEl.innerHTML = `<h1>Unable to load</h1><p>Please try again shortly.</p>`;
+  }
+}
+loadDeal();
+
+const f = document.getElementById('f');
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('msg');
+  msg.className = 'msg ok'; msg.textContent = 'Submitting request…';
+  const fd = new FormData(f);
+  const data = Object.fromEntries(fd.entries());
+  data.nda_ack = !!data.nda_ack;
+  const meta = JSON.parse(formCard.dataset.deal || '{}');
+  Object.assign(data, meta);
+  try{
+    const r = await fetch('/.netlify/functions/commercial-nda-request',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if(!r.ok || !j.ok) throw new Error(j.error || 'Submit failed');
+    formCard.innerHTML = `<h2>✅ Check your email</h2>
+      <p style="color:var(--muted)">We received your request for <b>${meta.deal_code}</b>. The NDA is on its way to <b>${data.email}</b>. Once executed, we'll release the full package.</p>`;
+  }catch(err){
+    msg.className = 'msg err'; msg.textContent = '⚠️ ' + err.message;
+  }
+});
+</script>
+</body></html>

@@ -158,6 +158,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/commercial-deals"
+  to = "/.netlify/functions/commercial-deals"
+  status = 200
+
+[[redirects]]
   from = "/api/insurance-quote"
   to = "/.netlify/functions/insurance-quote"
   status = 200
