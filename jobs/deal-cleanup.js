@@ -55,7 +55,7 @@
  *   NOTION_API_KEY           — Notion integration secret
  *                              (falls back to NOTION_TOKEN for repo consistency)
  *   NOTION_DEALS_DB_ID       — Main deals database
- *                              (falls back to NOTION_DATABASE_ID)
+ *                              (falls back to NOTION_DATABASE_ID, then NOTION_DB_ID)
  *   DRY_RUN                  — set to "true" to skip all writes (optional)
  *
  * COST: ~$0 per run (Notion free tier + GHL API included in subscription).
@@ -71,7 +71,10 @@ const DRY_RUN = String(process.env.DRY_RUN || '').toLowerCase() === 'true';
 const GHL_KEY = process.env.GHL_API_KEY;
 const GHL_LOCATION = process.env.GHL_LOCATION_ID_TERMS || process.env.GHL_LOCATION_ID;
 const NOTION_KEY = process.env.NOTION_API_KEY || process.env.NOTION_TOKEN;
-const NOTION_DB_ID = process.env.NOTION_DEALS_DB_ID || process.env.NOTION_DATABASE_ID;
+const NOTION_DB_ID =
+  process.env.NOTION_DEALS_DB_ID ||
+  process.env.NOTION_DATABASE_ID ||
+  process.env.NOTION_DB_ID;
 
 // ─────────────────────────────────────────────────────────────
 // Notion helpers
