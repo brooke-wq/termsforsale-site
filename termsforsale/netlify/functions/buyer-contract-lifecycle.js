@@ -20,7 +20,7 @@
  *   Trigger: Opportunity Stage Changed (pipeline = Buyer Inquiries)
  *   Action:  Webhook POST to /.netlify/functions/buyer-contract-lifecycle
  *   Payload Type: Custom Data
- *   Body: { contactId, opportunityId, stageName, pipelineId }
+ *   Body: { contactId, opportunityId, stageName, pipelineName }
  *
  * Required env vars: GHL_API_KEY, GHL_LOCATION_ID
  * Optional: INTERNAL_ALERT_PHONE (Brooke), INTERNAL_ALERT_EMAIL
@@ -70,10 +70,17 @@ exports.handler = async (event) => {
     cd.stageName || cd['stage name'] || cd['stage name '] ||
     body.pipleline_stage || body.pipeline_stage || null;
 
+  const pipelineName =
+    body.pipelineName ||
+    cd.pipelineName || cd['pipeline name'] || cd['pipeline name '] ||
+    body.pipeline_name || null;
+
   if (!contactId || !stageName) {
     console.warn('Missing required fields — contactId:', contactId, 'stageName:', stageName);
     return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'contactId and stageName required' }) };
   }
+
+  if (pipelineName) console.log('Pipeline:', pipelineName);
 
   const normalizedStage = (stageName || '').trim();
   console.log('✓ Parsed contactId:', contactId, '| stage:', JSON.stringify(normalizedStage));

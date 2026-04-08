@@ -385,7 +385,7 @@ All items below were completed and deployed:
 1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.netlify.app`: set `NOTIFICATIONS_LIVE=true` in Netlify env vars, test one real submission, re-enable `dispo-buddy-triage` cron on Droplet, point `dispobuddy.com` domain.
 
 2. **GHL Client Portal — Buyer Contract Lifecycle** — The webhook function `buyer-contract-lifecycle.js` handles automated partner-style notifications on Buyer Inquiries pipeline stage changes (Offer Submitted → Contract Sent → Contract Signed → EMD Received → Closed / Lost). To activate:
-   - Create one GHL workflow: Trigger = Opportunity Stage Changed (Pipeline = Buyer Inquiries). Action = Webhook POST to `/.netlify/functions/buyer-contract-lifecycle` with Custom Data body `{contactId, opportunityId, stageName, pipelineId}`.
+   - Create one GHL workflow: Trigger = Opportunity Stage Changed (Pipeline = Buyer Inquiries). Action = Webhook POST to `/.netlify/functions/buyer-contract-lifecycle` with Custom Data body `{contactId, opportunityId, stageName, pipelineName}`.
    - Build assignment contract template in GHL Documents & Contracts with merge fields for buyer name, property address, offer amount. The template's signing URL can be stored on the contact as `contract_signing_link` custom field — if present, the "Contract Sent" email includes a Sign Contract button.
    - Optional contact custom fields the emails will use if populated: `contract_signing_link`, `emd_wire_instructions` (Large Text), `closing_date`.
 

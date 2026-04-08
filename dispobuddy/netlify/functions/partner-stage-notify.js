@@ -9,7 +9,8 @@
  * GHL Workflow setup:
  *   Trigger: Pipeline Stage Changed (pipeline = 3. JV Deals)
  *   Action: Webhook POST to /.netlify/functions/partner-stage-notify
- *   Body: { contactId, opportunityId, stageName, pipelineId }
+ *   Payload Type: Custom Data
+ *   Body: { contactId, opportunityId, stageName, pipelineName }
  *
  * Required env vars:
  *   GHL_API_KEY
@@ -70,6 +71,13 @@ exports.handler = async (event) => {
     cd.stageName || cd['stage name'] || cd['stage name '] ||
     body.pipleline_stage ||   // GHL typo — they literally spell it "pipleline"
     body.pipeline_stage || null;
+
+  const pipelineName =
+    body.pipelineName ||
+    cd.pipelineName || cd['pipeline name'] || cd['pipeline name '] ||
+    body.pipeline_name || null;
+
+  if (pipelineName) console.log('Pipeline:', pipelineName);
 
   if (!contactId || !stageName) {
     console.warn('Missing required fields — contactId:', contactId, 'stageName:', stageName);
