@@ -158,6 +158,21 @@
   status = 200
 
 [[redirects]]
+  from = "/api/tag-blast-sent"
+  to = "/.netlify/functions/tag-blast-sent"
+  status = 200
+
+[[redirects]]
+  from = "/api/tag-buyer-response"
+  to = "/.netlify/functions/tag-buyer-response"
+  status = 200
+
+[[redirects]]
+  from = "/api/deal-buyer-list"
+  to = "/.netlify/functions/deal-buyer-list"
+  status = 200
+
+[[redirects]]
   from = "/api/commercial-deals"
   to = "/.netlify/functions/commercial-deals"
   status = 200
