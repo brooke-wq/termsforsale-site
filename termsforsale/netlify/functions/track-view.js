@@ -73,7 +73,9 @@ exports.handler = async (event) => {
           'Source: ' + source + '\n' +
           'Date: ' + new Date().toISOString() + '\n' +
           'URL: https://deals.termsforsale.com/deal.html?id=' + dealId
-        )
+        ),
+        // NEW: increment buyer_views on the JV partner contact (Dispo Buddy)
+        incrementJvPartnerViews(apiKey, dealId)
       ]);
 
       console.log('[track-view] ' + contactName + ' viewed ' + dealId + ' via ' + source);
@@ -112,4 +114,71 @@ function respond(status, body) {
     headers: { 'Content-Type': 'application/json', ...corsHeaders() },
     body: JSON.stringify(body),
   };
+}
+
+// ─────────────────────────────────────────────────────────────
+// INCREMENT BUYER_VIEWS ON JV PARTNER CONTACT
+// 1. Fetch Notion deal page
+// 2. Read "JV Partner Contact ID" property
+// 3. Fetch the matching GHL contact
+// 4. Read current buyer_views, add 1, save back
+// All non-fatal — track-view should never fail because of this
+// ─────────────────────────────────────────────────────────────
+async function incrementJvPartnerViews(apiKey, notionDealId) {
+  const notionToken = process.env.NOTION_TOKEN;
+  if (!notionToken) return; // Notion not configured, skip silently
+
+  try {
+    // 1. Fetch the Notion page
+    const pageRes = await fetch(`https://api.notion.com/v1/pages/${notionDealId}`, {
+      headers: {
+        'Authorization': `Bearer ${notionToken}`,
+        'Notion-Version': '2022-06-28',
+      },
+    });
+    if (!pageRes.ok) return;
+    const page = await pageRes.json();
+    const props = page.properties || {};
+
+    // 2. Extract JV Partner Contact ID from rich_text property
+    const partnerField = props['JV Partner Contact ID'];
+    if (!partnerField || !partnerField.rich_text || partnerField.rich_text.length === 0) return;
+    const jvContactId = (partnerField.rich_text[0].plain_text || '').trim();
+    if (!jvContactId) return;
+
+    // 3. Fetch the GHL contact to get current buyer_views
+    const GHL_BASE = 'https://services.leadconnectorhq.com';
+    const ghlHeaders = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'Version': '2021-07-28',
+    };
+    const contactRes = await fetch(`${GHL_BASE}/contacts/${jvContactId}`, { headers: ghlHeaders });
+    if (!contactRes.ok) return;
+    const contactData = await contactRes.json();
+    const contact = contactData.contact || contactData;
+    const cfArray = contact.customFields || [];
+
+    let currentViews = 0;
+    for (const f of cfArray) {
+      const k = f.fieldKey || f.key || f.name || '';
+      if (k === 'buyer_views' || k === 'Buyer Views') {
+        currentViews = parseInt(f.value, 10) || 0;
+        break;
+      }
+    }
+
+    // 4. Increment and save
+    const newViews = currentViews + 1;
+    await fetch(`${GHL_BASE}/contacts/${jvContactId}`, {
+      method: 'PUT',
+      headers: ghlHeaders,
+      body: JSON.stringify({
+        customFields: [{ key: 'buyer_views', field_value: String(newViews) }],
+      }),
+    });
+    console.log('[track-view] incremented buyer_views to', newViews, 'on JV partner', jvContactId);
+  } catch (err) {
+    console.warn('[track-view] incrementJvPartnerViews failed:', err.message);
+  }
 }

@@ -112,9 +112,15 @@ exports.handler = async (event) => {
     if (notionToken) {
       try {
         console.log('Creating Notion page in DB:', notionDbId);
-        const notionRes = await createNotionDeal(notionToken, notionDbId, body);
+        const notionRes = await createNotionDeal(notionToken, notionDbId, body, contactId);
         if (notionRes?.id) {
           console.log('Notion page created:', notionRes.id);
+          // Save the Notion page ID on the GHL contact so the portal can link back
+          try {
+            await ghlFetch(`${GHL_BASE}/contacts/${contactId}`, 'PUT', {
+              customFields: [{ key: 'notion_deal_id', field_value: notionRes.id }],
+            }, headers);
+          } catch (e) { /* non-fatal */ }
         } else {
           console.warn('Notion response (no id):', JSON.stringify(notionRes).substring(0, 500));
         }
@@ -553,7 +559,7 @@ function buildOpportunityPayload(d, contactId, locationId) {
 // NOTION — Create deal page as "New Submission"
 // Maps form fields to existing Notion database properties
 // ─────────────────────────────────────────────────────────────
-async function createNotionDeal(token, dbId, d) {
+async function createNotionDeal(token, dbId, d, ghlContactId) {
   const props = {};
 
   // Helpers — matched to ACTUAL Notion property types from database schema
@@ -639,6 +645,11 @@ async function createNotionDeal(token, dbId, d) {
 
   // JV Partner = rich_text
   text('JV Partner', `${d.jv_partner_name} | ${d.jv_phone_number}${d.jv_partner_email ? ' | ' + d.jv_partner_email : ''}`);
+
+  // JV Partner GHL Contact ID — used by track-view to increment buyer metrics
+  // when this deal is viewed on Terms For Sale. Stored as rich_text so it works
+  // even if the Notion field doesn't exist yet (Notion ignores unknown props).
+  if (ghlContactId) text('JV Partner Contact ID', ghlContactId);
 
   // Lead Source = rich_text
   text('Lead Source', d.how_did_you_hear_about_us || 'Dispo Buddy');
