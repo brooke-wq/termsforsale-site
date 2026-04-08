@@ -34,7 +34,7 @@ async function createNdaDocument({ buyer, dealCode, ghlContactId }) {
       email: buyer.email,
       first_name: (buyer.name || '').split(' ')[0] || 'Buyer',
       last_name: (buyer.name || '').split(' ').slice(1).join(' ') || '',
-      role: 'Client', // must match the recipient role name in your PandaDoc template
+      role: 'Receiving Party', // must match the recipient role name in your PandaDoc template
       signing_order: 1,
     }],
     // Metadata travels back in the webhook so we can resolve the deal + contact
