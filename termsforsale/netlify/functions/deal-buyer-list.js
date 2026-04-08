@@ -12,6 +12,7 @@
  */
 
 const https = require('https');
+const crypto = require('crypto');
 
 const GHL_HOST = 'services.leadconnectorhq.com';
 const GHL_VERSION = '2021-07-28';
@@ -23,6 +24,31 @@ const STATUS_PRIORITY = {
   'deal:no-response': 2,
   'deal:passed': 3
 };
+
+/**
+ * Constant-time password comparison to avoid timing attacks.
+ * Accepts password from X-Admin-Password header or ?password= query param.
+ */
+function verifyAdminPassword(event) {
+  var expected = process.env.ADMIN_PASSWORD;
+  if (!expected) return { ok: false, reason: 'ADMIN_PASSWORD not configured' };
+
+  var provided = (event.headers && (event.headers['x-admin-password'] || event.headers['X-Admin-Password']))
+    || (event.queryStringParameters && event.queryStringParameters.password)
+    || '';
+
+  if (!provided) return { ok: false, reason: 'Password required' };
+
+  if (typeof provided !== 'string' || provided.length !== expected.length) {
+    return { ok: false, reason: 'Invalid password' };
+  }
+  try {
+    var eq = crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+    return eq ? { ok: true } : { ok: false, reason: 'Invalid password' };
+  } catch (e) {
+    return { ok: false, reason: 'Invalid password' };
+  }
+}
 
 // ─── Helpers ───────────────────────────────────────────────────
 
@@ -118,7 +144,7 @@ exports.handler = async function(event) {
   var headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Password'
   };
 
   if (event.httpMethod === 'OPTIONS') {
@@ -126,6 +152,12 @@ exports.handler = async function(event) {
   }
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, headers: headers, body: JSON.stringify({ error: 'GET only' }) };
+  }
+
+  // Require admin password — this endpoint exposes contact PII
+  var auth = verifyAdminPassword(event);
+  if (!auth.ok) {
+    return { statusCode: 401, headers: headers, body: JSON.stringify({ error: auth.reason || 'Unauthorized' }) };
   }
 
   var apiKey = process.env.GHL_API_KEY;

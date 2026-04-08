@@ -82,6 +82,20 @@ tr:hover td{background:rgba(41,171,226,.06)}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s;z-index:1000}
 .toast.show{transform:translateY(0);opacity:1}
 
+/* Password gate */
+.gate{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:2000;padding:20px}
+.gate-card{background:#fff;border-radius:14px;padding:36px 40px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.gate-logo{width:44px;height:44px;border-radius:10px;background:var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.gate h2{font-size:22px;font-weight:900;color:var(--navy);text-align:center;margin-bottom:6px}
+.gate p{font-size:13px;color:var(--text-light);text-align:center;margin-bottom:24px}
+.gate input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:15px;color:var(--text);outline:none;margin-bottom:12px;transition:border .15s}
+.gate input:focus{border-color:var(--blue)}
+.gate button{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
+.gate button:hover{background:#1a3163}
+.gate-err{background:#FEE2E2;border:1px solid rgba(229,62,62,.3);color:#991B1B;padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:12px;display:none}
+.gate-err.show{display:block}
+body.locked{overflow:hidden}
+
 @media(max-width:768px){
   .page{padding:20px 14px 60px}
   h1{font-size:20px}
@@ -93,7 +107,24 @@ tr:hover td{background:rgba(41,171,226,.06)}
 }
 </style>
 </head>
-<body>
+<body class="locked">
+
+<!-- PASSWORD GATE -->
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <div class="gate-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2.5">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <h2>Admin Access Required</h2>
+    <p>Enter the admin password to view the buyer dashboard.</p>
+    <div id="gate-err" class="gate-err"></div>
+    <input type="password" id="gate-pw" placeholder="Admin password" autocomplete="current-password">
+    <button onclick="unlockGate()">Unlock Dashboard</button>
+  </div>
+</div>
 
 <div class="page">
 
@@ -135,6 +166,86 @@ tr:hover td{background:rgba(41,171,226,.06)}
 <script>
 var BUYERS = [];
 var CURRENT_SLUG = '';
+var ADMIN_PW = '';  // Set after successful unlock — stored in sessionStorage
+
+// ─── PASSWORD GATE ─────────────────────────────────────────────
+
+function showError(msg) {
+  var el = document.getElementById('gate-err');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+async function unlockGate() {
+  var input = document.getElementById('gate-pw').value.trim();
+  var errEl = document.getElementById('gate-err');
+  errEl.classList.remove('show');
+  if (!input) { showError('Enter the password'); return; }
+
+  try {
+    var res = await fetch('/api/admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: input })
+    });
+    var data = await res.json();
+    if (!res.ok || !data.ok) {
+      showError(data.error || 'Invalid password');
+      return;
+    }
+    // Stash password for subsequent API calls (sessionStorage — cleared when tab closes)
+    ADMIN_PW = input;
+    try { sessionStorage.setItem('tfs_admin_pw', input); } catch (e) {}
+    document.getElementById('gate').style.display = 'none';
+    document.body.classList.remove('locked');
+
+    // If a deal is preloaded in URL, load it now
+    var params = new URLSearchParams(window.location.search);
+    var deal = params.get('deal');
+    if (deal) {
+      document.getElementById('deal-input').value = deal;
+      loadBuyers();
+    }
+  } catch (err) {
+    showError('Network error: ' + err.message);
+  }
+}
+window.unlockGate = unlockGate;
+
+function lockOut(reason) {
+  // Clear session and show the gate again
+  ADMIN_PW = '';
+  try { sessionStorage.removeItem('tfs_admin_pw'); } catch (e) {}
+  document.body.classList.add('locked');
+  var gate = document.getElementById('gate');
+  gate.style.display = 'flex';
+  if (reason) showError(reason);
+  document.getElementById('gate-pw').focus();
+}
+
+// Try to restore session on load
+(function restoreSession() {
+  var saved = '';
+  try { saved = sessionStorage.getItem('tfs_admin_pw') || ''; } catch (e) {}
+  if (saved) {
+    ADMIN_PW = saved;
+    document.getElementById('gate').style.display = 'none';
+    document.body.classList.remove('locked');
+  }
+})();
+
+// Submit gate on Enter
+document.getElementById('gate-pw').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') unlockGate();
+});
+
+// Auto-focus gate input
+setTimeout(function() {
+  var g = document.getElementById('gate-pw');
+  if (g && document.body.classList.contains('locked')) g.focus();
+}, 100);
+
+// ─── HELPERS ──────────────────────────────────────────────────
 
 function slugifyAddress(addr) {
   return String(addr || '')
@@ -186,8 +297,16 @@ async function loadBuyers() {
   results.innerHTML = '<div class="spinner"></div>';
 
   try {
-    var res = await fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug));
+    var res = await fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug), {
+      headers: { 'X-Admin-Password': ADMIN_PW }
+    });
     var data = await res.json();
+
+    // Password rejected — force re-auth
+    if (res.status === 401) {
+      lockOut('Session expired. Please sign in again.');
+      return;
+    }
 
     if (!res.ok) {
       results.innerHTML = '<div class="err">Error loading: ' + esc(data.error || ('HTTP ' + res.status)) + '</div>';
@@ -295,13 +414,14 @@ function exportCsv() {
 }
 window.exportCsv = exportCsv;
 
-// Enter key to submit
+// Enter key to submit the deal search
 document.getElementById('deal-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') loadBuyers();
 });
 
-// Preload from ?deal= query param if present
+// If a session is already restored and there's a ?deal= param, preload it
 (function() {
+  if (document.body.classList.contains('locked')) return; // gate is still up
   var params = new URLSearchParams(window.location.search);
   var deal = params.get('deal');
   if (deal) {

@@ -29,6 +29,10 @@ const { URL } = require('url');
 const BASE_URL = process.env.BASE_URL || 'https://deals.termsforsale.com';
 const CONTACT_1 = process.env.TEST_CONTACT_ID_1 || '1HMBtAv9EuTlJa5EekAL';
 const CONTACT_2 = process.env.TEST_CONTACT_ID_2 || CONTACT_1;
+// /api/deal-buyer-list is password-protected. Pass your admin password
+// via env var so Test 3 can fetch it. Tag endpoints (Tests 1 & 2) don't
+// require it — only the read endpoint does.
+const ADMIN_PW = process.env.ADMIN_PASSWORD || '';
 
 // Use a recognizable test address so tags are easy to spot in GHL
 const TEST_DEAL_ADDRESS = '999 Test Blvd Test City TX';
@@ -36,16 +40,18 @@ const EXPECTED_SLUG = '999-test-blvd-test-city-tx';
 
 // ─── Simple fetch using Node built-ins ─────────────────────────
 
-function request(method, url, body) {
+function request(method, url, body, extraHeaders) {
   return new Promise(function(resolve, reject) {
     var parsed = new URL(url);
     var lib = parsed.protocol === 'https:' ? https : http;
+    var headers = { 'Content-Type': 'application/json' };
+    if (extraHeaders) Object.keys(extraHeaders).forEach(function(k) { headers[k] = extraHeaders[k]; });
     var opts = {
       hostname: parsed.hostname,
       port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
       path: parsed.pathname + (parsed.search || ''),
       method: method,
-      headers: { 'Content-Type': 'application/json' }
+      headers: headers
     };
     var req = lib.request(opts, function(res) {
       var data = '';
@@ -123,7 +129,13 @@ async function testDealBuyerList() {
   var url = BASE_URL + '/api/deal-buyer-list?deal=' + EXPECTED_SLUG;
   log('TEST 3: GET /api/deal-buyer-list', { url: url });
 
-  var res = await request('GET', url, null);
+  if (!ADMIN_PW) {
+    console.log('⚠ SKIPPED — set ADMIN_PASSWORD env var to run this test');
+    console.log('  Example: ADMIN_PASSWORD=yourpassword node scripts/test-tagging.js');
+    return;
+  }
+
+  var res = await request('GET', url, null, { 'X-Admin-Password': ADMIN_PW });
 
   log('→ Response status: ' + res.status, res.body);
 

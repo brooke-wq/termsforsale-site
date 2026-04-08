@@ -158,6 +158,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/admin-auth"
+  to = "/.netlify/functions/admin-auth"
+  status = 200
+
+[[redirects]]
   from = "/api/tag-blast-sent"
   to = "/.netlify/functions/tag-blast-sent"
   status = 200
