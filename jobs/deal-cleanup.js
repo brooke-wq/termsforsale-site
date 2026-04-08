@@ -100,71 +100,82 @@ async function notionFetch(path, method, body) {
 }
 
 /**
- * Query the deals DB for pages where Status is Closed or Archived AND
- * Tags Cleaned is false. We try several Status property variants (select,
- * status) to stay resilient to schema differences.
+ * Query the deals DB for pages where the deal is Closed/Archived AND the
+ * "Tags Cleaned" checkbox is unchecked.
+ *
+ * Notion rejects any filter that references a property that doesn't exist,
+ * so we introspect the DB schema first and only reference properties that
+ * actually live on the database. This makes the job resilient to schema
+ * differences across environments.
  */
 async function queryClosedUnclenedDeals() {
-  const statusValues = ['Closed', 'Archived'];
+  const closedValues = ['Closed', 'Archived'];
 
-  // Build an OR filter that tolerates either a `select` property or a
-  // `status` property named "Status" or "Deal Status".
-  const statusOr = [];
-  for (const name of ['Status', 'Deal Status']) {
-    for (const val of statusValues) {
-      statusOr.push({ property: name, select: { equals: val } });
-      statusOr.push({ property: name, status: { equals: val } });
-    }
-  }
+  // 1. Introspect the DB schema to find the real property names + types
+  let statusPropName = null;
+  let statusPropType = null; // 'status' or 'select'
+  let hasTagsCleaned = false;
 
-  const filter = {
-    and: [
-      { or: statusOr },
-      // NOTE: Notion's checkbox filter doesn't support `is_empty`. An unchecked
-      // OR missing checkbox both evaluate as `equals: false`, so this catches
-      // both "never cleaned" and "explicitly unchecked" deals.
-      { property: 'Tags Cleaned', checkbox: { equals: false } },
-    ],
-  };
-
-  const all = [];
-  let startCursor;
-
-  // Notion may reject filters that reference properties that don't exist.
-  // If the strict filter fails, fall back to paginating the DB and filtering
-  // in memory — safer than silently skipping deals.
   try {
-    do {
-      const res = await notionFetch(`/databases/${NOTION_DB_ID}/query`, 'POST', {
-        filter,
-        page_size: 100,
-        start_cursor: startCursor,
-      });
-      all.push(...(res.results || []));
-      startCursor = res.has_more ? res.next_cursor : undefined;
-    } while (startCursor);
-    return all;
-  } catch (err) {
-    console.warn('[deal-cleanup] strict Notion filter failed, falling back to in-memory filter:', err.message);
-    startCursor = undefined;
-    all.length = 0;
-    do {
-      const res = await notionFetch(`/databases/${NOTION_DB_ID}/query`, 'POST', {
-        page_size: 100,
-        start_cursor: startCursor,
-      });
-      for (const page of res.results || []) {
-        const p = page.properties || {};
-        const status = readSelect(p['Status']) || readSelect(p['Deal Status']);
-        const cleaned = readCheckbox(p['Tags Cleaned']);
-        if (statusValues.indexOf(status) !== -1 && !cleaned) {
-          all.push(page);
+    const schema = await notionFetch(`/databases/${NOTION_DB_ID}`, 'GET');
+    const props = schema.properties || {};
+    for (const [name, def] of Object.entries(props)) {
+      const lower = name.toLowerCase();
+      // Prefer "Deal Status" over a plain "Status" — but accept either.
+      if ((lower === 'deal status' || lower === 'status') &&
+          (def.type === 'status' || def.type === 'select')) {
+        if (!statusPropName || lower === 'deal status') {
+          statusPropName = name;
+          statusPropType = def.type;
         }
       }
-      startCursor = res.has_more ? res.next_cursor : undefined;
-    } while (startCursor);
-    return all;
+      if (lower === 'tags cleaned' && def.type === 'checkbox') {
+        hasTagsCleaned = true;
+      }
+    }
+  } catch (err) {
+    console.warn('[deal-cleanup] failed to introspect DB schema:', err.message);
   }
+
+  console.log(`[deal-cleanup] schema: statusProp=${statusPropName ? `"${statusPropName}" (${statusPropType})` : 'MISSING'}, hasTagsCleaned=${hasTagsCleaned}`);
+
+  if (!statusPropName) {
+    console.warn('[deal-cleanup] no Status / Deal Status property on the database — cannot filter closed deals');
+    return [];
+  }
+  if (!hasTagsCleaned) {
+    console.warn('[deal-cleanup] no "Tags Cleaned" checkbox property on the database — add one so we can track which deals have been cleaned');
+  }
+
+  // 2. Build a filter that only references properties that exist
+  const andClauses = [];
+
+  const statusOr = closedValues.map((val) => ({
+    property: statusPropName,
+    [statusPropType]: { equals: val },
+  }));
+  andClauses.push(statusOr.length === 1 ? statusOr[0] : { or: statusOr });
+
+  if (hasTagsCleaned) {
+    andClauses.push({ property: 'Tags Cleaned', checkbox: { equals: false } });
+  }
+
+  const filter = andClauses.length === 1 ? andClauses[0] : { and: andClauses };
+
+  // 3. Paginate results (no fallback needed — we built the filter from the schema)
+  const all = [];
+  let startCursor;
+  do {
+    const res = await notionFetch(`/databases/${NOTION_DB_ID}/query`, 'POST', {
+      filter,
+      page_size: 100,
+      start_cursor: startCursor,
+    });
+    all.push(...(res.results || []));
+    startCursor = res.has_more ? res.next_cursor : undefined;
+  } while (startCursor);
+
+  return all;
 }
 
 function readSelect(prop) {
