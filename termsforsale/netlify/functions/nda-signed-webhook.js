@@ -1,21 +1,20 @@
-// Receives GHL "Document Signed" webhook, advances the buyer's opportunity
-// from "NDA Requested" → "NDA Signed", and triggers data room delivery.
+// Receives "Document Signed/Completed" webhook from either PandaDoc or GHL,
+// advances the buyer's opportunity from "NDA Requested" → "NDA Signed",
+// and triggers data room delivery.
 //
-// Configure in GHL: Settings → Webhooks → Add webhook
+// === PandaDoc setup (preferred) ===
+// PandaDoc → Settings → Integrations → Webhooks → Create Webhook
 //   URL: https://deals.termsforsale.com/.netlify/functions/nda-signed-webhook
-//   Event: Document Signed (or use a Workflow with HTTP Request action)
-//   Auth: signed payload (we validate via shared secret env var GHL_WEBHOOK_SECRET)
+//   Events: document_state_changed
+//   Shared key: set it to GHL_WEBHOOK_SECRET (we validate via x-pandadoc-signature header)
+// When creating an NDA send, tag the document with metadata:
+//   { "dealCode": "CMF-001", "contactId": "<ghl_contact_id>" }
 //
-// Expected payload (GHL Document Signed event — fields vary by event source):
-//   {
-//     event: 'document.signed',
-//     contactId: '...',
-//     contactEmail: '...',
-//     contactName: '...',
-//     documentId: '...',
-//     templateName: 'Commercial NDA — CMF-001',   // we parse deal code from here
-//     customData: { dealCode: 'CMF-001' }         // OR set this in the workflow
-//   }
+// === GHL fallback setup ===
+// GHL Workflow → Document Signed → Custom Webhook
+//   URL: same as above
+//   Custom header x-ghl-signature = HMAC-SHA256(GHL_WEBHOOK_SECRET, rawBody)
+//   Body must include contactEmail, contactId, dealCode
 
 const crypto = require('crypto');
 const {
@@ -45,32 +44,75 @@ function validateSignature(rawBody, providedSig) {
 }
 
 function extractDealCode(payload) {
-  // Prefer explicit customData; fall back to parsing the template name
+  // PandaDoc: metadata lives at payload.data.metadata
+  if (payload.data?.metadata?.dealCode) return payload.data.metadata.dealCode;
+  // PandaDoc: parse from document name
+  const pdName = payload.data?.name || '';
+  // GHL: explicit customData
   if (payload.customData?.dealCode) return payload.customData.dealCode;
-  const templateName = payload.templateName || payload.documentName || '';
-  const m = templateName.match(/CMF-\d{3,}/i);
+  // GHL: from template name
+  const ghlName = payload.templateName || payload.documentName || '';
+  const m = (pdName + ' ' + ghlName).match(/CMF-\d{3,}/i);
   return m ? m[0].toUpperCase() : null;
+}
+
+// PandaDoc webhooks arrive as an array of events; GHL as a single object.
+// Normalize both into a single flat payload our handler can read.
+function normalizePayload(body) {
+  // PandaDoc sends an array like [{ event, data: {...} }]
+  if (Array.isArray(body)) {
+    const signedEvent = body.find(e =>
+      e.event === 'document_state_changed' &&
+      (e.data?.status === 'document.completed' || e.data?.status === 'document.signed')
+    );
+    if (!signedEvent) return null;
+    const d = signedEvent.data || {};
+    const signer = (d.recipients || []).find(r => r.has_completed) || (d.recipients || [])[0] || {};
+    return {
+      source: 'pandadoc',
+      data: d,
+      email: signer.email,
+      contactName: [signer.first_name, signer.last_name].filter(Boolean).join(' '),
+      contactId: d.metadata?.contactId || null,
+    };
+  }
+  // GHL: single object
+  return {
+    source: 'ghl',
+    email: body.contactEmail || body.email,
+    contactId: body.contactId || null,
+    contactName: body.contactName || '',
+    customData: body.customData,
+    templateName: body.templateName,
+    documentName: body.documentName,
+  };
 }
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return json(200, { ok: true });
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' });
 
-  // Validate signature against the raw body
+  // Validate signature against the raw body (accepts GHL or PandaDoc headers)
   const rawBody = event.body || '';
-  const providedSig = event.headers['x-ghl-signature'] || event.headers['x-webhook-signature'] || '';
+  const providedSig =
+    event.headers['x-pandadoc-signature'] ||
+    event.headers['x-ghl-signature'] ||
+    event.headers['x-webhook-signature'] || '';
   if (!validateSignature(rawBody, providedSig)) {
     return json(401, { ok: false, error: 'Invalid signature' });
   }
 
-  let payload;
-  try { payload = JSON.parse(rawBody); }
+  let body;
+  try { body = JSON.parse(rawBody); }
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
 
-  const email = payload.contactEmail || payload.email;
-  const dealCode = extractDealCode(payload);
+  const payload = normalizePayload(body);
+  if (!payload) return json(200, { ok: true, ignored: 'not a signed event' });
+
+  const email = payload.email;
+  const dealCode = extractDealCode(body);
   if (!email || !dealCode) {
-    return json(400, { ok: false, error: 'Missing email or dealCode' });
+    return json(400, { ok: false, error: 'Missing email or dealCode', source: payload.source });
   }
 
   try {
