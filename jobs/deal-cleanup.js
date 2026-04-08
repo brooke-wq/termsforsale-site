@@ -467,15 +467,20 @@ async function main() {
 
   let dealsCleaned = 0;
   let contactsUpdated = 0;
+  let skippedNoDealId = 0;
+  let skippedBadFormat = 0;
 
   for (const page of deals) {
     const dealId = extractDealId(page);
     if (!dealId) {
-      console.warn(`[deal-cleanup] skipping page ${page.id} — no Deal ID field`);
+      skippedNoDealId++;
       continue;
     }
     if (!DEAL_ID_RE.test(dealId)) {
-      console.warn(`[deal-cleanup] skipping page ${page.id} — Deal ID "${dealId}" does not match MKT-### format`);
+      skippedBadFormat++;
+      if (skippedBadFormat <= 5) {
+        console.warn(`[deal-cleanup] skipping page ${page.id} — Deal ID "${dealId}" does not match MKT-### format`);
+      }
       continue;
     }
 
@@ -497,6 +502,12 @@ async function main() {
     }
   }
 
+  if (skippedNoDealId > 0) {
+    console.log(`[deal-cleanup] skipped ${skippedNoDealId} deal(s) with no Deal ID field (legacy / pre-tag-system)`);
+  }
+  if (skippedBadFormat > 5) {
+    console.log(`[deal-cleanup] skipped ${skippedBadFormat - 5} additional deal(s) with malformed Deal ID (suppressed)`);
+  }
   console.log(`[deal-cleanup] complete — ${dealsCleaned} deal(s) cleaned, ${contactsUpdated} contact(s) updated`);
 }
 
