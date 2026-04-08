@@ -30,15 +30,17 @@ const json = (statusCode, body) => ({
   body: JSON.stringify(body),
 });
 
-function validateSignature(rawBody, providedSig) {
-  const secret = process.env.GHL_WEBHOOK_SECRET;
+function validateSignature(rawBody, providedSig, source) {
+  // PandaDoc uses its own shared key; GHL uses ours.
+  const secret = source === 'pandadoc'
+    ? process.env.PANDADOC_SHARED_KEY
+    : process.env.GHL_WEBHOOK_SECRET;
   if (!secret) {
-    console.warn('GHL_WEBHOOK_SECRET not set — signature validation skipped (NOT for production)');
+    console.warn(`${source} shared key not set — signature validation skipped (NOT for production)`);
     return true;
   }
   if (!providedSig) return false;
   const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  // Constant-time compare
   try { return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(providedSig, 'hex')); }
   catch { return false; }
 }
@@ -94,11 +96,11 @@ exports.handler = async (event) => {
 
   // Validate signature against the raw body (accepts GHL or PandaDoc headers)
   const rawBody = event.body || '';
-  const providedSig =
-    event.headers['x-pandadoc-signature'] ||
-    event.headers['x-ghl-signature'] ||
-    event.headers['x-webhook-signature'] || '';
-  if (!validateSignature(rawBody, providedSig)) {
+  const pdSig = event.headers['x-pandadoc-signature'];
+  const ghlSig = event.headers['x-ghl-signature'] || event.headers['x-webhook-signature'];
+  const providedSig = pdSig || ghlSig || '';
+  const sigSource = pdSig ? 'pandadoc' : 'ghl';
+  if (!validateSignature(rawBody, providedSig, sigSource)) {
     return json(401, { ok: false, error: 'Invalid signature' });
   }
 
