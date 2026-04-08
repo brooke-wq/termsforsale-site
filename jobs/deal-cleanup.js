@@ -120,12 +120,10 @@ async function queryClosedUnclenedDeals() {
   const filter = {
     and: [
       { or: statusOr },
-      {
-        or: [
-          { property: 'Tags Cleaned', checkbox: { equals: false } },
-          { property: 'Tags Cleaned', checkbox: { is_empty: true } },
-        ],
-      },
+      // NOTE: Notion's checkbox filter doesn't support `is_empty`. An unchecked
+      // OR missing checkbox both evaluate as `equals: false`, so this catches
+      // both "never cleaned" and "explicitly unchecked" deals.
+      { property: 'Tags Cleaned', checkbox: { equals: false } },
     ],
   };
 
