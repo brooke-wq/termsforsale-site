@@ -3,6 +3,7 @@
 // - Creates/updates opportunity at "NDA Requested" stage
 // - Sends confirmation email + SMS to Brooke
 const { upsertContact, createOpportunity, sendSmsToBrooke, sendEmailToContact, isTest, getStageIdByName } = require('./_ghl');
+const { createAndSendNda } = require('./_pandadoc');
 
 const json = (statusCode, body) => ({
   statusCode,
@@ -49,26 +50,22 @@ exports.handler = async (event) => {
       },
     });
 
-    await sendEmailToContact({
-      contactId,
-      subject: `NDA on its way — ${d.deal_code}`,
-      html: `
-        <p>Hi ${d.name.split(' ')[0]},</p>
-        <p>Thanks for your interest in <b>${d.deal_code}</b>. We received your NDA request.</p>
-        <p><b>Next steps:</b></p>
-        <ol>
-          <li>You'll receive the NDA for electronic signature shortly.</li>
-          <li>Once signed, we release the full CIM and data room.</li>
-          <li>Offers are being reviewed on a rolling basis.</li>
-        </ol>
-        <p>Questions? Reply to this email.</p>
-        <p>— Brooke<br/>Deal Pros</p>
-      `,
-    });
+    // Send the NDA via PandaDoc (non-blocking on failure — we still create the opp)
+    let pandaDocId = null;
+    try {
+      const doc = await createAndSendNda({
+        buyer: { name: d.name, email: d.email },
+        dealCode: d.deal_code,
+        ghlContactId: contactId,
+      });
+      pandaDocId = doc.id;
+    } catch (pdErr) {
+      console.error('PandaDoc send failed (opp still created):', pdErr.message);
+    }
 
-    await sendSmsToBrooke(`New NDA request from ${d.name} (${d.entity_name}) for ${d.deal_code}`);
+    await sendSmsToBrooke(`New NDA request from ${d.name} (${d.entity_name}) for ${d.deal_code}${pandaDocId ? ' (PandaDoc sent)' : ' (PandaDoc FAILED — check logs)'}`);
 
-    return json(200, { ok: true, contactId, oppId, test: isTest() });
+    return json(200, { ok: true, contactId, oppId, pandaDocId, test: isTest() });
   } catch (e) {
     console.error('commercial-nda-request error', e);
     return json(500, { ok: false, error: e.message });
