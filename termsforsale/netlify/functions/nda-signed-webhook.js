@@ -94,13 +94,16 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return json(200, { ok: true });
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' });
 
-  // Validate signature against the raw body (accepts GHL or PandaDoc headers)
+  // Validate signature. PandaDoc sends ?signature=XXX as a query param (HMAC-SHA256
+  // of the raw body using the shared key). GHL sends x-ghl-signature as a header.
   const rawBody = event.body || '';
-  const pdSig = event.headers['x-pandadoc-signature'];
+  const pdSig = event.queryStringParameters?.signature;
   const ghlSig = event.headers['x-ghl-signature'] || event.headers['x-webhook-signature'];
   const providedSig = pdSig || ghlSig || '';
   const sigSource = pdSig ? 'pandadoc' : 'ghl';
+  console.log('NDA webhook hit', { source: sigSource, hasSig: !!providedSig, bodyLen: rawBody.length });
   if (!validateSignature(rawBody, providedSig, sigSource)) {
+    console.warn('NDA webhook signature invalid', { source: sigSource });
     return json(401, { ok: false, error: 'Invalid signature' });
   }
 
