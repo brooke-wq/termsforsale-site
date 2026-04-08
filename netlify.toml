@@ -193,6 +193,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/buyer-contract-lifecycle"
+  to = "/.netlify/functions/buyer-contract-lifecycle"
+  status = 200
+
+[[redirects]]
   from = "/api/booking-notify"
   to = "/.netlify/functions/booking-notify"
   status = 200
