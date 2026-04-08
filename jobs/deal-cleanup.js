@@ -57,6 +57,12 @@
  *   NOTION_DEALS_DB_ID       — Main deals database
  *                              (falls back to NOTION_DATABASE_ID, then NOTION_DB_ID)
  *   DRY_RUN                  — set to "true" to skip all writes (optional)
+ *   CLEANUP_STATUSES         — comma-separated list of "done" status values to
+ *                              clean up. Default: "Closed,Archived". Values
+ *                              that don't exist on your Deal Status property
+ *                              are silently dropped. Example to also include
+ *                              dead deals:
+ *                                CLEANUP_STATUSES="Closed,Lost,Canceled,Abandoned,EMD Released"
  *
  * COST: ~$0 per run (Notion free tier + GHL API included in subscription).
  */
@@ -109,11 +115,19 @@ async function notionFetch(path, method, body) {
  * differences across environments.
  */
 async function queryClosedUnclenedDeals() {
-  const closedValues = ['Closed', 'Archived'];
+  // Desired "closed / done" statuses. Override via CLEANUP_STATUSES env var
+  // (comma-separated) if you want to clean up additional terminal statuses
+  // like Lost, Canceled, Abandoned, EMD Released, Not Accepted, etc.
+  const desiredStatuses = (process.env.CLEANUP_STATUSES || 'Closed,Archived')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   // 1. Introspect the DB schema to find the real property names + types
+  //    AND the available status options (so we can intersect)
   let statusPropName = null;
   let statusPropType = null; // 'status' or 'select'
+  let availableStatusOptions = [];
   let hasTagsCleaned = false;
 
   try {
@@ -127,6 +141,8 @@ async function queryClosedUnclenedDeals() {
         if (!statusPropName || lower === 'deal status') {
           statusPropName = name;
           statusPropType = def.type;
+          const typeDef = def[def.type] || {};
+          availableStatusOptions = (typeDef.options || []).map((o) => o.name);
         }
       }
       if (lower === 'tags cleaned' && def.type === 'checkbox') {
@@ -147,10 +163,24 @@ async function queryClosedUnclenedDeals() {
     console.warn('[deal-cleanup] no "Tags Cleaned" checkbox property on the database — add one so we can track which deals have been cleaned');
   }
 
-  // 2. Build a filter that only references properties that exist
+  // Intersect desired statuses with what actually exists on the property.
+  // Notion rejects any filter value that isn't a valid option — dropping
+  // unknown ones silently prevents a crash.
+  const validStatuses = desiredStatuses.filter((v) => availableStatusOptions.includes(v));
+  const droppedStatuses = desiredStatuses.filter((v) => !availableStatusOptions.includes(v));
+  if (droppedStatuses.length > 0) {
+    console.warn(`[deal-cleanup] dropping status values that don't exist on "${statusPropName}": ${droppedStatuses.join(', ')}`);
+  }
+  if (validStatuses.length === 0) {
+    console.warn(`[deal-cleanup] no valid closed statuses to query. Set CLEANUP_STATUSES env var to one of: ${availableStatusOptions.join(', ')}`);
+    return [];
+  }
+  console.log(`[deal-cleanup] cleaning deals with status: ${validStatuses.join(', ')}`);
+
+  // 2. Build a filter that only references properties + values that exist
   const andClauses = [];
 
-  const statusOr = closedValues.map((val) => ({
+  const statusOr = validStatuses.map((val) => ({
     property: statusPropName,
     [statusPropType]: { equals: val },
   }));
