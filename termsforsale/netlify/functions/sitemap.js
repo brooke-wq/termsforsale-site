@@ -4,7 +4,7 @@
 
 exports.handler = async function(event) {
   var SHEET_ID = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
-  var BASE_URL = 'https://deals.termsforsale.com';
+  var BASE_URL = 'https://termsforsale.com';
   var today = new Date().toISOString().split('T')[0];
 
   var urls = [

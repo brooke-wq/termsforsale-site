@@ -5,4 +5,4 @@ Disallow: /dashboard.html
 Disallow: /va-post-builder.html
 Disallow: /webhook-test.html
 
-Sitemap: https://deals.termsforsale.com/sitemap.xml
+Sitemap: https://termsforsale.com/sitemap.xml
