@@ -297,7 +297,7 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
 
 [[redirects]]
-  from = "/r/*"
-  to = "/.netlify/functions/track-click"
+  from = "/r/:dealCode"
+  to = "/.netlify/functions/track-click?d=:dealCode"
   status = 200
   force = true
