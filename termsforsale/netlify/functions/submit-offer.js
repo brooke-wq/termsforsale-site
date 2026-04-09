@@ -5,14 +5,19 @@
  * 1. Creates a GHL opportunity in the Buyer Inquiries pipeline
  * 2. Posts a note on the contact with offer details
  * 3. Tags the contact (Offer Submitted, Active Buyer)
- * 4. Sends SMS notification to Brooke
- * 5. Sends confirmation email to the buyer
+ * 4. Sends SMS notification to the Terms For Sale office line
+ * 5. Sends internal alert email to offers@termsforsale.com
+ * 6. Sends confirmation email to the buyer
  *
  * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, GHL_PIPELINE_ID_BUYER,
- *           GHL_STAGE_OFFER_RECEIVED, BROOKE_PHONE
+ *           GHL_STAGE_OFFER_RECEIVED
+ *           (optional overrides: TFS_OFFICE_PHONE, TFS_OFFERS_EMAIL)
  */
 
-const { getContact, postNote, addTags, sendSMS, sendEmail } = require('./_ghl');
+const {
+  getContact, postNote, addTags, sendEmail,
+  sendOfficeSms, sendOffersInboxEmail
+} = require('./_ghl');
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
@@ -138,22 +143,60 @@ exports.handler = async (event) => {
     }
   }
 
-  // 4. Notify Brooke via SMS — include buyer name, location, amount, funding
-  var brookePhone = process.env.BROOKE_PHONE || '+15167120113';
-  if (brookePhone && locationId) {
+  // 4. Notify the Terms For Sale office via SMS — include buyer name, location, amount, funding
+  if (locationId) {
     var sms = 'New offer: ' + (buyerName || 'Buyer') + ' on ' + location;
     if (amount) sms += ' — ' + amountFmt;
     if (structure) sms += ' (' + structure + ')';
     if (coe) sms += ', close ' + coe;
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
-      await sendSMS(apiKey, locationId, brookePhone, sms);
+      await sendOfficeSms(apiKey, locationId, sms);
     } catch (e) {
-      console.warn('[submit-offer] Brooke SMS failed:', e.message);
+      console.warn('[submit-offer] office SMS failed:', e.message);
     }
   }
 
-  // 5. Send buyer confirmation email — include EVERY submitted field
+  // 5. Internal alert email to offers@termsforsale.com
+  if (locationId) {
+    try {
+      var internalRows = '';
+      internalRows += row('Buyer',       escapeHtml(buyerName || '(unknown)'));
+      if (buyerPhone) internalRows += row('Phone', escapeHtml(buyerPhone));
+      if (buyerEmail) internalRows += row('Email', escapeHtml(buyerEmail));
+      internalRows += row('Deal',        escapeHtml(location + (dealType ? ' (' + dealType + ')' : '')));
+      if (streetAddress) internalRows += row('Address', escapeHtml(fullAddress));
+      internalRows += row('Deal ID',     escapeHtml(dealId));
+      internalRows += row('Offer amount', amount ? escapeHtml(amountFmt) : '<em>(not provided)</em>');
+      if (structure) internalRows += row('Funding source', escapeHtml(structure));
+      if (coe)       internalRows += row('Target close',   escapeHtml(coe));
+      if (notes)     internalRows += row('Notes',          escapeHtml(notes));
+
+      var internalHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+        + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
+        + '<h2 style="color:#fff;margin:0;font-size:18px">New Offer Submitted</h2>'
+        + '</div>'
+        + '<div style="padding:24px 32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
+        + '<p style="color:#4A5568;margin:0 0 16px">A buyer just submitted an offer on the Terms For Sale website.</p>'
+        + '<table style="width:100%;border-collapse:collapse;margin:0 0 16px;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">'
+        +   '<tbody>' + internalRows + '</tbody>'
+        + '</table>'
+        + '<p style="color:#718096;font-size:12px;margin:0">Submitted ' + new Date().toISOString().split('T')[0] + ' · Terms For Sale website</p>'
+        + '</div></div>';
+
+      var internalSubject = 'New offer: ' + (buyerName || 'Buyer') + ' — ' + location + (amount ? ' — ' + amountFmt : '');
+      var internalRes = await sendOffersInboxEmail(apiKey, locationId, internalSubject, internalHtml);
+      if (internalRes.status >= 400) {
+        console.warn('[submit-offer] offers inbox email -> ' + internalRes.status, JSON.stringify(internalRes.body));
+      } else {
+        console.log('[submit-offer] offers inbox email sent');
+      }
+    } catch (e) {
+      console.warn('[submit-offer] offers inbox email failed:', e.message);
+    }
+  }
+
+  // 6. Send buyer confirmation email — include EVERY submitted field
   if (buyerEmail && contactId) {
     try {
       var detailRows = '';

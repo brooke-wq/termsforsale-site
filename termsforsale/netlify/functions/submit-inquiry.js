@@ -4,13 +4,18 @@
  * When a logged-in buyer clicks "Request Info" on a deal page:
  * 1. Posts a note on the contact with the full inquiry details
  * 2. Tags the contact (Website Inquiry, Active Buyer, inquiry-[dealId])
- * 3. Sends SMS notification to Brooke
- * 4. Sends confirmation email to the buyer with every submitted field
+ * 3. Sends SMS notification to the Terms For Sale office line
+ * 4. Sends internal alert email to info@termsforsale.com
+ * 5. Sends confirmation email to the buyer with every submitted field
  *
- * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, BROOKE_PHONE
+ * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID
+ *           (optional overrides: TFS_OFFICE_PHONE, TFS_INQUIRIES_EMAIL)
  */
 
-const { getContact, postNote, addTags, sendSMS, sendEmail } = require('./_ghl');
+const {
+  getContact, postNote, addTags, sendEmail,
+  sendOfficeSms, sendInquiriesInboxEmail
+} = require('./_ghl');
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -95,21 +100,56 @@ exports.handler = async (event) => {
     ])
   ]);
 
-  // 3. Notify Brooke via SMS
-  var brookePhone = process.env.BROOKE_PHONE || '+15167120113';
-  if (brookePhone && locationId) {
+  // 3. Notify the Terms For Sale office line via SMS
+  if (locationId) {
     var sms = 'New inquiry: ' + buyerName + ' on ' + location;
     if (dealType) sms += ' (' + dealType + ')';
     if (notes) sms += ' — "' + notes.slice(0, 120) + '"';
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
-      await sendSMS(apiKey, locationId, brookePhone, sms);
+      await sendOfficeSms(apiKey, locationId, sms);
     } catch (e) {
-      console.warn('[submit-inquiry] Brooke SMS failed:', e.message);
+      console.warn('[submit-inquiry] office SMS failed:', e.message);
     }
   }
 
-  // 4. Send buyer confirmation email with every submitted field
+  // 4. Internal alert email to info@termsforsale.com
+  if (locationId) {
+    try {
+      var internalRows = '';
+      internalRows += row('Buyer',   escapeHtml(buyerName));
+      if (buyerPhone) internalRows += row('Phone', escapeHtml(buyerPhone));
+      if (buyerEmail) internalRows += row('Email', escapeHtml(buyerEmail));
+      internalRows += row('Deal',    escapeHtml(location + (dealType ? ' (' + dealType + ')' : '')));
+      if (streetAddress) internalRows += row('Address', escapeHtml(fullAddress));
+      internalRows += row('Deal ID', escapeHtml(String(dealId)));
+      internalRows += row('Question', notes ? escapeHtml(notes) : '<em>(none provided)</em>');
+
+      var internalHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+        + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
+        + '<h2 style="color:#fff;margin:0;font-size:18px">New Buyer Inquiry</h2>'
+        + '</div>'
+        + '<div style="padding:24px 32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
+        + '<p style="color:#4A5568;margin:0 0 16px">A logged-in buyer just submitted a question on the Terms For Sale website.</p>'
+        + '<table style="width:100%;border-collapse:collapse;margin:0 0 16px;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">'
+        +   '<tbody>' + internalRows + '</tbody>'
+        + '</table>'
+        + '<p style="color:#718096;font-size:12px;margin:0">Submitted ' + new Date().toISOString().split('T')[0] + ' · Terms For Sale website</p>'
+        + '</div></div>';
+
+      var internalSubject = 'New inquiry: ' + buyerName + ' — ' + location;
+      var internalRes = await sendInquiriesInboxEmail(apiKey, locationId, internalSubject, internalHtml);
+      if (internalRes.status >= 400) {
+        console.warn('[submit-inquiry] inquiries inbox email -> ' + internalRes.status, JSON.stringify(internalRes.body));
+      } else {
+        console.log('[submit-inquiry] inquiries inbox email sent');
+      }
+    } catch (e) {
+      console.warn('[submit-inquiry] inquiries inbox email failed:', e.message);
+    }
+  }
+
+  // 5. Send buyer confirmation email with every submitted field
   if (buyerEmail && contactId) {
     try {
       var detailRows = '';

@@ -204,6 +204,127 @@ async function sendEmail(apiKey, contactId, subject, htmlBody) {
   });
 }
 
+// ─── Internal alert routing ─────────────────────────────────────
+// Used by offer / inquiry / buy-criteria flows so alerts go to the shared
+// Terms For Sale phone + inboxes instead of Brooke's personal cell.
+//
+// The get-or-create helpers hit GHL to search for a contact by phone/email
+// and upsert one if missing. Results are cached in-memory for the lifetime
+// of a warm Netlify function container so we don't pay the round trip on
+// every invocation.
+
+const TFS_OFFICE_PHONE_DEFAULT    = '+14806373117';
+const TFS_OFFERS_EMAIL_DEFAULT    = 'offers@termsforsale.com';
+const TFS_INQUIRIES_EMAIL_DEFAULT = 'info@termsforsale.com';
+
+const _phoneContactCache = {};
+const _emailContactCache = {};
+
+async function getOrCreateContactByPhone(apiKey, locationId, phone, fallbackName) {
+  var p = (phone || '').replace(/\s+/g, '');
+  if (!p) return null;
+  if (_phoneContactCache[p]) return _phoneContactCache[p];
+
+  var search = await ghlRequest(apiKey, 'GET',
+    '/contacts/?locationId=' + encodeURIComponent(locationId) +
+    '&query=' + encodeURIComponent(p) + '&limit=5');
+  var contacts = (search.body && search.body.contacts) || [];
+  if (contacts.length) {
+    _phoneContactCache[p] = contacts[0].id;
+    return contacts[0].id;
+  }
+
+  var upsert = await ghlRequest(apiKey, 'POST', '/contacts/upsert', {
+    locationId: locationId,
+    phone: p,
+    firstName: fallbackName || 'Internal',
+    lastName: 'Alerts',
+    source: 'Internal Alert Routing',
+    tags: ['internal-routing', 'do-not-blast']
+  });
+  var id = (upsert.body && ((upsert.body.contact && upsert.body.contact.id) || upsert.body.id)) || null;
+  if (id) _phoneContactCache[p] = id;
+  else console.warn('getOrCreateContactByPhone: upsert failed for ' + p, JSON.stringify(upsert.body));
+  return id;
+}
+
+async function getOrCreateContactByEmail(apiKey, locationId, email, fallbackName) {
+  var e = (email || '').trim().toLowerCase();
+  if (!e) return null;
+  if (_emailContactCache[e]) return _emailContactCache[e];
+
+  var search = await ghlRequest(apiKey, 'GET',
+    '/contacts/?locationId=' + encodeURIComponent(locationId) +
+    '&query=' + encodeURIComponent(e) + '&limit=5');
+  var contacts = (search.body && search.body.contacts) || [];
+  if (contacts.length) {
+    _emailContactCache[e] = contacts[0].id;
+    return contacts[0].id;
+  }
+
+  var upsert = await ghlRequest(apiKey, 'POST', '/contacts/upsert', {
+    locationId: locationId,
+    email: e,
+    firstName: fallbackName || 'Internal',
+    lastName: 'Inbox',
+    source: 'Internal Alert Routing',
+    tags: ['internal-routing', 'do-not-blast']
+  });
+  var id = (upsert.body && ((upsert.body.contact && upsert.body.contact.id) || upsert.body.id)) || null;
+  if (id) _emailContactCache[e] = id;
+  else console.warn('getOrCreateContactByEmail: upsert failed for ' + e, JSON.stringify(upsert.body));
+  return id;
+}
+
+// Send an SMS to the Terms For Sale office line (shared, not Brooke's cell).
+async function sendOfficeSms(apiKey, locationId, message) {
+  var phone = process.env.TFS_OFFICE_PHONE || TFS_OFFICE_PHONE_DEFAULT;
+  var contactId = await getOrCreateContactByPhone(apiKey, locationId, phone, 'TFS Office');
+  if (!contactId) {
+    console.warn('sendOfficeSms: no contact resolved for ' + phone);
+    return { status: 404, body: { error: 'No contact for office phone' } };
+  }
+  return ghlRequest(apiKey, 'POST', '/conversations/messages', {
+    type: 'SMS',
+    contactId: contactId,
+    message: message
+  });
+}
+
+// Send an email to the offers@termsforsale.com inbox.
+async function sendOffersInboxEmail(apiKey, locationId, subject, htmlBody) {
+  var email = process.env.TFS_OFFERS_EMAIL || TFS_OFFERS_EMAIL_DEFAULT;
+  var contactId = await getOrCreateContactByEmail(apiKey, locationId, email, 'TFS Offers');
+  if (!contactId) {
+    console.warn('sendOffersInboxEmail: no contact resolved for ' + email);
+    return { status: 404, body: { error: 'No contact for offers inbox' } };
+  }
+  return ghlRequest(apiKey, 'POST', '/conversations/messages', {
+    type: 'Email',
+    contactId: contactId,
+    subject: subject,
+    html: htmlBody,
+    emailFrom: 'Terms For Sale <brooke@mydealpros.com>'
+  });
+}
+
+// Send an email to the info@termsforsale.com inbox (inquiries + buy criteria).
+async function sendInquiriesInboxEmail(apiKey, locationId, subject, htmlBody) {
+  var email = process.env.TFS_INQUIRIES_EMAIL || TFS_INQUIRIES_EMAIL_DEFAULT;
+  var contactId = await getOrCreateContactByEmail(apiKey, locationId, email, 'TFS Inquiries');
+  if (!contactId) {
+    console.warn('sendInquiriesInboxEmail: no contact resolved for ' + email);
+    return { status: 404, body: { error: 'No contact for inquiries inbox' } };
+  }
+  return ghlRequest(apiKey, 'POST', '/conversations/messages', {
+    type: 'Email',
+    contactId: contactId,
+    subject: subject,
+    html: htmlBody,
+    emailFrom: 'Terms For Sale <brooke@mydealpros.com>'
+  });
+}
+
 // Polymorphic upsertContact:
 //   Legacy style:  upsertContact(apiKey, locationId, data)  → returns { status, body }
 //   Commercial:    upsertContact({email, phone, name, tags, customFields, source}) → returns contactId string
@@ -383,6 +504,12 @@ module.exports = {
   sendSMS,
   sendEmail,
   upsertContact,
+  // Internal alert routing (offer / inquiry / buy-criteria flows)
+  getOrCreateContactByPhone,
+  getOrCreateContactByEmail,
+  sendOfficeSms,
+  sendOffersInboxEmail,
+  sendInquiriesInboxEmail,
   // Commercial lane exports
   ghlFetch,
   createOpportunity,

@@ -276,6 +276,94 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 9 2026 Redirect Offer / Inquiry / Buy-Criteria Alerts off Brooke's Cell
+
+Branch: `claude/redirect-contact-numbers-ZwAqG`.
+
+All internal notifications from the offer, inquiry, and buy-criteria flows
+previously hit Brooke's personal cell (`+15167120113` via `BROOKE_PHONE` env
+var) and used the buyer's own email contact for internal alerts. They now
+route to the Terms For Sale shared office line (`+14806373117`) and to
+department inboxes (`offers@termsforsale.com` for offers, `info@termsforsale.com`
+for inquiries + buy-criteria updates).
+
+**Shared helper additions in `termsforsale/netlify/functions/_ghl.js`:**
+
+- `getOrCreateContactByPhone(apiKey, locationId, phone, fallbackName)` —
+  searches GHL by phone, upserts a new contact if none exists. Upserted
+  contacts are tagged `internal-routing` + `do-not-blast` so they never
+  accidentally land in the deal blast universe. Results cached in-memory
+  per warm container.
+- `getOrCreateContactByEmail(apiKey, locationId, email, fallbackName)` —
+  same pattern for email-only lookups. Used for the offers/inquiries
+  inboxes since there's no buyer tied to them.
+- `sendOfficeSms(apiKey, locationId, message)` — sends to
+  `process.env.TFS_OFFICE_PHONE || '+14806373117'`. Drop-in replacement
+  for the old `sendSMS(apiKey, locationId, BROOKE_PHONE, ...)` pattern.
+- `sendOffersInboxEmail(apiKey, locationId, subject, html)` — sends to
+  `process.env.TFS_OFFERS_EMAIL || 'offers@termsforsale.com'`.
+- `sendInquiriesInboxEmail(apiKey, locationId, subject, html)` — sends to
+  `process.env.TFS_INQUIRIES_EMAIL || 'info@termsforsale.com'`.
+
+All three `send*` helpers reuse the existing GHL conversations API with the
+verified `Brooke Froehlich <brooke@mydealpros.com>` sender so deliverability
+is unchanged.
+
+**Call-site rewrites:**
+
+- **`submit-offer.js`** — Brooke SMS → `sendOfficeSms`. **NEW:** internal
+  alert email to `offers@termsforsale.com` with a full details table
+  (buyer, phone, email, deal, address, deal ID, offer amount, funding
+  source, target close, notes). Buyer confirmation email unchanged.
+  Removed `BROOKE_PHONE` env dep.
+- **`submit-inquiry.js`** — Brooke SMS → `sendOfficeSms`. **NEW:** internal
+  alert email to `info@termsforsale.com` with buyer / phone / email /
+  deal / address / question table. Buyer confirmation email unchanged.
+  Removed `BROOKE_PHONE` env dep.
+- **`buyer-inquiry.js`** — three code paths updated:
+  1. `buying-criteria-confirm` action: Brooke SMS → `sendOfficeSms`.
+     **NEW:** internal email to `info@termsforsale.com` with buyer name /
+     email / phone + full criteria summary block.
+  2. OFFER path (InvestorLift webhook): internal email no longer sent via
+     `sendEmail(contactId, ...)` (which landed in the buyer's inbox or
+     the CEO briefing fallback) — now via `sendOffersInboxEmail` so it
+     lands in `offers@termsforsale.com`. Brooke SMS → `sendOfficeSms`.
+  3. INQUIRY path (InvestorLift webhook): same rewrite, email via
+     `sendInquiriesInboxEmail` → `info@termsforsale.com`. Brooke SMS →
+     `sendOfficeSms`.
+- **`buy-box-save.js`** — Brooke SMS → `sendOfficeSms`. **NEW:** internal
+  email to `info@termsforsale.com` with a full criteria table (structures,
+  property types, exits, markets, max price, max entry, max PITI, min
+  cash flow, max rate, ARV, beds, baths, condition, timeline, notes).
+  Added local `bbRow` + `escapeBBHtml` helpers for the table. Removed
+  `BROOKE_PHONE` env dep.
+
+**Explicitly NOT touched** (Brooke's personal cell still gets these per the
+user's scope — "offer, inquiry, buy criteria updates" only):
+- `buyer-alert.js`, `weekly-synthesis.js`, `equity-exit-intake.js`,
+  `follow-up-nudge.js`, `lead-intake.js`, `ceo-briefing.js`,
+  `booking-notify.js`
+
+**Verification:** all 62 Netlify function modules still load cleanly
+(`SKIP_REMOTE=1 node scripts/ops-audit.js`). All `_ghl.js` destructures
+resolve (29 exports total — 24 legacy + 5 new internal-alert helpers).
+No `BROOKE_PHONE` / `brookePhone` references remain in the four affected
+files.
+
+**Optional env vars** (all have sensible hardcoded defaults so nothing
+needs to be set in Netlify for this to work):
+- `TFS_OFFICE_PHONE` (default `+14806373117`)
+- `TFS_OFFERS_EMAIL` (default `offers@termsforsale.com`)
+- `TFS_INQUIRIES_EMAIL` (default `info@termsforsale.com`)
+
+**One-time side effect on first run:** the first time each helper is called,
+it searches GHL for a contact with the office phone / offers email / info
+email, and if none exists, upserts one. Those auto-created contacts will
+show up in GHL named "TFS Office Alerts", "TFS Offers Inbox", and "TFS
+Inquiries Inbox" with the `internal-routing` + `do-not-blast` tags. If
+Brooke has already set up contacts with these phone/email values, they'll
+be reused as-is.
+
 ## Completed — April 9 2026 Steadily Quote Helper Refactor + Metadata Support
 
 Branch: `claude/add-quote-metadata-support-8E65T`.

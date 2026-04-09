@@ -5,7 +5,10 @@
 //
 // ENV VARS: GHL_API_KEY, GHL_LOCATION_ID
 
-const { upsertContact, addTags, updateCustomFields, postNote, sendSMS } = require('./_ghl');
+const {
+  upsertContact, addTags, updateCustomFields, postNote,
+  sendOfficeSms, sendInquiriesInboxEmail
+} = require('./_ghl');
 
 // Fetch all custom field IDs for a location, return { fieldKey: fieldId } map
 async function getFieldIds(apiKey, locationId) {
@@ -33,7 +36,6 @@ exports.handler = async function(event) {
 
   var ghlKey = process.env.GHL_API_KEY;
   var locationId = process.env.GHL_LOCATION_ID;
-  var brookePhone = process.env.BROOKE_PHONE;
 
   if (!ghlKey || !locationId) return respond(500, { error: 'Missing env vars' });
 
@@ -134,13 +136,50 @@ exports.handler = async function(event) {
 
     await postNote(ghlKey, contactId, noteLines.join('\n'));
 
-    // 5. Internal notification to Brooke
-    if (brookePhone) {
-      try {
-        await sendSMS(ghlKey, locationId, brookePhone,
-          'BUY BOX SAVED: ' + (body.firstName || '') + ' ' + (body.email || '') + ' — ' + (body.deal_structure || '') + ' | ' + (body.target_zips || '').slice(0, 60));
-      } catch(e) {}
-    }
+    // 5. Internal notification to the Terms For Sale office line
+    try {
+      await sendOfficeSms(ghlKey, locationId,
+        'BUY BOX SAVED: ' + (body.firstName || '') + ' ' + (body.email || '') + ' — ' + (body.deal_structure || '') + ' | ' + (body.target_zips || '').slice(0, 60));
+    } catch(e) { console.warn('[buy-box-save] office SMS failed:', e.message); }
+
+    // 6. Internal alert email to info@termsforsale.com
+    try {
+      var buyerName = ((body.firstName || '') + ' ' + (body.lastName || '')).trim() || (body.email || 'Buyer');
+      var bcRows = '';
+      bcRows += bbRow('Name',  escapeBBHtml(buyerName));
+      if (body.email) bcRows += bbRow('Email', escapeBBHtml(body.email));
+      if (body.phone) bcRows += bbRow('Phone', escapeBBHtml(body.phone));
+      if (body.deal_structure)            bcRows += bbRow('Structures', escapeBBHtml(body.deal_structure));
+      if (body.property_type_preference)  bcRows += bbRow('Property Types', escapeBBHtml(body.property_type_preference));
+      if (body.exits)                     bcRows += bbRow('Exit Strategies', escapeBBHtml(body.exits));
+      if (body.target_zips)               bcRows += bbRow('Markets', escapeBBHtml(body.target_zips));
+      if (body.max_price)                 bcRows += bbRow('Max Price', '$' + Number(body.max_price).toLocaleString());
+      if (body.max_down)                  bcRows += bbRow('Max Entry', '$' + Number(body.max_down).toLocaleString());
+      if (body.max_monthly)               bcRows += bbRow('Max PITI', '$' + Number(body.max_monthly).toLocaleString());
+      if (body.target_monthly_cashflow)   bcRows += bbRow('Min Cash Flow', '$' + escapeBBHtml(body.target_monthly_cashflow));
+      if (body.max_rate_)                 bcRows += bbRow('Max Rate', escapeBBHtml(body.max_rate_) + '%');
+      if (body.arv)                       bcRows += bbRow('Min ARV', '$' + Number(body.arv).toLocaleString());
+      if (body.bedrooms_min)              bcRows += bbRow('Min Beds', escapeBBHtml(body.bedrooms_min));
+      if (body.baths_min)                 bcRows += bbRow('Min Baths', escapeBBHtml(body.baths_min));
+      if (body.remodel_level)             bcRows += bbRow('Condition', escapeBBHtml(body.remodel_level));
+      if (body.purchase_timeline)         bcRows += bbRow('Timeline', escapeBBHtml(body.purchase_timeline));
+      if (body.buy_box)                   bcRows += bbRow('Notes', escapeBBHtml(body.buy_box));
+
+      var bcHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+        + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
+        + '<h2 style="color:#fff;margin:0;font-size:18px">Buy Box Saved</h2>'
+        + '</div>'
+        + '<div style="padding:24px 32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
+        + '<p style="color:#4A5568;margin:0 0 16px">A buyer just saved or updated their buying criteria on the Terms For Sale website.</p>'
+        + '<table style="width:100%;border-collapse:collapse;margin:0 0 16px;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">'
+        +   '<tbody>' + bcRows + '</tbody>'
+        + '</table>'
+        + '<p style="color:#718096;font-size:12px;margin:0">Submitted ' + new Date().toISOString().split('T')[0] + ' · Terms For Sale website</p>'
+        + '</div></div>';
+      await sendInquiriesInboxEmail(ghlKey, locationId,
+        'Buy box saved: ' + buyerName,
+        bcHtml);
+    } catch(e) { console.warn('[buy-box-save] inquiries inbox email failed:', e.message); }
 
     return respond(200, { success: true, contactId: contactId });
 
@@ -156,4 +195,15 @@ function respond(statusCode, body) {
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' },
     body: JSON.stringify(body)
   };
+}
+
+function bbRow(label, value) {
+  return '<tr>'
+    + '<td style="padding:10px 14px;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;width:40%">' + label + '</td>'
+    + '<td style="padding:10px 14px;font-size:14px;color:#0D1F3C;font-weight:700;border-bottom:1px solid #E2E8F0">' + value + '</td>'
+    + '</tr>';
+}
+
+function escapeBBHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }

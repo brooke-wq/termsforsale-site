@@ -6,7 +6,10 @@
 //
 // POST /api/buyer-inquiry
 
-const { upsertContact, addTags, postNote, sendSMS, sendEmail } = require('./_ghl');
+const {
+  upsertContact, addTags, postNote, sendSMS, sendEmail,
+  sendOfficeSms, sendOffersInboxEmail, sendInquiriesInboxEmail
+} = require('./_ghl');
 
 const GHL_API_KEY     = process.env.GHL_API_KEY;
 const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
@@ -141,14 +144,33 @@ exports.handler = async (event) => {
         } catch(e) { console.warn('[buyer-inquiry] Email failed:', e.message); }
       }
 
-      // Internal notification to Brooke
-      var brookePhone = process.env.BROOKE_PHONE;
-      if (brookePhone) {
-        try {
-          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone,
-            'NEW BUYER CRITERIA: ' + (payload.firstName || '') + ' ' + (payload.email || '') + ' — ' + (payload.summary || '').split('\n').slice(0, 3).join(' | ').slice(0, 120));
-        } catch(e) {}
-      }
+      // Internal notification to the Terms For Sale office line
+      try {
+        await sendOfficeSms(GHL_API_KEY, GHL_LOCATION_ID,
+          'NEW BUYER CRITERIA: ' + (payload.firstName || '') + ' ' + (payload.email || '') + ' — ' + (payload.summary || '').split('\n').slice(0, 3).join(' | ').slice(0, 120));
+      } catch(e) { console.warn('[buyer-inquiry] office SMS (buying criteria) failed:', e.message); }
+
+      // Internal alert email to info@termsforsale.com
+      try {
+        var bcSummaryHtml = (payload.summary || '(no summary provided)').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+        var bcHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+          + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
+          + '<h2 style="color:#fff;margin:0;font-size:18px">New Buying Criteria Submitted</h2>'
+          + '</div>'
+          + '<div style="padding:24px 32px;background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">'
+          + '<p style="color:#4A5568;margin:0 0 16px">A buyer just updated their buy box on the Terms For Sale website.</p>'
+          + '<table style="width:100%;border-collapse:collapse;margin:0 0 16px">'
+          + '<tr><td style="padding:8px 0;color:#718096;font-weight:600">Name</td><td style="padding:8px 0;color:#0D1F3C;font-weight:700">' + ((payload.firstName || '') + ' ' + (payload.lastName || '')).trim() + '</td></tr>'
+          + '<tr><td style="padding:8px 0;color:#718096;font-weight:600">Email</td><td style="padding:8px 0;color:#0D1F3C">' + (payload.email || 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:8px 0;color:#718096;font-weight:600">Phone</td><td style="padding:8px 0;color:#0D1F3C">' + (payload.phone || 'N/A') + '</td></tr>'
+          + '</table>'
+          + '<div style="background:#F4F6F9;border-radius:8px;padding:16px 20px;font-size:13px;line-height:1.8;color:#4A5568">' + bcSummaryHtml + '</div>'
+          + '<p style="color:#718096;font-size:12px;margin-top:16px">Submitted ' + new Date().toISOString().split('T')[0] + ' · Terms For Sale website</p>'
+          + '</div></div>';
+        await sendInquiriesInboxEmail(GHL_API_KEY, GHL_LOCATION_ID,
+          'New buying criteria: ' + (payload.firstName || payload.email || 'buyer'),
+          bcHtml);
+      } catch(e) { console.warn('[buyer-inquiry] inquiries inbox email (buying criteria) failed:', e.message); }
 
       return {
         statusCode: 200, headers,
@@ -254,8 +276,7 @@ exports.handler = async (event) => {
 
       // Send internal notification email to offers@termsforsale.com
       try {
-        var notifyContactId = contactId || 'qO4YuZHrhGTTBaFKPDYD'; // fallback to CEO Briefing contact
-        await sendEmail(GHL_API_KEY, notifyContactId,
+        await sendOffersInboxEmail(GHL_API_KEY, GHL_LOCATION_ID,
           'NEW OFFER: $' + (payload.price || '?') + ' — ' + (fullAddress || 'Unknown Property'),
           '<div style="font-family:Arial,sans-serif;max-width:600px">'
           + '<h2 style="color:#0D1F3C;margin:0 0 16px">New Offer Received</h2>'
@@ -269,17 +290,14 @@ exports.handler = async (event) => {
           + '<tr><td style="padding:8px 0;color:#718096;font-weight:600">Notes</td><td style="padding:8px 0;color:#0D1F3C">' + (payload.message || 'None') + '</td></tr>'
           + '</table></div>'
         );
-        console.log('[buyer-inquiry] Internal offer notification sent');
-      } catch(e) { console.warn('[buyer-inquiry] Internal notification failed:', e.message); }
+        console.log('[buyer-inquiry] Internal offer notification sent to offers inbox');
+      } catch(e) { console.warn('[buyer-inquiry] offers inbox email failed:', e.message); }
 
-      // SMS alert to Brooke
-      var brookePhone = process.env.BROOKE_PHONE;
-      if (brookePhone) {
-        try {
-          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone,
-            'NEW OFFER: $' + Number(payload.price||0).toLocaleString() + ' on ' + (fullAddress || 'property') + ' from ' + contactName);
-        } catch(e) {}
-      }
+      // SMS alert to the Terms For Sale office line
+      try {
+        await sendOfficeSms(GHL_API_KEY, GHL_LOCATION_ID,
+          'NEW OFFER: $' + Number(payload.price||0).toLocaleString() + ' on ' + (fullAddress || 'property') + ' from ' + contactName);
+      } catch(e) { console.warn('[buyer-inquiry] office SMS (offer) failed:', e.message); }
 
       return {
         statusCode: 200,
@@ -347,10 +365,9 @@ exports.handler = async (event) => {
         await postNote(GHL_API_KEY, contactId, inquiryNotes);
       }
 
-      // Internal notification email
+      // Internal notification email to info@termsforsale.com
       try {
-        var notifyId = contactId || 'qO4YuZHrhGTTBaFKPDYD';
-        await sendEmail(GHL_API_KEY, notifyId,
+        await sendInquiriesInboxEmail(GHL_API_KEY, GHL_LOCATION_ID,
           'NEW INQUIRY: ' + contactName + ' — ' + (fullAddress || 'Deal Page'),
           '<div style="font-family:Arial,sans-serif;max-width:600px">'
           + '<h2 style="color:#0D1F3C;margin:0 0 16px">New Buyer Inquiry</h2>'
@@ -362,16 +379,13 @@ exports.handler = async (event) => {
           + '<tr><td style="padding:8px 0;color:#718096;font-weight:600">Message</td><td style="padding:8px 0;color:#0D1F3C">' + (message || 'None') + '</td></tr>'
           + '</table></div>'
         );
-      } catch(e) { console.warn('[buyer-inquiry] Internal inquiry notification failed:', e.message); }
+      } catch(e) { console.warn('[buyer-inquiry] inquiries inbox email failed:', e.message); }
 
-      // SMS alert to Brooke
-      var brookePhone2 = process.env.BROOKE_PHONE;
-      if (brookePhone2) {
-        try {
-          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone2,
-            'NEW INQUIRY: ' + contactName + ' asking about ' + (fullAddress || 'a deal') + '. ' + (message ? '"' + message.slice(0,60) + '"' : ''));
-        } catch(e) {}
-      }
+      // SMS alert to the Terms For Sale office line
+      try {
+        await sendOfficeSms(GHL_API_KEY, GHL_LOCATION_ID,
+          'NEW INQUIRY: ' + contactName + ' asking about ' + (fullAddress || 'a deal') + '. ' + (message ? '"' + message.slice(0,60) + '"' : ''));
+      } catch(e) { console.warn('[buyer-inquiry] office SMS (inquiry) failed:', e.message); }
 
       return {
         statusCode: 200,
