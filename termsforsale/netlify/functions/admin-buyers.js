@@ -20,7 +20,8 @@ const crypto = require('crypto');
 const GHL_HOST = 'services.leadconnectorhq.com';
 const GHL_VERSION = '2021-07-28';
 const PAGE_SIZE = 100;
-const HARD_CAP = 2000;
+const HARD_CAP = 20000;   // absolute ceiling — prevents a runaway loop
+const DEFAULT_LIMIT = 10000;
 
 // Buyer-identifying tags — any contact with at least one of these is a buyer
 const BUYER_TAGS = [
@@ -112,7 +113,7 @@ async function searchBuyers(apiKey, locationId, hardLimit) {
 
     if (batch.length < PAGE_SIZE) break;
     page++;
-    if (page > 50) break; // safety
+    if (page > 200) break; // safety — 200 pages * 100 = 20k contacts max
   }
 
   return { contacts: all };
@@ -159,7 +160,7 @@ exports.handler = async function (event) {
   var params = event.queryStringParameters || {};
   var q = String(params.q || '').trim().toLowerCase();
   var filter = String(params.filter || 'all').toLowerCase();
-  var limit = Math.min(parseInt(params.limit, 10) || 500, HARD_CAP);
+  var limit = Math.min(parseInt(params.limit, 10) || DEFAULT_LIMIT, HARD_CAP);
 
   try {
     var result = await searchBuyers(apiKey, locationId, limit);

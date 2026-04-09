@@ -147,7 +147,7 @@ function initials(name) {
 async function loadBuyers() {
   document.getElementById('results').innerHTML = '<div class="spinner"></div>';
   try {
-    var res = await AdminShell.fetch('/api/admin-buyers?limit=1000');
+    var res = await AdminShell.fetch('/api/admin-buyers?limit=20000');
     if (!res.ok) {
       var err = await res.json().catch(function () { return {}; });
       document.getElementById('results').innerHTML =
