@@ -592,9 +592,73 @@ notes + SMS to Brooke.
 
 ---
 
+## Completed — April 9 2026 OTP Login Fix + Deal ID Auto-Gen + URL Cleanup
+
+Three fixes shipped in commits `96af2ae`, `aa25bd7`, and `f786ed6`:
+
+### 1. Dispo Buddy OTP login fix (`partner-login.js`)
+Partners could request an OTP via SMS but entering the code returned
+"No code on file." Root cause: the PUT to store the code used a string
+`key: 'portal_otp_code'` which GHL silently dropped — it needs the actual
+field UUID. The field also may not have existed yet on the location.
+
+- Added `getCustomFieldMap()` (same pattern as `dispo-buddy-submit.js`)
+  that fetches `/locations/{id}/customFields` and builds a key → UUID map
+- Added `createOtpField()` that auto-creates the `portal_otp_code` text
+  field if the map lookup comes up empty — so it's self-healing on first run
+- `findOtpFieldId()` checks multiple possible key names
+  (`portal_otp_code`, `contact.portal_otp_code`, lowercase variants)
+- Store now uses `[{ id: fieldId, value: storedValue }]` with a
+  key-based PUT as a fallback if the ID-based one fails
+- OTP value format changed from `CODE:EXPIRY` to `OTP:CODE:EXPIRY` so it
+  can't collide with TFS reset codes on shared contacts (which use
+  `6digits:13digitTimestamp`)
+- On verify, matches by **value pattern** (`/^OTP:\d{6}:\d+$/`) instead
+  of key name — robust against any GHL key naming weirdness
+- Verbose logging added throughout so the next bug is diagnosable from
+  Netlify function logs alone
+
+### 2. Dispo Buddy auto-generate Deal ID (`dispo-buddy-submit.js`)
+Every JV partner submission now gets a Deal ID written to Notion in
+format `PHX-001` / `MSA-042` so the weekly `deal-cleanup` cron can pick
+it up instead of skipping it forever.
+
+- `CITY_CODE_MAP` — 36 AZ cities pre-mapped to 3-letter codes:
+  Phoenix=PHX, Mesa=MSA, Scottsdale=SCT, Tempe=TMP, Chandler=CHD,
+  Gilbert=GIL, Glendale=GLN, Peoria=PEO, Surprise=SUR, Goodyear=GDY,
+  Buckeye=BKY, Avondale=AVN, Tucson=TUC, Flagstaff=FLG, Sedona=SDN,
+  Yuma=YUM, Prescott=PRC, etc.
+- `getDealPrefix(city, state)` — checks city map first, falls back to
+  first 3 alpha chars of city, final fallback is 2-letter state + X
+- `generateDealId(token, dbId, city, state)` — queries Notion with
+  `filter: { property: 'Deal ID', rich_text: { starts_with: '${prefix}-' } }`,
+  paginates up to 5 pages (500 deals), finds max sequence, returns
+  `${prefix}-${String(max + 1).padStart(3, '0')}`
+- Wired into `createNotionDeal` — runs before props are built, writes
+  via the existing `text('Deal ID', dealId)` helper
+- Format matches `jobs/deal-cleanup.js` regex `/^[A-Z]+-[0-9]+$/i`
+- Non-fatal: if generation throws or Notion is down, submission still
+  succeeds without a Deal ID
+- Known limitation: concurrent submissions from the same city within
+  seconds can race to the same sequence number. Volume is low enough
+  this doesn't matter yet; if it does, swap to a GHL counter field.
+
+### 3. `dispobuddy.netlify.app` → `dispobuddy.com` in outbound content
+Updated email template logo srcs and admin SOP references in:
+- `dispobuddy/netlify/functions/partner-onboard.js` (×2 email logos)
+- `dispobuddy/netlify/functions/partner-stage-notify.js` (email shell logo)
+- `dispobuddy/netlify/functions/dispo-buddy-submit.js` (confirmation email)
+- `dispobuddy/admin/sop.html` (×5 references — Live Site, Test Mode,
+  Partner Dashboard URLs, system status, tech stack row)
+
+CLAUDE.md references to `dispobuddy.netlify.app` left alone as historical
+deploy context.
+
+---
+
 ## TODO — Next Session
 
-1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.netlify.app`: set `NOTIFICATIONS_LIVE=true` in Netlify env vars, test one real submission, re-enable `dispo-buddy-triage` cron on Droplet, point `dispobuddy.com` domain.
+1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.com` (which should now be pointed at the Netlify site): verify the OTP login flow works end to end (Brooke's phone → SMS → enter code → dashboard), confirm `NOTIFICATIONS_LIVE=true` is set in Netlify env vars, test one real submission (should produce a Deal ID like `PHX-001` in Notion), re-enable `dispo-buddy-triage` cron on Droplet.
 
 2. **Deal Tracking Tag System — All wire-up complete as of April 9, 2026** ✅
    - ✅ Branch merged to main (PRs #30–#37)
@@ -606,7 +670,7 @@ notes + SMS to Brooke.
    - ✅ Regex case-insensitivity fix for GHL lowercasing tags on save (PR #37)
    - ✅ GHL "Buyer Interest Webhook" workflow live in Terms For Sale sub-account
    - ✅ End-to-end verified: curl test on real contact returns `{"success":true,"dealIds":["TEST-001"]}`, tag+note+SMS all fire
-   - ⚠️ **Still ongoing:** populate `Deal ID` (e.g. `PHX-001`) on new Notion deal pages going forward — the cleanup job skips any deal missing this field. Legacy deals without Deal ID will stay skipped forever.
+   - ✅ **Deal ID auto-population** — Dispo Buddy submissions now auto-generate `PHX-001`-style IDs in Notion on creation (commit `f786ed6`). Legacy deals still need backfill if you want them cleanable.
    - 🔧 Optional: expand `CLEANUP_STATUSES` env var on droplet if you want Lost/Canceled/Abandoned/EMD Released/Not Accepted deals also auto-cleaned: `echo 'CLEANUP_STATUSES="Closed,Lost,Canceled,Abandoned,EMD Released,Not Accepted"' >> /etc/environment`
 
 3. **GHL Client Portal — Buyer Contract Lifecycle** — The webhook function `buyer-contract-lifecycle.js` handles automated partner-style notifications on Buyer Inquiries pipeline stage changes (Offer Submitted → Contract Sent → Contract Signed → EMD Received → Closed / Lost). To activate:
