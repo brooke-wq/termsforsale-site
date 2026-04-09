@@ -98,6 +98,38 @@ async function getDealById(token, dbId, pageId) {
   return parseDeal(result.body);
 }
 
+// Resolve a short deal code (e.g. "PHX-001") to a full Notion page by querying
+// the database for a matching "Deal ID" property. Returns the parsed deal or
+// null. Used when the user passes a short code to ?deal_id= instead of a UUID.
+async function getDealByCode(token, dbId, dealCode) {
+  var body = {
+    filter: {
+      property: 'Deal ID',
+      rich_text: { equals: String(dealCode).toUpperCase() }
+    },
+    page_size: 1
+  };
+  var result = await httpRequest('https://api.notion.com/v1/databases/' + dbId + '/query', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Notion-Version': '2022-06-28',
+      'Content-Type': 'application/json'
+    }
+  }, body);
+  if (result.status !== 200) return null;
+  var pages = (result.body && result.body.results) || [];
+  if (!pages.length) return null;
+  return parseDeal(pages[0]);
+}
+
+// Notion page UUIDs are 32 hex chars (typically with dashes). Anything
+// shorter/different is almost certainly a short code like "PHX-001".
+function looksLikeNotionUuid(s) {
+  var clean = String(s || '').replace(/-/g, '');
+  return clean.length === 32 && /^[0-9a-f]+$/i.test(clean);
+}
+
 function prop(page, name) {
   var p = page.properties[name];
   if (!p) return '';
@@ -796,10 +828,23 @@ exports.handler = async function(event) {
 
   try {
     if (params.deal_id) {
-      // Manual test: check a specific deal
-      var deal = await getDealById(token, dbId, params.deal_id);
+      // Manual test: check a specific deal. Accept either a full Notion UUID
+      // or a short dealCode like "PHX-001" (resolved via the Notion DB).
+      var deal = null;
+      if (looksLikeNotionUuid(params.deal_id)) {
+        deal = await getDealById(token, dbId, params.deal_id);
+      } else {
+        deal = await getDealByCode(token, dbId, params.deal_id);
+        // Fallback: if code lookup fails, try treating the input as a UUID
+        // anyway (handles edge cases where the DB filter errors out)
+        if (!deal) deal = await getDealById(token, dbId, params.deal_id);
+      }
       if (deal) deals = [deal];
-      else return { statusCode: 404, headers: headers, body: JSON.stringify({ error: 'Deal not found' }) };
+      else return { statusCode: 404, headers: headers, body: JSON.stringify({
+        error: 'Deal not found',
+        hint: 'Pass either the Notion page UUID or a dealCode like "PHX-001"',
+        tried: params.deal_id
+      }) };
     } else {
       // Scheduled run: check deals edited in last 35 minutes
       deals = await getRecentDeals(token, dbId, 35);
