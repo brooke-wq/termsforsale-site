@@ -163,6 +163,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/admin-buyers"
+  to = "/.netlify/functions/admin-buyers"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin-stats"
+  to = "/.netlify/functions/admin-stats"
+  status = 200
+
+[[redirects]]
   from = "/api/tag-blast-sent"
   to = "/.netlify/functions/tag-blast-sent"
   status = 200

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyer List — Admin — Terms For Sale</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<style>
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.filter-tab{
+  padding:8px 16px;
+  background:#fff;
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-mid);
+  cursor:pointer;
+  transition:all .15s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.filter-tab:hover{border-color:var(--blue);color:var(--blue)}
+.filter-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filter-tab .count{
+  background:rgba(0,0,0,.08);
+  padding:1px 7px;
+  border-radius:10px;
+  font-size:10px;
+}
+.filter-tab.active .count{background:rgba(255,255,255,.2);color:#fff}
+
+.search-row{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.search-row input{flex:1;min-width:240px}
+
+.badge-ring{
+  width:36px;height:36px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--blue-light) 0%,#D0EBFB 100%);
+  color:var(--blue-dark);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;
+  flex-shrink:0;
+}
+.buyer-cell{display:flex;align-items:center;gap:10px}
+.buyer-name-wrap{min-width:0}
+.buyer-name{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.buyer-mail{font-size:11px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+</head>
+<body class="locked">
+
+<div class="admin-shell">
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Operations</div>
+        <div class="topbar-h">Buyer List</div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" id="export-btn" onclick="exportCsv()" disabled>
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export CSV</span>
+        </button>
+        <button class="topbar-btn primary" onclick="loadBuyers()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Total Buyers</div>
+          <div class="stat-value" id="s-total">—</div>
+          <div class="stat-sub">In the buyer database</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label">New This Week</div>
+          <div class="stat-value" id="s-new">—</div>
+          <div class="stat-sub">Past 7 days</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label">VIP Buyers</div>
+          <div class="stat-value" id="s-vip">—</div>
+          <div class="stat-sub">Early-access list</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label">Buy Box Complete</div>
+          <div class="stat-value" id="s-bbox">—</div>
+          <div class="stat-sub">Criteria on file</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              All Buyers
+            </div>
+            <div class="panel-sub">Contacts tagged as TFS Buyer, VIP, or Buy Box complete</div>
+          </div>
+          <div class="muted" style="font-size:12px"><span id="row-count">0</span> shown</div>
+        </div>
+        <div class="panel-body">
+
+          <div class="search-row">
+            <input type="text" id="search" class="ctl" placeholder="Search name, email, or phone..." autocomplete="off">
+          </div>
+
+          <div class="filter-tabs" id="tabs">
+            <button class="filter-tab active" data-filter="all">All <span class="count" id="c-all">0</span></button>
+            <button class="filter-tab" data-filter="vip">VIP <span class="count" id="c-vip">0</span></button>
+            <button class="filter-tab" data-filter="buybox">Buy Box <span class="count" id="c-buybox">0</span></button>
+            <button class="filter-tab" data-filter="nobuybox">No Buy Box <span class="count" id="c-nobuybox">0</span></button>
+          </div>
+
+          <div id="results"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('buyers');
+
+var ALL_BUYERS = [];
+var CURRENT_FILTER = 'all';
+var SEARCH_Q = '';
+
+function initials(name) {
+  if (!name) return '?';
+  var parts = name.trim().split(/\s+/);
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+async function loadBuyers() {
+  document.getElementById('results').innerHTML = '<div class="spinner"></div>';
+  try {
+    var res = await AdminShell.fetch('/api/admin-buyers?limit=1000');
+    if (!res.ok) {
+      var err = await res.json().catch(function () { return {}; });
+      document.getElementById('results').innerHTML =
+        '<div class="err">Error loading buyers: ' + AdminShell.esc(err.error || ('HTTP ' + res.status)) + '</div>';
+      return;
+    }
+    var data = await res.json();
+    ALL_BUYERS = data.contacts || [];
+
+    // Top stats
+    document.getElementById('s-total').textContent = AdminShell.fmtNum(data.stats.total);
+    document.getElementById('s-new').textContent = AdminShell.fmtNum(data.stats.newThisWeek);
+    document.getElementById('s-vip').textContent = AdminShell.fmtNum(data.stats.vip);
+    document.getElementById('s-bbox').textContent = AdminShell.fmtNum(data.stats.hasBuyBox);
+
+    // Tab counts
+    var tCounts = {
+      all: ALL_BUYERS.length,
+      vip: ALL_BUYERS.filter(function (b) { return b.isVip; }).length,
+      buybox: ALL_BUYERS.filter(function (b) { return b.hasBuyBox; }).length,
+      nobuybox: ALL_BUYERS.filter(function (b) { return !b.hasBuyBox; }).length
+    };
+    document.getElementById('c-all').textContent = tCounts.all;
+    document.getElementById('c-vip').textContent = tCounts.vip;
+    document.getElementById('c-buybox').textContent = tCounts.buybox;
+    document.getElementById('c-nobuybox').textContent = tCounts.nobuybox;
+
+    renderList();
+    document.getElementById('export-btn').disabled = !ALL_BUYERS.length;
+  } catch (err) {
+    document.getElementById('results').innerHTML =
+      '<div class="err">Network error: ' + AdminShell.esc(err.message) + '</div>';
+  }
+}
+window.loadBuyers = loadBuyers;
+
+function renderList() {
+  var host = document.getElementById('results');
+  var filtered = ALL_BUYERS.slice();
+
+  if (CURRENT_FILTER === 'vip') filtered = filtered.filter(function (b) { return b.isVip; });
+  else if (CURRENT_FILTER === 'buybox') filtered = filtered.filter(function (b) { return b.hasBuyBox; });
+  else if (CURRENT_FILTER === 'nobuybox') filtered = filtered.filter(function (b) { return !b.hasBuyBox; });
+
+  if (SEARCH_Q) {
+    var q = SEARCH_Q.toLowerCase();
+    filtered = filtered.filter(function (b) {
+      return (b.name || '').toLowerCase().indexOf(q) > -1
+        || (b.email || '').toLowerCase().indexOf(q) > -1
+        || (b.phone || '').indexOf(SEARCH_Q) > -1;
+    });
+  }
+
+  document.getElementById('row-count').textContent = filtered.length;
+
+  if (!filtered.length) {
+    host.innerHTML = '<div class="state"><h3>No buyers match</h3><p>Try clearing the search or switching filter tabs.</p></div>';
+    return;
+  }
+
+  var rows = filtered.map(function (b) {
+    var badges = [];
+    if (b.isVip) badges.push('<span class="pill orange">VIP</span>');
+    if (b.hasBuyBox) badges.push('<span class="pill green">Buy Box</span>');
+    if (!b.hasBuyBox) badges.push('<span class="pill gray">Incomplete</span>');
+    if (b.isLegacy) badges.push('<span class="pill purple">Legacy</span>');
+
+    var markets = b.markets.slice(0, 3).map(function (m) {
+      return '<span class="mini-tag mkt">' + AdminShell.esc(m) + '</span>';
+    }).join('');
+    if (b.markets.length > 3) markets += '<span class="mini-tag mkt">+' + (b.markets.length - 3) + '</span>';
+    var strategies = b.strategies.slice(0, 3).map(function (s) {
+      return '<span class="mini-tag acq">' + AdminShell.esc(s) + '</span>';
+    }).join('');
+
+    return '<tr>'
+      + '<td>'
+      +   '<div class="buyer-cell">'
+      +     '<div class="badge-ring">' + AdminShell.esc(initials(b.name)) + '</div>'
+      +     '<div class="buyer-name-wrap">'
+      +       '<div class="buyer-name">' + AdminShell.esc(b.name || '(No name)') + '</div>'
+      +       '<div class="buyer-mail">' + AdminShell.esc(b.email || '—') + '</div>'
+      +     '</div>'
+      +   '</div>'
+      + '</td>'
+      + '<td class="nowrap">' + (b.phone
+            ? '<a href="tel:' + AdminShell.esc(b.phone) + '" style="color:var(--blue)">' + AdminShell.esc(b.phone) + '</a>'
+            : '<span class="muted">—</span>') + '</td>'
+      + '<td>' + (badges.join(' ') || '<span class="muted">—</span>') + '</td>'
+      + '<td><div class="tag-list">' + (markets + strategies || '<span class="muted">—</span>') + '</div></td>'
+      + '<td class="nowrap muted">' + AdminShell.fmtDate(b.dateAdded) + '</td>'
+      + '</tr>';
+  }).join('');
+
+  host.innerHTML = '<div class="table-wrap"><table class="t">'
+    + '<thead><tr><th>Buyer</th><th>Phone</th><th>Status</th><th>Markets / Strategy</th><th>Joined</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div>';
+}
+
+// Search (debounced)
+var searchTimer;
+document.getElementById('search').addEventListener('input', function (e) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(function () {
+    SEARCH_Q = e.target.value.trim();
+    renderList();
+  }, 200);
+});
+
+// Filter tabs
+document.querySelectorAll('#tabs .filter-tab').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('#tabs .filter-tab').forEach(function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    CURRENT_FILTER = b.dataset.filter;
+    renderList();
+  });
+});
+
+function exportCsv() {
+  if (!ALL_BUYERS.length) return;
+  var headers = ['Name','Email','Phone','VIP','Buy Box','Markets','Strategies','Date Added','GHL ID'];
+  var rows = ALL_BUYERS.map(function (b) {
+    return [
+      b.name || '',
+      b.email || '',
+      b.phone || '',
+      b.isVip ? 'yes' : '',
+      b.hasBuyBox ? 'yes' : '',
+      (b.markets || []).join('; '),
+      (b.strategies || []).join('; '),
+      b.dateAdded || '',
+      b.id || ''
+    ];
+  });
+  var csv = [headers].concat(rows).map(function (row) {
+    return row.map(function (cell) {
+      var s = String(cell == null ? '' : cell);
+      if (s.indexOf(',') > -1 || s.indexOf('"') > -1 || s.indexOf('\n') > -1) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'buyers_' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  AdminShell.toast('CSV exported');
+}
+window.exportCsv = exportCsv;
+
+AdminShell.requireAuth(loadBuyers);
+</script>
+
+</body>
+</html>
