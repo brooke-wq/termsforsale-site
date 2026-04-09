@@ -228,7 +228,9 @@
   function requireAuth(onReady) {
     var pw = getPw();
     if (pw) {
-      // Optimistically proceed; individual API calls will redirect back to gate on 401
+      // Valid session — drop the locked blur and proceed.
+      // Individual API calls will redirect back to gate on 401.
+      document.body.classList.remove('locked');
       if (onReady) onReady();
       return;
     }
