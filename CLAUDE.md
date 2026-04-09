@@ -276,6 +276,78 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 9 2026 Steadily Quote Helper Refactor + Metadata Support
+
+Branch: `claude/add-quote-metadata-support-8E65T`.
+
+Refactor of the landlord-insurance quoting path off of Steadily. The old
+`insurance-quote.js` had three problems: (1) the staging API key was
+hardcoded as a fallback on line 56, (2) it used the legacy Node `https`
+module instead of native `fetch` (violates the CLAUDE.md "native fetch
+only" convention), and (3) the HTTP call was inlined so no other function
+could reuse it. Branch name also indicated we needed to start accepting
+the `metadata` / `property_details` passthrough fields the curl example
+shows.
+
+**Files shipped:**
+
+- **`termsforsale/netlify/functions/_steadily.js` (new)** — shared Steadily
+  helper, same pattern as `_claude.js` / `_ghl.js`. Prefix `_` so Netlify
+  won't deploy it as a function. Exports:
+  - `quoteEstimate(payload, opts?)` — POSTs to `/v1/quote/estimate` using
+    the `X-Steadily-ApiKey` header (this is the header the curl example
+    uses; the legacy code was sending `Authorization: Api-Key` + `x-api-key`
+    neither of which matched the curl). Reads `STEADILY_API_KEY` from env
+    (no hardcoded fallback — throws cleanly if unset). Routes to
+    `api.staging.steadily.com` by default; set `STEADILY_LIVE=1` to hit
+    `api.steadily.com`. 15s AbortController timeout. Returns
+    `{status, body}` on 2xx; throws on non-2xx with `.status` + `.body`
+    attached.
+  - `buildPropertyPayload({address, propertyId, propertyDetails,
+    propertyMetadata, metadata})` — convenience builder for single-property
+    requests. Only `address` is required; everything else is optional
+    passthrough so we can send the richer payload the curl example shows
+    (size_sqft, year_built, property_type, stories, bedrooms, etc.) once
+    the deal page knows those fields.
+
+- **`termsforsale/netlify/functions/insurance-quote.js`** — rewritten to
+  use the helper. Removed the hardcoded key. Removed the `https` module
+  in favor of the shared `fetch`-based helper. Request body now accepts
+  the optional `property_id`, `property_details`, `property_metadata`,
+  and top-level `metadata` fields in addition to the existing address
+  fields, so future callers can send richer payloads without touching
+  this function again. Response projection (`available`, `annual`,
+  `monthly`, `startUrl`, `propertyId`) is unchanged — backward compatible
+  with the existing `deal.html` caller at line 1130.
+
+**Docs caveat (flagged in `_steadily.js` header comment):** the Steadily
+Redoc page at
+`https://api.steadily.com/estimate-api/redoc#tag/Quote-Estimates/operation/quote_estimate`
+returned 403 from every fetch attempt in the build environment (direct
+WebFetch, curl, and alternate doc URLs all blocked). The helper therefore
+returns the full parsed JSON body as-is so callers can read whichever
+fields the current API version documents. `insurance-quote.js` still
+projects `estimates[0].estimate.lowest` / `start_url` / `property_id`
+based on the observed staging response shape the old code was parsing;
+if the canonical schema names anything differently, that projection may
+need adjustment. Payload shape is verified against the user-provided
+curl command and is an exact match.
+
+**Smoke tests (all pass):**
+- `buildPropertyPayload()` with full inputs from the curl example produces
+  byte-identical structure to the curl JSON body.
+- `buildPropertyPayload()` throws on missing `address.street_address` /
+  `city` / `state`.
+- `quoteEstimate()` throws on empty `properties` array.
+- `quoteEstimate()` throws cleanly when `STEADILY_API_KEY` is unset.
+- `insurance-quote.js` loads cleanly as a module.
+- `scripts/ops-audit.js` local-mode confirms all 62 function modules load
+  without errors.
+
+**Env vars required:** `STEADILY_API_KEY` (set in Netlify dashboard — the
+hardcoded fallback was removed so this is now mandatory). Optional:
+`STEADILY_LIVE=1` to flip from staging to production.
+
 ## Completed — April 9 2026 Domain Migration to Apex termsforsale.com
 
 Brooke promoted `termsforsale.com` to the Netlify primary domain (with

@@ -2,47 +2,33 @@
  * Steadily Insurance Quote — POST /.netlify/functions/insurance-quote
  *
  * Proxies a quote request to Steadily's API and returns the estimate.
- * Called from the deal page with the property address.
+ * Called from the deal page with the property address (and optionally
+ * property details + metadata for richer quoting).
  *
- * ENV VARS: STEADILY_API_KEY (staging or production)
- * Staging URL: api.staging.steadily.com
- * Production URL: api.steadily.com
+ * Request body (JSON):
+ *   street_address  (required)
+ *   city            (required)
+ *   state           (required)
+ *   zip             (optional, passed as zip_code)
+ *   county          (optional)
+ *   property_id       (optional passthrough)
+ *   property_details  (optional object: size_sqft, year_built, property_type, ...)
+ *   property_metadata (optional object, passthrough)
+ *   metadata          (optional top-level metadata object)
+ *
+ * Response:
+ *   { available, annual, monthly, startUrl, propertyId }
+ *
+ * ENV VARS: STEADILY_API_KEY (required), STEADILY_LIVE (optional)
  */
 
-const https = require('https');
+const { quoteEstimate, buildPropertyPayload } = require('./_steadily');
 
-function steadilyRequest(body, apiKey, isStaging) {
-  var hostname = isStaging ? 'api.staging.steadily.com' : 'api.steadily.com';
-  return new Promise(function(resolve, reject) {
-    var opts = {
-      hostname: hostname,
-      path: '/v1/quote/estimate',
-      method: 'POST',
-      headers: {
-        'Authorization': 'Api-Key ' + apiKey,
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json'
-      }
-    };
-    var req = https.request(opts, function(res) {
-      var data = '';
-      res.on('data', function(c) { data += c; });
-      res.on('end', function() {
-        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
-        catch(e) { resolve({ status: res.statusCode, body: data }); }
-      });
-    });
-    req.on('error', reject);
-    req.write(JSON.stringify(body));
-    req.end();
-  });
-}
-
-exports.handler = async function(event) {
-  var headers = {
+exports.handler = async function (event) {
+  const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type'
   };
 
   if (event.httpMethod === 'OPTIONS') {
@@ -53,66 +39,94 @@ exports.handler = async function(event) {
     return { statusCode: 405, headers: headers, body: JSON.stringify({ error: 'POST only' }) };
   }
 
-  var apiKey = process.env.STEADILY_API_KEY || '35f32f0a-bcc5-404c-aded-54085ba27050';
-  var isStaging = !process.env.STEADILY_LIVE;
+  let body;
+  try { body = JSON.parse(event.body || '{}'); }
+  catch (e) {
+    return { statusCode: 400, headers: headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
+  }
 
-  var body;
-  try { body = JSON.parse(event.body); }
-  catch(e) { return { statusCode: 400, headers: headers, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
-
-  var street = body.street_address || '';
-  var city = body.city || '';
-  var state = body.state || '';
-  var zip = body.zip || '';
+  const street = body.street_address || '';
+  const city   = body.city || '';
+  const state  = body.state || '';
+  const zip    = body.zip || body.zip_code || '';
+  const county = body.county || '';
 
   if (!street || !city || !state) {
     return { statusCode: 400, headers: headers, body: JSON.stringify({ error: 'Missing address fields' }) };
   }
 
+  const address = {
+    street_address: street,
+    city: city,
+    state: state,
+    zip_code: zip
+  };
+  if (county) address.county = county;
+
+  let payload;
   try {
-    var result = await steadilyRequest({
-      properties: [{
-        address: {
-          street_address: street,
-          city: city,
-          state: state,
-          zip_code: zip
-        }
-      }]
-    }, apiKey, isStaging);
+    payload = buildPropertyPayload({
+      address: address,
+      propertyId: body.property_id,
+      propertyDetails: body.property_details,
+      propertyMetadata: body.property_metadata,
+      metadata: body.metadata
+    });
+  } catch (e) {
+    return { statusCode: 400, headers: headers, body: JSON.stringify({ error: e.message }) };
+  }
 
-    console.log('[insurance-quote] Steadily response: status=' + result.status + ' body=' + JSON.stringify(result.body).substring(0, 300));
-
-    if (result.status !== 200) {
-      return { statusCode: 502, headers: headers, body: JSON.stringify({ error: 'Quote unavailable', status: result.status, detail: JSON.stringify(result.body).substring(0, 200) }) };
-    }
-
-    var estimates = result.body.estimates || [];
-    if (!estimates.length) {
-      return { statusCode: 200, headers: headers, body: JSON.stringify({ available: false, message: 'No estimate available for this property' }) };
-    }
-
-    var est = estimates[0];
-    var annual = est.estimate && est.estimate.lowest ? est.estimate.lowest : 0;
-    var monthly = annual > 0 ? Math.round(annual / 12) : 0;
-    var startUrl = est.start_url || '';
-
-    console.log('[insurance-quote] ' + city + ', ' + state + ' — $' + monthly + '/mo, url=' + (startUrl ? 'yes' : 'no'));
-
-    return {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify({
-        available: true,
-        annual: annual,
-        monthly: monthly,
-        startUrl: startUrl,
-        propertyId: est.property_id || ''
-      })
-    };
-
+  let result;
+  try {
+    result = await quoteEstimate(payload);
   } catch (err) {
+    if (err && typeof err.status === 'number' && err.status > 0) {
+      console.error('[insurance-quote] Steadily error ' + err.status, err.body);
+      return {
+        statusCode: 502,
+        headers: headers,
+        body: JSON.stringify({
+          error: 'Quote unavailable',
+          status: err.status,
+          detail: JSON.stringify(err.body).substring(0, 200)
+        })
+      };
+    }
     console.error('[insurance-quote] Error:', err.message);
     return { statusCode: 500, headers: headers, body: JSON.stringify({ error: err.message }) };
   }
+
+  console.log('[insurance-quote] Steadily 200 body=' + JSON.stringify(result.body).substring(0, 300));
+
+  // Response shape based on observed staging responses: `estimates[]` with
+  // `estimate.lowest` (annual premium, USD), `start_url`, and `property_id`.
+  // Redoc was not reachable from this environment; callers should treat the
+  // mapping below as a best-effort projection and fall back gracefully.
+  const estimates = (result.body && result.body.estimates) || [];
+  if (!estimates.length) {
+    return {
+      statusCode: 200,
+      headers: headers,
+      body: JSON.stringify({ available: false, message: 'No estimate available for this property' })
+    };
+  }
+
+  const est = estimates[0] || {};
+  const annual = (est.estimate && typeof est.estimate.lowest === 'number') ? est.estimate.lowest : 0;
+  const monthly = annual > 0 ? Math.round(annual / 12) : 0;
+  const startUrl = est.start_url || '';
+
+  console.log('[insurance-quote] ' + city + ', ' + state + ' — $' + monthly + '/mo, url=' + (startUrl ? 'yes' : 'no'));
+
+  return {
+    statusCode: 200,
+    headers: headers,
+    body: JSON.stringify({
+      available: monthly > 0,
+      annual: annual,
+      monthly: monthly,
+      startUrl: startUrl,
+      propertyId: est.property_id || ''
+    })
+  };
 };
