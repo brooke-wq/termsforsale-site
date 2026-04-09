@@ -306,3 +306,8 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     
+[[redirects]]
+  from = "/r/*"
+  to = "/.netlify/functions/track-click?d=:splat"
+  status = 200
+  force = true
