@@ -208,6 +208,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/buyer-alert"
+  to = "/.netlify/functions/buyer-alert"
+  status = 200
+
+[[redirects]]
+  from = "/api/deal-view-tracker"
+  to = "/.netlify/functions/deal-view-tracker"
+  status = 200
+
+[[redirects]]
   from = "/api/saved-deals"
   to = "/.netlify/functions/saved-deals"
   status = 200
