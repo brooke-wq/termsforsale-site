@@ -295,9 +295,4 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-
-[[redirects]]
-  from = "/r/:dealCode"
-  to = "/.netlify/functions/track-click?d=:dealCode"
-  status = 200
-  force = true
+    
