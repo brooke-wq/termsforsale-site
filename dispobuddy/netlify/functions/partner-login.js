@@ -20,8 +20,14 @@
  */
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
-const OTP_FIELD_KEY = 'portal_otp_code';    // stores "123456:1712345678000"
-const OTP_EXPIRY_MS = 15 * 60 * 1000;       // 15 minutes
+const OTP_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
+
+// OTP is stored as "OTP:CODE:EXPIRY" — unique prefix avoids collision with TFS reset codes
+function encodeOtp(code, expiresAt) { return `OTP:${code}:${expiresAt}`; }
+function decodeOtp(val) {
+  const m = /^OTP:(\d{6}):(\d+)$/.exec(val || '');
+  return m ? { code: m[1], expiresAt: parseInt(m[2], 10) } : null;
+}
 
 exports.handler = async (event) => {
   const headers = {
@@ -82,27 +88,58 @@ async function handleRequest(body, ghlHeaders, locationId, respHeaders) {
   // Generate 6-digit code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + OTP_EXPIRY_MS;
-  const storedValue = `${code}:${expiresAt}`;
+  const storedValue = encodeOtp(code, expiresAt);
 
-  // Store code on the contact
+  // Get field map so we can use the field's actual ID (not just key name)
+  const fieldMap = await getCustomFieldMap(locationId, ghlHeaders);
+  let fieldId = findOtpFieldId(fieldMap);
+
+  // If field doesn't exist yet, create it
+  if (!fieldId) {
+    console.log('[partner-login] portal_otp_code field not found — creating it');
+    fieldId = await createOtpField(locationId, ghlHeaders);
+    if (fieldId) console.log('[partner-login] Created portal_otp_code field:', fieldId);
+  }
+
+  // Build the custom field payload — prefer ID-based (reliable), fall back to key-based
+  const cfPayload = fieldId
+    ? [{ id: fieldId, value: storedValue }]
+    : [{ key: 'portal_otp_code', field_value: storedValue }];
+
+  console.log('[partner-login] Storing OTP on contact', contact.partner.id, '— fieldId:', fieldId || 'none (using key)');
+
   const updateRes = await fetch(`${GHL_BASE}/contacts/${contact.partner.id}`, {
     method: 'PUT',
     headers: ghlHeaders,
-    body: JSON.stringify({
-      customFields: [{ key: OTP_FIELD_KEY, field_value: storedValue }],
-    }),
+    body: JSON.stringify({ customFields: cfPayload }),
   });
+
   if (!updateRes.ok) {
     const errData = await updateRes.json().catch(() => ({}));
-    console.warn('OTP store failed:', updateRes.status, JSON.stringify(errData).substring(0, 200));
-    // Non-fatal — try to continue. If field doesn't exist, admin needs to create portal_otp_code field.
+    console.error('[partner-login] OTP store FAILED:', updateRes.status, JSON.stringify(errData).substring(0, 300));
+
+    // If ID-based failed, try key-based as fallback
+    if (fieldId) {
+      console.log('[partner-login] Retrying with key-based format...');
+      const retryRes = await fetch(`${GHL_BASE}/contacts/${contact.partner.id}`, {
+        method: 'PUT',
+        headers: ghlHeaders,
+        body: JSON.stringify({ customFields: [{ key: 'portal_otp_code', field_value: storedValue }] }),
+      });
+      const retryData = await retryRes.json().catch(() => ({}));
+      console.log('[partner-login] Key retry result:', retryRes.status, JSON.stringify(retryData).substring(0, 200));
+    }
+  } else {
+    const updateData = await updateRes.json().catch(() => ({}));
+    console.log('[partner-login] OTP stored successfully. Status:', updateRes.status,
+      '— contact customFields count:', (updateData.contact?.customFields || updateData.customFields || []).length);
   }
 
   // Send the code via SMS (if live)
   const isLive = process.env.NOTIFICATIONS_LIVE === 'true';
   if (isLive && contact.partner.phone) {
     try {
-      await fetch(`${GHL_BASE}/conversations/messages`, {
+      const smsRes = await fetch(`${GHL_BASE}/conversations/messages`, {
         method: 'POST',
         headers: ghlHeaders,
         body: JSON.stringify({
@@ -111,11 +148,17 @@ async function handleRequest(body, ghlHeaders, locationId, respHeaders) {
           message: `Your Dispo Buddy login code: ${code}\n\nExpires in 15 minutes. Don't share this with anyone.`,
         }),
       });
+      if (!smsRes.ok) {
+        const smsErr = await smsRes.json().catch(() => ({}));
+        console.warn('[partner-login] SMS send failed:', smsRes.status, JSON.stringify(smsErr).substring(0, 200));
+      } else {
+        console.log('[partner-login] OTP SMS sent to', contact.partner.phone);
+      }
     } catch (err) {
-      console.warn('OTP SMS send failed:', err.message);
+      console.warn('[partner-login] OTP SMS error:', err.message);
     }
   } else {
-    console.log('OTP (test mode — not sent via SMS):', code, 'for', contact.partner.id);
+    console.log('[partner-login] OTP (NOTIFICATIONS_LIVE is off — not sent via SMS):', code, 'for contact', contact.partner.id);
   }
 
   // Mask phone for UI feedback
@@ -148,41 +191,67 @@ async function handleVerify(body, ghlHeaders, locationId, respHeaders) {
     return { statusCode: contact.status, headers: respHeaders, body: JSON.stringify({ error: contact.error }) };
   }
 
-  // Fetch the contact's custom fields to read the stored code
+  // Fetch the contact's full data (including custom fields)
   const fullRes = await fetch(`${GHL_BASE}/contacts/${contact.partner.id}`, { headers: ghlHeaders });
   const fullData = await fullRes.json();
   const fullContact = fullData.contact || fullData;
   const cfArray = fullContact.customFields || [];
 
+  console.log('[partner-login] Verify — contact', contact.partner.id, '— customFields count:', cfArray.length);
+
+  // Log all custom field values to help debug
+  for (const f of cfArray) {
+    if (f.value) {
+      console.log('[partner-login] CF:', f.id || '?', '|', f.fieldKey || f.key || f.name || '?', '=', String(f.value).substring(0, 30));
+    }
+  }
+
+  // Find the OTP field — match by unique "OTP:" prefix in value (avoids key name issues)
   let stored = '';
   for (const f of cfArray) {
-    const k = f.fieldKey || f.key || f.name || '';
-    if (k === OTP_FIELD_KEY && /^\d{6}:\d+$/.test(f.value || '')) {
-      stored = f.value;
+    const val = f.value || '';
+    if (decodeOtp(val)) {
+      stored = val;
+      console.log('[partner-login] Found OTP value on field:', f.id || '?', f.fieldKey || f.key || f.name || '?');
       break;
     }
   }
 
   if (!stored) {
+    console.warn('[partner-login] No OTP found in customFields. Field count:', cfArray.length,
+      '— Fields with values:', cfArray.filter(f => f.value).length);
     return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'No code on file. Request a new one.' }) };
   }
 
-  const [storedCode, expiresAt] = stored.split(':');
-  if (Date.now() > parseInt(expiresAt, 10)) {
+  const parsed = decodeOtp(stored);
+  if (!parsed) {
+    return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'Invalid code format. Request a new one.' }) };
+  }
+
+  if (Date.now() > parsed.expiresAt) {
     return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'Code expired. Request a new one.' }) };
   }
-  if (storedCode !== body.code) {
+
+  if (parsed.code !== body.code) {
+    console.log('[partner-login] Code mismatch. Entered:', body.code, '— Stored:', parsed.code);
     return { statusCode: 400, headers: respHeaders, body: JSON.stringify({ error: 'Incorrect code.' }) };
   }
 
   // Clear the code so it can't be reused
   try {
+    const fieldMap = await getCustomFieldMap(locationId, ghlHeaders);
+    const fieldId = findOtpFieldId(fieldMap);
+    const clearPayload = fieldId
+      ? [{ id: fieldId, value: '' }]
+      : [{ key: 'portal_otp_code', field_value: '' }];
     await fetch(`${GHL_BASE}/contacts/${contact.partner.id}`, {
       method: 'PUT',
       headers: ghlHeaders,
-      body: JSON.stringify({ customFields: [{ key: OTP_FIELD_KEY, field_value: '' }] }),
+      body: JSON.stringify({ customFields: clearPayload }),
     });
   } catch (err) { /* non-fatal */ }
+
+  console.log('[partner-login] OTP verified for', contact.partner.name, '(', contact.partner.id, ')');
 
   return {
     statusCode: 200,
@@ -290,4 +359,69 @@ async function findPartner(body, ghlHeaders, locationId) {
       tags: contact.tags || [],
     },
   };
+}
+
+// ─────────────────────────────────────────────────────────────
+// GHL CUSTOM FIELD HELPERS
+// ─────────────────────────────────────────────────────────────
+
+/** Fetch all location custom fields and return { key/name → id } map */
+async function getCustomFieldMap(locationId, ghlHeaders) {
+  const map = {};
+  try {
+    const res = await fetch(`${GHL_BASE}/locations/${locationId}/customFields`, { headers: ghlHeaders });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const fields = data.customFields || data.fields || [];
+      for (const f of fields) {
+        const key = f.fieldKey || f.key || f.name;
+        const id  = f.id;
+        if (key && id) map[key] = id;
+        // Also store lowercase name for looser matching
+        if (f.name && id) map[f.name.toLowerCase()] = id;
+      }
+      console.log('[partner-login] Custom field map: loaded', Object.keys(map).length, 'fields');
+    } else {
+      console.warn('[partner-login] Custom field lookup failed:', res.status);
+    }
+  } catch (err) {
+    console.warn('[partner-login] Custom field lookup error:', err.message);
+  }
+  return map;
+}
+
+/** Find the OTP field ID from the field map, checking multiple possible key names */
+function findOtpFieldId(fieldMap) {
+  return fieldMap['portal_otp_code']
+    || fieldMap['contact.portal_otp_code']
+    || fieldMap['portal otp code']
+    || fieldMap['portal_otp_code'.toLowerCase()]
+    || null;
+}
+
+/** Create the portal_otp_code custom field in GHL if it doesn't exist */
+async function createOtpField(locationId, ghlHeaders) {
+  try {
+    const res = await fetch(`${GHL_BASE}/locations/${locationId}/customFields`, {
+      method: 'POST',
+      headers: ghlHeaders,
+      body: JSON.stringify({
+        name: 'portal_otp_code',
+        dataType: 'TEXT',
+        model: 'contact',
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const id = data.customField?.id || data.id;
+      console.log('[partner-login] Created portal_otp_code field, id:', id);
+      return id || null;
+    } else {
+      console.warn('[partner-login] Failed to create OTP field:', res.status, JSON.stringify(data).substring(0, 200));
+      return null;
+    }
+  } catch (err) {
+    console.warn('[partner-login] OTP field creation error:', err.message);
+    return null;
+  }
 }
