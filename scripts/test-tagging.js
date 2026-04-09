@@ -11,7 +11,7 @@
  *   node scripts/test-tagging.js
  *
  * ENV VARS (optional):
- *   BASE_URL             — default https://deals.termsforsale.com
+ *   BASE_URL             — default https://termsforsale.com
  *   TEST_CONTACT_ID_1    — real GHL contact ID for test buyer #1
  *                          (default: 1HMBtAv9EuTlJa5EekAL — Brooke's contact)
  *   TEST_CONTACT_ID_2    — real GHL contact ID for test buyer #2
@@ -26,7 +26,7 @@ const https = require('https');
 const http = require('http');
 const { URL } = require('url');
 
-const BASE_URL = process.env.BASE_URL || 'https://deals.termsforsale.com';
+const BASE_URL = process.env.BASE_URL || 'https://termsforsale.com';
 const CONTACT_1 = process.env.TEST_CONTACT_ID_1 || '1HMBtAv9EuTlJa5EekAL';
 const CONTACT_2 = process.env.TEST_CONTACT_ID_2 || CONTACT_1;
 // /api/deal-buyer-list is password-protected. Pass your admin password

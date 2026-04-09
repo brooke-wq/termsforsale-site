@@ -11,12 +11,23 @@ const DEALS_DB_ID = process.env.NOTION_COMMERCIAL_DB_ID;
 const HMAC_SECRET = process.env.NDA_HMAC_SECRET;
 const NOTION_VERSION = "2022-06-28";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "https://deals.termsforsale.com",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type",
-  "Content-Type": "application/json",
-};
+const ALLOWED_ORIGINS = [
+  "https://termsforsale.com",
+  "https://www.termsforsale.com",
+  "https://deals.termsforsale.com",
+];
+
+function cors(event) {
+  const origin = (event && event.headers && (event.headers.origin || event.headers.Origin)) || "";
+  const allowOrigin = ALLOWED_ORIGINS.indexOf(origin) !== -1 ? origin : "https://termsforsale.com";
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Vary": "Origin",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type",
+    "Content-Type": "application/json",
+  };
+}
 
 function constantTimeCompare(a, b) {
   if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
@@ -102,6 +113,7 @@ function buildPublicDeal(page) {
 }
 
 exports.handler = async (event) => {
+  const CORS = cors(event);
   if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: CORS };
   if (event.httpMethod !== "GET") {
     return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: "method not allowed" }) };

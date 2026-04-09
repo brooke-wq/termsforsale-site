@@ -15,7 +15,7 @@
  *                  Filter: Message contains any of:
  *                    INTERESTED, interested, YES, Yes, yes
  *   Action:        Webhook
- *                  URL:    https://deals.termsforsale.com/api/buyer-alert
+ *                  URL:    https://termsforsale.com/api/buyer-alert
  *                  Method: POST
  *                  Body:   Custom Data (default GHL contact payload — GHL
  *                          will send contact.id, contact.firstName,

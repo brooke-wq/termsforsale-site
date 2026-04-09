@@ -183,7 +183,7 @@
   <div class="subtitle">Master Reference &mdash; Build, Fields, Automations, SOPs, Workflows &amp; AI</div>
   <div class="meta">
     <div class="meta-item"><strong>Owner:</strong> Deal Pros LLC</div>
-    <div class="meta-item"><strong>Domain:</strong> deals.termsforsale.com</div>
+    <div class="meta-item"><strong>Domain:</strong> termsforsale.com</div>
     <div class="meta-item"><strong>Portal:</strong> termsforsale.app.clientclub.net</div>
     <div class="meta-item"><strong>Stack:</strong> Static HTML + Netlify + Notion + GHL</div>
     <div class="meta-item"><strong>Updated:</strong> March 25, 2026</div>
@@ -195,7 +195,7 @@
 <!-- ============================================================ -->
 <div class="section" id="architecture">
 <h2><span class="num">1.</span> Site Architecture</h2>
-<pre><code>deals.termsforsale.com (Netlify)
+<pre><code>termsforsale.com (Netlify)
 ├── / ................................. Homepage &mdash; deal listings, signup, buying criteria
 ├── /deal.html?id=XX ................. Deal detail &mdash; photos, terms, offers
 ├── /dashboard.html .................. Buyer dashboard &mdash; saved deals, offers, activity
@@ -570,7 +570,7 @@
     <li>Set Contact Role = "Buyer"</li>
     <li>Add to "Buyer Inquiries" pipeline &rarr; New Lead stage</li>
     <li>Send <strong>Welcome Email</strong> (plain text or branded)</li>
-    <li>Wait 2 min &rarr; Send SMS: "Hey {first_name}, welcome to Terms For Sale! Browse deals at deals.termsforsale.com"</li>
+    <li>Wait 2 min &rarr; Send SMS: "Hey {first_name}, welcome to Terms For Sale! Browse deals at termsforsale.com"</li>
     <li>Internal notification to team (Slack or email)</li>
   </ol>
 </div>
@@ -765,7 +765,7 @@ Common objections and response frameworks:
 - "The entry fee is too high" → Compare to traditional down payment, show cash-on-cash return
 - "I'm worried about the due-on-sale clause" → Explain actual enforcement statistics, insurance options
 - "The rate seems high for seller finance" → Compare to hard money rates, show total cost of capital
-- "I don't understand subject-to" → Explain simply, reference the blog at deals.termsforsale.com/blog
+- "I don't understand subject-to" → Explain simply, reference the blog at termsforsale.com/blog
 - "Is this deal still available?" → Check status, offer alternatives if sold
 - "Can I negotiate the price?" → Explain offer process, encourage portal submission
 
@@ -961,7 +961,7 @@ Keep messages under 300 characters for SMS. Be conversational, not salesy. Use t
   <div class="sop-step"><strong>Add deal to Notion</strong> &mdash; Fill all required fields (Deal Type, Address, City, State, ZIP, Asking Price, Entry Fee, ARV, Rent, Beds, Baths, Sqft, Year Built, Highlights 1-3)</div>
   <div class="sop-step"><strong>Upload photos</strong> &mdash; Create Google Drive folder, upload property photos, paste folder URL into Notion "Photos" field</div>
   <div class="sop-step"><strong>Set status</strong> &mdash; Change Deal Status to "Actively Marketing"</div>
-  <div class="sop-step"><strong>Verify on site</strong> &mdash; Visit deals.termsforsale.com and confirm deal appears (may take ~60s for cache)</div>
+  <div class="sop-step"><strong>Verify on site</strong> &mdash; Visit termsforsale.com and confirm deal appears (may take ~60s for cache)</div>
   <div class="sop-step"><strong>Verify deal page</strong> &mdash; Click into deal, confirm photos load, terms display correctly</div>
   <div class="sop-step"><strong>Buyer alerts fire automatically</strong> &mdash; notify-buyers.js runs every 30 min, matches deal to buyers, triggers <code>new-deal-alert</code> tag</div>
   <div class="sop-step"><strong>Optional: Manual test</strong> &mdash; Hit <code>/api/notify-test?deal_id={NOTION_PAGE_ID}</code> to test matching</div>
@@ -1001,7 +1001,7 @@ Keep messages under 300 characters for SMS. Be conversational, not salesy. Use t
   <div class="sop-step">Enter session password</div>
   <div class="sop-step">Fill in all 4 steps: Deal info + SEO copy, Financial details, Deal narrative, Review and publish</div>
   <div class="sop-step">Post created on GitHub &rarr; auto-deploys to Netlify</div>
-  <div class="sop-step">Verify post at <code>deals.termsforsale.com/blog/posts/{slug}.html</code></div>
+  <div class="sop-step">Verify post at <code>termsforsale.com/blog/posts/{slug}.html</code></div>
   <div class="sop-step">Share link on social media / email</div>
 </div>
 
@@ -1116,7 +1116,7 @@ Keep messages under 300 characters for SMS. Be conversational, not salesy. Use t
   <tr><td><strong>Teal</strong></td><td><span style="display:inline-block;width:14px;height:14px;background:#7296aa;border-radius:3px;vertical-align:middle;margin-right:6px"></span><code>#7296aa</code> (labels)</td></tr>
   <tr><td><strong>Background</strong></td><td><span style="display:inline-block;width:14px;height:14px;background:#F4F6F9;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid #ddd"></span><code>#F4F6F9</code></td></tr>
   <tr><td><strong>Logo SVG</strong></td><td><code>https://assets.cdn.filesafe.space/.../697a3aee1fd827ffd863448d.svg</code></td></tr>
-  <tr><td><strong>OG Image</strong></td><td><code>https://deals.termsforsale.com/og-default.png</code></td></tr>
+  <tr><td><strong>OG Image</strong></td><td><code>https://termsforsale.com/og-default.png</code></td></tr>
   <tr><td><strong>GA4 ID</strong></td><td><code>G-DRV6NWNY06</code></td></tr>
   <tr><td><strong>Company</strong></td><td>Deal Pros LLC</td></tr>
   <tr><td><strong>Email</strong></td><td>info@termsforsale.com</td></tr>
