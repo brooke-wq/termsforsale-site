@@ -140,6 +140,26 @@ function tagsWithPrefix(tags, prefix) {
   return tags.filter(function(t) { return String(t || '').indexOf(prefix) === 0; });
 }
 
+/**
+ * Extract match tier (1|2|3|null) from a contact's tags for a specific deal slug.
+ * Tier tags are written by notify-buyers.js at blast time as `tier1:[slug]`,
+ * `tier2:[slug]`, `tier3:[slug]`. Historical blasts (before tier tagging was
+ * added) won't have any tier tag → returns null.
+ *
+ *   tier 1 = strict buy-box match (≥ 2 criteria)
+ *   tier 2 = relaxed match (≥ 1 criterion) — only if tier 1 < 50 buyers
+ *   tier 3 = state-only fallback — only if tier 1 + 2 < 50 buyers
+ */
+function findTierForDeal(tags, dealSlug) {
+  for (var i = 0; i < tags.length; i++) {
+    var t = String(tags[i] || '').toLowerCase();
+    if (t === 'tier1:' + dealSlug) return 1;
+    if (t === 'tier2:' + dealSlug) return 2;
+    if (t === 'tier3:' + dealSlug) return 3;
+  }
+  return null;
+}
+
 // ─── Handler ───────────────────────────────────────────────────
 
 exports.handler = async function(event) {
@@ -195,7 +215,8 @@ exports.handler = async function(event) {
         email: c.email || '',
         acqTags: tagsWithPrefix(tags, 'acq:'),
         mktTags: tagsWithPrefix(tags, 'mkt:'),
-        dealStatus: findStatusTag(tags)   // may be null if they haven't responded yet
+        dealStatus: findStatusTag(tags),  // may be null if they haven't responded yet
+        tier: findTierForDeal(tags, dealSlug)  // 1|2|3|null — null for historical blasts
       };
     });
 

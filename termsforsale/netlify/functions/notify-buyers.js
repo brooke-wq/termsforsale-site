@@ -432,17 +432,25 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
   var addressSlug = slugifyAddress(deal.streetAddress, deal.city, deal.state);
   var sentTag = addressSlug ? 'sent:' + addressSlug : null;
+  // Per-blast tier tag: tier1:[slug] / tier2:[slug] / tier3:[slug]
+  //   tier 1 = strict buy-box match (≥ 2 criteria)
+  //   tier 2 = relaxed match (≥ 1 criterion) — only if tier 1 < 50 buyers
+  //   tier 3 = state-only fallback — only if tier 1 + 2 < 50 buyers
+  // Used by /admin/deal-buyers.html to distinguish real matches from padding.
+  var tierNum = contact.tier || contact._tier;  // set on the buyer object by findMatchingBuyers
+  var tierTag = (addressSlug && tierNum) ? 'tier' + tierNum + ':' + addressSlug : null;
   var existingTags = contact.tags || [];
   if (existingTags.indexOf(dealTag) > -1) {
     console.log('notify-buyers: SKIP ' + contact.name + ' — already alerted for deal ' + deal.id);
     return 'skipped-duplicate';
   }
 
-  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag
+  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag + tierN:[slug] match-quality tag
   // (sent:[slug] is the one the admin Deal Buyer List dashboard queries —
   //  without it, new deal blasts are invisible to /admin/deal-buyers.html)
   var tagsToAdd = ['new-deal-alert', dealTag];
   if (sentTag) tagsToAdd.push(sentTag);
+  if (tierTag) tagsToAdd.push(tierTag);
 
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';
   var result = await httpRequest(tagUrl, {

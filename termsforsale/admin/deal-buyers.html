@@ -18,6 +18,19 @@ tr.row-passed{background:rgba(229,62,62,.03);opacity:.75}
 .status-passed{background:rgba(229,62,62,.1);color:var(--red)}
 .status-none{background:var(--bg);color:var(--text-light);font-style:italic}
 
+/* Tier match-quality pill */
+.tier-pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
+.tier-1{background:rgba(16,185,129,.15);color:#047857}
+.tier-2{background:rgba(247,148,29,.15);color:#b7600a}
+.tier-3{background:rgba(229,62,62,.12);color:#991b1b}
+.tier-none{background:var(--bg);color:var(--text-light);font-style:italic;font-weight:600}
+
+/* Tier filter pills above the table */
+.tier-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tier-filter button{background:#fff;border:1.5px solid var(--border);color:var(--text-mid);padding:7px 14px;border-radius:999px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.tier-filter button:hover{border-color:var(--blue);color:var(--blue)}
+.tier-filter button.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
 .hint{font-size:11px;color:var(--text-light);margin-top:8px}
 .copy-btn{background:transparent;border:none;cursor:pointer;padding:2px 6px;font-size:11px;color:var(--blue);font-weight:600}
 .copy-btn:hover{text-decoration:underline}
@@ -91,6 +104,7 @@ AdminShell.renderShell('deal-buyers');
 
 var BUYERS = [];
 var CURRENT_SLUG = '';
+var TIER_FILTER = 'all';   // 'all' | '1' | '2' | '3' | 'none'
 
 function statusInfo(dealStatus) {
   switch (dealStatus) {
@@ -101,6 +115,30 @@ function statusInfo(dealStatus) {
     default:                 return { label: 'Not yet responded', cls: 'none' };
   }
 }
+
+/**
+ * Tier 1 = strict buy-box match (≥ 2 criteria)
+ * Tier 2 = relaxed match (≥ 1 criterion) — only if tier 1 < 50 buyers
+ * Tier 3 = state-only fallback — only if tier 1 + 2 < 50 buyers
+ * null   = historical blast before tier tagging was added (April 9, 2026)
+ */
+function tierInfo(tier) {
+  if (tier === 1) return { label: 'Tier 1 · Strict Match', cls: 'tier-1' };
+  if (tier === 2) return { label: 'Tier 2 · Relaxed', cls: 'tier-2' };
+  if (tier === 3) return { label: 'Tier 3 · State Fallback', cls: 'tier-3' };
+  return { label: 'Historical', cls: 'tier-none' };
+}
+
+function countByTier(buyers, tier) {
+  if (tier === 'none') return buyers.filter(function (b) { return !b.tier; }).length;
+  return buyers.filter(function (b) { return b.tier === tier; }).length;
+}
+
+function setTierFilter(f) {
+  TIER_FILTER = f;
+  render(CURRENT_SLUG, BUYERS);
+}
+window.setTierFilter = setTierFilter;
 
 async function loadBuyers() {
   var input = document.getElementById('deal-input').value.trim();
@@ -142,7 +180,7 @@ function render(slug, buyers) {
     return;
   }
 
-  var cards =
+  var statusCards =
     '<div class="stat-grid">'
     + card('Total Sent', buyers.length, '')
     + card('Hot', countByStatus(buyers, 'deal:hot'), 'green')
@@ -151,8 +189,42 @@ function render(slug, buyers) {
     + card('Passed', countByStatus(buyers, 'deal:passed'), 'red')
     + '</div>';
 
-  var rowsHtml = buyers.map(function (b) {
+  var t1 = countByTier(buyers, 1);
+  var t2 = countByTier(buyers, 2);
+  var t3 = countByTier(buyers, 3);
+  var tNone = countByTier(buyers, 'none');
+
+  var tierCards =
+    '<div class="stat-grid" style="margin-top:6px">'
+    + card('Tier 1 · Strict', t1, 'green')
+    + card('Tier 2 · Relaxed', t2, '')
+    + card('Tier 3 · State Fallback', t3, 'red')
+    + card('Historical (pre-tier)', tNone, 'purple')
+    + '</div>';
+
+  // Filter buyers by the active tier filter
+  var filtered = buyers;
+  if (TIER_FILTER === '1') filtered = buyers.filter(function (b) { return b.tier === 1; });
+  else if (TIER_FILTER === '2') filtered = buyers.filter(function (b) { return b.tier === 2; });
+  else if (TIER_FILTER === '3') filtered = buyers.filter(function (b) { return b.tier === 3; });
+  else if (TIER_FILTER === 'none') filtered = buyers.filter(function (b) { return !b.tier; });
+
+  function filterBtn(val, label, count) {
+    var active = TIER_FILTER === val ? ' active' : '';
+    return '<button class="' + active + '" onclick="setTierFilter(\'' + val + '\')">' + label + ' (' + count + ')</button>';
+  }
+  var tierFilter =
+    '<div class="tier-filter">'
+    + filterBtn('all', 'All', buyers.length)
+    + filterBtn('1', 'Tier 1', t1)
+    + filterBtn('2', 'Tier 2', t2)
+    + filterBtn('3', 'Tier 3', t3)
+    + (tNone > 0 ? filterBtn('none', 'Historical', tNone) : '')
+    + '</div>';
+
+  var rowsHtml = filtered.map(function (b) {
     var si = statusInfo(b.dealStatus);
+    var ti = tierInfo(b.tier);
     var rowClass = si.cls !== 'none' ? 'row-' + si.cls : '';
     var acqTags = (b.acqTags || []).map(function (t) { return '<span class="mini-tag acq">' + AdminShell.esc(t.replace('acq:', '')) + '</span>'; }).join('');
     var mktTags = (b.mktTags || []).map(function (t) { return '<span class="mini-tag mkt">' + AdminShell.esc(t.replace('mkt:', '')) + '</span>'; }).join('');
@@ -160,6 +232,7 @@ function render(slug, buyers) {
 
     return '<tr class="' + rowClass + '">'
       + '<td><span class="pill status-' + si.cls + '" style="background:rgba(' + (si.cls === 'hot' ? '16,185,129' : si.cls === 'interested' ? '41,171,226' : si.cls === 'passed' ? '229,62,62' : '160,174,192') + ',.15)">' + AdminShell.esc(si.label) + '</span></td>'
+      + '<td><span class="tier-pill ' + ti.cls + '">' + AdminShell.esc(ti.label) + '</span></td>'
       + '<td class="cell-strong">' + AdminShell.esc(b.name || '—') + '</td>'
       + '<td>' + (b.phone ? '<a href="tel:' + AdminShell.esc(b.phone) + '" style="color:var(--blue)">' + AdminShell.esc(b.phone) + '</a> <button class="copy-btn" onclick="AdminShell.copy(\'' + AdminShell.esc(b.phone) + '\')">copy</button>' : '<span class="muted">—</span>') + '</td>'
       + '<td>' + (b.email ? '<a href="mailto:' + AdminShell.esc(b.email) + '" style="color:var(--blue)">' + AdminShell.esc(b.email) + '</a>' : '<span class="muted">—</span>') + '</td>'
@@ -167,16 +240,21 @@ function render(slug, buyers) {
       + '</tr>';
   }).join('');
 
-  results.innerHTML = cards
+  var emptyFiltered = filtered.length === 0
+    ? '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-light)">No buyers match this filter.</td></tr>'
+    : '';
+
+  results.innerHTML = statusCards + tierCards
     + '<div class="panel">'
     +   '<div class="panel-head">'
-    +     '<div><div class="panel-title">Results</div><div class="panel-sub">Tag: <code>sent:' + AdminShell.esc(slug) + '</code></div></div>'
+    +     '<div><div class="panel-title">Results</div><div class="panel-sub">Tag: <code>sent:' + AdminShell.esc(slug) + '</code> · Showing ' + filtered.length + ' of ' + buyers.length + '</div></div>'
     +     '<button class="btn secondary" onclick="loadBuyers()" style="padding:7px 14px;font-size:12px">Refresh</button>'
     +   '</div>'
     +   '<div class="panel-body flush">'
+    +     tierFilter
     +     '<div class="table-wrap"><table class="t">'
-    +       '<thead><tr><th>Status</th><th>Name</th><th>Phone</th><th>Email</th><th>Acq / Mkt Tags</th></tr></thead>'
-    +       '<tbody>' + rowsHtml + '</tbody>'
+    +       '<thead><tr><th>Status</th><th>Tier</th><th>Name</th><th>Phone</th><th>Email</th><th>Acq / Mkt Tags</th></tr></thead>'
+    +       '<tbody>' + (rowsHtml || emptyFiltered) + '</tbody>'
     +     '</table></div>'
     +   '</div>'
     + '</div>';
@@ -188,11 +266,13 @@ function card(label, value, cls) {
 
 function exportCsv() {
   if (!BUYERS.length) return;
-  var headers = ['Status', 'Name', 'Phone', 'Email', 'Acq Tags', 'Mkt Tags', 'Contact ID'];
+  var headers = ['Status', 'Tier', 'Name', 'Phone', 'Email', 'Acq Tags', 'Mkt Tags', 'Contact ID'];
   var rows = BUYERS.map(function (b) {
     var si = statusInfo(b.dealStatus);
+    var tierLabel = b.tier ? 'Tier ' + b.tier : 'Historical';
     return [
       si.label,
+      tierLabel,
       b.name || '',
       b.phone || '',
       b.email || '',
