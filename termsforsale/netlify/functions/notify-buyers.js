@@ -10,6 +10,7 @@
 
 const https = require('https');
 const { buildDealUrl, buildTrackedDealUrl } = require('./_deal-url');
+const { setDealWebsiteLink } = require('./_notion-url');
 
 // ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
 var sentLog;
@@ -817,6 +818,21 @@ exports.handler = async function(event) {
 
     for (var i = 0; i < deals.length; i++) {
       var deal = deals[i];
+
+      // Best-effort: sync the Notion "Website Link" URL column with the
+      // short /d/{city}-{zip}-{code} URL so Notion views show a clickable
+      // live link. Never blocks alerts if the PATCH fails.
+      try {
+        var linkResult = await setDealWebsiteLink(token, deal);
+        if (!linkResult.ok) {
+          console.warn('notify-buyers: Website Link patch failed for ' + deal.id + ' status=' + linkResult.status);
+        } else {
+          console.log('notify-buyers: Website Link synced for ' + deal.id + ' → ' + deal.dealUrl);
+        }
+      } catch (linkErr) {
+        console.warn('notify-buyers: Website Link patch threw for ' + deal.id + ': ' + linkErr.message);
+      }
+
       var buyers = await findMatchingBuyers(apiKey, locationId, deal);
 
       var dealResult = {
