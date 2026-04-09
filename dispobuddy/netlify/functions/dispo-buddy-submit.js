@@ -247,7 +247,7 @@ function buildPartnerConfirmationEmail(d) {
   return `
     <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1F3C">
       <div style="background:#0a1828;padding:28px 24px;text-align:center;border-radius:12px 12px 0 0">
-        <img src="https://dispobuddy.netlify.app/logo-email.png" alt="Dispo Buddy" style="height:48px;margin:0 auto">
+        <img src="https://dispobuddy.com/logo-email.png" alt="Dispo Buddy" style="height:48px;margin:0 auto">
       </div>
       <div style="padding:32px 24px;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px">
         <h1 style="font-size:24px;font-weight:800;margin-bottom:16px">Deal Received!</h1>
@@ -572,6 +572,17 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
   function url(name, val)      { if (val) props[name] = { url: String(val) }; }
   function date(name, val)     { if (val) props[name] = { date: { start: String(val) } }; }
 
+  // Auto-generate Deal ID (e.g. PHX-001, MSA-042)
+  try {
+    const dealId = await generateDealId(token, dbId, d.property_city, d.property_state);
+    if (dealId) {
+      text('Deal ID', dealId);
+      console.log('[dispo-buddy-submit] Generated Deal ID:', dealId);
+    }
+  } catch (err) {
+    console.warn('[dispo-buddy-submit] Deal ID generation failed (non-fatal):', err.message);
+  }
+
   const dealTypeMap = {
     'Cash': 'Cash', 'Subto': 'SubTo', 'Seller Finance': 'Seller Finance',
     'Hybrid': 'Hybrid', 'Morby/Stack Method': 'Morby Method',
@@ -713,6 +724,104 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
   }
 
   return data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// DEAL ID GENERATION
+// Produces a unique deal code like "PHX-001" / "MSA-042" based on
+// city (preferred) or state, with the sequence number auto-incremented
+// from the highest existing Deal ID with the same prefix in Notion.
+// ─────────────────────────────────────────────────────────────
+
+// 3-letter codes for major Deal Pros markets. Fallback logic handles
+// any city not in this map (first 3 letters of city name).
+const CITY_CODE_MAP = {
+  // Phoenix metro
+  'phoenix': 'PHX', 'scottsdale': 'SCT', 'mesa': 'MSA', 'tempe': 'TMP',
+  'chandler': 'CHD', 'gilbert': 'GIL', 'glendale': 'GLN', 'peoria': 'PEO',
+  'surprise': 'SUR', 'goodyear': 'GDY', 'buckeye': 'BKY', 'avondale': 'AVN',
+  'apache junction': 'APJ', 'queen creek': 'QCK', 'maricopa': 'MRC',
+  'fountain hills': 'FTH', 'el mirage': 'EMR', 'anthem': 'ANT',
+  'cave creek': 'CVK', 'carefree': 'CFR', 'paradise valley': 'PVY',
+  'san tan valley': 'STV', 'litchfield park': 'LIT', 'tolleson': 'TLS',
+  'sun city': 'SUN', 'sun city west': 'SCW',
+  // Other AZ
+  'tucson': 'TUC', 'casa grande': 'CGR', 'prescott': 'PRC',
+  'prescott valley': 'PRV', 'flagstaff': 'FLG', 'sedona': 'SDN',
+  'yuma': 'YUM', 'kingman': 'KGM', 'lake havasu city': 'LHC',
+  'bullhead city': 'BHC', 'sierra vista': 'SVA', 'show low': 'SLW',
+  'payson': 'PAY', 'florence': 'FLO', 'oro valley': 'ORV',
+  'marana': 'MRN', 'san luis': 'SLU', 'nogales': 'NOG',
+};
+
+function getDealPrefix(city, state) {
+  // Try the city map first
+  if (city) {
+    const key = String(city).toLowerCase().trim();
+    if (CITY_CODE_MAP[key]) return CITY_CODE_MAP[key];
+    // Fallback: strip non-alpha, take first 3 letters
+    const clean = String(city).replace(/[^a-zA-Z]/g, '').toUpperCase();
+    if (clean.length >= 3) return clean.substring(0, 3);
+  }
+  // Final fallback: use state abbreviation (2 letters) + 'X'
+  const st = String(state || '').replace(/[^a-zA-Z]/g, '').toUpperCase();
+  if (st.length >= 2) return st.substring(0, 2) + 'X';
+  return 'DPR'; // Deal Pros
+}
+
+async function generateDealId(token, dbId, city, state) {
+  const prefix = getDealPrefix(city, state);
+
+  // Query Notion for the highest existing Deal ID with this prefix
+  let maxSeq = 0;
+  let cursor = undefined;
+  let pageCount = 0;
+  const MAX_PAGES = 5; // safety cap
+
+  do {
+    const queryBody = {
+      filter: {
+        property: 'Deal ID',
+        rich_text: { starts_with: `${prefix}-` },
+      },
+      page_size: 100,
+    };
+    if (cursor) queryBody.start_cursor = cursor;
+
+    const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28',
+      },
+      body: JSON.stringify(queryBody),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.warn('[generateDealId] Notion query failed:', res.status, errText.substring(0, 200));
+      break;
+    }
+
+    const data = await res.json();
+    const results = data.results || [];
+    for (const page of results) {
+      const dealIdProp = page.properties?.['Deal ID'];
+      const val = (dealIdProp?.rich_text || []).map(t => t.plain_text).join('').trim();
+      const match = /^[A-Z]+-(\d+)$/.exec(val);
+      if (match) {
+        const seq = parseInt(match[1], 10);
+        if (seq > maxSeq) maxSeq = seq;
+      }
+    }
+
+    cursor = data.has_more ? data.next_cursor : undefined;
+    pageCount++;
+  } while (cursor && pageCount < MAX_PAGES);
+
+  const nextSeq = maxSeq + 1;
+  return `${prefix}-${String(nextSeq).padStart(3, '0')}`;
 }
 
 // ─────────────────────────────────────────────────────────────
