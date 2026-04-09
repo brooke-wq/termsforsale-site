@@ -101,7 +101,7 @@ exports.handler = async function(event) {
         var dealUrlRaw = cf['5eEVPcp8nERlR6GpjZUn'] || '';
         // Extract deal page ID from stored URL for tracking
         var dealPageId = (dealUrlRaw.match(/[?&]id=([^&]+)/) || [])[1] || dealId;
-        var dealUrl = dealUrlRaw ? 'https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + dealPageId + '&r=1' : 'https://deals.termsforsale.com/deals.html';
+        var dealUrl = dealUrlRaw ? 'https://termsforsale.com/api/track-view?c=' + contact.id + '&d=' + dealPageId + '&r=1' : 'https://termsforsale.com/deals.html';
 
         // File-based dedup check helper
         var useFileDedup = sentLog && sentLog.isDroplet();

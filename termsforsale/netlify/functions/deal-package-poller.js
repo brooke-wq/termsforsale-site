@@ -105,7 +105,7 @@ async function processContact(contact, anthropicKey, ghlKey, locationId) {
   const loanBal   = cf.subto_loan_balance || '';
   const rate      = cf.interest_rate    || '';
   const piti      = cf.monthly_payment  || '';
-  const dealUrl   = cf.deal_url         || 'https://deals.termsforsale.com';
+  const dealUrl   = cf.deal_url         || 'https://termsforsale.com';
 
   const fmt = function(n) { return n ? '$' + (+n).toLocaleString() : ''; };
 

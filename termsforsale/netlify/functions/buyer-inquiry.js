@@ -115,7 +115,7 @@ exports.handler = async (event) => {
       if (confirmContactId && payload.phone) {
         try {
           await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, payload.phone,
-            'Thanks ' + (payload.firstName || '') + '! Your buying criteria is saved. We\'ll match you to deals automatically. Browse: https://deals.termsforsale.com');
+            'Thanks ' + (payload.firstName || '') + '! Your buying criteria is saved. We\'ll match you to deals automatically. Browse: https://termsforsale.com');
           smsOk = true;
         } catch(e) { console.warn('[buyer-inquiry] SMS failed:', e.message); }
       }
@@ -133,7 +133,7 @@ exports.handler = async (event) => {
             + '<p style="color:#4A5568;line-height:1.6;margin:0 0 20px">Here\'s a recap of what you submitted:</p>'
             + '<div style="background:#F4F6F9;border-radius:8px;padding:16px 20px;margin:0 0 24px;font-size:13px;line-height:1.8;color:#4A5568">' + summary + '</div>'
             + '<p style="color:#4A5568;line-height:1.6;margin:0 0 20px">We\'ll start matching you to deals that fit your criteria. You can update your buy box anytime at:</p>'
-            + '<a href="https://deals.termsforsale.com/buy-box.html" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Update My Buy Box</a>'
+            + '<a href="https://termsforsale.com/buy-box.html" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Update My Buy Box</a>'
             + '<p style="color:#718096;font-size:13px;margin-top:24px">Questions? Reply to this email anytime.</p>'
             + '</div></div>'
           );

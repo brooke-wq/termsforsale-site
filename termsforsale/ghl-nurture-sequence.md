@@ -25,7 +25,7 @@ Welcome to the VIP buyer list. You're now ahead of the public blasts.
 
 Here's what we've got live right now:
 
-→ [View Active Deals](https://deals.termsforsale.com)
+→ [View Active Deals](https://termsforsale.com)
 
 Every deal on our board is pre-vetted — we don't blast junk. When something matches your buy box, you'll hear from us first.
 
@@ -65,7 +65,7 @@ Quick breakdown of how we operate:
 
 We're not a marketplace. We're operators who move our own contracts. You're buying direct from us or our JV partners.
 
-Current live deals → [View Board](https://deals.termsforsale.com)
+Current live deals → [View Board](https://termsforsale.com)
 
 — Brooke
 ```

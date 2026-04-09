@@ -76,7 +76,7 @@ exports.handler = async function(event) {
     var loanBal   = deal.loan_balance || deal.subtoLoanBalance || '';
     var rate      = deal.rate || deal.subtoRate || '';
     var piti      = deal.piti || '';
-    var dealUrl   = deal.deal_url || deal.dealUrl || 'https://deals.termsforsale.com/deal.html?id=' + (deal.id || '');
+    var dealUrl   = deal.deal_url || deal.dealUrl || 'https://termsforsale.com/deal.html?id=' + (deal.id || '');
 
     var fmt = function(n) { return n ? '$' + (+n).toLocaleString() : ''; };
 

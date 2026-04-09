@@ -72,7 +72,7 @@ exports.handler = async (event) => {
           'Deal ID: ' + dealId + '\n' +
           'Source: ' + source + '\n' +
           'Date: ' + new Date().toISOString() + '\n' +
-          'URL: https://deals.termsforsale.com/deal.html?id=' + dealId
+          'URL: https://termsforsale.com/deal.html?id=' + dealId
         ),
         // NEW: increment buyer_views on the JV partner contact (Dispo Buddy)
         incrementJvPartnerViews(apiKey, dealId)

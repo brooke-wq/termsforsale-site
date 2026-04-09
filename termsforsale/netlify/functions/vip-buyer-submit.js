@@ -90,7 +90,7 @@ exports.handler = async function(event) {
   if (phone && contactId) {
     try {
       await sendSMS(apiKey, locationId, phone,
-        'Welcome to the Terms For Sale VIP list, ' + firstName + '! You\'ll get first access to our best off-market deals. Browse now: https://deals.termsforsale.com');
+        'Welcome to the Terms For Sale VIP list, ' + firstName + '! You\'ll get first access to our best off-market deals. Browse now: https://termsforsale.com');
       console.log('[vip-buyer-submit] confirmation SMS sent to ' + phone);
     } catch (e) {
       console.warn('[vip-buyer-submit] SMS failed:', e.message);
@@ -112,7 +112,7 @@ exports.handler = async function(event) {
         + '<li><strong>Deal alerts</strong> matched to your buy box via SMS + email</li>'
         + '<li><strong>Direct access</strong> to our acquisitions team</li>'
         + '</ul>'
-        + '<a href="https://deals.termsforsale.com" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">Browse Deals Now →</a>'
+        + '<a href="https://termsforsale.com" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">Browse Deals Now →</a>'
         + '<p style="color:#718096;font-size:13px;margin-top:24px">Reply to this email anytime — we\'re real people.</p>'
         + '</div></div>'
       );

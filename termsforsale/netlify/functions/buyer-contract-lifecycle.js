@@ -212,7 +212,7 @@ function getStageTemplate(stage, ctx) {
       internal: `💵 EMD IN: ${propertyAddress}`,
     },
     'Closed': {
-      sms: `🎉 ${firstName}, we closed on ${propertyAddress}! Congrats. Looking for your next deal? deals.termsforsale.com — Terms For Sale`,
+      sms: `🎉 ${firstName}, we closed on ${propertyAddress}! Congrats. Looking for your next deal? termsforsale.com — Terms For Sale`,
       email: {
         subject: `🎉 Congrats — ${propertyAddress} closed!`,
         html: buildClosedEmail(firstName, propertyAddress),
@@ -220,7 +220,7 @@ function getStageTemplate(stage, ctx) {
       internal: `✅ BUYER CLOSED: ${propertyAddress}`,
     },
     'Lost': {
-      sms: `Hey ${firstName}, we weren't able to close ${propertyAddress} this time. New deals drop daily — keep an eye on deals.termsforsale.com. — Terms For Sale`,
+      sms: `Hey ${firstName}, we weren't able to close ${propertyAddress} this time. New deals drop daily — keep an eye on termsforsale.com. — Terms For Sale`,
       email: {
         subject: `Update on ${propertyAddress}`,
         html: buildLostEmail(firstName, propertyAddress),
@@ -257,7 +257,7 @@ function emailShell(innerHtml) {
   </div>
   <div style="padding:24px;text-align:center;color:#718096;font-size:12px;border-top:1px solid #E2E8F0">
     Terms For Sale — A Deal Pros LLC Brand<br>
-    <a href="https://deals.termsforsale.com" style="color:#29ABE2">deals.termsforsale.com</a> · (480) 637-3117
+    <a href="https://termsforsale.com" style="color:#29ABE2">termsforsale.com</a> · (480) 637-3117
   </div>
 </div>`;
 }
@@ -378,7 +378,7 @@ function buildClosedEmail(firstName, address) {
         New deals drop daily. You're on our alert list — keep an eye on your inbox.
       </p>
       <div style="text-align:center">
-        <a href="https://deals.termsforsale.com/deals.html" style="display:inline-block;padding:14px 36px;background:#F7941D;color:#fff;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px">
+        <a href="https://termsforsale.com/deals.html" style="display:inline-block;padding:14px 36px;background:#F7941D;color:#fff;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px">
           Browse Active Deals
         </a>
       </div>
@@ -400,7 +400,7 @@ function buildLostEmail(firstName, address) {
       <strong>Don't let it slow you down.</strong> We drop new deals every day and you're on our buyer alert list. The next one is always around the corner.
     </p>
     <div style="text-align:center;margin:24px 0">
-      <a href="https://deals.termsforsale.com/deals.html" style="display:inline-block;padding:12px 28px;background:#29ABE2;color:#fff;border-radius:8px;font-weight:700;text-decoration:none">
+      <a href="https://termsforsale.com/deals.html" style="display:inline-block;padding:12px 28px;background:#29ABE2;color:#fff;border-radius:8px;font-weight:700;text-decoration:none">
         See Active Deals
       </a>
     </div>
