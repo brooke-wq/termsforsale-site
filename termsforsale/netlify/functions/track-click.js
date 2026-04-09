@@ -27,7 +27,7 @@ async function logClickToNotion({ dealCode, contactId, email, channel, userAgent
   const now = new Date().toISOString();
   const clickId = `${dealCode}-${contactId || email || 'anon'}-${Date.now()}`;
   try {
-    await fetch('https://api.notion.com/v1/pages', {
+    const res = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -48,6 +48,8 @@ async function logClickToNotion({ dealCode, contactId, email, channel, userAgent
         },
       }),
     });
+    const json = await res.json();
+    console.log('Notion response:', res.status, JSON.stringify(json).slice(0, 500));
   } catch (e) {
     console.error('Notion log click failed:', e.message);
   }
