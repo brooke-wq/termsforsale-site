@@ -2,6 +2,22 @@
   publish = "termsforsale"
   functions = "termsforsale/netlify/functions"
 
+# Legacy deals.termsforsale.com → apex termsforsale.com
+# Netlify's built-in "primary domain" auto-301 was not firing reliably in
+# incognito after the primary-domain switch, so this forces the redirect at
+# the rule level. Path-preserving so /deal.html?id=... still lands correctly.
+[[redirects]]
+  from = "https://deals.termsforsale.com/*"
+  to = "https://termsforsale.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://deals.termsforsale.com/*"
+  to = "https://termsforsale.com/:splat"
+  status = 301
+  force = true
+
 # buyingcriteria.com → redirect to buying criteria page
 [[redirects]]
   from = "https://buyingcriteria.com/*"
