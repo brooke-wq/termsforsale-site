@@ -117,6 +117,22 @@ function prop(page, name) {
   }
 }
 
+// Slugify an address the same way scripts/migrate-sent-tags.js and
+// termsforsale/netlify/functions/tag-blast-sent.js do it.
+// "123 Main St Mesa AZ" → "123-main-st-mesa-az"
+// IMPORTANT: all three slugifiers MUST stay in lockstep or the admin buyer
+// dashboard won't find the tags that notify-buyers writes.
+function slugifyAddress(street, city, state) {
+  var parts = [street, city, state].filter(Boolean).join(' ');
+  return String(parts)
+    .toLowerCase()
+    .replace(/,/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 function parseDeal(page) {
   return {
     id: page.id,
@@ -414,13 +430,20 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
 
   // DEDUP CHECK 2: Tag-based dedup (GHL — works on Netlify too)
   var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
+  var addressSlug = slugifyAddress(deal.streetAddress, deal.city, deal.state);
+  var sentTag = addressSlug ? 'sent:' + addressSlug : null;
   var existingTags = contact.tags || [];
   if (existingTags.indexOf(dealTag) > -1) {
     console.log('notify-buyers: SKIP ' + contact.name + ' — already alerted for deal ' + deal.id);
     return 'skipped-duplicate';
   }
 
-  // Add dedup tag + new-deal-alert tag
+  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag
+  // (sent:[slug] is the one the admin Deal Buyer List dashboard queries —
+  //  without it, new deal blasts are invisible to /admin/deal-buyers.html)
+  var tagsToAdd = ['new-deal-alert', dealTag];
+  if (sentTag) tagsToAdd.push(sentTag);
+
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';
   var result = await httpRequest(tagUrl, {
     method: 'POST',
@@ -430,7 +453,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       'Content-Type': 'application/json'
     }
   }, {
-    tags: ['new-deal-alert', dealTag]
+    tags: tagsToAdd
   });
 
   // Update GHL custom fields with deal info
