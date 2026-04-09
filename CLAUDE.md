@@ -344,6 +344,91 @@ redirects.
 level sidebar item on every admin page, and the per-deal buyer lookup
 is separate (Deal Buyer Lookup) so the two are no longer conflated.
 
+## Completed — April 9 2026 track-view Hang Hotfix (PR #40)
+
+Day 2 follow-up SMS link (`https://deals.termsforsale.com/api/track-view?c=…&d=…&r=1`)
+was spinning forever for buyers. Root cause: the GET handler was `await`-ing
+up to 5 serial GHL/Notion API hops (`getContact` + `addTags` + `postNote` +
+Notion page fetch + JV-partner GET + JV-partner PUT) before returning the 302.
+Any cold start or slow hop pushed the click past Netlify's 10s function timeout.
+
+**Fix shipped in `termsforsale/netlify/functions/track-view.js` (commit 7f1de56):**
+- GET mode now ALWAYS redirects. Tracking writes (addTags + postNote) are
+  raced against a 1500 ms timeout — if GHL hangs we redirect anyway.
+- Dropped the `r=1` requirement. If a carrier strips the trailing `&r=1`, the
+  link still lands the buyer on `/deal.html?id=…` instead of falling through
+  to POST mode and returning raw JSON.
+- Dropped `getContact` (only used for a log line, one wasted round trip).
+- Dropped `incrementJvPartnerViews` entirely — 3 serial API hops on a Dispo
+  Buddy metric path this file flags as not-yet-wired-up, and the most likely
+  actual hanger. If we want buyer_views metrics back, they belong in a
+  separate fire-and-forget job, not in the redirect hot path.
+- Missing `dealId` falls back to `/deals.html` instead of a 400 JSON.
+- POST mode (frontend view tracking from `deal.html`) unchanged.
+
+Smoke-tested all 8 code paths locally; timed a single GET with a stubbed-hang
+underlying fetch — redirect fires in ~1500 ms (vs the previous ≥10 s timeout).
+
+## Completed — April 9 2026 Alert-Preference A/B/C Handler
+
+The Day 2 follow-up SMS in `deal-follow-up.js:180` prompts buyers with:
+> Last ping on [deal]. Want me to:
+> A) Keep sending you stuff like this
+> B) Tighten to [city] only
+> C) Pause alerts for now
+> Reply A/B/C.
+
+But `buyer-response-tag.js` only matched `1/2/3` + `IN/MAYBE/PASS`, so every
+A/B/C reply was logged as "unmatched" and had zero effect. This session wires
+it up end-to-end.
+
+**Tag model** (3 mutually exclusive preference tags — writing one clears the other two):
+
+| Reply | Tag | Semantic | Enforcement |
+|---|---|---|---|
+| A | `pref-keep-all` | Default — no change | none (no-op) |
+| B | `pref-market-only` | Only deals in buyer's `targetCities` | `matchesBuyBox` hard-rejects non-matching city; tier-3 fallback also rejects |
+| C | `alerts-paused` | Stop all future alerts | `fetchAllBuyers` filters these out of the buyer universe entirely |
+
+All three also stamp `buyer-responded` so the follow-up sprint stops on that deal.
+
+**Changes shipped:**
+
+- `termsforsale/netlify/functions/buyer-response-tag.js`
+  - Added 6 new patterns for A/B/C (bare letter, punctuated `a.`/`a)`, and
+    natural-language aliases: `keep`, `keep sending`, `tighten`, `market only`,
+    `city only`, `pause`, `pause alerts`, `stop for now`).
+  - Split `ALL_RESPONSE_TAGS` into `DEAL_RESPONSE_TAGS` (IN/MAYBE/PASS family)
+    and `PREF_TAGS` (A/B/C family). Pref replies now only clear other prefs;
+    deal replies only clear deal sprint tags. No cross-contamination.
+  - Note heading switches between "BUYER RESPONSE" (deal) and "ALERT PREF" (pref).
+  - Response payload adds `kind: 'deal' | 'pref'` so the GHL workflow can
+    branch downstream if needed.
+
+- `termsforsale/netlify/functions/notify-buyers.js`
+  - `fetchAllBuyers` skips any contact tagged `alerts-paused` — paused buyers
+    are invisible to notify-buyers until the tag is manually removed.
+  - `matchesBuyBox` reads `contact.tags` and if `pref-market-only` is set,
+    converts the existing soft city match into a hard reject (no target
+    cities on buy box → fail; target cities set but deal city not in list
+    → fail). State/price/structure/etc. criteria still apply as before.
+  - Tier 3 (state-only fallback) bypasses `matchesBuyBox`, so the same
+    `pref-market-only` check is inlined into the tier 3 buyer loop.
+
+**Smoke tests (temp harness, not checked in):**
+- 27 reply-parsing cases (1/2/3 regression + all new A/B/C patterns + unmatched) — 27/27 pass
+- 5 tag-swap side-effect cases — verified pref replies clear pref tags only and deal replies clear deal tags only, no cross-contamination — 5/5 pass
+- `notify-buyers.js` static + `require()` load test — passes
+
+**Reuses existing GHL workflow**: no new webhook needed. The existing
+"Customer Reply" workflow already POSTs every inbound SMS/email to
+`/api/buyer-response-tag`; the new patterns just extend the match table.
+
+**Open caveat:** a buyer who types a bare `a`, `b`, or `c` outside the Day 2
+follow-up context will still get tagged — same ambiguity the existing 1/2/3
+matcher has. Low cost (recoverable by tag removal), consistent with the
+status quo.
+
 ## Completed — April 9 2026 Maintenance Audit
 
 Triage session that caught two silent regressions that were breaking buyer
@@ -442,7 +527,7 @@ All items below were completed and deployed:
 - **Signup form** — simplified to name, email, phone, password only
 
 ### Automations
-- **buyer-response-tag.js** — auto-tags buyer responses (IN/MAYBE/PASS, 1/2/3) and maps to deal-hot/deal-warm/deal-paused to stop follow-up sprint
+- **buyer-response-tag.js** — auto-tags buyer responses. Deal sprint replies (1/2/3, IN/MAYBE/PASS) → buyer-interested / buyer-maybe / buyer-pass + deal-hot/deal-warm/deal-paused to stop follow-up sprint. Day-2 alert-preference replies (A/B/C) → pref-keep-all / pref-market-only / alerts-paused; notify-buyers skips paused contacts entirely and enforces hard city match for market-only contacts.
 - **booking-notify.js** — sends SMS to Brooke on new bookings (was previously just logging)
 - **Tracked links** — all deal URLs in alert emails/SMS route through `/api/track-view` for GHL logging
 - **Deal view tracking** — website views (logged-in) + email clicks both tracked on GHL contact
@@ -592,9 +677,161 @@ notes + SMS to Brooke.
 
 ---
 
+## Completed — April 9 2026 Short Deal Link Paths + Notion Description
+
+Outbound deal links (SMS, email, blog, sitemap, deal package) now use a
+short, city/zip-aware path instead of the raw Notion UUID. Old format was
+`https://deals.termsforsale.com/deal.html?id=a1b2c3d4-e5f6-7890-abcd-...`
+(~75 chars). New format is
+`https://deals.termsforsale.com/d/phoenix-85016-phx001` (~50 chars) —
+shorter, and buyers + search engines see the city + ZIP right in the path.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/_deal-url.js` (new)** — shared builder
+  used by every outbound link path. Exports `buildDealUrl(deal)`,
+  `buildDealPath(deal)`, `buildDealSlug(deal)`, `buildTrackedDealUrl(deal,
+  contactId)`. Slug format: `{city-slug}-{zip}-{code}` where `code` is the
+  Notion "Deal ID" (e.g. `PHX-001` → `phx001`), falling back to the first
+  8 alphanumeric chars of the Notion UUID for legacy deals. Missing
+  city/zip pieces are dropped gracefully — a deal with no city and no zip
+  still resolves to `/d/{code}`.
+
+- **`netlify.toml`** — added `/d/* → /deal.html` status-200 rewrite. The
+  pretty URL stays visible in the browser and the deal page's JS parses
+  the slug out of `window.location.pathname`.
+
+- **`termsforsale/deal.html`** — init() now accepts all three link forms:
+  new short path (`/d/phoenix-85016-phx001`), legacy `?id=<uuid>`, and
+  `?slug=` escape hatch. `findDealBySlug()` matches the last hyphen
+  segment of the slug against `deal.dealCode` (normalized to lowercase
+  alphanumeric) and falls back to the first 8 chars of the Notion UUID
+  for pre-Deal-ID deals. If a recipient arrives via `/d/...?c=CONTACT_ID`
+  (the format SMS/email now send), the page fires a track-view POST
+  on load with `source: 'sms-email'` so engagement still logs to GHL.
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — `parseDeal()`
+  now pulls `dealCode` from Notion and builds `dealUrl` via
+  `buildDealUrl()`. SMS and email blast paths both use
+  `buildTrackedDealUrl(deal, contact.id)` for the `/d/...?c=...` format.
+  Saves ~25 chars per SMS, leaves more headroom under the 160-char cap.
+
+- **`termsforsale/netlify/functions/sitemap.js`** — sitemap entries for
+  active deals now use `buildDealPath()`.
+
+- **`termsforsale/netlify/functions/auto-blog.js`** — blog-post CTA
+  buttons link via `buildDealUrl()`.
+
+- **`termsforsale/netlify/functions/deal-package.js`** — Claude marketing
+  package prompt passes the short URL when no explicit `deal_url` custom
+  field is set on the deal.
+
+- **`termsforsale/netlify/functions/track-view.js`** — POST-mode note URL
+  consolidated into a single `noteUrl` const. GET mode intentionally left
+  alone — legacy SMS/email links still redirect to `/deal.html?id=...`
+  with the 1500 ms timeout race, because there's no point paying a Notion
+  round trip on a legacy link just to produce a prettier URL.
+
+### Backwards compatibility
+
+- `?id=<uuid>` links still work — old SMS/email history + any bookmarks
+  resolve exactly as they always did.
+- The new flow is functionally equivalent for tracking: previously,
+  `track-view.js` GET mode added `viewed:`, `Active Viewer`, `Last View:`
+  tags and a note, then redirected. Now, `/d/...?c=CONTACT_ID` lands
+  directly on the deal page and the page JS POSTs to `/api/track-view`
+  which runs the same tag+note writes via the existing `trackView()`
+  function. Same tags, same notes, just fires on page-load instead of
+  pre-redirect.
+- Legacy deals without a Deal ID still get a usable short path —
+  `/d/phoenix-85016-a1b2c3d4` (city, zip, 8-char UUID prefix). The
+  `findDealBySlug` fallback matches on UUID prefix so these links still
+  resolve.
+
+### Notion "Description" field now renders on the deal page
+
+Separate fix in the same session: `deals.js` was pulling `Details` but
+not `Description`, and `deal.html` wasn't rendering either one. Two
+changes:
+
+- **`termsforsale/netlify/functions/deals.js`** — added `description`
+  field alongside `details`. Tries `Description`, `Property Description`,
+  `Deal Description`, `Summary` (in that order) so it picks up whatever
+  the actual Notion column is called.
+- **`termsforsale/deal.html`** — new "About This Deal" card rendered
+  above the tabs (between `.tags-row` and `.tabs`). Uses
+  `d.description || d.details` as the source, HTML-escaped, with
+  `white-space: pre-wrap` so manual line breaks in Notion carry through.
+  New `.deal-desc` CSS block added. Card only renders when a description
+  exists — deals without one look identical to before.
+
+## Completed — April 9 2026 OTP Login Fix + Deal ID Auto-Gen + URL Cleanup
+
+Three fixes shipped in commits `96af2ae`, `aa25bd7`, and `f786ed6`:
+
+### 1. Dispo Buddy OTP login fix (`partner-login.js`)
+Partners could request an OTP via SMS but entering the code returned
+"No code on file." Root cause: the PUT to store the code used a string
+`key: 'portal_otp_code'` which GHL silently dropped — it needs the actual
+field UUID. The field also may not have existed yet on the location.
+
+- Added `getCustomFieldMap()` (same pattern as `dispo-buddy-submit.js`)
+  that fetches `/locations/{id}/customFields` and builds a key → UUID map
+- Added `createOtpField()` that auto-creates the `portal_otp_code` text
+  field if the map lookup comes up empty — so it's self-healing on first run
+- `findOtpFieldId()` checks multiple possible key names
+  (`portal_otp_code`, `contact.portal_otp_code`, lowercase variants)
+- Store now uses `[{ id: fieldId, value: storedValue }]` with a
+  key-based PUT as a fallback if the ID-based one fails
+- OTP value format changed from `CODE:EXPIRY` to `OTP:CODE:EXPIRY` so it
+  can't collide with TFS reset codes on shared contacts (which use
+  `6digits:13digitTimestamp`)
+- On verify, matches by **value pattern** (`/^OTP:\d{6}:\d+$/`) instead
+  of key name — robust against any GHL key naming weirdness
+- Verbose logging added throughout so the next bug is diagnosable from
+  Netlify function logs alone
+
+### 2. Dispo Buddy auto-generate Deal ID (`dispo-buddy-submit.js`)
+Every JV partner submission now gets a Deal ID written to Notion in
+format `PHX-001` / `MSA-042` so the weekly `deal-cleanup` cron can pick
+it up instead of skipping it forever.
+
+- `CITY_CODE_MAP` — 36 AZ cities pre-mapped to 3-letter codes:
+  Phoenix=PHX, Mesa=MSA, Scottsdale=SCT, Tempe=TMP, Chandler=CHD,
+  Gilbert=GIL, Glendale=GLN, Peoria=PEO, Surprise=SUR, Goodyear=GDY,
+  Buckeye=BKY, Avondale=AVN, Tucson=TUC, Flagstaff=FLG, Sedona=SDN,
+  Yuma=YUM, Prescott=PRC, etc.
+- `getDealPrefix(city, state)` — checks city map first, falls back to
+  first 3 alpha chars of city, final fallback is 2-letter state + X
+- `generateDealId(token, dbId, city, state)` — queries Notion with
+  `filter: { property: 'Deal ID', rich_text: { starts_with: '${prefix}-' } }`,
+  paginates up to 5 pages (500 deals), finds max sequence, returns
+  `${prefix}-${String(max + 1).padStart(3, '0')}`
+- Wired into `createNotionDeal` — runs before props are built, writes
+  via the existing `text('Deal ID', dealId)` helper
+- Format matches `jobs/deal-cleanup.js` regex `/^[A-Z]+-[0-9]+$/i`
+- Non-fatal: if generation throws or Notion is down, submission still
+  succeeds without a Deal ID
+- Known limitation: concurrent submissions from the same city within
+  seconds can race to the same sequence number. Volume is low enough
+  this doesn't matter yet; if it does, swap to a GHL counter field.
+
+### 3. `dispobuddy.netlify.app` → `dispobuddy.com` in outbound content
+Updated email template logo srcs and admin SOP references in:
+- `dispobuddy/netlify/functions/partner-onboard.js` (×2 email logos)
+- `dispobuddy/netlify/functions/partner-stage-notify.js` (email shell logo)
+- `dispobuddy/netlify/functions/dispo-buddy-submit.js` (confirmation email)
+- `dispobuddy/admin/sop.html` (×5 references — Live Site, Test Mode,
+  Partner Dashboard URLs, system status, tech stack row)
+
+CLAUDE.md references to `dispobuddy.netlify.app` left alone as historical
+deploy context.
+
+---
+
 ## TODO — Next Session
 
-1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.netlify.app`: set `NOTIFICATIONS_LIVE=true` in Netlify env vars, test one real submission, re-enable `dispo-buddy-triage` cron on Droplet, point `dispobuddy.com` domain.
+1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.com` (which should now be pointed at the Netlify site): verify the OTP login flow works end to end (Brooke's phone → SMS → enter code → dashboard), confirm `NOTIFICATIONS_LIVE=true` is set in Netlify env vars, test one real submission (should produce a Deal ID like `PHX-001` in Notion), re-enable `dispo-buddy-triage` cron on Droplet.
 
 2. **Deal Tracking Tag System — All wire-up complete as of April 9, 2026** ✅
    - ✅ Branch merged to main (PRs #30–#37)
@@ -606,7 +843,7 @@ notes + SMS to Brooke.
    - ✅ Regex case-insensitivity fix for GHL lowercasing tags on save (PR #37)
    - ✅ GHL "Buyer Interest Webhook" workflow live in Terms For Sale sub-account
    - ✅ End-to-end verified: curl test on real contact returns `{"success":true,"dealIds":["TEST-001"]}`, tag+note+SMS all fire
-   - ⚠️ **Still ongoing:** populate `Deal ID` (e.g. `PHX-001`) on new Notion deal pages going forward — the cleanup job skips any deal missing this field. Legacy deals without Deal ID will stay skipped forever.
+   - ✅ **Deal ID auto-population** — Dispo Buddy submissions now auto-generate `PHX-001`-style IDs in Notion on creation (commit `f786ed6`). Legacy deals still need backfill if you want them cleanable.
    - 🔧 Optional: expand `CLEANUP_STATUSES` env var on droplet if you want Lost/Canceled/Abandoned/EMD Released/Not Accepted deals also auto-cleaned: `echo 'CLEANUP_STATUSES="Closed,Lost,Canceled,Abandoned,EMD Released,Not Accepted"' >> /etc/environment`
 
 3. **GHL Client Portal — Buyer Contract Lifecycle** — The webhook function `buyer-contract-lifecycle.js` handles automated partner-style notifications on Buyer Inquiries pipeline stage changes (Offer Submitted → Contract Sent → Contract Signed → EMD Received → Closed / Lost). To activate:

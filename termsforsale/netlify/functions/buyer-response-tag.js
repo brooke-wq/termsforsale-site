@@ -6,8 +6,16 @@
  *
  * Response mapping:
  *   "1" or "IN"    → interested (tag: buyer-interested)
- *   "2" or "MAYBE" → maybe (tag: buyer-maybe)
- *   "3" or "PASS"  → pass (tag: buyer-pass)
+ *   "2" or "MAYBE" → maybe       (tag: buyer-maybe)
+ *   "3" or "PASS"  → pass        (tag: buyer-pass)
+ *
+ * Day 2 follow-up (deal-follow-up.js SMS 3) also asks for A/B/C:
+ *   "A" or "keep"      → pref-keep-all     (no change to alert flow)
+ *   "B" or "tighten"   → pref-market-only  (gate future alerts to buyer's target cities)
+ *   "C" or "pause"     → alerts-paused     (stop future alerts entirely)
+ *
+ * A/B/C tags are mutually exclusive — writing one always clears the other two.
+ * The actual gating for pref-market-only / alerts-paused lives in notify-buyers.js.
  *
  * GHL webhook payload: { contact_id, message, ... }
  */
@@ -37,10 +45,28 @@ const PATTERNS = [
   { match: /^skip$|^remove me$|^unsubscribe$|^stop$|^take me off$|^opt out$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
   { match: /^too expensive$|^too rich$|^out of my range$|^over budget$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
   { match: /^not in my area$|^wrong market$|^don't buy there$|^too far$/i, tag: 'buyer-pass', label: 'PASS', emoji: '🔴' },
+  // ── ALERT PREFERENCE (A/B/C from Day 2 follow-up SMS 3) ──
+  // A = keep sending everything (default, just records the preference)
+  { match: /^a$|^a\.$|^a\)$/i, tag: 'pref-keep-all', label: 'KEEP ALL', emoji: '🟢', kind: 'pref' },
+  { match: /^keep$|^keep sending$|^keep them coming$|^keep it coming$|^keep all$|^keep sending stuff$/i, tag: 'pref-keep-all', label: 'KEEP ALL', emoji: '🟢', kind: 'pref' },
+  // B = tighten to their target market only (gates future alerts to target cities)
+  { match: /^b$|^b\.$|^b\)$/i, tag: 'pref-market-only', label: 'MARKET ONLY', emoji: '🔵', kind: 'pref' },
+  { match: /^tighten$|^tighten up$|^market only$|^my market only$|^city only$|^tighten to market$|^tighten to my market$/i, tag: 'pref-market-only', label: 'MARKET ONLY', emoji: '🔵', kind: 'pref' },
+  // C = pause all alerts (notify-buyers will skip this contact entirely)
+  { match: /^c$|^c\.$|^c\)$/i, tag: 'alerts-paused', label: 'PAUSED', emoji: '⏸', kind: 'pref' },
+  { match: /^pause$|^pause alerts$|^pause for now$|^stop for now$|^pause me$|^pause my alerts$/i, tag: 'alerts-paused', label: 'PAUSED', emoji: '⏸', kind: 'pref' },
 ];
 
-// Tags to remove when re-categorizing (so a buyer doesn't have conflicting tags)
-const ALL_RESPONSE_TAGS = PATTERNS.map(function(p) { return p.tag; });
+// Legacy deal-sprint response tags (IN/MAYBE/PASS family) — cleared together when re-categorizing.
+const DEAL_RESPONSE_TAGS = PATTERNS
+  .filter(function(p) { return p.kind !== 'pref'; })
+  .map(function(p) { return p.tag; });
+
+// Alert-preference tags (A/B/C family) — mutually exclusive; writing one clears the other two.
+const PREF_TAGS = ['pref-keep-all', 'pref-market-only', 'alerts-paused'];
+
+// Kept for backwards-compat with any callers referencing the full list.
+const ALL_RESPONSE_TAGS = DEAL_RESPONSE_TAGS.concat(PREF_TAGS);
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -79,18 +105,34 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Remove any existing response tags, then add the new one
-    // Also add deal-hot/warm/paused for deal-follow-up sprint compatibility
-    var SPRINT_TAGS = ['deal-hot', 'deal-warm', 'deal-paused'];
-    var sprintTag = matched.tag === 'buyer-interested' ? 'deal-hot'
-                  : matched.tag === 'buyer-maybe' ? 'deal-warm'
-                  : 'deal-paused';
-    await removeTags(apiKey, contactId, ALL_RESPONSE_TAGS.concat(SPRINT_TAGS));
-    await addTags(apiKey, contactId, [matched.tag, sprintTag, 'buyer-responded']);
+    var isPref = matched.kind === 'pref';
+    var tagsToRemove, tagsToAdd, noteHeading;
+
+    if (isPref) {
+      // A/B/C alert preference: the three pref tags are mutually exclusive.
+      // Always clear the other two prefs, write the new one, and stamp
+      // buyer-responded so the Day 2 sprint stops on this deal.
+      tagsToRemove = PREF_TAGS.slice();
+      tagsToAdd = [matched.tag, 'buyer-responded'];
+      noteHeading = 'ALERT PREF';
+    } else {
+      // Legacy IN/MAYBE/PASS flow: also swap the deal-hot/warm/paused
+      // sprint tag so deal-follow-up.js stops on the right branch.
+      var SPRINT_TAGS = ['deal-hot', 'deal-warm', 'deal-paused'];
+      var sprintTag = matched.tag === 'buyer-interested' ? 'deal-hot'
+                    : matched.tag === 'buyer-maybe' ? 'deal-warm'
+                    : 'deal-paused';
+      tagsToRemove = DEAL_RESPONSE_TAGS.concat(SPRINT_TAGS);
+      tagsToAdd = [matched.tag, sprintTag, 'buyer-responded'];
+      noteHeading = 'BUYER RESPONSE';
+    }
+
+    await removeTags(apiKey, contactId, tagsToRemove);
+    await addTags(apiKey, contactId, tagsToAdd);
 
     // Post note
     await postNote(apiKey, contactId,
-      matched.emoji + ' BUYER RESPONSE: ' + matched.label + '\n' +
+      matched.emoji + ' ' + noteHeading + ': ' + matched.label + '\n' +
       'Message: "' + message + '"\n' +
       'Tagged: ' + matched.tag + '\n' +
       'Date: ' + new Date().toISOString().split('T')[0]
@@ -101,6 +143,7 @@ exports.handler = async (event) => {
     return respond(200, {
       ok: true,
       matched: true,
+      kind: isPref ? 'pref' : 'deal',
       tag: matched.tag,
       label: matched.label
     });

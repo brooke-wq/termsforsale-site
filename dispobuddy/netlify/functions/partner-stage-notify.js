@@ -282,7 +282,7 @@ function emailShell(innerHtml) {
   return `
 <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1F3C">
   <div style="padding:32px 24px 16px;text-align:center">
-    <img src="https://dispobuddy.netlify.app/logo-email.png" alt="Dispo Buddy" style="height:60px;margin:0 auto;display:block">
+    <img src="https://dispobuddy.com/logo-email.png" alt="Dispo Buddy" style="height:60px;margin:0 auto;display:block">
   </div>
   <div style="padding:0 24px 32px">
     ${innerHtml}

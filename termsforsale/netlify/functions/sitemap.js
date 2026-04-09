@@ -2,6 +2,8 @@
 // Generates sitemap.xml from Google Sheet + posts-index.json
 // Accessible at /sitemap.xml via redirect in netlify.toml
 
+var { buildDealPath } = require('./_deal-url');
+
 exports.handler = async function(event) {
   var SHEET_ID = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
   var BASE_URL = 'https://deals.termsforsale.com';
@@ -24,7 +26,7 @@ exports.handler = async function(event) {
       var dealsData = await dealsRes.json();
       (dealsData.deals || []).forEach(function(d) {
         urls.push({
-          loc: BASE_URL + '/deal.html?id=' + encodeURIComponent(d.id),
+          loc: BASE_URL + buildDealPath(d),
           priority: '0.8',
           freq: 'weekly'
         });

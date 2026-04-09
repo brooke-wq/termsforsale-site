@@ -9,6 +9,7 @@
 //   DEAL_ALERTS_LIVE — set to "true" to actually send alerts (default: test mode)
 
 const https = require('https');
+const { buildDealUrl, buildTrackedDealUrl } = require('./_deal-url');
 
 // ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
 var sentLog;
@@ -134,8 +135,9 @@ function slugifyAddress(street, city, state) {
 }
 
 function parseDeal(page) {
-  return {
+  var deal = {
     id: page.id,
+    dealCode: prop(page, 'Deal ID'),
     dealType: prop(page, 'Deal Type'),
     streetAddress: prop(page, 'Street Address'),
     city: prop(page, 'City'),
@@ -154,9 +156,10 @@ function parseDeal(page) {
     highlight1: prop(page, 'Highlight 1'),
     highlight2: prop(page, 'Highlight 2'),
     highlight3: prop(page, 'Highlight 3'),
-    dealUrl: 'https://deals.termsforsale.com/deal.html?id=' + page.id,
     lastEdited: page.last_edited_time
   };
+  deal.dealUrl = buildDealUrl(deal);
+  return deal;
 }
 
 // ─── GHL: Search contacts by tags/criteria ───────────────────
@@ -308,6 +311,10 @@ function matchesBuyBox(contact, deal) {
   var reasons = [];
   var fails = [];
 
+  // Day-2 "pref-market-only" tag — buyer explicitly wants their target
+  // market only. If set, disable the state fallback for this buyer.
+  var marketOnly = (contact.tags || []).indexOf('pref-market-only') > -1;
+
   // ═ HARD FILTER 1: buyer status ═
   var buyerStatus = getCFByKey(contact, 'contact.buyer_status');
   if (buyerStatus != null) {
@@ -413,6 +420,15 @@ function matchesBuyBox(contact, deal) {
     return { match: false, fails: ['No market match (no city/state/market overlap)'] };
   }
 
+  // pref-market-only: buyer asked for their target market only — never fall
+  // back to state. Hard-reject if they didn't get a city match.
+  if (marketOnly && !cityMatch) {
+    return {
+      match: false,
+      fails: ['Market-only pref set but deal city ' + (deal.city || '?') + ' not in buyer target market']
+    };
+  }
+
   if (cityMatch) reasons.push('Market: ' + deal.city);
   else reasons.push('State fallback: ' + dealState);
 
@@ -500,7 +516,12 @@ async function fetchAllBuyers(apiKey, locationId) {
           isBuyer = String(contactRole).toLowerCase() === 'buyer';
         }
       }
-      if (isBuyer) allBuyers.push(contact);
+      if (!isBuyer) return;
+      // Skip buyers who asked to pause alerts (reply "C" on Day 2 follow-up SMS).
+      // Tag is set by buyer-response-tag.js and must be manually removed to re-enable.
+      var tags = contact.tags || [];
+      if (tags.indexOf('alerts-paused') > -1) return;
+      allBuyers.push(contact);
     });
 
     if (result.body.meta && result.body.meta.nextPageUrl) {
@@ -573,17 +594,25 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
   var addressSlug = slugifyAddress(deal.streetAddress, deal.city, deal.state);
   var sentTag = addressSlug ? 'sent:' + addressSlug : null;
+  // Per-blast tier tag: tier1:[slug] / tier2:[slug] / tier3:[slug]
+  //   tier 1 = strict buy-box match (≥ 2 criteria)
+  //   tier 2 = relaxed match (≥ 1 criterion) — only if tier 1 < 50 buyers
+  //   tier 3 = state-only fallback — only if tier 1 + 2 < 50 buyers
+  // Used by /admin/deal-buyers.html to distinguish real matches from padding.
+  var tierNum = contact.tier || contact._tier;  // set on the buyer object by findMatchingBuyers
+  var tierTag = (addressSlug && tierNum) ? 'tier' + tierNum + ':' + addressSlug : null;
   var existingTags = contact.tags || [];
   if (existingTags.indexOf(dealTag) > -1) {
     console.log('notify-buyers: SKIP ' + contact.name + ' — already alerted for deal ' + deal.id);
     return 'skipped-duplicate';
   }
 
-  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag
+  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag + tierN:[slug] match-quality tag
   // (sent:[slug] is the one the admin Deal Buyer List dashboard queries —
   //  without it, new deal blasts are invisible to /admin/deal-buyers.html)
   var tagsToAdd = ['new-deal-alert', dealTag];
   if (sentTag) tagsToAdd.push(sentTag);
+  if (tierTag) tagsToAdd.push(tierTag);
 
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';
   var result = await httpRequest(tagUrl, {
@@ -635,7 +664,9 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
     if (price) smsMsg += ' — ' + price;
     if (entry) smsMsg += ' entry ' + entry;
-    smsMsg += '. View: https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
+    // Short /d/{city}-{zip}-{code} link w/ ?c= for view tracking. The deal
+    // page JS reads ?c= and fires a track-view POST on load.
+    smsMsg += '. View: ' + buildTrackedDealUrl(deal, contact.id);
     if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
 
     try {
@@ -670,7 +701,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       deal.yearBuilt ? 'Built ' + deal.yearBuilt : ''
     ].filter(Boolean).join(' · ');
 
-    var trackUrl = 'https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
+    var trackUrl = buildTrackedDealUrl(deal, contact.id);
     var arvStr = deal.arv ? '$' + deal.arv.toLocaleString() : '';
     var rentStr = deal.rentFinal ? '$' + deal.rentFinal.toLocaleString() + '/mo' : '';
     var highlights = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean);

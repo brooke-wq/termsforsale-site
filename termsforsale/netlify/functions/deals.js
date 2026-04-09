@@ -276,6 +276,7 @@ exports.handler = async function(event) {
         highlight2: prop(page, 'Highlight 2'),
         highlight3: prop(page, 'Highlight 3'),
         details: prop(page, 'Details ') || prop(page, 'Details'),
+        description: prop(page, 'Description') || prop(page, 'Property Description') || prop(page, 'Deal Description') || prop(page, 'Summary') || '',
         entryBreakdown: prop(page, 'Entry Breakdown'),
         parking: prop(page, 'Parking'),
         lastEdited: page.last_edited_time
