@@ -81,18 +81,20 @@ function ghlRequest(method, path, apiKey, body) {
 
 /**
  * Search GHL contacts that have a specific tag.
- * Uses POST /contacts/search with a tag filter. Paginates up to 500.
+ * Uses POST /contacts/search with a tag filter. Paginates up to 2000.
  */
 async function searchContactsByTag(apiKey, locationId, tag) {
   var all = [];
   var page = 1;
   var hasMore = true;
+  var PAGE_SIZE = 100;
+  var SAFETY_LIMIT = 2000;  // hard cap to prevent runaway
 
-  while (hasMore && all.length < 500) {
+  while (hasMore && all.length < SAFETY_LIMIT) {
     var res = await ghlRequest('POST', '/contacts/search', apiKey, {
       locationId: locationId,
       page: page,
-      pageLimit: 100,
+      pageLimit: PAGE_SIZE,
       filters: [{
         group: 'AND',
         filters: [{
@@ -113,9 +115,9 @@ async function searchContactsByTag(apiKey, locationId, tag) {
     var batch = (res.body && (res.body.contacts || res.body.data)) || [];
     all = all.concat(batch);
 
-    var meta = (res.body && res.body.meta) || {};
-    var total = meta.total || all.length;
-    if (all.length >= total || batch.length === 0) {
+    // Don't trust meta.total — GHL returns page size, not total count.
+    // Only stop when a batch returns less than PAGE_SIZE (reliable end signal).
+    if (batch.length < PAGE_SIZE) {
       hasMore = false;
     } else {
       page++;
