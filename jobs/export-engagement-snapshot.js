@@ -190,47 +190,63 @@ async function ghlFetch(pathPart, method, body) {
 
 /**
  * Paginate through every contact in the Terms For Sale location using the
- * /contacts/search endpoint. GHL's bulk-list endpoint caps pages at 100.
- * We don't filter server-side — we pull everything and filter in memory.
+ * /contacts/ GET endpoint with cursor-based pagination.
  *
- * Termination: stop when a batch comes back smaller than pageLimit (last
- * page) or when an error occurs. We intentionally do NOT rely on meta.total
- * because GHL doesn't always populate it and the previous version of this
- * script stopped after one page as a result.
+ * Why not /contacts/search? That endpoint caps at 10,000 results (100 pages
+ * × 100 per page) and returns a hard 400 on page 101. This endpoint uses
+ * server-provided cursors (startAfterId + startAfter timestamp) so we can
+ * walk the full contact list regardless of size.
  */
 async function pullAllContacts() {
-  console.log('[export] pulling all GHL contacts (this can take a minute)…');
+  console.log('[export] pulling all GHL contacts (cursor-based)…');
   const all = [];
-  let page = 1;
-  const pageLimit = 100;
-  const hardCap = 20000; // safety stop
+  const limit = 100;
+  const hardCap = 100000; // raised from 20k — cursor endpoint can go further
+  let startAfterId = null;
+  let startAfter = null;
+  let iterations = 0;
+  const maxIterations = Math.ceil(hardCap / limit) + 10;
 
-  while (all.length < hardCap) {
+  while (all.length < hardCap && iterations < maxIterations) {
+    iterations++;
+    const params = new URLSearchParams({
+      locationId: GHL_LOCATION,
+      limit: String(limit),
+    });
+    if (startAfterId) params.set('startAfterId', startAfterId);
+    if (startAfter) params.set('startAfter', String(startAfter));
+
     let res;
     try {
-      res = await ghlFetch('/contacts/search', 'POST', {
-        locationId: GHL_LOCATION,
-        page,
-        pageLimit,
-      });
+      res = await ghlFetch(`/contacts/?${params.toString()}`, 'GET');
     } catch (err) {
-      console.warn(`[export] contacts/search page=${page} failed: ${err.message}`);
+      console.warn(`[export] GET /contacts/ failed at ${all.length}: ${err.message}`);
       break;
     }
+
     const batch = res.contacts || res.data || [];
+    if (batch.length === 0) break;
     all.push(...batch);
 
-    // Stop conditions
-    if (batch.length === 0) break;           // no more data
-    if (batch.length < pageLimit) break;     // last (partial) page
+    if (all.length % 500 === 0 || all.length === batch.length) {
+      console.log(`[export]   …pulled ${all.length} so far`);
+    }
 
-    // Optional safeguard: if GHL reports a total, respect it
-    const reportedTotal =
-      (res.meta && res.meta.total) || res.total || 0;
-    if (reportedTotal > 0 && all.length >= reportedTotal) break;
+    // Extract cursor for next page. GHL returns it under meta.*
+    const meta = res.meta || {};
+    const nextStartAfterId = meta.startAfterId || null;
+    const nextStartAfter = meta.startAfter || null;
 
-    if (page % 5 === 0) console.log(`[export]   …pulled ${all.length} so far`);
-    page++;
+    // No next cursor → end of list
+    if (!nextStartAfterId && !nextStartAfter) break;
+    // Cursor didn't advance → safety stop (prevents infinite loops)
+    if (nextStartAfterId === startAfterId && nextStartAfter === startAfter) break;
+
+    startAfterId = nextStartAfterId;
+    startAfter = nextStartAfter;
+
+    // Last page is partial → done
+    if (batch.length < limit) break;
   }
 
   console.log(`[export] pulled ${all.length} total contacts`);
