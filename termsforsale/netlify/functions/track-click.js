@@ -55,12 +55,13 @@ async function logClickToNotion({ dealCode, contactId, email, channel, userAgent
 
 exports.handler = async (event) => {
   // Deal code comes from the ?d= query param (Netlify rewrite maps /r/:dealCode → ?d=:dealCode)
-  const q = event.queryStringParameters || {};
-  const dealCode = (q.d || '').toUpperCase();
+
   const contactId = q.c || '';
   const email = q.e || '';
   const channel = q.ch || '';
-
+  const q = event.queryStringParameters || {};
+  const pathMatch = (event.rawUrl || event.path || '').match(/\/r\/([^/?]+)/i);
+  const dealCode = (pathMatch ? pathMatch[1] : q.d || '').toUpperCase();
   const userAgent = event.headers['user-agent'] || '';
   const ip = event.headers['x-forwarded-for']?.split(',')[0] || event.headers['client-ip'] || '';
 
