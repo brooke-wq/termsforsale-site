@@ -176,12 +176,16 @@ async function fetchAlertedContacts() {
   var all = [];
   var page = 1;
   var hasMore = true;
+  var PAGE_SIZE = 100;
+  // Some GHL accounts cap search at ~2500 total via pagination. Hard stop
+  // at a safe ceiling to avoid runaway if pagination doesn't signal an end.
+  var SAFETY_LIMIT = 10000;
 
-  while (hasMore) {
+  while (hasMore && all.length < SAFETY_LIMIT) {
     var res = await ghl('POST', '/contacts/search', {
       locationId: GHL_LOCATION_ID,
       page: page,
-      pageLimit: 100,
+      pageLimit: PAGE_SIZE,
       filters: [{
         group: 'AND',
         filters: [{ field: 'tags', operator: 'contains', value: ['new-deal-alert'] }]
@@ -197,10 +201,13 @@ async function fetchAlertedContacts() {
     all = all.concat(batch);
 
     var meta = (res.body && res.body.meta) || {};
-    var total = meta.total || all.length;
-    console.log('  page ' + page + ' → ' + batch.length + ' contacts (total ' + all.length + '/' + total + ')');
+    // meta.total can be unreliable — only log if present, don't rely on it
+    var totalReported = meta.total ? '/' + meta.total : '';
+    console.log('  page ' + page + ' → ' + batch.length + ' contacts (running total ' + all.length + totalReported + ')');
 
-    if (all.length >= total || batch.length === 0) {
+    // Stop when we get a partial or empty page — that's the only reliable
+    // signal that we've reached the end. Do NOT trust meta.total.
+    if (batch.length < PAGE_SIZE) {
       hasMore = false;
     } else {
       page++;
