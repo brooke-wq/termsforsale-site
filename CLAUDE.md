@@ -348,6 +348,21 @@ curl command and is an exact match.
 hardcoded fallback was removed so this is now mandatory). Optional:
 `STEADILY_LIVE=1` to flip from staging to production.
 
+**Post-deploy hotfix (same day, branch
+`claude/fix-steadily-property-id-required`):** The staging API returned a
+422 on the first live call with `{"detail":[{"loc":["body","properties",0,
+"property_id"],"msg":"field required"}]}`. Despite the curl example showing
+`property_id` as just another passthrough field, Steadily actually rejects
+requests that omit it. Since we couldn't reach Redoc to learn this from the
+schema, we only found out via the live 422. Fixed in `insurance-quote.js`
+by auto-generating a stable property_id from a SHA1 hash of
+`street|city|state|zip` (lowercased), prefixed with `tfs_` — same address
+always gets the same ID (good for Steadily's internal tracking). Callers
+can still override via `body.property_id` if they want to pass their own.
+`_steadily.js` header comment now documents the empirical schema notes
+(property_id required, property_details/property_metadata/metadata
+optional) so future maintainers don't repeat the mistake.
+
 ## Completed — April 9 2026 Domain Migration to Apex termsforsale.com
 
 Brooke promoted `termsforsale.com` to the Netlify primary domain (with

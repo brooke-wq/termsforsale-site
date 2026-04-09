@@ -22,6 +22,17 @@
 // (403 from the network). The helper therefore returns the full parsed JSON
 // body as-is so callers can read whichever fields the current API version
 // documents — no silent field dropping.
+//
+// EMPIRICAL SCHEMA NOTES (observed from staging, not Redoc — update as learned):
+//   - `properties[].property_id` is REQUIRED. Omitting it returns a 422 with
+//     `{"detail":[{"loc":["body","properties",0,"property_id"], "msg":"field required"}]}`.
+//     Callers should pass a stable caller-defined string (e.g. hash of the
+//     address) so repeat lookups for the same property get the same ID.
+//   - `properties[].property_details` / `property_metadata` / top-level
+//     `metadata` appear to be optional passthrough bags.
+//   - On 2xx, the body contains `estimates[]` with `estimate.lowest` (annual
+//     premium, USD), `start_url`, and `property_id` — this is what the
+//     insurance-quote.js caller currently projects.
 
 const STAGING_BASE = 'https://api.staging.steadily.com';
 const PROD_BASE    = 'https://api.steadily.com';
