@@ -35,7 +35,9 @@
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 const GHL_VERSION = '2021-07-28';
-const DEAL_ID_RE = /^[A-Z]+-[0-9]+$/;
+// Case-insensitive so we accept PHX-001, phx-001, Phx-001, etc.
+// GHL will lowercase the tag on save regardless.
+const DEAL_ID_RE = /^[A-Z]+-[0-9]+$/i;
 
 function corsHeaders() {
   return {
@@ -94,6 +96,8 @@ exports.handler = async (event) => {
     console.warn('[deal-view-tracker] invalid dealId format:', dealId);
     return respond(400, { error: 'dealId must match format MKT-### (e.g. PHX-001)' });
   }
+  // Normalize to uppercase for display consistency. GHL will lowercase on save.
+  const normalizedDealId = dealId.toUpperCase();
 
   const apiKey = process.env.GHL_API_KEY;
   if (!apiKey) {
@@ -101,11 +105,11 @@ exports.handler = async (event) => {
     return respond(200, { success: true, warning: 'ghl_not_configured' });
   }
 
-  const tag = `viewed-${dealId}`;
+  const tag = `viewed-${normalizedDealId}`;
   const today = new Date().toISOString().split('T')[0];
-  const note = `Buyer viewed deal ${dealId} on ${today}`;
+  const note = `Buyer viewed deal ${normalizedDealId} on ${today}`;
 
-  console.log(`[deal-view-tracker] contact=${contactId} deal=${dealId} tag=${tag}`);
+  console.log(`[deal-view-tracker] contact=${contactId} deal=${normalizedDealId} tag=${tag}`);
 
   // 1. Add the viewed tag. Errors are logged, not thrown — never break the page load.
   try {

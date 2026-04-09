@@ -59,7 +59,10 @@
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 const GHL_VERSION = '2021-07-28';
-const SENT_TAG_RE = /^sent-([A-Z]+-[0-9]+)$/;
+// Case-insensitive: GHL lowercases tags on save, so `sent-TEST-001` ends up
+// stored as `sent-test-001`. The `/i` flag lets us match either and we
+// uppercase the captured dealId for display.
+const SENT_TAG_RE = /^sent-([a-z]+-[0-9]+)$/i;
 
 function corsHeaders() {
   return {
@@ -251,11 +254,14 @@ exports.handler = async (event) => {
     }
   }
 
-  // Find every sent-[DEAL-ID] tag
+  // Find every sent-[DEAL-ID] tag. Uppercase the captured dealId for display
+  // (GHL stores it lowercase so the raw match is lowercase).
   const dealIds = [];
   for (const t of tags) {
     const m = SENT_TAG_RE.exec(String(t || ''));
-    if (m && dealIds.indexOf(m[1]) === -1) dealIds.push(m[1]);
+    if (!m) continue;
+    const dealId = m[1].toUpperCase();
+    if (dealIds.indexOf(dealId) === -1) dealIds.push(dealId);
   }
   console.log(`[buyer-alert] found ${dealIds.length} sent-tag(s): ${dealIds.join(', ') || '(none)'}`);
 

@@ -71,7 +71,8 @@ const GHL_BASE = 'https://services.leadconnectorhq.com';
 const GHL_VERSION = '2021-07-28';
 const NOTION_BASE = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
-const DEAL_ID_RE = /^[A-Z]+-[0-9]+$/;
+// Case-insensitive: GHL stores tags lowercase so we match both forms.
+const DEAL_ID_RE = /^[A-Z]+-[0-9]+$/i;
 
 const DRY_RUN = String(process.env.DRY_RUN || '').toLowerCase() === 'true';
 const GHL_KEY = process.env.GHL_API_KEY;
@@ -397,9 +398,12 @@ function mergeHistory(existing, additions) {
  */
 async function processDeal(dealId, dealPageId) {
   const today = new Date().toISOString().split('T')[0];
-  const sentTag   = `sent-${dealId}`;
-  const viewedTag = `viewed-${dealId}`;
-  const alertTag  = `alert-${dealId}`;
+  // GHL stores tags lowercase on save. We search/compare/remove in lowercase
+  // but keep the uppercase dealId for display + history entries.
+  const dealIdLower = String(dealId).toLowerCase();
+  const sentTag   = `sent-${dealIdLower}`;
+  const viewedTag = `viewed-${dealIdLower}`;
+  const alertTag  = `alert-${dealIdLower}`;
 
   console.log(`[deal-cleanup] ── processing ${dealId} (page ${dealPageId})`);
 
@@ -431,10 +435,13 @@ async function processDeal(dealId, dealPageId) {
         allSucceeded = false;
         continue;
       }
-      const tags = Array.isArray(full.tags) ? full.tags : (listContact.tags || []);
-      const hasSent   = tags.indexOf(sentTag) !== -1;
-      const hasViewed = tags.indexOf(viewedTag) !== -1;
-      const hasAlert  = tags.indexOf(alertTag) !== -1;
+      const rawTags = Array.isArray(full.tags) ? full.tags : (listContact.tags || []);
+      // Lowercase comparison — GHL stores tags lowercase, but old contacts
+      // might still have mixed-case tags from before the normalization.
+      const tagsLower = rawTags.map((t) => String(t || '').toLowerCase());
+      const hasSent   = tagsLower.indexOf(sentTag) !== -1;
+      const hasViewed = tagsLower.indexOf(viewedTag) !== -1;
+      const hasAlert  = tagsLower.indexOf(alertTag) !== -1;
 
       const additions = [];
       if (hasSent)   additions.push(`${dealId}:sent:${today}`);
