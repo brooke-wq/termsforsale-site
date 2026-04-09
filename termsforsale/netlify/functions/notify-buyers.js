@@ -9,6 +9,7 @@
 //   DEAL_ALERTS_LIVE — set to "true" to actually send alerts (default: test mode)
 
 const https = require('https');
+const { buildDealUrl, buildTrackedDealUrl } = require('./_deal-url');
 
 // ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
 var sentLog;
@@ -134,8 +135,9 @@ function slugifyAddress(street, city, state) {
 }
 
 function parseDeal(page) {
-  return {
+  var deal = {
     id: page.id,
+    dealCode: prop(page, 'Deal ID'),
     dealType: prop(page, 'Deal Type'),
     streetAddress: prop(page, 'Street Address'),
     city: prop(page, 'City'),
@@ -154,9 +156,10 @@ function parseDeal(page) {
     highlight1: prop(page, 'Highlight 1'),
     highlight2: prop(page, 'Highlight 2'),
     highlight3: prop(page, 'Highlight 3'),
-    dealUrl: 'https://deals.termsforsale.com/deal.html?id=' + page.id,
     lastEdited: page.last_edited_time
   };
+  deal.dealUrl = buildDealUrl(deal);
+  return deal;
 }
 
 // ─── GHL: Search contacts by tags/criteria ───────────────────
@@ -502,7 +505,9 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
     if (price) smsMsg += ' — ' + price;
     if (entry) smsMsg += ' entry ' + entry;
-    smsMsg += '. View: https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
+    // Short /d/{city}-{zip}-{code} link w/ ?c= for view tracking. The deal
+    // page JS reads ?c= and fires a track-view POST on load.
+    smsMsg += '. View: ' + buildTrackedDealUrl(deal, contact.id);
     if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
 
     try {
@@ -537,7 +542,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       deal.yearBuilt ? 'Built ' + deal.yearBuilt : ''
     ].filter(Boolean).join(' · ');
 
-    var trackUrl = 'https://deals.termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
+    var trackUrl = buildTrackedDealUrl(deal, contact.id);
     var arvStr = deal.arv ? '$' + deal.arv.toLocaleString() : '';
     var rentStr = deal.rentFinal ? '$' + deal.rentFinal.toLocaleString() + '/mo' : '';
     var highlights = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean);

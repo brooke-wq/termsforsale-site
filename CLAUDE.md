@@ -617,6 +617,94 @@ notes + SMS to Brooke.
 
 ---
 
+## Completed — April 9 2026 Short Deal Link Paths + Notion Description
+
+Outbound deal links (SMS, email, blog, sitemap, deal package) now use a
+short, city/zip-aware path instead of the raw Notion UUID. Old format was
+`https://deals.termsforsale.com/deal.html?id=a1b2c3d4-e5f6-7890-abcd-...`
+(~75 chars). New format is
+`https://deals.termsforsale.com/d/phoenix-85016-phx001` (~50 chars) —
+shorter, and buyers + search engines see the city + ZIP right in the path.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/_deal-url.js` (new)** — shared builder
+  used by every outbound link path. Exports `buildDealUrl(deal)`,
+  `buildDealPath(deal)`, `buildDealSlug(deal)`, `buildTrackedDealUrl(deal,
+  contactId)`. Slug format: `{city-slug}-{zip}-{code}` where `code` is the
+  Notion "Deal ID" (e.g. `PHX-001` → `phx001`), falling back to the first
+  8 alphanumeric chars of the Notion UUID for legacy deals. Missing
+  city/zip pieces are dropped gracefully — a deal with no city and no zip
+  still resolves to `/d/{code}`.
+
+- **`netlify.toml`** — added `/d/* → /deal.html` status-200 rewrite. The
+  pretty URL stays visible in the browser and the deal page's JS parses
+  the slug out of `window.location.pathname`.
+
+- **`termsforsale/deal.html`** — init() now accepts all three link forms:
+  new short path (`/d/phoenix-85016-phx001`), legacy `?id=<uuid>`, and
+  `?slug=` escape hatch. `findDealBySlug()` matches the last hyphen
+  segment of the slug against `deal.dealCode` (normalized to lowercase
+  alphanumeric) and falls back to the first 8 chars of the Notion UUID
+  for pre-Deal-ID deals. If a recipient arrives via `/d/...?c=CONTACT_ID`
+  (the format SMS/email now send), the page fires a track-view POST
+  on load with `source: 'sms-email'` so engagement still logs to GHL.
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — `parseDeal()`
+  now pulls `dealCode` from Notion and builds `dealUrl` via
+  `buildDealUrl()`. SMS and email blast paths both use
+  `buildTrackedDealUrl(deal, contact.id)` for the `/d/...?c=...` format.
+  Saves ~25 chars per SMS, leaves more headroom under the 160-char cap.
+
+- **`termsforsale/netlify/functions/sitemap.js`** — sitemap entries for
+  active deals now use `buildDealPath()`.
+
+- **`termsforsale/netlify/functions/auto-blog.js`** — blog-post CTA
+  buttons link via `buildDealUrl()`.
+
+- **`termsforsale/netlify/functions/deal-package.js`** — Claude marketing
+  package prompt passes the short URL when no explicit `deal_url` custom
+  field is set on the deal.
+
+- **`termsforsale/netlify/functions/track-view.js`** — POST-mode note URL
+  consolidated into a single `noteUrl` const. GET mode intentionally left
+  alone — legacy SMS/email links still redirect to `/deal.html?id=...`
+  with the 1500 ms timeout race, because there's no point paying a Notion
+  round trip on a legacy link just to produce a prettier URL.
+
+### Backwards compatibility
+
+- `?id=<uuid>` links still work — old SMS/email history + any bookmarks
+  resolve exactly as they always did.
+- The new flow is functionally equivalent for tracking: previously,
+  `track-view.js` GET mode added `viewed:`, `Active Viewer`, `Last View:`
+  tags and a note, then redirected. Now, `/d/...?c=CONTACT_ID` lands
+  directly on the deal page and the page JS POSTs to `/api/track-view`
+  which runs the same tag+note writes via the existing `trackView()`
+  function. Same tags, same notes, just fires on page-load instead of
+  pre-redirect.
+- Legacy deals without a Deal ID still get a usable short path —
+  `/d/phoenix-85016-a1b2c3d4` (city, zip, 8-char UUID prefix). The
+  `findDealBySlug` fallback matches on UUID prefix so these links still
+  resolve.
+
+### Notion "Description" field now renders on the deal page
+
+Separate fix in the same session: `deals.js` was pulling `Details` but
+not `Description`, and `deal.html` wasn't rendering either one. Two
+changes:
+
+- **`termsforsale/netlify/functions/deals.js`** — added `description`
+  field alongside `details`. Tries `Description`, `Property Description`,
+  `Deal Description`, `Summary` (in that order) so it picks up whatever
+  the actual Notion column is called.
+- **`termsforsale/deal.html`** — new "About This Deal" card rendered
+  above the tabs (between `.tags-row` and `.tabs`). Uses
+  `d.description || d.details` as the source, HTML-escaped, with
+  `white-space: pre-wrap` so manual line breaks in Notion carry through.
+  New `.deal-desc` CSS block added. Card only renders when a description
+  exists — deals without one look identical to before.
+
 ## Completed — April 9 2026 OTP Login Fix + Deal ID Auto-Gen + URL Cleanup
 
 Three fixes shipped in commits `96af2ae`, `aa25bd7`, and `f786ed6`:

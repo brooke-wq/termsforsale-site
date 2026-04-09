@@ -92,6 +92,10 @@ exports.handler = async (event) => {
 async function trackView(apiKey, contactId, dealId, source) {
   try {
     const now = new Date().toISOString().split('T')[0];
+    // Legacy link format is still logged — deal.html handles the short
+    // /d/city-zip-code path and calls POST with the Notion UUID as dealId,
+    // so the note URL stays correct for both flows.
+    const noteUrl = 'https://deals.termsforsale.com/deal.html?id=' + dealId;
     await Promise.all([
       addTags(apiKey, contactId, [
         'viewed:' + dealId.substring(0, 12),
@@ -104,7 +108,7 @@ async function trackView(apiKey, contactId, dealId, source) {
         'Deal ID: ' + dealId + '\n' +
         'Source: ' + source + '\n' +
         'Date: ' + new Date().toISOString() + '\n' +
-        'URL: https://deals.termsforsale.com/deal.html?id=' + dealId
+        'URL: ' + noteUrl
       ),
     ]);
     console.log('[track-view] tracked ' + contactId + ' → ' + dealId + ' (' + source + ')');
