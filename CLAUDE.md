@@ -344,6 +344,31 @@ redirects.
 level sidebar item on every admin page, and the per-deal buyer lookup
 is separate (Deal Buyer Lookup) so the two are no longer conflated.
 
+## Completed — April 9 2026 track-view Hang Hotfix (PR #40)
+
+Day 2 follow-up SMS link (`https://deals.termsforsale.com/api/track-view?c=…&d=…&r=1`)
+was spinning forever for buyers. Root cause: the GET handler was `await`-ing
+up to 5 serial GHL/Notion API hops (`getContact` + `addTags` + `postNote` +
+Notion page fetch + JV-partner GET + JV-partner PUT) before returning the 302.
+Any cold start or slow hop pushed the click past Netlify's 10s function timeout.
+
+**Fix shipped in `termsforsale/netlify/functions/track-view.js` (commit 7f1de56):**
+- GET mode now ALWAYS redirects. Tracking writes (addTags + postNote) are
+  raced against a 1500 ms timeout — if GHL hangs we redirect anyway.
+- Dropped the `r=1` requirement. If a carrier strips the trailing `&r=1`, the
+  link still lands the buyer on `/deal.html?id=…` instead of falling through
+  to POST mode and returning raw JSON.
+- Dropped `getContact` (only used for a log line, one wasted round trip).
+- Dropped `incrementJvPartnerViews` entirely — 3 serial API hops on a Dispo
+  Buddy metric path this file flags as not-yet-wired-up, and the most likely
+  actual hanger. If we want buyer_views metrics back, they belong in a
+  separate fire-and-forget job, not in the redirect hot path.
+- Missing `dealId` falls back to `/deals.html` instead of a 400 JSON.
+- POST mode (frontend view tracking from `deal.html`) unchanged.
+
+Smoke-tested all 8 code paths locally; timed a single GET with a stubbed-hang
+underlying fetch — redirect fires in ~1500 ms (vs the previous ≥10 s timeout).
+
 ## Completed — April 9 2026 Maintenance Audit
 
 Triage session that caught two silent regressions that were breaking buyer
