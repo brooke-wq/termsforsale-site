@@ -34,8 +34,7 @@
         items: [
           { key: 'deals',        href: '/admin/deals.html',        label: 'Active Deals',     icon: 'home' },
           { key: 'buyers',       href: '/admin/buyers.html',       label: 'Buyer List',       icon: 'users' },
-          { key: 'deal-buyers',  href: '/admin/deal-buyers.html',  label: 'Deal Buyer Lookup',icon: 'target' },
-          { key: 'leads',        href: '/admin/leads.html',        label: 'Seller Leads',     icon: 'mailbox' }
+          { key: 'deal-buyers',  href: '/admin/deal-buyers.html',  label: 'Deal Buyer Lookup',icon: 'target' }
         ]
       },
       {
@@ -47,8 +46,7 @@
       {
         label: 'System',
         items: [
-          { key: 'sop',    href: '/admin/paperclip-sop.html', label: 'Paperclip SOP',  icon: 'book' },
-          { key: 'health', href: '/admin/health.html',        label: 'System Health',  icon: 'activity' }
+          { key: 'sop', href: '/admin/paperclip-sop.html', label: 'Paperclip SOP', icon: 'book' }
         ]
       },
       {
