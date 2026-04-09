@@ -7,6 +7,7 @@
  */
 
 const https = require('https');
+const { buildDealUrl } = require('./_deal-url');
 
 function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
@@ -52,7 +53,7 @@ async function createDealPost(deal) {
 
   var slug = slugify(deal.dealType + '-deal-' + deal.city + '-' + deal.state);
   var filePath = 'termsforsale/blog/posts/' + slug + '.html';
-  var dealUrl = 'https://deals.termsforsale.com/deal.html?id=' + deal.id;
+  var dealUrl = buildDealUrl(deal);
   var price = fc(deal.askingPrice);
   var entry = fc(deal.entryFee);
   var rent = fc(deal.rentFinal);

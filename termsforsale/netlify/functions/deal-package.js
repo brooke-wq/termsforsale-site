@@ -13,6 +13,7 @@
 // Brand voice: Terms For Sale — professional, investor-to-investor, numbers first.
 
 const { complete } = require('./_claude');
+const { buildDealUrl } = require('./_deal-url');
 
 const PACKAGE_SYSTEM = `You are the marketing director for Terms For Sale, a real estate disposition company that connects motivated sellers with real estate investors.
 
@@ -76,7 +77,7 @@ exports.handler = async function(event) {
     var loanBal   = deal.loan_balance || deal.subtoLoanBalance || '';
     var rate      = deal.rate || deal.subtoRate || '';
     var piti      = deal.piti || '';
-    var dealUrl   = deal.deal_url || deal.dealUrl || 'https://deals.termsforsale.com/deal.html?id=' + (deal.id || '');
+    var dealUrl   = deal.deal_url || deal.dealUrl || buildDealUrl(deal);
 
     var fmt = function(n) { return n ? '$' + (+n).toLocaleString() : ''; };
 
