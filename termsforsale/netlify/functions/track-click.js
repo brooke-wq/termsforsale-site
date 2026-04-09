@@ -68,8 +68,8 @@ exports.handler = async (event) => {
   // Fire-and-forget log (don't block the redirect)
   const userAgent = (event.headers && event.headers['user-agent']) || '';
   const ip = (event.headers && (event.headers['x-forwarded-for'] || event.headers['client-ip'])) || '';
-  logClickToNotion({ dealCode, contactId, email, channel, userAgent, ip }).catch((e) => { console.error('Click log error:', e.message); });
-
+  await logClickToNotion({ dealCode, contactId, email, channel, userAgent, ip });
+  
   const target = dealCode
     ? `${DEFAULT_TARGET}?code=${encodeURIComponent(dealCode)}`
     : DEFAULT_TARGET;
