@@ -394,11 +394,14 @@ per deal we apply:
 - `viewed-[deal-id]` — buyer clicked the deal link
 - `alert-[deal-id]`  — buyer replied INTERESTED
 
-### Files shipped (branch `claude/deal-tracking-tags-ghBV2`)
+### Files shipped (merged to main via PRs #30-#33)
 - **`termsforsale/netlify/functions/deal-view-tracker.js`** — POST `/api/deal-view-tracker`. Validates `{contactId, dealId}`, adds `viewed-[dealId]` tag + GHL note. Never throws (silent fail so it can't break the page load).
-- **`termsforsale/deal-page-tracker.js`** — vanilla JS snippet to include on every deal detail page via `<script src="/deal-page-tracker.js" defer>`. Reads `?cid=` from URL + `<meta name="deal-id" content="PHX-001">` from the page head and fires the tracker on DOMContentLoaded. Silent fail.
+- **`termsforsale/deal-page-tracker.js`** — vanilla JS snippet included on `deal.html` via `<script src="/deal-page-tracker.js" defer>`. Reads `?cid=` from URL + `<meta name="deal-id" content="PHX-001">` from the page head. Uses MutationObserver to handle dynamic pages where the meta tag is injected after async deal load. Silent fail.
+- **`termsforsale/deal.html`** — includes the tracker script in `<head>` and dynamically injects the deal-id meta tag after fetching the deal from `/api/deals`.
+- **`termsforsale/netlify/functions/deals.js`** — now exposes `dealCode` field (the new `Deal ID` from Notion) alongside existing fields.
 - **`termsforsale/netlify/functions/buyer-alert.js`** — POST `/api/buyer-alert`. GHL webhook receiver fired when a buyer replies INTERESTED/YES. Fetches the contact from GHL (tags aren't always in the webhook payload), finds every `sent-[deal-id]` tag, promotes each to `alert-[deal-id]`, posts notes, and SMSes Brooke with the deal list. Handles no-sent-tag fallback gracefully.
-- **`jobs/deal-cleanup.js`** — Weekly droplet cron. Registered with PM2 `--cron "0 6 * * 1"` (Monday 06:00 UTC = Sunday 11pm AZ). Introspects the Notion DB schema at runtime to discover the real property names + status options, filters desired statuses against what exists, paginates closed deals, flushes per-buyer engagement into `buyer_deal_history` (comma-separated, deduped), removes the 3 tags, and marks `Tags Cleaned=true` on the Notion page. Legacy deals with no Deal ID are silently summarized. Env-configurable via `CLEANUP_STATUSES` (default `"Closed,Archived"` — `Archived` is silently dropped since it doesn't exist in the current DB).
+- **`jobs/deal-cleanup.js`** — Weekly droplet cron. Registered with PM2 `--cron "0 6 * * 1"` (Monday 06:00 UTC = Sunday 11pm AZ). Introspects the Notion DB schema at runtime to discover the real property names + status options, intersects desired statuses against available options (so invalid values get silently dropped instead of crashing), paginates closed deals, flushes per-buyer engagement into `buyer_deal_history` (comma-separated, deduped), removes the 3 tags, and marks `Tags Cleaned=true` on the Notion page. Legacy deals with no Deal ID are summarized into a single skip line. Env-configurable via `CLEANUP_STATUSES` (default `"Closed,Archived"` — `Archived` is silently dropped since it doesn't exist in the current DB, so effectively `Closed` only).
+- **`jobs/export-engagement-snapshot.js`** — One-time CSV dump of historical engagement tags. Uses cursor-based pagination against `/contacts/` GET endpoint (not the 10k-capped `/contacts/search` POST). Run once on 2026-04-09 — scanned 17,073 contacts, found only 79 with old-format engagement tags (1 sent:<slug>, 116 viewed:<short-id> events across 23 deals). Very sparse historical data — the new tag system effectively starts from a clean slate.
 
 ### Droplet env vars confirmed
 - `NOTION_TOKEN` ✅, `NOTION_DB_ID` ✅ (`a3c0a38fd9294d758dedabab2548ff29`)
@@ -429,12 +432,15 @@ The meta tag must be templated with the actual Deal ID per deal.
 
 1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.netlify.app`: set `NOTIFICATIONS_LIVE=true` in Netlify env vars, test one real submission, re-enable `dispo-buddy-triage` cron on Droplet, point `dispobuddy.com` domain.
 
-2. **Deal Tracking Tag System — Wire-Up** (`claude/deal-tracking-tags-ghBV2`):
-   - Merge `claude/deal-tracking-tags-ghBV2` into `main` so Netlify auto-deploys `deal-view-tracker.js` and `buyer-alert.js`, and the droplet deploy-hook returns to tracking main
-   - Add `<meta name="deal-id" content="...">` + `<script src="/deal-page-tracker.js" defer>` to every deal detail page template (needs to be populated dynamically per deal)
-   - Create GHL "Buyer Interest Webhook" workflow in Terms For Sale sub-account (trigger: inbound SMS contains INTERESTED/YES; action: POST to `/api/buyer-alert` with Custom Data `contactId={{contact.id}}`)
-   - Populate `Deal ID` (e.g. `PHX-001`) on new Notion deal pages going forward — the cleanup job skips any deal missing this field
-   - Optionally expand `CLEANUP_STATUSES` env var on droplet if you want Lost/Canceled/Abandoned/etc. deals also auto-cleaned: `echo 'CLEANUP_STATUSES="Closed,Lost,Canceled,Abandoned,EMD Released,Not Accepted"' >> /etc/environment`
+2. **Deal Tracking Tag System — Remaining Wire-Up** (system built, deployed, and running as of April 2026):
+   - ✅ Branch merged to main (PRs #30, #31, #32, #33)
+   - ✅ `deal.html` wired: includes `/deal-page-tracker.js` and dynamically injects `<meta name="deal-id">` after Notion load
+   - ✅ `deals.js` exposes new `dealCode` field (`PHX-001` format)
+   - ✅ `deal-cleanup` PM2 cron running on droplet (Mondays 06:00 UTC)
+   - ✅ Historical engagement snapshot captured (`jobs/export-engagement-snapshot.js` → 17,073 contacts scanned, only 79 with any old-format tags — very sparse, clean slate for new system)
+   - ❌ **Create GHL "Buyer Interest Webhook" workflow** in Terms For Sale sub-account (trigger: inbound SMS contains INTERESTED/YES; action: POST to `/api/buyer-alert` with Custom Data `contactId={{contact.id}}`). The function fetches the rest of the contact (including tags) from GHL directly, so only contactId is required.
+   - ❌ **Populate `Deal ID`** (e.g. `PHX-001`) on new Notion deal pages going forward — the cleanup job skips any deal missing this field. Legacy deals without Deal ID will stay skipped forever.
+   - 🔧 Optional: expand `CLEANUP_STATUSES` env var on droplet if you want Lost/Canceled/Abandoned/EMD Released/Not Accepted deals also auto-cleaned: `echo 'CLEANUP_STATUSES="Closed,Lost,Canceled,Abandoned,EMD Released,Not Accepted"' >> /etc/environment`
 
 3. **GHL Client Portal — Buyer Contract Lifecycle** — The webhook function `buyer-contract-lifecycle.js` handles automated partner-style notifications on Buyer Inquiries pipeline stage changes (Offer Submitted → Contract Sent → Contract Signed → EMD Received → Closed / Lost). To activate:
    - Create one GHL workflow: Trigger = Opportunity Stage Changed (Pipeline = Buyer Inquiries). Action = Webhook POST to `/.netlify/functions/buyer-contract-lifecycle` with Custom Data body `{contactId, opportunityId, stageName, pipelineName}`.
