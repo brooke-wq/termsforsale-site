@@ -677,6 +677,57 @@ notes + SMS to Brooke.
 
 ---
 
+## Completed — April 9 2026 Notion Website Link Autopopulate
+
+Follow-up to the short-deal-link-paths session: `notify-buyers.js` now
+writes the short `/d/{city}-{zip}-{code}` URL back to the Notion deals
+DB's `Website Link` URL property whenever it processes a deal, so the
+Notion views show a clickable live link alongside every Actively
+Marketing deal. Brooke's team no longer has to copy/paste URLs.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/_notion-url.js` (new)** — shared
+  helper. Exports `patchWebsiteLink(token, pageId, url)` and
+  `setDealWebsiteLink(token, deal)`. PATCHes the Notion page's
+  `Website Link` URL property via `/v1/pages/{pageId}`. Never throws —
+  caller handles `{ok, status, body}` result. Used by both the Netlify
+  function and the standalone backfill script.
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — in the main
+  handler deal loop, calls `setDealWebsiteLink(token, deal)` once per
+  recent deal before `findMatchingBuyers`. Write is best-effort and
+  wrapped in try/catch so a Notion blip never blocks the SMS/email
+  blast. Logs success/failure per deal.
+
+- **`scripts/backfill-notion-website-links.js` (new)** — one-shot
+  sweep for legacy Actively Marketing deals that were created before
+  the notify-buyers hook went live. Queries the Notion deals DB
+  (default filter: `Deal Status = Actively Marketing`), skips pages
+  whose `Website Link` already matches the computed short URL,
+  PATCHes the rest. Supports `DRY_RUN=1`, `MAX_DEALS=N`, and
+  `STATUSES="Closed,Canceled"` to re-link historical pages too.
+
+### Notion schema confirmed
+
+Verified the deals DB (`a3c0a38fd9294d758dedabab2548ff29` →
+`collection://6498ce51-68a9-40b7-8377-14fe077fdd62`) has a `Website
+Link` property of type `url` already defined. There's also a
+`Website Published` checkbox; this session does NOT touch that field
+since it may be used as a manual admin workflow signal.
+
+### Run on Droplet to finish the backfill:
+```
+cd /root/termsforsale-site
+git pull origin main
+DRY_RUN=1 node scripts/backfill-notion-website-links.js   # preview
+node scripts/backfill-notion-website-links.js             # apply
+```
+
+From that point forward, every deal that hits `notify-buyers` (on the
+30-min cron or via `/api/notify-test?deal_id=…`) will keep its
+`Website Link` field in sync automatically.
+
 ## Completed — April 9 2026 Short Deal Link Paths + Notion Description
 
 Outbound deal links (SMS, email, blog, sitemap, deal package) now use a
