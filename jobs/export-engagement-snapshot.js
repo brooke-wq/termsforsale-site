@@ -192,6 +192,11 @@ async function ghlFetch(pathPart, method, body) {
  * Paginate through every contact in the Terms For Sale location using the
  * /contacts/search endpoint. GHL's bulk-list endpoint caps pages at 100.
  * We don't filter server-side — we pull everything and filter in memory.
+ *
+ * Termination: stop when a batch comes back smaller than pageLimit (last
+ * page) or when an error occurs. We intentionally do NOT rely on meta.total
+ * because GHL doesn't always populate it and the previous version of this
+ * script stopped after one page as a result.
  */
 async function pullAllContacts() {
   console.log('[export] pulling all GHL contacts (this can take a minute)…');
@@ -214,9 +219,16 @@ async function pullAllContacts() {
     }
     const batch = res.contacts || res.data || [];
     all.push(...batch);
-    if (batch.length === 0) break;
-    const total = (res.meta && res.meta.total) || all.length;
-    if (all.length >= total) break;
+
+    // Stop conditions
+    if (batch.length === 0) break;           // no more data
+    if (batch.length < pageLimit) break;     // last (partial) page
+
+    // Optional safeguard: if GHL reports a total, respect it
+    const reportedTotal =
+      (res.meta && res.meta.total) || res.total || 0;
+    if (reportedTotal > 0 && all.length >= reportedTotal) break;
+
     if (page % 5 === 0) console.log(`[export]   …pulled ${all.length} so far`);
     page++;
   }
