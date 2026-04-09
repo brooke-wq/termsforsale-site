@@ -369,6 +369,66 @@ Any cold start or slow hop pushed the click past Netlify's 10s function timeout.
 Smoke-tested all 8 code paths locally; timed a single GET with a stubbed-hang
 underlying fetch — redirect fires in ~1500 ms (vs the previous ≥10 s timeout).
 
+## Completed — April 9 2026 Alert-Preference A/B/C Handler
+
+The Day 2 follow-up SMS in `deal-follow-up.js:180` prompts buyers with:
+> Last ping on [deal]. Want me to:
+> A) Keep sending you stuff like this
+> B) Tighten to [city] only
+> C) Pause alerts for now
+> Reply A/B/C.
+
+But `buyer-response-tag.js` only matched `1/2/3` + `IN/MAYBE/PASS`, so every
+A/B/C reply was logged as "unmatched" and had zero effect. This session wires
+it up end-to-end.
+
+**Tag model** (3 mutually exclusive preference tags — writing one clears the other two):
+
+| Reply | Tag | Semantic | Enforcement |
+|---|---|---|---|
+| A | `pref-keep-all` | Default — no change | none (no-op) |
+| B | `pref-market-only` | Only deals in buyer's `targetCities` | `matchesBuyBox` hard-rejects non-matching city; tier-3 fallback also rejects |
+| C | `alerts-paused` | Stop all future alerts | `fetchAllBuyers` filters these out of the buyer universe entirely |
+
+All three also stamp `buyer-responded` so the follow-up sprint stops on that deal.
+
+**Changes shipped:**
+
+- `termsforsale/netlify/functions/buyer-response-tag.js`
+  - Added 6 new patterns for A/B/C (bare letter, punctuated `a.`/`a)`, and
+    natural-language aliases: `keep`, `keep sending`, `tighten`, `market only`,
+    `city only`, `pause`, `pause alerts`, `stop for now`).
+  - Split `ALL_RESPONSE_TAGS` into `DEAL_RESPONSE_TAGS` (IN/MAYBE/PASS family)
+    and `PREF_TAGS` (A/B/C family). Pref replies now only clear other prefs;
+    deal replies only clear deal sprint tags. No cross-contamination.
+  - Note heading switches between "BUYER RESPONSE" (deal) and "ALERT PREF" (pref).
+  - Response payload adds `kind: 'deal' | 'pref'` so the GHL workflow can
+    branch downstream if needed.
+
+- `termsforsale/netlify/functions/notify-buyers.js`
+  - `fetchAllBuyers` skips any contact tagged `alerts-paused` — paused buyers
+    are invisible to notify-buyers until the tag is manually removed.
+  - `matchesBuyBox` reads `contact.tags` and if `pref-market-only` is set,
+    converts the existing soft city match into a hard reject (no target
+    cities on buy box → fail; target cities set but deal city not in list
+    → fail). State/price/structure/etc. criteria still apply as before.
+  - Tier 3 (state-only fallback) bypasses `matchesBuyBox`, so the same
+    `pref-market-only` check is inlined into the tier 3 buyer loop.
+
+**Smoke tests (temp harness, not checked in):**
+- 27 reply-parsing cases (1/2/3 regression + all new A/B/C patterns + unmatched) — 27/27 pass
+- 5 tag-swap side-effect cases — verified pref replies clear pref tags only and deal replies clear deal tags only, no cross-contamination — 5/5 pass
+- `notify-buyers.js` static + `require()` load test — passes
+
+**Reuses existing GHL workflow**: no new webhook needed. The existing
+"Customer Reply" workflow already POSTs every inbound SMS/email to
+`/api/buyer-response-tag`; the new patterns just extend the match table.
+
+**Open caveat:** a buyer who types a bare `a`, `b`, or `c` outside the Day 2
+follow-up context will still get tagged — same ambiguity the existing 1/2/3
+matcher has. Low cost (recoverable by tag removal), consistent with the
+status quo.
+
 ## Completed — April 9 2026 Maintenance Audit
 
 Triage session that caught two silent regressions that were breaking buyer
@@ -467,7 +527,7 @@ All items below were completed and deployed:
 - **Signup form** — simplified to name, email, phone, password only
 
 ### Automations
-- **buyer-response-tag.js** — auto-tags buyer responses (IN/MAYBE/PASS, 1/2/3) and maps to deal-hot/deal-warm/deal-paused to stop follow-up sprint
+- **buyer-response-tag.js** — auto-tags buyer responses. Deal sprint replies (1/2/3, IN/MAYBE/PASS) → buyer-interested / buyer-maybe / buyer-pass + deal-hot/deal-warm/deal-paused to stop follow-up sprint. Day-2 alert-preference replies (A/B/C) → pref-keep-all / pref-market-only / alerts-paused; notify-buyers skips paused contacts entirely and enforces hard city match for market-only contacts.
 - **booking-notify.js** — sends SMS to Brooke on new bookings (was previously just logging)
 - **Tracked links** — all deal URLs in alert emails/SMS route through `/api/track-view` for GHL logging
 - **Deal view tracking** — website views (logged-in) + email clicks both tracked on GHL contact

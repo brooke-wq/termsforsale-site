@@ -206,6 +206,9 @@ function matchesBuyBox(contact, deal, minScore) {
   var reasons = [];
   var fails = [];
   var reqScore = minScore || TIER1_MIN_SCORE;
+  var tags = contact.tags || [];
+  // Day-2 "B) tighten to market only" preference — hard-match city/metro
+  var marketOnly = tags.indexOf('pref-market-only') > -1;
 
   // 1. Target States — must include deal state (if buyer has preferences)
   var targetStates = getCF(contact, CF.TARGET_STATES);
@@ -220,15 +223,28 @@ function matchesBuyBox(contact, deal, minScore) {
 
   // 2. Target Cities — check if deal city/metro matches (if buyer has preferences)
   var targetCities = getCF(contact, CF.TARGET_CITIES);
+  var dealCity = (deal.city || '').toLowerCase();
+  var dealMetro = (deal.nearestMetro || '').toLowerCase();
+  var cityMatch = false;
   if (targetCities && Array.isArray(targetCities) && targetCities.length > 0) {
-    var dealCity = (deal.city || '').toLowerCase();
-    var dealMetro = (deal.nearestMetro || '').toLowerCase();
-    var cityMatch = targetCities.some(function(c) {
+    cityMatch = targetCities.some(function(c) {
       var cl = c.toLowerCase();
       return cl.includes(dealCity) || dealCity.includes(cl.split(',')[0].trim()) || cl.includes(dealMetro) || dealMetro.includes(cl.split(',')[0].trim());
     });
     if (cityMatch) reasons.push('City: ' + deal.city);
-    // City is soft match — don't reject if no match, just don't add reason
+    // City is soft match by default — don't reject if no match, just don't add reason
+  }
+  if (marketOnly) {
+    // pref-market-only: buyer explicitly asked for their target market only.
+    // Hard-fail if no cities configured OR deal city doesn't match their list.
+    if (!targetCities || !Array.isArray(targetCities) || !targetCities.length) {
+      fails.push('Market-only pref set but no target cities on buy box');
+      return { match: false, reasons: reasons, fails: fails };
+    }
+    if (!cityMatch) {
+      fails.push('Market-only: deal city ' + (deal.city || '?') + ' not in target list ' + targetCities.join(','));
+      return { match: false, reasons: reasons, fails: fails };
+    }
   }
 
   // 3. Deal Structure — must accept this deal type (if buyer has preferences)
@@ -317,7 +333,12 @@ async function fetchAllBuyers(apiKey, locationId) {
           isBuyer = String(contactRole).toLowerCase() === 'buyer';
         }
       }
-      if (isBuyer) allBuyers.push(contact);
+      if (!isBuyer) return;
+      // Skip buyers who asked to pause alerts (reply "C" on Day 2 follow-up SMS).
+      // Tag is set by buyer-response-tag.js and must be manually removed to re-enable.
+      var tags = contact.tags || [];
+      if (tags.indexOf('alerts-paused') > -1) return;
+      allBuyers.push(contact);
     });
 
     if (result.body.meta && result.body.meta.nextPageUrl) {
@@ -381,8 +402,22 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
   // TIER 3: State-only — only if tier 1 + tier 2 < 50. Any buyer in the same state.
   if (tier1.length + tier2.length < MIN_BUYERS_TARGET) {
     var dealState = (deal.state || '').trim().toUpperCase();
+    var dealCityT3 = (deal.city || '').toLowerCase();
+    var dealMetroT3 = (deal.nearestMetro || '').toLowerCase();
     buyers.forEach(function(contact) {
       if (tier1Ids[contact.id] || tier2Ids[contact.id]) return;
+      // pref-market-only: never include these buyers in the state-only fallback
+      // unless the deal city is explicitly in their target city list.
+      var t3Tags = contact.tags || [];
+      if (t3Tags.indexOf('pref-market-only') > -1) {
+        var t3Cities = getCF(contact, CF.TARGET_CITIES);
+        if (!t3Cities || !Array.isArray(t3Cities) || !t3Cities.length) return;
+        var t3CityMatch = t3Cities.some(function(c) {
+          var cl = c.toLowerCase();
+          return cl.includes(dealCityT3) || dealCityT3.includes(cl.split(',')[0].trim()) || cl.includes(dealMetroT3) || dealMetroT3.includes(cl.split(',')[0].trim());
+        });
+        if (!t3CityMatch) return;
+      }
       // Check contact's own state field or target states
       var contactState = (contact.state || '').trim().toUpperCase();
       var targetStates = getCF(contact, CF.TARGET_STATES);
