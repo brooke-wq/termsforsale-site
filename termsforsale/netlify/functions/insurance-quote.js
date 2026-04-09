@@ -23,6 +23,17 @@
  */
 
 const { quoteEstimate, buildPropertyPayload } = require('./_steadily');
+const crypto = require('crypto');
+
+// Steadily's /v1/quote/estimate requires a caller-supplied `property_id` on
+// every property (learned empirically from staging 422 responses — the Redoc
+// page was unreachable from the build environment). We auto-generate a stable
+// ID from the address so repeat calls for the same property get the same ID.
+function deriveStablePropertyId(street, city, state, zip) {
+  const fingerprint = [street, city, state, zip].join('|').toLowerCase();
+  const hash = crypto.createHash('sha1').update(fingerprint).digest('hex').slice(0, 16);
+  return 'tfs_' + hash;
+}
 
 exports.handler = async function (event) {
   const headers = {
@@ -63,11 +74,13 @@ exports.handler = async function (event) {
   };
   if (county) address.county = county;
 
+  const propertyId = body.property_id || deriveStablePropertyId(street, city, state, zip);
+
   let payload;
   try {
     payload = buildPropertyPayload({
       address: address,
-      propertyId: body.property_id,
+      propertyId: propertyId,
       propertyDetails: body.property_details,
       propertyMetadata: body.property_metadata,
       metadata: body.metadata
