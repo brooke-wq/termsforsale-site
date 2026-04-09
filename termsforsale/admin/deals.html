@@ -99,6 +99,7 @@
 AdminShell.renderShell('deals');
 
 var ALL_DEALS = [];
+var BUYER_COUNTS = {};   // slug -> { total, hot, interested, noResponse, passed } | 'loading' | 'error'
 
 async function loadDeals() {
   document.getElementById('results').innerHTML = '<div class="spinner"></div>';
@@ -117,12 +118,62 @@ async function loadDeals() {
     populateFilters();
     renderStats();
     renderList();
+    loadAllBuyerCounts();
   } catch (err) {
     document.getElementById('results').innerHTML =
       '<div class="err">Network error: ' + AdminShell.esc(err.message) + '</div>';
   }
 }
 window.loadDeals = loadDeals;
+
+// For every active deal, fire a parallel /api/deal-buyer-list call and
+// populate the "Buyers" cell as each one returns. Results cached so
+// re-renders (search / filter) reuse them instead of re-fetching.
+function loadAllBuyerCounts() {
+  ALL_DEALS.forEach(function (d) {
+    var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
+    if (BUYER_COUNTS[slug]) return; // already loading or loaded
+    BUYER_COUNTS[slug] = 'loading';
+    updateBuyerCell(slug);
+
+    AdminShell.fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug))
+      .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
+      .then(function (data) {
+        var contacts = data.contacts || [];
+        var counts = { total: contacts.length, hot: 0, interested: 0, noResponse: 0, passed: 0 };
+        contacts.forEach(function (c) {
+          if (c.dealStatus === 'deal:hot') counts.hot++;
+          else if (c.dealStatus === 'deal:interested') counts.interested++;
+          else if (c.dealStatus === 'deal:no-response') counts.noResponse++;
+          else if (c.dealStatus === 'deal:passed') counts.passed++;
+        });
+        BUYER_COUNTS[slug] = counts;
+        updateBuyerCell(slug);
+      })
+      .catch(function () {
+        BUYER_COUNTS[slug] = 'error';
+        updateBuyerCell(slug);
+      });
+  });
+}
+
+function updateBuyerCell(slug) {
+  var cell = document.querySelector('[data-buyer-cell="' + slug + '"]');
+  if (!cell) return;
+  var v = BUYER_COUNTS[slug];
+  if (v === 'loading') {
+    cell.innerHTML = '<span class="muted" style="font-size:11px">loading…</span>';
+  } else if (v === 'error') {
+    cell.innerHTML = '<span class="muted" style="font-size:11px">—</span>';
+  } else if (v && typeof v === 'object') {
+    if (v.total === 0) {
+      cell.innerHTML = '<span class="pill gray">0 sent</span>';
+    } else {
+      var hotBit = v.hot ? ' <span class="pill green" title="Hot responses" style="padding:2px 7px;font-size:10px">' + v.hot + ' hot</span>' : '';
+      cell.innerHTML = '<span class="pill blue">' + v.total + ' sent</span>' + hotBit;
+    }
+  }
+}
 
 function populateFilters() {
   var types = {}, states = {};
@@ -196,6 +247,9 @@ function renderList() {
       + '<td class="cell-strong tr">' + (d.askingPrice ? AdminShell.fmtMoney(d.askingPrice) : '<span class="muted">—</span>') + '</td>'
       + '<td class="tr">' + (d.entryFee ? AdminShell.fmtMoney(d.entryFee) : '<span class="muted">—</span>') + '</td>'
       + '<td class="tr">' + (d.compsArv ? AdminShell.fmtMoney(d.compsArv) : '<span class="muted">—</span>') + '</td>'
+      + '<td><a href="' + buyersUrl + '" data-buyer-cell="' + AdminShell.esc(slug) + '" style="text-decoration:none">'
+      +   '<span class="muted" style="font-size:11px">…</span>'
+      + '</a></td>'
       + '<td class="nowrap">'
       +   '<a href="' + dealUrl + '" target="_blank" class="btn secondary" style="padding:5px 10px;font-size:11px">View</a> '
       +   '<a href="' + buyersUrl + '" class="btn secondary" style="padding:5px 10px;font-size:11px">Buyers</a>'
@@ -211,10 +265,17 @@ function renderList() {
     +   '<th class="tr">Asking</th>'
     +   '<th class="tr">Entry</th>'
     +   '<th class="tr">ARV</th>'
+    +   '<th>Buyers</th>'
     +   '<th>Actions</th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table></div>';
+
+  // Repopulate buyer cells from cache (for search / filter re-renders)
+  ALL_DEALS.forEach(function (d) {
+    var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
+    if (BUYER_COUNTS[slug]) updateBuyerCell(slug);
+  });
 }
 
 var searchTimer;
