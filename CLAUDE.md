@@ -276,6 +276,74 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 9 2026 Admin Console Rebuild
+
+Rebuilt `/admin/*` into a real corporate back-office hub with shared
+sidebar navigation, live stats from Notion + GHL, and proper landing
+pages for every operational view.
+
+**Shared shell** (`termsforsale/admin/admin.css` + `admin.js`):
+- Navy sidebar with grouped nav (Overview / Operations / Content /
+  System / External), pulsing "Live · Production" indicator, and sign-
+  out button. Mobile-collapsible with overlay.
+- `AdminShell.renderShell(activeKey)` injects the sidebar + mobile
+  toggle into any page that has `<div class="admin-shell">` + `<main
+  class="main">`. Sets the correct active nav item.
+- `AdminShell.requireAuth(onReady)` shows the password gate if no
+  session, otherwise runs `onReady`. Session stored in
+  `sessionStorage.tfs_admin_pw`.
+- `AdminShell.fetch(url, opts)` auto-injects `X-Admin-Password` header
+  and re-prompts on 401.
+- Shared helpers: `toast()`, `esc()`, `fmtMoney()`, `fmtNum()`,
+  `fmtDate()`, `copy()`, `slugifyAddress()`.
+
+**New pages**:
+- `admin/index.html` — dashboard hub. Hero card, 4 stat tiles (active
+  deals / total buyers / VIP / closed), quick-action grid, recently
+  updated deals table, pipeline-mix progress bars, and the full
+  Paperclip cron-job status table. Pulls live data from `/api/admin-
+  stats`. Replaces the old Decap-CMS-only index.
+- `admin/buyers.html` — full buyer list with search, 4-tab filter
+  (All / VIP / Buy Box / No Buy Box), 4 stat cards, avatar initials,
+  market/strategy chips, CSV export. Pulls from `/api/admin-buyers`.
+- `admin/deals.html` — active deals from Notion (via existing
+  `/api/deals`), type + state filters, per-row buttons linking to the
+  public deal page + the deal-buyers lookup. Portfolio value + metro
+  count stat tiles.
+- `admin/blog.html` — content management landing page that links to
+  the Decap CMS and explains the two collections (deal spotlights +
+  education). Replaces the old bare Decap index.
+- `admin/cms.html` — the raw Decap CMS loader (moved here since it
+  used to live at `admin/index.html`). Reads sibling `config.yml`.
+
+**Existing pages rewrapped**:
+- `admin/deal-buyers.html` — rebuilt with the shared shell. Same
+  lookup logic + CSV export, now with stat cards and navy sidebar.
+- `admin/paperclip-sop.html` — rebuilt with the shared shell; all 13
+  SOP sections preserved. Scoped its old styles to `.sop` so they
+  don't collide with shared shell classes. Print button in topbar.
+
+**Backend endpoints** (both gated by `ADMIN_PASSWORD`):
+- `termsforsale/netlify/functions/admin-buyers.js` — POST-searches GHL
+  for contacts with any buyer-identifying tag (tfs buyer / buyer-
+  signup / VIP Buyer List / buy box complete / use:buyer / etc.),
+  paginates up to 1000, dedupes by id, returns shape with
+  `{id, name, email, phone, isVip, hasBuyBox, markets[], strategies[],
+  dateAdded, lastActivity, tags[]}` plus aggregate `stats` (total,
+  vip, hasBuyBox, newThisWeek). Supports `?q=`, `?filter=`, `?limit=`.
+- `termsforsale/netlify/functions/admin-stats.js` — single-shot
+  dashboard stats. Paginates Notion for `Deal Status = Actively
+  Marketing` + `Closed`, computes breakdowns by Deal Type and State,
+  returns the 5 most recently edited active deals, and does cheap
+  first-page GHL tag counts for total + VIP buyers.
+
+**netlify.toml** — added `/api/admin-buyers` and `/api/admin-stats`
+redirects.
+
+**Nav addresses the user's complaint**: the Buyer List is now a top-
+level sidebar item on every admin page, and the per-deal buyer lookup
+is separate (Deal Buyer Lookup) so the two are no longer conflated.
+
 ## Completed — April 9 2026 Maintenance Audit
 
 Triage session that caught two silent regressions that were breaking buyer
