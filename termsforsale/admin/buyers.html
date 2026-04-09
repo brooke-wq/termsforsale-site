@@ -26,13 +26,6 @@
 }
 .filter-tab:hover{border-color:var(--blue);color:var(--blue)}
 .filter-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-.filter-tab .count{
-  background:rgba(0,0,0,.08);
-  padding:1px 7px;
-  border-radius:10px;
-  font-size:10px;
-}
-.filter-tab.active .count{background:rgba(255,255,255,.2);color:#fff}
 
 .search-row{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
 .search-row input{flex:1;min-width:240px}
@@ -50,6 +43,10 @@
 .buyer-name-wrap{min-width:0}
 .buyer-name{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .buyer-mail{font-size:11px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.load-more-wrap{padding:18px;text-align:center;border-top:1px solid var(--border)}
+.result-meta{font-size:12px;color:var(--text-light);margin-bottom:12px}
+.inline-spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 </style>
 </head>
 <body>
@@ -64,9 +61,9 @@
       <div class="topbar-right">
         <button class="topbar-btn" id="export-btn" onclick="exportCsv()" disabled>
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Export CSV</span>
+          <span>Export Page</span>
         </button>
-        <button class="topbar-btn primary" onclick="loadBuyers()">
+        <button class="topbar-btn primary" onclick="refetch()">
           <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
           <span>Refresh</span>
         </button>
@@ -84,7 +81,7 @@
         <div class="stat green">
           <div class="stat-label">New This Week</div>
           <div class="stat-value" id="s-new">—</div>
-          <div class="stat-sub">Past 7 days</div>
+          <div class="stat-sub">Est. from recent page</div>
         </div>
         <div class="stat orange">
           <div class="stat-label">VIP Buyers</div>
@@ -105,21 +102,21 @@
               <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
               All Buyers
             </div>
-            <div class="panel-sub">Contacts tagged as TFS Buyer, VIP, or Buy Box complete</div>
+            <div class="panel-sub">Server-side search — results come from GHL directly</div>
           </div>
-          <div class="muted" style="font-size:12px"><span id="row-count">0</span> shown</div>
+          <div class="muted" style="font-size:12px" id="result-summary">—</div>
         </div>
         <div class="panel-body">
 
           <div class="search-row">
-            <input type="text" id="search" class="ctl" placeholder="Search name, email, or phone..." autocomplete="off">
+            <input type="text" id="search" class="ctl" placeholder="Search name, email, or phone... (min 2 chars)" autocomplete="off">
           </div>
 
           <div class="filter-tabs" id="tabs">
-            <button class="filter-tab active" data-filter="all">All <span class="count" id="c-all">0</span></button>
-            <button class="filter-tab" data-filter="vip">VIP <span class="count" id="c-vip">0</span></button>
-            <button class="filter-tab" data-filter="buybox">Buy Box <span class="count" id="c-buybox">0</span></button>
-            <button class="filter-tab" data-filter="nobuybox">No Buy Box <span class="count" id="c-nobuybox">0</span></button>
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="vip">VIP</button>
+            <button class="filter-tab" data-filter="buybox">Buy Box</button>
+            <button class="filter-tab" data-filter="nobuybox">No Buy Box</button>
           </div>
 
           <div id="results"><div class="spinner"></div></div>
@@ -134,9 +131,18 @@
 <script>
 AdminShell.renderShell('buyers');
 
-var ALL_BUYERS = [];
-var CURRENT_FILTER = 'all';
-var SEARCH_Q = '';
+// ─── State ─────────────────────────────────────────────────────
+var state = {
+  page: 1,
+  pageLimit: 100,
+  q: '',
+  filter: 'all',
+  contacts: [],    // accumulated across pages (same filter/query)
+  total: 0,
+  hasMore: false,
+  loading: false,
+  statsLoaded: false
+};
 
 function initials(name) {
   if (!name) return '?';
@@ -144,71 +150,86 @@ function initials(name) {
   return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
 }
 
-async function loadBuyers() {
-  document.getElementById('results').innerHTML = '<div class="spinner"></div>';
+// ─── Fetch ─────────────────────────────────────────────────────
+async function fetchPage(reset) {
+  if (state.loading) return;
+  state.loading = true;
+
+  if (reset) {
+    state.page = 1;
+    state.contacts = [];
+    document.getElementById('results').innerHTML = '<div class="spinner"></div>';
+  }
+
+  var url = '/api/admin-buyers'
+    + '?page=' + state.page
+    + '&pageLimit=' + state.pageLimit
+    + '&filter=' + encodeURIComponent(state.filter)
+    + (state.q ? '&q=' + encodeURIComponent(state.q) : '')
+    + (state.statsLoaded ? '' : '&stats=1');
+
   try {
-    var res = await AdminShell.fetch('/api/admin-buyers?limit=20000');
+    var res = await AdminShell.fetch(url);
     if (!res.ok) {
       var err = await res.json().catch(function () { return {}; });
       document.getElementById('results').innerHTML =
-        '<div class="err">Error loading buyers: ' + AdminShell.esc(err.error || ('HTTP ' + res.status)) + '</div>';
+        '<div class="err">Error: ' + AdminShell.esc(err.error || ('HTTP ' + res.status)) + '</div>';
+      state.loading = false;
       return;
     }
     var data = await res.json();
-    ALL_BUYERS = data.contacts || [];
 
-    // Top stats
-    document.getElementById('s-total').textContent = AdminShell.fmtNum(data.stats.total);
-    document.getElementById('s-new').textContent = AdminShell.fmtNum(data.stats.newThisWeek);
-    document.getElementById('s-vip').textContent = AdminShell.fmtNum(data.stats.vip);
-    document.getElementById('s-bbox').textContent = AdminShell.fmtNum(data.stats.hasBuyBox);
+    // Append contacts to accumulated list
+    state.contacts = state.contacts.concat(data.contacts || []);
+    state.total = data.total || state.contacts.length;
+    state.hasMore = !!data.hasMore;
 
-    // Tab counts
-    var tCounts = {
-      all: ALL_BUYERS.length,
-      vip: ALL_BUYERS.filter(function (b) { return b.isVip; }).length,
-      buybox: ALL_BUYERS.filter(function (b) { return b.hasBuyBox; }).length,
-      nobuybox: ALL_BUYERS.filter(function (b) { return !b.hasBuyBox; }).length
-    };
-    document.getElementById('c-all').textContent = tCounts.all;
-    document.getElementById('c-vip').textContent = tCounts.vip;
-    document.getElementById('c-buybox').textContent = tCounts.buybox;
-    document.getElementById('c-nobuybox').textContent = tCounts.nobuybox;
+    // Populate stats the first time we see them
+    if (data.stats && !state.statsLoaded) {
+      document.getElementById('s-total').textContent = AdminShell.fmtNum(data.stats.total);
+      document.getElementById('s-vip').textContent = AdminShell.fmtNum(data.stats.vip);
+      document.getElementById('s-bbox').textContent = AdminShell.fmtNum(data.stats.hasBuyBox);
+      document.getElementById('s-new').textContent = AdminShell.fmtNum(data.stats.newThisWeek);
+      state.statsLoaded = true;
+    }
 
     renderList();
-    document.getElementById('export-btn').disabled = !ALL_BUYERS.length;
+    document.getElementById('export-btn').disabled = !state.contacts.length;
   } catch (err) {
     document.getElementById('results').innerHTML =
       '<div class="err">Network error: ' + AdminShell.esc(err.message) + '</div>';
+  } finally {
+    state.loading = false;
   }
 }
-window.loadBuyers = loadBuyers;
 
+function refetch() { fetchPage(true); }
+window.refetch = refetch;
+
+async function loadMore() {
+  if (state.loading || !state.hasMore) return;
+  state.page++;
+  await fetchPage(false);
+}
+window.loadMore = loadMore;
+
+// ─── Render ────────────────────────────────────────────────────
 function renderList() {
   var host = document.getElementById('results');
-  var filtered = ALL_BUYERS.slice();
+  var buyers = state.contacts;
 
-  if (CURRENT_FILTER === 'vip') filtered = filtered.filter(function (b) { return b.isVip; });
-  else if (CURRENT_FILTER === 'buybox') filtered = filtered.filter(function (b) { return b.hasBuyBox; });
-  else if (CURRENT_FILTER === 'nobuybox') filtered = filtered.filter(function (b) { return !b.hasBuyBox; });
+  // Result summary
+  var summary = buyers.length + ' of ' + AdminShell.fmtNum(state.total) + ' shown';
+  if (state.q) summary += ' · search "' + state.q + '"';
+  if (state.filter !== 'all') summary += ' · ' + state.filter;
+  document.getElementById('result-summary').textContent = summary;
 
-  if (SEARCH_Q) {
-    var q = SEARCH_Q.toLowerCase();
-    filtered = filtered.filter(function (b) {
-      return (b.name || '').toLowerCase().indexOf(q) > -1
-        || (b.email || '').toLowerCase().indexOf(q) > -1
-        || (b.phone || '').indexOf(SEARCH_Q) > -1;
-    });
-  }
-
-  document.getElementById('row-count').textContent = filtered.length;
-
-  if (!filtered.length) {
-    host.innerHTML = '<div class="state"><h3>No buyers match</h3><p>Try clearing the search or switching filter tabs.</p></div>';
+  if (!buyers.length) {
+    host.innerHTML = '<div class="state"><h3>No buyers match</h3><p>Try a different search or filter.</p></div>';
     return;
   }
 
-  var rows = filtered.map(function (b) {
+  var rows = buyers.map(function (b) {
     var badges = [];
     if (b.isVip) badges.push('<span class="pill orange">VIP</span>');
     if (b.hasBuyBox) badges.push('<span class="pill green">Buy Box</span>');
@@ -242,36 +263,51 @@ function renderList() {
       + '</tr>';
   }).join('');
 
+  var loadMoreHtml = '';
+  if (state.hasMore) {
+    loadMoreHtml = '<div class="load-more-wrap">'
+      + '<div class="result-meta">Showing ' + buyers.length + ' of ' + AdminShell.fmtNum(state.total) + '</div>'
+      + '<button class="btn secondary" id="load-more-btn" onclick="loadMore()">Load next ' + state.pageLimit + '</button>'
+      + '</div>';
+  } else if (buyers.length >= state.pageLimit) {
+    loadMoreHtml = '<div class="load-more-wrap"><div class="result-meta">End of results · ' + AdminShell.fmtNum(state.total) + ' total</div></div>';
+  }
+
   host.innerHTML = '<div class="table-wrap"><table class="t">'
     + '<thead><tr><th>Buyer</th><th>Phone</th><th>Status</th><th>Markets / Strategy</th><th>Joined</th></tr></thead>'
     + '<tbody>' + rows + '</tbody>'
-    + '</table></div>';
+    + '</table></div>'
+    + loadMoreHtml;
 }
 
-// Search (debounced)
+// ─── Events ────────────────────────────────────────────────────
 var searchTimer;
 document.getElementById('search').addEventListener('input', function (e) {
   clearTimeout(searchTimer);
+  var v = e.target.value.trim();
   searchTimer = setTimeout(function () {
-    SEARCH_Q = e.target.value.trim();
-    renderList();
-  }, 200);
+    // Require at least 2 chars for server-side search, or empty to clear
+    if (v.length === 1) return;
+    if (v === state.q) return;
+    state.q = v;
+    fetchPage(true);
+  }, 350);
 });
 
-// Filter tabs
 document.querySelectorAll('#tabs .filter-tab').forEach(function (b) {
   b.addEventListener('click', function () {
+    if (state.loading) return;
     document.querySelectorAll('#tabs .filter-tab').forEach(function (x) { x.classList.remove('active'); });
     b.classList.add('active');
-    CURRENT_FILTER = b.dataset.filter;
-    renderList();
+    state.filter = b.dataset.filter;
+    fetchPage(true);
   });
 });
 
 function exportCsv() {
-  if (!ALL_BUYERS.length) return;
+  if (!state.contacts.length) return;
   var headers = ['Name','Email','Phone','VIP','Buy Box','Markets','Strategies','Date Added','GHL ID'];
-  var rows = ALL_BUYERS.map(function (b) {
+  var rows = state.contacts.map(function (b) {
     return [
       b.name || '',
       b.email || '',
@@ -300,11 +336,11 @@ function exportCsv() {
   a.download = 'buyers_' + new Date().toISOString().split('T')[0] + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  AdminShell.toast('CSV exported');
+  AdminShell.toast('Exported ' + state.contacts.length + ' buyers');
 }
 window.exportCsv = exportCsv;
 
-AdminShell.requireAuth(loadBuyers);
+AdminShell.requireAuth(function () { fetchPage(true); });
 </script>
 
 </body>
