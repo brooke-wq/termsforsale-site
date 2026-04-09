@@ -91,6 +91,14 @@ exports.handler = async (event) => {
       customFields: [],
     };
 
+    // CRITICAL: Set Contact Role = ['Buyer'] so notify-buyers.js picks them up
+    // in its buyer scan. Without this, new website signups are INVISIBLE to the
+    // deal blast matcher. Field id matches CF.CONTACT_ROLE in notify-buyers.js.
+    contactPayload.customFields.push({
+      id: 'agG4HMPB5wzsZXiRxfmR',
+      field_value: ['Buyer'],
+    });
+
     // Deal structures — multi-select from signup form or single from legacy
     var structureValue = deal_structures || deal_structure || '';
     if (structureValue) {

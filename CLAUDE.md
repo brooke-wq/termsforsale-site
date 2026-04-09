@@ -276,6 +276,68 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 9 2026 Maintenance Audit
+
+Triage session that caught two silent regressions that were breaking buyer
+targeting and ~20 Netlify functions. Items shipped:
+
+- **Contact Role bug on signup** — `auth-signup.js` was creating contacts
+  without setting Contact Role = `['Buyer']`. `notify-buyers.js` filters by
+  Contact Role === 'Buyer' → every website signup since real auth launched
+  (April 3) was invisible to the deal blast matcher. Fixed at
+  `termsforsale/netlify/functions/auth-signup.js:93-99` (explicit custom field
+  `id: agG4HMPB5wzsZXiRxfmR`, value `['Buyer']`).
+- **notify-buyers missing sent:[slug] tag** — it only wrote
+  `alerted-[shortId]` and `new-deal-alert`, never the `sent:[slug]` tag the
+  admin Deal Buyer List dashboard queries. Historical data was backfilled by
+  `scripts/migrate-sent-tags.js` on April 9, but every new blast since was
+  invisible to `/admin/deal-buyers.html`. Fixed at
+  `termsforsale/netlify/functions/notify-buyers.js` — added `slugifyAddress()`
+  helper (same rules as migration script) and appended `sent:[slug]` to the
+  tag array in `triggerBuyerAlert()`.
+- **CATASTROPHIC: _ghl.js rewrite on April 7 broke ~20 functions** — commit
+  `e9a4b4c` ("Add files via upload") replaced `_ghl.js` with a commercial-lane-
+  only version, removing `cfMap`, `CF_IDS`, `findByTag`, `searchContacts`,
+  `getContact`, `postNote`, `addTags`, `removeTags`, `swapTags`, `updateContact`,
+  `updateCustomFields`, `sendSMS`, `sendEmail`, and changed `upsertContact`
+  signature. Silently broke: `buy-box-save`, `vip-buyer-submit`, `buyer-inquiry`,
+  `buyer-relations`, `buyer-import`, `buyer-response-tag`, `lead-intake`,
+  `equity-exit-intake`, `track-view`, `submit-offer`, `booking-notify`,
+  `follow-up-nudge`, `saved-deals`, `seller-call-prep`, `weekly-synthesis`,
+  `deal-dog-poller`, `deal-package-poller`, `ceo-briefing`, `partner-scorecard`.
+  Restored all legacy exports and made `upsertContact` polymorphic (detects
+  3-arg legacy call vs 1-arg commercial call). Now exports 24 functions total —
+  14 legacy + 10 commercial lane. Ops audit confirms all 59 function modules
+  load cleanly and every `_ghl.js` destructure resolves.
+- **`scripts/backfill-contact-role.js`** — retroactive backfill for existing
+  website signups missing Contact Role = Buyer. Scans GHL contacts tagged
+  `buyer-signup`, `tfs buyer`, `TFS Buyer`, `use:buyer`, `Website Signup`,
+  `VIP Buyer List`, `buy box complete`; deduplicates by id; sets
+  `Contact Role = ['Buyer']` if missing. Supports `DRY_RUN=1` and `MAX_CONTACTS`.
+- **`scripts/ops-audit.js`** — regular maintenance health check. Validates
+  (1) all function modules load without errors, (2) every `_ghl.js` destructure
+  resolves to a real export, (3) sampled buyer contacts have Contact Role set,
+  (4) recent "Started Marketing" deals have `sent:[slug]` tags in GHL,
+  (5) required env vars are present. Run `node scripts/ops-audit.js` for full
+  audit, `SKIP_REMOTE=1 node scripts/ops-audit.js` or `--quick` for local
+  static checks only. Exit code 1 if any FAIL items.
+
+**Run on Droplet to finish the backfill:**
+```
+cd /root/termsforsale-site
+git pull origin main
+DRY_RUN=1 node scripts/backfill-contact-role.js    # preview
+node scripts/backfill-contact-role.js              # apply
+node scripts/ops-audit.js                          # verify
+```
+
+**Recommended: add weekly PM2 cron for ops-audit:**
+```
+pm2 start scripts/ops-audit.js --name ops-audit --no-autorestart --cron "0 13 * * 1"
+pm2 save
+```
+Monday 6am AZ. Sends findings to stdout / `/var/log/paperclip.log` for review.
+
 ## Completed — April 2026 Audit/Stabilization Session
 
 All items below were completed and deployed:

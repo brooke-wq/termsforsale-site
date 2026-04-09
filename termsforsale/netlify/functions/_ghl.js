@@ -1,11 +1,52 @@
-// Shared GHL helper for commercial lane functions.
-// Honors TEST_MODE env var — when "true", logs payloads instead of making live calls.
+// Shared GHL helper — native fetch (Node 18+), no npm packages
+// Prefix _ means Netlify will NOT deploy this as a function (it's a private module)
+//
+// Legacy exports (used by ~20 functions):
+//   cfMap, CF_IDS, findByTag, searchContacts, getContact, postNote,
+//   addTags, removeTags, swapTags, updateContact, updateCustomFields,
+//   sendSMS, sendEmail, upsertContact (3-arg: apiKey, locationId, data)
+//
+// Commercial lane exports (added April 7 for the commercial/multifamily lane):
+//   ghlFetch, createOpportunity, sendSmsToBrooke, sendEmailToContact,
+//   isTest, getStageIdByName, advanceOpportunityStage, findContactByEmail,
+//   findOpportunityByContactAndDealCode, sendTokenizedDataRoomEmail
+//
+// upsertContact is polymorphic — it detects whether it was called with the
+// old 3-arg style (apiKey, locationId, data) or the new 1-arg destructured
+// style ({email, phone, ...}) and routes accordingly.
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 const API_VERSION = '2021-07-28';
 
 const isTest = () => String(process.env.TEST_MODE || '').toLowerCase() === 'true';
 
+// ─── Low-level HTTP helpers ─────────────────────────────────────
+
+function ghlHeaders(apiKey) {
+  return {
+    'Authorization': 'Bearer ' + apiKey,
+    'Version': API_VERSION,
+    'Content-Type': 'application/json'
+  };
+}
+
+// Legacy request helper — returns { status, body }, does NOT throw on 4xx/5xx.
+async function ghlRequest(apiKey, method, path, body) {
+  var url = GHL_BASE + path;
+  var opts = { method: method, headers: ghlHeaders(apiKey) };
+  if (body) opts.body = JSON.stringify(body);
+  var res = await fetch(url, opts);
+  var text = await res.text();
+  var parsed;
+  try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+  if (res.status >= 400) {
+    console.error('GHL ' + method + ' ' + path + ' -> ' + res.status, typeof parsed === 'object' ? JSON.stringify(parsed) : parsed);
+  }
+  return { status: res.status, body: parsed };
+}
+
+// New-style request helper — throws on non-2xx, used by commercial lane.
+// Honors TEST_MODE env var (logs payload instead of making the call).
 async function ghlFetch(path, opts = {}) {
   const url = `${GHL_BASE}${path}`;
   const headers = {
@@ -27,25 +68,192 @@ async function ghlFetch(path, opts = {}) {
   return json;
 }
 
-// Upsert contact by email, add tags, set custom fields.
-async function upsertContact({ email, phone, firstName, lastName, name, tags = [], customFields = {}, source = 'Commercial Lane' }) {
-  const locationId = process.env.GHL_LOCATION_ID;
-  const [fn, ...rest] = (name || '').trim().split(' ');
-  const body = {
-    locationId,
-    email,
-    phone,
-    firstName: firstName || fn || '',
-    lastName: lastName || rest.join(' ') || '',
-    tags,
-    source,
-    customFields: Object.entries(customFields)
-      .filter(([, v]) => v !== undefined && v !== null && v !== '')
-      .map(([key, value]) => ({ key, field_value: Array.isArray(value) ? value.join(', ') : String(value) })),
-  };
-  const res = await ghlFetch('/contacts/upsert', { method: 'POST', body: JSON.stringify(body) });
-  return res?.contact?.id || res?.id || (isTest() ? 'test-contact-id' : null);
+// ─── Field maps ──────────────────────────────────────────────────
+
+// Flatten a contact's customFields array into { key: value } object
+function cfMap(contact) {
+  var fields = contact.customFields || contact.customField || [];
+  var map = {};
+  if (Array.isArray(fields)) {
+    fields.forEach(function(f) {
+      if (f.id)  map[f.id] = f.value;
+      if (f.key) map[f.key] = f.field_value || f.value;
+    });
+  }
+  return map;
 }
+
+// Known custom field IDs (Terms For Sale location)
+const CF_IDS = {
+  // Buy box fields
+  TARGET_STATES:       'aewzY7iEvZh12JhMVi7E',
+  TARGET_CITIES:       'DbY7dHIXk8YowpaWrxYj',
+  DEAL_STRUCTURES:     '0L0ycmmsEjy6OPDL0rgq',
+  PROPERTY_TYPE:       'HGC6xWLpSqoAQPZr0uwY',
+  MAX_PRICE:           'BcxuopmSK4wA3Z3NyanD',
+  MAX_ENTRY:           'SZmNHA3BQva2AZg00ZNP',
+  MIN_ARV:             'KKGEfgdaqu98yrZYkmoO',
+  MIN_BEDS:            'RRuCraVtRUlEMvdFXngv',
+  EXIT_STRATEGIES:     '98i8EKc3OWYSqS4Qb1nP',
+  TARGET_MARKETS:      'XjXqGv6Y82iTP659pO4t',
+  BUYER_TYPE:          '95PgdlIYfXYcMymnjsIv',
+  CONTACT_ROLE:        'agG4HMPB5wzsZXiRxfmR',
+  // Deal alert fields (used by notify-buyers)
+  ALERT_FULL_ADDRESS:  'TerjqctukTW67rB21ugC',
+  ALERT_CITY:          'KuaUFXhbQB6kKvBSKfoI',
+  ALERT_STATE:         'ltmVcWUpbwZ0S3dBid3U',
+  ALERT_ZIP:           'UqJl4Dq6T8wfNb70EMrL',
+  ALERT_DEAL_TYPE:     '0thrOdoETTLlFA45oN8U',
+  ALERT_DEAL_URL:      '5eEVPcp8nERlR6GpjZUn',
+  ALERT_DEAL_SUMMARY:  'YjoPoDPv7Joo1izePpDx',
+  ALERT_ASKING_PRICE:  'iur6TZsfKotwO3gZb8yk',
+  ALERT_ENTRY_FEE:     'DH4Ekmyw2dvzrE74JSzs',
+  ALERT_PROPERTY_TYPE: 'DJFMav5mPvWBzsPdhAqy',
+  ALERT_BEDS:          '2iVO7pRpi0f0ABb6nYka',
+  ALERT_BATHS:         'rkzCcjHJMFJP3GcwnNx6',
+  ALERT_YEAR_BUILT:    'nNMHvkPbjGYRbOB1v7vQ',
+  ALERT_SQFT:          'MgNeVZgMdTcdatcTTHue',
+  ALERT_HIGHLIGHTS:    'eke6ZGnex77y5aUCNgly',
+  ALERT_COVER_PHOTO:   'FXp9oPT4T4xqA1HIJuSC'
+};
+
+// ─── Legacy contact operations ──────────────────────────────────
+
+// Search contacts by tag (returns contacts array)
+async function findByTag(apiKey, locationId, tag) {
+  return ghlRequest(apiKey, 'GET',
+    '/contacts/?locationId=' + encodeURIComponent(locationId) +
+    '&query=' + encodeURIComponent(tag) + '&limit=100');
+}
+
+// Search contacts by any query string (name, email, phone)
+async function searchContacts(apiKey, locationId, query, limit) {
+  return ghlRequest(apiKey, 'GET',
+    '/contacts/?locationId=' + encodeURIComponent(locationId) +
+    '&query=' + encodeURIComponent(query) + '&limit=' + (limit || 10));
+}
+
+async function getContact(apiKey, contactId) {
+  return ghlRequest(apiKey, 'GET', '/contacts/' + contactId);
+}
+
+async function postNote(apiKey, contactId, body) {
+  return ghlRequest(apiKey, 'POST', '/contacts/' + contactId + '/notes', { body: body });
+}
+
+async function addTags(apiKey, contactId, tags) {
+  return ghlRequest(apiKey, 'POST', '/contacts/' + contactId + '/tags', { tags: tags });
+}
+
+async function removeTags(apiKey, contactId, tags) {
+  return ghlRequest(apiKey, 'DELETE', '/contacts/' + contactId + '/tags', { tags: tags });
+}
+
+// Remove tagsToRemove then add tagsToAdd in sequence
+async function swapTags(apiKey, contactId, tagsToRemove, tagsToAdd) {
+  if (tagsToRemove && tagsToRemove.length) {
+    await removeTags(apiKey, contactId, tagsToRemove);
+  }
+  if (tagsToAdd && tagsToAdd.length) {
+    return addTags(apiKey, contactId, tagsToAdd);
+  }
+  return { status: 200, body: {} };
+}
+
+async function updateContact(apiKey, contactId, data) {
+  return ghlRequest(apiKey, 'PUT', '/contacts/' + contactId, data);
+}
+
+// fields: [{id: 'fieldId', value: 'value'}, ...]
+async function updateCustomFields(apiKey, contactId, fields) {
+  return ghlRequest(apiKey, 'PUT', '/contacts/' + contactId, { customFields: fields });
+}
+
+// Send SMS to a phone number via GHL conversations API.
+// Looks up the contact by phone first; falls back to sending by phone number directly.
+async function sendSMS(apiKey, locationId, toPhone, message) {
+  var phone = (toPhone || '').replace(/\s+/g, '');
+
+  var searchRes = await ghlRequest(apiKey, 'GET',
+    '/contacts/?locationId=' + encodeURIComponent(locationId) +
+    '&query=' + encodeURIComponent(phone) + '&limit=5');
+
+  var contacts = (searchRes.body && searchRes.body.contacts) || [];
+  var contactId = contacts.length ? contacts[0].id : null;
+
+  if (!contactId) {
+    console.warn('sendSMS: no GHL contact found for ' + phone + ', cannot send SMS');
+    return { status: 404, body: { error: 'Contact not found for phone ' + phone } };
+  }
+
+  return ghlRequest(apiKey, 'POST', '/conversations/messages', {
+    type: 'SMS',
+    contactId: contactId,
+    message: message
+  });
+}
+
+// Send Email via GHL conversations API
+async function sendEmail(apiKey, contactId, subject, htmlBody) {
+  return ghlRequest(apiKey, 'POST', '/conversations/messages', {
+    type: 'Email',
+    contactId: contactId,
+    subject: subject,
+    html: htmlBody,
+    emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+  });
+}
+
+// Polymorphic upsertContact:
+//   Legacy style:  upsertContact(apiKey, locationId, data)  → returns { status, body }
+//   Commercial:    upsertContact({email, phone, name, tags, customFields, source}) → returns contactId string
+//
+// We detect by inspecting the first argument: if it's a string, it's the
+// legacy 3-arg call; if it's an object, it's the commercial-lane style.
+async function upsertContact() {
+  var a0 = arguments[0];
+  // Legacy: upsertContact(apiKey, locationId, data)
+  if (typeof a0 === 'string') {
+    var apiKey = a0;
+    var locationId = arguments[1];
+    var data = arguments[2] || {};
+    return ghlRequest(apiKey, 'POST', '/contacts/upsert',
+      Object.assign({ locationId: locationId }, data));
+  }
+  // Commercial: upsertContact({email, phone, name, ...})
+  var opts = a0 || {};
+  var email = opts.email;
+  var phone = opts.phone;
+  var firstName = opts.firstName;
+  var lastName = opts.lastName;
+  var name = opts.name;
+  var tags = opts.tags || [];
+  var customFields = opts.customFields || {};
+  var source = opts.source || 'Commercial Lane';
+  var locId = process.env.GHL_LOCATION_ID;
+  var parts = (name || '').trim().split(' ');
+  var fn = parts[0] || '';
+  var ln = parts.slice(1).join(' ');
+  var body = {
+    locationId: locId,
+    email: email,
+    phone: phone,
+    firstName: firstName || fn || '',
+    lastName: lastName || ln || '',
+    tags: tags,
+    source: source,
+    customFields: Object.keys(customFields)
+      .filter(function(k) { var v = customFields[k]; return v !== undefined && v !== null && v !== ''; })
+      .map(function(k) {
+        var v = customFields[k];
+        return { key: k, field_value: Array.isArray(v) ? v.join(', ') : String(v) };
+      })
+  };
+  var res = await ghlFetch('/contacts/upsert', { method: 'POST', body: JSON.stringify(body) });
+  return (res && res.contact && res.contact.id) || (res && res.id) || (isTest() ? 'test-contact-id' : null);
+}
+
+// ─── Commercial lane helpers ────────────────────────────────────
 
 async function createOpportunity({ contactId, pipelineId, stageId, name, monetaryValue = 0, customFields = {} }) {
   const body = {
@@ -73,7 +281,7 @@ async function sendSmsToBrooke(message) {
     body: JSON.stringify({
       type: 'SMS',
       locationId: process.env.GHL_LOCATION_ID,
-      contactId: process.env.BROOKE_CONTACT_ID, // Brooke's own contact record
+      contactId: process.env.BROOKE_CONTACT_ID,
       message,
     }),
   });
@@ -104,7 +312,6 @@ async function getStageIdByName(pipelineId, stageName) {
   const pipelines = res.pipelines || res.data || [];
   const p = pipelines.find(x => x.id === pipelineId);
   if (!p) throw new Error(`Pipeline ${pipelineId} not found`);
-  // Cache every stage in this pipeline for future calls
   (p.stages || []).forEach(s => {
     stageCache[`${pipelineId}::${s.name}`] = s.id;
   });
@@ -113,7 +320,6 @@ async function getStageIdByName(pipelineId, stageName) {
   return id;
 }
 
-// Move an opportunity to a different stage in the same pipeline.
 async function advanceOpportunityStage({ opportunityId, pipelineId, stageName }) {
   const stageId = await getStageIdByName(pipelineId, stageName);
   if (isTest()) {
@@ -158,5 +364,34 @@ async function sendTokenizedDataRoomEmail({ contactId, contactName, dealCode, to
   `;
   await sendEmailToContact({ contactId, subject, html });
 }
-module.exports = { upsertContact, createOpportunity, sendSmsToBrooke, sendEmailToContact, isTest, getStageIdByName, advanceOpportunityStage,
-  findContactByEmail, findOpportunityByContactAndDealCode, sendTokenizedDataRoomEmail, };
+
+// ─── Exports ─────────────────────────────────────────────────────
+
+module.exports = {
+  // Legacy exports (restored April 9 after April 7 regression)
+  cfMap,
+  CF_IDS,
+  findByTag,
+  searchContacts,
+  getContact,
+  postNote,
+  addTags,
+  removeTags,
+  swapTags,
+  updateContact,
+  updateCustomFields,
+  sendSMS,
+  sendEmail,
+  upsertContact,
+  // Commercial lane exports
+  ghlFetch,
+  createOpportunity,
+  sendSmsToBrooke,
+  sendEmailToContact,
+  isTest,
+  getStageIdByName,
+  advanceOpportunityStage,
+  findContactByEmail,
+  findOpportunityByContactAndDealCode,
+  sendTokenizedDataRoomEmail,
+};
