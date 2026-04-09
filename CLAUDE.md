@@ -456,6 +456,108 @@ case (empty amount) now shows a red "we didn't receive offer details —
 please reply" banner in the email instead of silently omitting the line.
 All 60 Netlify function modules load cleanly.
 
+## Completed — April 9 2026 Admin Console Iteration 2 (blur fix, scale, matching rewrite)
+
+Follow-up session to the admin rebuild. Shipped the polish + the real
+buyer→deal matching overhaul the user wanted.
+
+**UI fixes**
+- `admin.js` + all admin HTML pages: the `body.locked` class was
+  blurring `.sidebar`/`.main` behind the password gate, but the class
+  wasn't being removed when a valid session was restored from
+  `sessionStorage`. Every nav click loaded a new page with
+  `class="locked"` hardcoded, so the JS race left the UI blurred.
+  Fixed two ways: (1) `requireAuth()` now explicitly removes the
+  class on the session-restore branch, and (2) all admin HTML pages
+  start with a clean `<body>` — the `locked` class is only added
+  by `mountGate()` when the gate actually shows. Belt-and-braces; the
+  blur is now structurally impossible when there's a valid session.
+- Removed broken sidebar links to `/admin/leads.html` and
+  `/admin/health.html` (placeholder pages that were never built — they
+  404'd).
+- `admin/deals.html`: each row now has a "Buyers" column that
+  auto-loads the sent-count from `/api/deal-buyer-list` after the
+  deal list renders. Shows `0 sent` (gray), `N sent` (blue), and
+  `N sent  K hot` if any buyers replied INTERESTED. Counts cached
+  per-slug so search/filter doesn't re-fetch.
+
+**Buyer list scale — 10k+ buyers**
+- Old frontend was capped at 1000 and loaded everything client-side.
+  Bumped cap first (20k), then realized that's still a dead end past
+  a few thousand buyers — refactored to proper server-side
+  pagination + search.
+- `admin-buyers.js` now accepts `page`, `pageLimit`, `q`, `filter`,
+  `stats`. Pushes buyer-tag filter + VIP/Buy Box tab + name/email/
+  phone search to GHL as one paginated `/contacts/search` POST.
+  Returns one page at a time with `total` (from `meta.total`) and
+  `hasMore`. On first load fires 3 parallel count queries for total
+  / VIP / hasBuyBox stat tiles. `nobuybox` stays client-side (GHL
+  has no NOT-contains).
+- `buyers.html` rewritten around a state machine: debounced 350 ms
+  search (2+ chars), filter-tab reset, "Load next 100" button, CSV
+  export ships whatever's currently loaded. Stats populate once
+  from the first response and persist across filter changes.
+
+**Matching rewrite (the big one)**
+- Replaced the old "2-of-7 criteria" scoring cascade with explicit
+  hard filters + market match + tier scoring, per the user's new
+  segmentation rules:
+
+  HARD FILTERS (all tiers must pass all):
+  1. Contact Role = Buyer (done upstream in `fetchAllBuyers`)
+  2. `contact.buyer_status` ≠ "not buying now"
+  3. Deal structure preference contains deal type
+  4. `contact.property_type_preference` contains deal property type
+  5. HOA rule: if deal has HOA, `contact.hoa` ≠ "no" AND
+     `contact.hoa_tolerance` doesn't contain "no" (word boundary)
+
+  MARKET MATCH (required, determines tier):
+  - Scans 3 places for deal city/metro: `target_markets` (text),
+    `contact.buy_box` (text), `target_cities` (multi-select)
+  - City match found anywhere → Tier 1 or 2
+  - City preferences filled but none match → state fallback (Tier 3)
+  - No city preferences filled → state match → Tier 3
+  - No match at all → reject
+
+  TIER ASSIGNMENT:
+  - T1 = city match + every populated optional extra passes
+    (max_price, max_entry, min_arv, min_beds)
+  - T2 = city match but one or more extras fail (or no extras set)
+  - T3 = state-only fallback
+
+- New fields resolved at runtime via `/locations/{id}/customFields`
+  by `fieldKey` (not hardcoded IDs), cached at module level:
+  `contact.buyer_status`, `contact.hoa`, `contact.hoa_tolerance`,
+  `contact.property_type_preference`, `contact.deal_structure`,
+  `contact.buy_box`.
+- `findMatchingBuyers` is now a single pass — `matchesBuyBox()` returns
+  the tier directly. No more "cascade to T2 if T1 < 50" loops.
+- Preserved the existing `pref-market-only` buyer tag (Day-2 follow-up
+  preference): buyers with that tag get hard-rejected if they don't
+  get a city match, bypassing the state fallback.
+- User tested with `?test=true&deal_id=<code>` after deploy — all 3
+  tiers producing results.
+
+**`notify-buyers` dealCode support**
+- `?deal_id=` used to only accept full Notion UUIDs — passing
+  `PHX-001` returned `{"error":"Deal not found"}`. Now the handler
+  detects whether the input looks like a 32-char hex UUID and
+  either fetches directly or queries Notion for the page with
+  matching `Deal ID` property. Fallback tries UUID interpretation
+  if the code lookup fails. 404 response now includes a hint +
+  the value tried so the next failed lookup is self-diagnosable.
+
+Commits (in order, all on main):
+- `893395b` — Fix admin pages staying blurred after restoring session
+- `bfe5364` — Remove body.locked from admin pages to kill blur race
+- `0098bae` — Remove broken Seller Leads + System Health sidebar links
+- `a944f20` — Show buyer count per deal inline on /admin/deals.html
+- `5fb9aac` — Raise buyer list cap from 1000 to 20000
+- `2981bda` — Server-side pagination + search for buyer list (10k+)
+- `762a166` — Rewrite buyer→deal matching rules
+- `897ef91` — Merge resolution (preserved pref-market-only)
+- `4b348ac` — Accept short dealCode in notify-buyers ?deal_id=
+
 ## Completed — April 9 2026 Admin Console Rebuild
 
 Rebuilt `/admin/*` into a real corporate back-office hub with shared
