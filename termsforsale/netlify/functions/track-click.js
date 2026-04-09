@@ -64,6 +64,8 @@ exports.handler = async (event) => {
   const channel = q.ch || '';
 
   // Fire-and-forget log (don't block the redirect)
+  const userAgent = (event.headers && event.headers['user-agent']) || '';
+  const ip = (event.headers && (event.headers['x-forwarded-for'] || event.headers['client-ip'])) || '';
   logClickToNotion({ dealCode, contactId, email, channel, userAgent, ip }).catch(() => {});
 
   const target = dealCode
