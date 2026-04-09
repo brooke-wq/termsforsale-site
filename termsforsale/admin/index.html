@@ -1,12 +1,320 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms For Sale — Blog Admin</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Terms For Sale</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
-  <!-- Decap CMS -->
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+<div class="admin-shell">
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Overview</div>
+        <div class="topbar-h">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/" class="topbar-btn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          <span>View site</span>
+        </a>
+        <button class="topbar-btn primary" onclick="refreshAll()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Hero greeting -->
+      <div class="panel" style="background:linear-gradient(120deg,#0D1F3C 0%,#1a3163 55%,#29ABE2 130%);border:none;color:#fff">
+        <div class="panel-body" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px" id="greeting-time">Good morning</div>
+            <div style="font-size:22px;font-weight:900;letter-spacing:-.3px">Welcome back to the Deal Pros command center.</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:6px;max-width:620px">Live visibility into the Terms For Sale pipeline — deals, buyers, and Paperclip AI OS automation — all in one place.</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="/admin/buyers.html" class="btn blue">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              View Buyer List
+            </a>
+            <a href="/admin/deals.html" class="btn secondary" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)">
+              Active Deals
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Active Deals</div>
+          <div class="stat-value" id="stat-active">—</div>
+          <div class="stat-sub">Currently marketing to buyers</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Total Buyers</div>
+          <div class="stat-value" id="stat-buyers">—</div>
+          <div class="stat-sub"><span id="stat-new-buyers">—</span> new this week</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>VIP Buyers</div>
+          <div class="stat-value" id="stat-vip">—</div>
+          <div class="stat-sub">Early-access list</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Deals Closed</div>
+          <div class="stat-value" id="stat-closed">—</div>
+          <div class="stat-sub">All-time funded</div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Quick Actions
+            </div>
+            <div class="panel-sub">Shortcut to the tools you use most</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="quick-grid">
+            <a href="/admin/buyers.html" class="quick-card green">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Buyer List</div>
+                <div class="quick-card-desc">Browse, search, and export your full buyer database with filters.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/admin/deals.html" class="quick-card">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Active Deals</div>
+                <div class="quick-card-desc">See every deal currently marketing, by type and metro.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/admin/deal-buyers.html" class="quick-card orange">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Deal Buyer Lookup</div>
+                <div class="quick-card-desc">See exactly who was sent a specific deal and who responded.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/admin/blog.html" class="quick-card purple">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Blog & Content</div>
+                <div class="quick-card-desc">Create deal spotlight posts and education articles via Decap CMS.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/admin/paperclip-sop.html" class="quick-card red">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Paperclip SOP</div>
+                <div class="quick-card-desc">Full VA process sheet — cron jobs, tags, automation flow.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="https://app.gohighlevel.com/" class="quick-card" target="_blank" rel="noopener">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Open GoHighLevel</div>
+                <div class="quick-card-desc">Full CRM access — contacts, workflows, opportunities.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent deals + breakdown -->
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Recently Updated Deals
+              </div>
+              <div class="panel-sub">Latest edits in the Notion deal database</div>
+            </div>
+            <a href="/admin/deals.html" class="btn secondary" style="padding:7px 14px;font-size:12px">View all</a>
+          </div>
+          <div class="panel-body flush">
+            <div id="recent-deals" class="table-wrap">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Pipeline Mix
+              </div>
+              <div class="panel-sub">Active deals by type</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="deal-types"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Automation status -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Paperclip AI OS — Automation Status
+            </div>
+            <div class="panel-sub">All 14 cron jobs active on the DigitalOcean droplet</div>
+          </div>
+          <span class="pill green" style="font-size:11px;padding:5px 12px">All Systems Operational</span>
+        </div>
+        <div class="panel-body flush">
+          <div class="table-wrap">
+            <table class="t">
+              <thead>
+                <tr>
+                  <th>Job</th>
+                  <th>Schedule</th>
+                  <th>What It Does</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="cell-strong">notify-buyers</td><td class="mono">*/30 8-20 * * *</td><td>Matches active deals to buyer criteria, sends SMS + email alerts</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">deal-follow-up</td><td class="mono">*/30 8-20 * * *</td><td>3-day follow-up sprint after initial deal alert</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">lead-intake</td><td class="mono">*/15 * * * *</td><td>Scores seller leads 1–50, routes hot leads to underwriting</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">underwriting-poller</td><td class="mono">*/15 * * * *</td><td>Claude AI underwriting analysis → posts to GHL note</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">seller-call-prep</td><td class="mono">*/15 * * * *</td><td>Generates Eddie's call brief from underwriting results</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">buyer-relations</td><td class="mono">*/30 * * * *</td><td>Profiles + tags new buyer signups</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">ceo-briefing</td><td class="mono">0 14 * * *</td><td>Daily 7am AZ pipeline briefing → SMS to Brooke</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">weekly-synthesis</td><td class="mono">0 15 * * 1</td><td>Monday 8am AZ weekly report</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">deal-cleanup</td><td class="mono">0 6 * * 1</td><td>Weekly — flushes engagement tags into buyer history on closed deals</td><td><span class="pill green">Active</span></td></tr>
+                <tr><td class="cell-strong">dispo-buddy-triage</td><td class="mono">—</td><td>JV deal screening (deferred)</td><td><span class="pill gray">Paused</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('dashboard');
+
+// Greeting
+(function () {
+  var h = new Date().getHours();
+  var t = h < 12 ? 'Good morning' : (h < 18 ? 'Good afternoon' : 'Good evening');
+  var el = document.getElementById('greeting-time');
+  if (el) el.textContent = t;
+})();
+
+async function loadStats() {
+  try {
+    var res = await AdminShell.fetch('/api/admin-stats');
+    if (!res.ok) {
+      setStat('stat-active', '—');
+      setStat('stat-buyers', '—');
+      setStat('stat-vip', '—');
+      setStat('stat-closed', '—');
+      renderRecent([]);
+      renderTypes({});
+      return;
+    }
+    var data = await res.json();
+    setStat('stat-active', AdminShell.fmtNum(data.activeDeals));
+    setStat('stat-buyers', AdminShell.fmtNum(data.totalBuyers));
+    setStat('stat-vip', AdminShell.fmtNum(data.vipBuyers));
+    setStat('stat-closed', AdminShell.fmtNum(data.closedDeals));
+    var nb = document.getElementById('stat-new-buyers');
+    if (nb) nb.textContent = AdminShell.fmtNum(data.newBuyersThisWeek || 0);
+    renderRecent(data.recentDeals || []);
+    renderTypes(data.dealsByType || {});
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function setStat(id, v) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = v;
+}
+
+function renderRecent(deals) {
+  var host = document.getElementById('recent-deals');
+  if (!deals.length) {
+    host.innerHTML = '<div class="state"><h3>No active deals</h3><p>Once deals are set to "Actively Marketing" in Notion they\'ll appear here.</p></div>';
+    return;
+  }
+  var rows = deals.map(function (d) {
+    var price = d.price ? AdminShell.fmtMoney(d.price) : '—';
+    return '<tr>'
+      + '<td class="cell-strong">' + AdminShell.esc(d.dealCode || '—') + '</td>'
+      + '<td>' + AdminShell.esc(d.city || '') + (d.state ? ', ' + AdminShell.esc(d.state) : '') + '</td>'
+      + '<td><span class="pill blue">' + AdminShell.esc(d.dealType || '—') + '</span></td>'
+      + '<td class="cell-strong tr">' + price + '</td>'
+      + '</tr>';
+  }).join('');
+  host.innerHTML = '<table class="t"><thead><tr><th>ID</th><th>Location</th><th>Type</th><th class="tr">Price</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function renderTypes(types) {
+  var keys = Object.keys(types);
+  if (!keys.length) {
+    document.getElementById('deal-types').innerHTML = '<div class="state"><p class="muted">No active deals.</p></div>';
+    return;
+  }
+  var total = keys.reduce(function (s, k) { return s + types[k]; }, 0);
+  keys.sort(function (a, b) { return types[b] - types[a]; });
+  var html = keys.map(function (k) {
+    var pct = Math.round((types[k] / total) * 100);
+    return '<div style="margin-bottom:14px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'
+      +   '<span style="font-weight:700;color:var(--navy)">' + AdminShell.esc(k) + '</span>'
+      +   '<span class="muted">' + types[k] + ' · ' + pct + '%</span>'
+      + '</div>'
+      + '<div style="height:6px;background:var(--bg-2);border-radius:4px;overflow:hidden">'
+      +   '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:4px"></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('deal-types').innerHTML = html;
+}
+
+function refreshAll() {
+  AdminShell.toast('Refreshing...');
+  loadStats();
+}
+window.refreshAll = refreshAll;
+
+AdminShell.requireAuth(loadStats);
+</script>
+
 </body>
 </html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog & Content — Admin — Terms For Sale</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<style>
+.cms-frame{
+  width:100%;
+  min-height:800px;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  background:#fff;
+  overflow:hidden;
+}
+.cms-frame iframe{width:100%;height:80vh;border:none;display:block}
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Content</div>
+        <div class="topbar-h">Blog & Content</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/blog/" class="topbar-btn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          <span>View blog</span>
+        </a>
+        <a href="/admin/cms.html" class="topbar-btn primary">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          <span>Open Full CMS</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Post Types</div>
+          <div class="stat-value">2</div>
+          <div class="stat-sub">Deal spotlights + education</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label">CMS</div>
+          <div class="stat-value" style="font-size:22px">Decap CMS</div>
+          <div class="stat-sub">Git-based editor</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label">Auto-Publishing</div>
+          <div class="stat-value" style="font-size:22px">Enabled</div>
+          <div class="stat-sub">Deal spotlights auto-generated</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Content Management
+            </div>
+            <div class="panel-sub">Create and edit blog posts for termsforsale.com/blog</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <p style="color:var(--text-mid);font-size:13px;margin-bottom:18px">
+            The blog editor runs on <strong>Decap CMS</strong> — a git-based content editor.
+            Posts you create here commit directly to the <code>main</code> branch and trigger
+            a Netlify deploy. Two content types are available:
+          </p>
+
+          <div class="quick-grid" style="margin-bottom:24px">
+            <a href="/admin/cms.html#/collections/deal_posts" class="quick-card">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Deal Spotlight Posts</div>
+                <div class="quick-card-desc">Individual property spotlights — location, numbers, story, buyer fit.</div>
+              </div>
+            </a>
+            <a href="/admin/cms.html#/collections/education_posts" class="quick-card purple">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Education & Guides</div>
+                <div class="quick-card-desc">Creative finance 101, market insights, buyer strategy articles.</div>
+              </div>
+            </a>
+          </div>
+
+          <div class="important" style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:14px 18px;border-radius:0 8px 8px 0">
+            <strong style="color:#92400E">Tip:</strong>
+            <span style="font-size:13px;color:var(--text-mid)">
+              The "Open Full CMS" button above gives you the full-screen Decap editor experience.
+              Authenticating there uses Netlify Identity / git-gateway (separate from this admin password).
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('blog');
+AdminShell.requireAuth();
+</script>
+</body>
+</html>

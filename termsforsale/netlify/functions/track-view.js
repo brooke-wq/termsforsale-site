@@ -2,13 +2,22 @@
  * Track Deal View — GET/POST /.netlify/functions/track-view
  *
  * Two modes:
- * 1. GET  ?c=CONTACT_ID&d=DEAL_ID&r=1  → logs view + redirects to deal page (for email links)
- * 2. POST {contactId, dealId, source}   → logs view silently (for frontend JS)
+ * 1. GET  ?c=CONTACT_ID&d=DEAL_ID[&r=1]  → logs view + 302s to the deal page
+ *    (r=1 is legacy; GET always redirects now so SMS clients that strip
+ *    the trailing param still land users on the deal page.)
+ * 2. POST {contactId, dealId, source}    → logs view silently (frontend JS)
  *
- * Logs a note on the GHL contact and adds a "viewed:DEAL_ID" tag.
+ * IMPORTANT: In GET/redirect mode the tracking work is time-boxed to
+ * TRACK_TIMEOUT_MS so a slow GHL/Notion call can never stall the redirect.
+ * Netlify functions have a 10s hard limit — blocking the redirect on
+ * multiple serial API hops caused every track-view link to hang for users.
  */
 
-const { getContact, postNote, addTags } = require('./_ghl');
+const { postNote, addTags } = require('./_ghl');
+
+// Cap how long we'll wait for tracking writes before firing the 302.
+// Must stay well below Netlify's 10s function timeout.
+const TRACK_TIMEOUT_MS = 1500;
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -16,17 +25,17 @@ exports.handler = async (event) => {
   }
 
   const apiKey = process.env.GHL_API_KEY;
-  if (!apiKey) return respond(500, { error: 'Server config error' });
 
-  let contactId, dealId, source, redirect;
+  let contactId, dealId, source, isGet;
 
   if (event.httpMethod === 'GET') {
+    isGet = true;
     const q = event.queryStringParameters || {};
     contactId = q.c;
     dealId = q.d;
     source = q.src || 'email';
-    redirect = q.r === '1';
   } else if (event.httpMethod === 'POST') {
+    isGet = false;
     try {
       const body = JSON.parse(event.body);
       contactId = body.contactId;
@@ -39,66 +48,87 @@ exports.handler = async (event) => {
     return respond(405, { error: 'Method not allowed' });
   }
 
-  if (!contactId || !dealId) {
-    // If redirect requested but missing params, just send to deal page
-    if (redirect && dealId) {
-      return { statusCode: 302, headers: { Location: '/deal.html?id=' + encodeURIComponent(dealId) }, body: '' };
+  // GET mode ALWAYS redirects — even if params are missing or GHL is down.
+  // The tracking is best-effort; the redirect is the contract with the user.
+  if (isGet) {
+    // If we got a dealId, always redirect to that deal (even if contactId or
+    // apiKey is missing — those only affect tracking, not navigation).
+    const location = dealId
+      ? '/deal.html?id=' + encodeURIComponent(dealId)
+      : '/deals.html';
+
+    // Fire tracking in the background, capped at TRACK_TIMEOUT_MS.
+    if (apiKey && contactId && dealId) {
+      await raceWithTimeout(
+        trackView(apiKey, contactId, dealId, source),
+        TRACK_TIMEOUT_MS
+      );
     }
-    return respond(400, { error: 'Missing contactId or dealId' });
-  }
 
-  // Fire tracking in background — don't block the redirect
-  const trackPromise = (async () => {
-    try {
-      // Verify contact exists
-      const contact = await getContact(apiKey, contactId);
-      if (contact.status >= 400) return;
-
-      const contactName = contact.body && contact.body.contact
-        ? (contact.body.contact.firstName || 'Unknown')
-        : 'Unknown';
-
-      // Add view tag + note in parallel
-      const now = new Date().toISOString().split('T')[0];
-      await Promise.all([
-        addTags(apiKey, contactId, [
-          'viewed:' + dealId.substring(0, 12),
-          'Active Viewer',
-          'Last View: ' + now
-        ]),
-        postNote(apiKey, contactId,
-          '👁 DEAL VIEWED\n' +
-          '─────────────────\n' +
-          'Deal ID: ' + dealId + '\n' +
-          'Source: ' + source + '\n' +
-          'Date: ' + new Date().toISOString() + '\n' +
-          'URL: https://termsforsale.com/deal.html?id=' + dealId
-        ),
-        // NEW: increment buyer_views on the JV partner contact (Dispo Buddy)
-        incrementJvPartnerViews(apiKey, dealId)
-      ]);
-
-      console.log('[track-view] ' + contactName + ' viewed ' + dealId + ' via ' + source);
-    } catch (err) {
-      console.error('[track-view] error:', err.message);
-    }
-  })();
-
-  // For redirect mode (email links), redirect immediately and track in background
-  if (redirect) {
-    // We can't truly fire-and-forget in Lambda, so await but redirect fast
-    await trackPromise;
     return {
       statusCode: 302,
-      headers: { Location: '/deal.html?id=' + encodeURIComponent(dealId) },
-      body: ''
+      headers: {
+        Location: location,
+        'Cache-Control': 'no-store',
+      },
+      body: '',
     };
   }
 
-  // For POST mode, await and respond
-  await trackPromise;
-  return respond(200, { ok: true });
+  // POST mode — await full tracking and return JSON.
+  if (!apiKey) return respond(500, { error: 'Server config error' });
+  if (!contactId || !dealId) return respond(400, { error: 'Missing contactId or dealId' });
+
+  try {
+    await trackView(apiKey, contactId, dealId, source);
+    return respond(200, { ok: true });
+  } catch (err) {
+    console.error('[track-view] POST error:', err.message);
+    return respond(500, { error: err.message });
+  }
 };
+
+// Write the tag + note to GHL. Never throws — errors are logged.
+async function trackView(apiKey, contactId, dealId, source) {
+  try {
+    const now = new Date().toISOString().split('T')[0];
+    // Legacy link format is still logged — deal.html handles the short
+    // /d/city-zip-code path and calls POST with the Notion UUID as dealId,
+    // so the note URL stays correct for both flows.
+    const noteUrl = 'https://termsforsale.com/deal.html?id=' + dealId;
+    await Promise.all([
+      addTags(apiKey, contactId, [
+        'viewed:' + dealId.substring(0, 12),
+        'Active Viewer',
+        'Last View: ' + now,
+      ]),
+      postNote(apiKey, contactId,
+        '👁 DEAL VIEWED\n' +
+        '─────────────────\n' +
+        'Deal ID: ' + dealId + '\n' +
+        'Source: ' + source + '\n' +
+        'Date: ' + new Date().toISOString() + '\n' +
+        'URL: ' + noteUrl
+      ),
+    ]);
+    console.log('[track-view] tracked ' + contactId + ' → ' + dealId + ' (' + source + ')');
+  } catch (err) {
+    console.error('[track-view] tracking error:', err.message);
+  }
+}
+
+// Resolve when p resolves OR after ms milliseconds — whichever comes first.
+// Never rejects. Used so the redirect is never blocked by a hanging API call.
+function raceWithTimeout(p, ms) {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    const timer = setTimeout(finish, ms);
+    Promise.resolve(p)
+      .catch((err) => console.error('[track-view] background error:', err.message))
+      .finally(() => { clearTimeout(timer); finish(); });
+  });
+}
 
 function corsHeaders() {
   return {
@@ -114,71 +144,4 @@ function respond(status, body) {
     headers: { 'Content-Type': 'application/json', ...corsHeaders() },
     body: JSON.stringify(body),
   };
-}
-
-// ─────────────────────────────────────────────────────────────
-// INCREMENT BUYER_VIEWS ON JV PARTNER CONTACT
-// 1. Fetch Notion deal page
-// 2. Read "JV Partner Contact ID" property
-// 3. Fetch the matching GHL contact
-// 4. Read current buyer_views, add 1, save back
-// All non-fatal — track-view should never fail because of this
-// ─────────────────────────────────────────────────────────────
-async function incrementJvPartnerViews(apiKey, notionDealId) {
-  const notionToken = process.env.NOTION_TOKEN;
-  if (!notionToken) return; // Notion not configured, skip silently
-
-  try {
-    // 1. Fetch the Notion page
-    const pageRes = await fetch(`https://api.notion.com/v1/pages/${notionDealId}`, {
-      headers: {
-        'Authorization': `Bearer ${notionToken}`,
-        'Notion-Version': '2022-06-28',
-      },
-    });
-    if (!pageRes.ok) return;
-    const page = await pageRes.json();
-    const props = page.properties || {};
-
-    // 2. Extract JV Partner Contact ID from rich_text property
-    const partnerField = props['JV Partner Contact ID'];
-    if (!partnerField || !partnerField.rich_text || partnerField.rich_text.length === 0) return;
-    const jvContactId = (partnerField.rich_text[0].plain_text || '').trim();
-    if (!jvContactId) return;
-
-    // 3. Fetch the GHL contact to get current buyer_views
-    const GHL_BASE = 'https://services.leadconnectorhq.com';
-    const ghlHeaders = {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Version': '2021-07-28',
-    };
-    const contactRes = await fetch(`${GHL_BASE}/contacts/${jvContactId}`, { headers: ghlHeaders });
-    if (!contactRes.ok) return;
-    const contactData = await contactRes.json();
-    const contact = contactData.contact || contactData;
-    const cfArray = contact.customFields || [];
-
-    let currentViews = 0;
-    for (const f of cfArray) {
-      const k = f.fieldKey || f.key || f.name || '';
-      if (k === 'buyer_views' || k === 'Buyer Views') {
-        currentViews = parseInt(f.value, 10) || 0;
-        break;
-      }
-    }
-
-    // 4. Increment and save
-    const newViews = currentViews + 1;
-    await fetch(`${GHL_BASE}/contacts/${jvContactId}`, {
-      method: 'PUT',
-      headers: ghlHeaders,
-      body: JSON.stringify({
-        customFields: [{ key: 'buyer_views', field_value: String(newViews) }],
-      }),
-    });
-    console.log('[track-view] incremented buyer_views to', newViews, 'on JV partner', jvContactId);
-  } catch (err) {
-    console.warn('[track-view] incrementJvPartnerViews failed:', err.message);
-  }
 }

@@ -26,6 +26,15 @@
   to = "/deals.html"
   status = 200
 
+# Short deal links: /d/phoenix-85016-phx001 → deal.html
+# The page JS parses the slug out of window.location.pathname and
+# resolves it against the dealCode (or UUID prefix) returned from Notion.
+# Rewrite (status 200) keeps the pretty URL visible in the address bar.
+[[redirects]]
+  from = "/d/*"
+  to = "/deal.html"
+  status = 200
+
 # Legacy /about.html → homepage
 [[redirects]]
   from = "/about.html"
@@ -160,6 +169,16 @@
 [[redirects]]
   from = "/api/admin-auth"
   to = "/.netlify/functions/admin-auth"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin-buyers"
+  to = "/.netlify/functions/admin-buyers"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin-stats"
+  to = "/.netlify/functions/admin-stats"
   status = 200
 
 [[redirects]]
@@ -301,3 +320,8 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     
+[[redirects]]
+  from = "/r/*"
+  to = "/.netlify/functions/track-click?d=:splat"
+  status = 200
+  force = true

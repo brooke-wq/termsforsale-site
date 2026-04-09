@@ -105,6 +105,11 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .tag-green{background:#E6F9F0;color:#276749;border-color:#b2dfce}
 .tag-orange{background:#FFF3E0;color:#c05621;border-color:#f5cba7}
 
+/* DESCRIPTION */
+.deal-desc{background:var(--white);border:1px solid var(--border-light);border-radius:var(--r);padding:18px 20px;margin-bottom:24px}
+.deal-desc-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.deal-desc-body{font-size:14px;color:var(--text-mid);line-height:1.65;white-space:pre-wrap}
+
 /* TABS */
 .tabs{border-bottom:2px solid var(--border);margin-bottom:24px}
 .tabs-inner{display:flex;gap:0;overflow-x:auto}
@@ -819,6 +824,11 @@ function renderDeal(d,allDeals){
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
   const hlHtml=hlItems.length?`<div class="highlights">${hlItems.map(h=>`<div class="hl-item"><div class="hl-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:13px;color:var(--text-mid);line-height:1.55">${h}</span></div>`).join('')}</div>`:'';
 
+  // DESCRIPTION — Notion "Description" field (falls back to "Details")
+  const descText=(d.description||d.details||'').trim();
+  const descSafe=descText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const descHtml=descText?`<div class="deal-desc"><div class="deal-desc-label">About This Deal</div><div class="deal-desc-body">${descSafe}</div></div>`:'';
+
   // RENTAL
   const rentHtml=d.rentFinal?`<div style="background:var(--blue-light);border-radius:var(--r);padding:16px;margin-top:0">
     <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Rental Analysis</div>
@@ -876,6 +886,8 @@ function renderDeal(d,allDeals){
       </div>
 
       <div class="tags-row">${tagsHtml}</div>
+
+      ${descHtml}
 
       <div class="tabs">
         <div class="tabs-inner">
@@ -1335,32 +1347,89 @@ async function loadDealsFromSheet(){
   return {allDeals,parse,rows};
 }
 
+// Normalize a dealCode ("PHX-001" / "phx-001" / "phx001") into a compact
+// comparable token ("phx001"). Matches the slug format produced by
+// netlify/functions/_deal-url.js → shortCode().
+function normalizeCode(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+
+// Resolve the deal the user wants out of window.location, supporting 3 forms:
+//   1. /d/{city}-{zip}-{code}       (new short path — preferred)
+//   2. /deal.html?id=NOTION_UUID    (legacy query string — still supported)
+//   3. /deal.html?slug=...          (escape hatch, same rules as #1)
+// Returns { id, slug, trackContactId }. `id` may be null when only a slug
+// is available — the caller resolves it against the deals list by dealCode.
+function parseDealRequest(){
+  var params=new URLSearchParams(window.location.search);
+  var trackContactId=params.get('c')||params.get('contact')||null;
+  var id=params.get('id');
+  var slug=params.get('slug');
+  if(!slug){
+    var path=window.location.pathname||'';
+    var m=path.match(/^\/d\/([^\/?#]+)/i);
+    if(m)slug=decodeURIComponent(m[1]);
+  }
+  return {id:id,slug:slug||null,trackContactId:trackContactId};
+}
+
+// Given a slug like "phoenix-85016-phx001", pull out the last hyphen
+// segment as the short code (e.g. "phx001"). Legacy deals without a
+// dealCode fall back to an 8-char UUID prefix.
+function slugShortCode(slug){
+  if(!slug)return '';
+  var parts=String(slug).split('-');
+  return normalizeCode(parts[parts.length-1]);
+}
+
+// Find a deal in the active list by short-path slug. Matches by dealCode
+// first, then by UUID prefix for legacy deals that predate Deal ID.
+function findDealBySlug(allDeals,slug){
+  if(!allDeals||!allDeals.length||!slug)return null;
+  var target=slugShortCode(slug);
+  if(!target)return null;
+  for(var i=0;i<allDeals.length;i++){
+    var d=allDeals[i];
+    if(d.dealCode && normalizeCode(d.dealCode)===target)return d;
+  }
+  for(var j=0;j<allDeals.length;j++){
+    var d2=allDeals[j];
+    var idPrefix=String(d2.id||'').replace(/[^a-z0-9]/gi,'').slice(0,8).toLowerCase();
+    if(idPrefix && idPrefix===target)return d2;
+  }
+  return null;
+}
+
 async function init(){
-  const params=new URLSearchParams(window.location.search);
-  const id=params.get('id');
-  if(!id){document.getElementById('app').innerHTML='<div class="not-found"><h2>No Deal Selected</h2><p>Return to the deals board to select a property.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';return}
+  var req=parseDealRequest();
+  var id=req.id;
+  var slug=req.slug;
+  if(!id && !slug){document.getElementById('app').innerHTML='<div class="not-found"><h2>No Deal Selected</h2><p>Return to the deals board to select a property.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View All Deals</a></div>';return}
 
   // Always fetch fresh deals from Notion for similar deals (don't use stale SAMPLE data)
   const cached=sessionStorage.getItem('deal');
   let cachedDeal=null;
-  if(cached){try{const d=JSON.parse(cached);if(String(d.id)===String(id))cachedDeal=d;}catch(e){}}
+  if(cached){try{const d=JSON.parse(cached);if(id && String(d.id)===String(id))cachedDeal=d;}catch(e){}}
 
   try{
     // Always fetch fresh deals from Notion/Sheets for accurate similar deals
     let allDeals,deal;
     try{
       allDeals=await loadDealsFromNotion();
-      const freshDeal=allDeals.find(d=>String(d.id)===String(id));
+      let freshDeal=null;
+      if(id)freshDeal=allDeals.find(d=>String(d.id)===String(id));
+      if(!freshDeal && slug)freshDeal=findDealBySlug(allDeals,slug);
       // Prefer fresh Notion data if it has a cover photo the cache is missing
       if(cachedDeal&&freshDeal){deal=Object.assign({},cachedDeal,{coverPhoto:freshDeal.coverPhoto||cachedDeal.coverPhoto,photos:freshDeal.photos||cachedDeal.photos});}
       else{deal=freshDeal||cachedDeal;}
+      if(deal && !id)id=deal.id;
       console.log('Loaded '+allDeals.length+' deals from Notion');
     }catch(notionErr){
       console.warn('Notion unavailable, falling back to Sheets:',notionErr.message);
       const sheet=await loadDealsFromSheet();
       allDeals=sheet.allDeals;
-      if(!cachedDeal){const raw=sheet.rows.find(r=>String(r['Deal ID'])===String(id));cachedDeal=raw?sheet.parse(raw):null;}
+      if(!cachedDeal && id){const raw=sheet.rows.find(r=>String(r['Deal ID'])===String(id));cachedDeal=raw?sheet.parse(raw):null;}
+      if(!cachedDeal && slug)cachedDeal=findDealBySlug(allDeals,slug);
       deal=cachedDeal;
+      if(deal && !id)id=deal.id;
       console.log('Loaded '+allDeals.length+' deals from Sheets');
     }
     if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
@@ -1375,10 +1444,13 @@ async function init(){
       if(!dealIdMeta){dealIdMeta=document.createElement('meta');dealIdMeta.name='deal-id';document.head.appendChild(dealIdMeta);}
       dealIdMeta.setAttribute('content',deal.dealCode);
     }
-    // Track deal view for logged-in users
+    // Track deal view — logged-in users always, plus SMS/email recipients
+    // who arrived via ?c=CONTACT_ID on a /d/ short link.
     var viewer=getUser();
-    if(viewer&&viewer.contactId&&id){
-      fetch('/api/track-view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:viewer.contactId,dealId:id,source:'website'})}).catch(function(){});
+    var trackContactId=(viewer&&viewer.contactId)||req.trackContactId;
+    var trackSource=(viewer&&viewer.contactId)?'website':(req.trackContactId?'sms-email':null);
+    if(trackContactId && id && trackSource){
+      fetch('/api/track-view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:trackContactId,dealId:id,source:trackSource})}).catch(function(){});
     }
     // Save to recently viewed (localStorage) for dashboard
     try{var viewed=JSON.parse(localStorage.getItem('tfs_viewed')||'[]');viewed=viewed.filter(function(v){return v.id!==id;});viewed.unshift({id:id,city:deal.city,state:deal.state,dealType:deal.dealType,askingPrice:deal.askingPrice,entryFee:deal.entryFee,coverPhoto:deal.coverPhoto,beds:deal.beds,baths:deal.baths,sqft:deal.sqft,nearestMetro:deal.nearestMetro,time:new Date().toISOString()});if(viewed.length>20)viewed=viewed.slice(0,20);localStorage.setItem('tfs_viewed',JSON.stringify(viewed));}catch(e){}

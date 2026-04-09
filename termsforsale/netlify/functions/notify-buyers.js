@@ -9,6 +9,7 @@
 //   DEAL_ALERTS_LIVE — set to "true" to actually send alerts (default: test mode)
 
 const https = require('https');
+const { buildDealUrl, buildTrackedDealUrl } = require('./_deal-url');
 
 // ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
 var sentLog;
@@ -134,8 +135,9 @@ function slugifyAddress(street, city, state) {
 }
 
 function parseDeal(page) {
-  return {
+  var deal = {
     id: page.id,
+    dealCode: prop(page, 'Deal ID'),
     dealType: prop(page, 'Deal Type'),
     streetAddress: prop(page, 'Street Address'),
     city: prop(page, 'City'),
@@ -154,14 +156,16 @@ function parseDeal(page) {
     highlight1: prop(page, 'Highlight 1'),
     highlight2: prop(page, 'Highlight 2'),
     highlight3: prop(page, 'Highlight 3'),
-    dealUrl: 'https://termsforsale.com/deal.html?id=' + page.id,
     lastEdited: page.last_edited_time
   };
+  deal.dealUrl = buildDealUrl(deal);
+  return deal;
 }
 
 // ─── GHL: Search contacts by tags/criteria ───────────────────
 
 // ─── GHL Custom Field IDs for Buy Box matching ──────────────
+// Hardcoded field IDs (from legacy buy-box integration)
 var CF = {
   TARGET_STATES:    'aewzY7iEvZh12JhMVi7E',  // Multi-select: ['AZ','TX']
   TARGET_CITIES:    'DbY7dHIXk8YowpaWrxYj',  // Multi-select: ['Phoenix, AZ','Dallas, TX']
@@ -177,11 +181,21 @@ var CF = {
   CONTACT_ROLE:     'agG4HMPB5wzsZXiRxfmR',  // Multi-select: ['Buyer']
 };
 
-// Matching thresholds
-var MIN_BUYERS_TARGET = 50;  // If fewer than this, expand matching
-var TIER1_MIN_SCORE = 2;     // Strict: state + structure + more
-var TIER2_MIN_SCORE = 1;     // Relaxed: at least state OR structure match
-// Tier 3: Same state buyers with Contact Role=Buyer (no buy box required)
+// Fields looked up dynamically by fieldKey at runtime (populated once per invocation
+// via getFieldIds()). Lets us reference new fields by their stable fieldKey without
+// hardcoding mutable GHL IDs.
+var DYNAMIC_FIELD_KEYS = [
+  'contact.buyer_status',              // dropdown — exclude "not buying now"
+  'contact.hoa',                       // checkbox — no = excluded on HOA deals
+  'contact.hoa_tolerance',             // text/dropdown — "no" = excluded on HOA deals
+  'contact.property_type_preference',  // multi-select — buyer's preferred prop types
+  'contact.deal_structure',            // multi-select — buyer's accepted structures
+  'contact.buy_box'                    // large text — free-form buy box description
+];
+var dynamicFieldIds = {}; // populated at runtime: fieldKey -> fieldId
+
+// Required match thresholds
+var MIN_BUYERS_TARGET = 50;
 
 // Map deal types to structure values in GHL custom fields
 var DEAL_STRUCTURE_MAP = {
@@ -202,83 +216,268 @@ function getCF(contact, fieldId) {
   return field.value;
 }
 
-function matchesBuyBox(contact, deal, minScore) {
+// Fetch by fieldKey — uses the dynamicFieldIds lookup table
+function getCFByKey(contact, fieldKey) {
+  var id = dynamicFieldIds[fieldKey];
+  if (!id) return null;
+  return getCF(contact, id);
+}
+
+// One-time load of dynamic field IDs from GHL for the given location
+async function loadDynamicFieldIds(apiKey, locationId) {
+  if (Object.keys(dynamicFieldIds).length > 0) return; // already loaded
+  try {
+    var res = await httpRequest(
+      'https://services.leadconnectorhq.com/locations/' + locationId + '/customFields',
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + apiKey,
+          'Version': '2021-07-28'
+        }
+      }
+    );
+    if (res.status !== 200 || !res.body || !res.body.customFields) {
+      console.warn('[notify-buyers] Could not load custom fields map, status=' + res.status);
+      return;
+    }
+    res.body.customFields.forEach(function (f) {
+      if (f.fieldKey && f.id && DYNAMIC_FIELD_KEYS.indexOf(f.fieldKey) > -1) {
+        dynamicFieldIds[f.fieldKey] = f.id;
+      }
+    });
+    console.log('[notify-buyers] Loaded dynamic field IDs:', Object.keys(dynamicFieldIds).join(', '));
+  } catch (e) {
+    console.warn('[notify-buyers] loadDynamicFieldIds failed:', e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUYER → DEAL MATCHING
+// ═══════════════════════════════════════════════════════════════
+//
+// Hard filters (all tiers require these to pass):
+//   1. Contact role = Buyer                (enforced in fetchAllBuyers)
+//   2. Vetted / buyer_status ≠ "not buying now"
+//   3. Deal structure contains deal type   (if buyer has prefs)
+//   4. Property type contains deal type    (if buyer has prefs)
+//   5. HOA rule: if deal has HOA, buyer hoa ≠ "no" AND hoa_tolerance doesn't
+//      contain "no"
+//
+// Market match (required, determines tier):
+//   - CITY MATCH: deal city or metro appears in target_markets, buy_box,
+//     or target_cities → tier 1 or 2 (based on extras)
+//   - STATE FALLBACK: buyer has no city-level preferences filled (only state)
+//     and buyer's state matches deal state → tier 3
+//   - If buyer HAS city preferences but none matched, fall back to state
+//     match → tier 3 (the user's explicit "fallback to state" rule)
+//
+// Tier scoring (among buyers who passed hard + market):
+//   - TIER 1: City match + all optional extras satisfied (price, beds, ARV
+//     where populated — each populated field must pass)
+//   - TIER 2: City match but not all extras satisfied (or no extras set)
+//   - TIER 3: State-only fallback
+//
+// Buyers who fail a populated "Max Price" / "Min Beds" / "Max Entry" / "Min
+// ARV" are STILL eligible — they just drop to Tier 2 or 3 instead of Tier 1.
+// The user's original rule was "if additional like price, bed/bath included,
+// those can be a higher tier" — so the scoring bumps the tier, doesn't reject.
+
+function parseHoaDeal(dealHoa) {
+  // Notion HOA field — "Yes"/"No"/"$129/mo"/"" etc. Return true if deal has HOA.
+  if (dealHoa == null) return false;
+  var s = String(dealHoa).trim().toLowerCase();
+  if (!s) return false;
+  if (s === 'no' || s === 'none' || s === 'n/a' || s === '0' || s === 'false') return false;
+  return true;
+}
+
+function buyerRejectsHoa(contact) {
+  var hoaFlag = getCFByKey(contact, 'contact.hoa');
+  var hoaTol = getCFByKey(contact, 'contact.hoa_tolerance');
+  var flagStr = String(hoaFlag == null ? '' : hoaFlag).toLowerCase().trim();
+  var tolStr = String(hoaTol == null ? '' : hoaTol).toLowerCase().trim();
+  // checkbox "no" / "false" / "0"
+  if (flagStr === 'no' || flagStr === 'false' || flagStr === '0') return true;
+  // tolerance field containing "no" (e.g. "No HOA", "No thanks")
+  // — reject only if the string starts with / contains "no" as a standalone word
+  if (tolStr) {
+    if (tolStr === 'no' || /\bno\b/.test(tolStr)) return true;
+  }
+  return false;
+}
+
+function matchesBuyBox(contact, deal) {
   var reasons = [];
   var fails = [];
-  var reqScore = minScore || TIER1_MIN_SCORE;
 
-  // 1. Target States — must include deal state (if buyer has preferences)
-  var targetStates = getCF(contact, CF.TARGET_STATES);
-  if (targetStates && Array.isArray(targetStates) && targetStates.length > 0) {
-    var dealState = (deal.state || '').trim().toUpperCase();
-    var stateMatch = targetStates.some(function(s) {
-      return s.trim().toUpperCase() === dealState;
-    });
-    if (stateMatch) reasons.push('State: ' + dealState);
-    else { fails.push('State mismatch (wants ' + targetStates.join(',') + ', deal is ' + dealState + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  // Day-2 "pref-market-only" tag — buyer explicitly wants their target
+  // market only. If set, disable the state fallback for this buyer.
+  var marketOnly = (contact.tags || []).indexOf('pref-market-only') > -1;
+
+  // ═ HARD FILTER 1: buyer status ═
+  var buyerStatus = getCFByKey(contact, 'contact.buyer_status');
+  if (buyerStatus != null) {
+    var statusStr = String(Array.isArray(buyerStatus) ? buyerStatus.join(' ') : buyerStatus).toLowerCase().trim();
+    if (statusStr.indexOf('not buying now') > -1) {
+      return { match: false, fails: ['Status: not buying now'] };
+    }
   }
 
-  // 2. Target Cities — check if deal city/metro matches (if buyer has preferences)
-  var targetCities = getCF(contact, CF.TARGET_CITIES);
-  if (targetCities && Array.isArray(targetCities) && targetCities.length > 0) {
-    var dealCity = (deal.city || '').toLowerCase();
-    var dealMetro = (deal.nearestMetro || '').toLowerCase();
-    var cityMatch = targetCities.some(function(c) {
-      var cl = c.toLowerCase();
-      return cl.includes(dealCity) || dealCity.includes(cl.split(',')[0].trim()) || cl.includes(dealMetro) || dealMetro.includes(cl.split(',')[0].trim());
-    });
-    if (cityMatch) reasons.push('City: ' + deal.city);
-    // City is soft match — don't reject if no match, just don't add reason
-  }
-
-  // 3. Deal Structure — must accept this deal type (if buyer has preferences)
+  // ═ HARD FILTER 2: deal structure ═
+  // Buyer may have structures under hardcoded CF.DEAL_STRUCTURES or dynamic contact.deal_structure
   var dealStructures = getCF(contact, CF.DEAL_STRUCTURES);
+  if (!dealStructures) dealStructures = getCFByKey(contact, 'contact.deal_structure');
   var structureNames = DEAL_STRUCTURE_MAP[deal.dealType] || [deal.dealType];
-  if (dealStructures && Array.isArray(dealStructures) && dealStructures.length > 0) {
-    var structMatch = structureNames.some(function(s) {
-      return dealStructures.some(function(ds) {
-        return ds.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(ds.toLowerCase());
+  if (dealStructures && (Array.isArray(dealStructures) ? dealStructures.length : String(dealStructures).trim())) {
+    var dsArr = Array.isArray(dealStructures) ? dealStructures : String(dealStructures).split(/,\s*/);
+    var structMatch = structureNames.some(function (s) {
+      return dsArr.some(function (ds) {
+        var a = String(ds).toLowerCase(), b = String(s).toLowerCase();
+        return a.indexOf(b) > -1 || b.indexOf(a) > -1;
       });
     });
-    if (structMatch) reasons.push('Structure: ' + deal.dealType);
-    else { fails.push('Structure mismatch (wants ' + dealStructures.join(',') + ', deal is ' + deal.dealType + ')'); return { match: false, reasons: reasons, fails: fails }; }
+    if (!structMatch) {
+      return { match: false, fails: ['Structure mismatch: wants ' + dsArr.join(',') + ', deal is ' + deal.dealType] };
+    }
+    reasons.push('Structure: ' + deal.dealType);
   }
 
-  // 4. Max Purchase Price — deal must be at or under (if buyer has preference)
+  // ═ HARD FILTER 3: property type ═
+  var propTypes = getCFByKey(contact, 'contact.property_type_preference')
+    || getCF(contact, CF.PROPERTY_TYPE);
+  var dealPropType = (deal.propertyType || '').trim();
+  if (propTypes && dealPropType) {
+    var ptArr = Array.isArray(propTypes) ? propTypes : String(propTypes).split(/,\s*/);
+    if (ptArr.length > 0) {
+      var propMatch = ptArr.some(function (pt) {
+        var a = String(pt).toLowerCase(), b = dealPropType.toLowerCase();
+        return a.indexOf(b) > -1 || b.indexOf(a) > -1;
+      });
+      if (!propMatch) {
+        return { match: false, fails: ['Property type mismatch: wants ' + ptArr.join(',') + ', deal is ' + dealPropType] };
+      }
+      reasons.push('Prop type: ' + dealPropType);
+    }
+  }
+
+  // ═ HARD FILTER 4: HOA rule ═
+  if (parseHoaDeal(deal.hoa)) {
+    if (buyerRejectsHoa(contact)) {
+      return { match: false, fails: ['HOA: buyer will not accept HOA'] };
+    }
+    reasons.push('HOA OK');
+  }
+
+  // ═ MARKET MATCH: city first, state fallback ═
+  var dealCity = (deal.city || '').toLowerCase().trim();
+  var dealMetro = (deal.nearestMetro || '').toLowerCase().trim();
+  var dealState = (deal.state || '').trim().toUpperCase();
+
+  // Collect all the text fields where city/market might be mentioned
+  var cityFields = [];
+  var targetMarketsRaw = getCF(contact, CF.TARGET_MARKETS);
+  if (typeof targetMarketsRaw === 'string' && targetMarketsRaw.trim()) cityFields.push(targetMarketsRaw.toLowerCase());
+  else if (Array.isArray(targetMarketsRaw)) cityFields.push(targetMarketsRaw.join(' ').toLowerCase());
+
+  var buyBoxTextRaw = getCFByKey(contact, 'contact.buy_box');
+  if (typeof buyBoxTextRaw === 'string' && buyBoxTextRaw.trim()) cityFields.push(buyBoxTextRaw.toLowerCase());
+
+  var targetCities = getCF(contact, CF.TARGET_CITIES);
+  if (Array.isArray(targetCities) && targetCities.length > 0) {
+    cityFields.push(targetCities.join(' ').toLowerCase());
+  } else if (typeof targetCities === 'string' && targetCities.trim()) {
+    cityFields.push(targetCities.toLowerCase());
+  }
+
+  var hasAnyCityPreference = cityFields.length > 0;
+
+  // State preferences
+  var targetStates = getCF(contact, CF.TARGET_STATES);
+  var stateMatch = false;
+  if (Array.isArray(targetStates) && targetStates.length > 0) {
+    stateMatch = targetStates.some(function (s) { return String(s).trim().toUpperCase() === dealState; });
+  } else if (typeof targetStates === 'string' && targetStates.trim()) {
+    stateMatch = String(targetStates).trim().toUpperCase() === dealState;
+  }
+  // Fall back to contact.state
+  if (!stateMatch) {
+    var contactState = (contact.state || '').trim().toUpperCase();
+    if (contactState && contactState === dealState) stateMatch = true;
+  }
+
+  // City match — does the deal city or metro appear in any of the city fields?
+  var cityMatch = false;
+  if (hasAnyCityPreference && dealCity) {
+    cityMatch = cityFields.some(function (txt) {
+      if (txt.indexOf(dealCity) > -1) return true;
+      if (dealMetro && txt.indexOf(dealMetro) > -1) return true;
+      return false;
+    });
+  }
+
+  if (!cityMatch && !stateMatch) {
+    return { match: false, fails: ['No market match (no city/state/market overlap)'] };
+  }
+
+  // pref-market-only: buyer asked for their target market only — never fall
+  // back to state. Hard-reject if they didn't get a city match.
+  if (marketOnly && !cityMatch) {
+    return {
+      match: false,
+      fails: ['Market-only pref set but deal city ' + (deal.city || '?') + ' not in buyer target market']
+    };
+  }
+
+  if (cityMatch) reasons.push('Market: ' + deal.city);
+  else reasons.push('State fallback: ' + dealState);
+
+  // ═ OPTIONAL EXTRAS (determine T1 vs T2) ═
+  var extrasPass = true;    // did every populated optional field pass?
+  var extrasCount = 0;      // how many populated extras there are
+
   var maxPrice = getCF(contact, CF.MAX_PRICE);
   if (maxPrice && +maxPrice > 0 && deal.askingPrice > 0) {
-    if (deal.askingPrice <= +maxPrice) reasons.push('Price: $' + deal.askingPrice.toLocaleString() + ' <= $' + (+maxPrice).toLocaleString());
-    else { fails.push('Over budget ($' + deal.askingPrice + ' > $' + maxPrice + ')'); return { match: false, reasons: reasons, fails: fails }; }
+    extrasCount++;
+    if (deal.askingPrice <= +maxPrice) reasons.push('Price in range');
+    else { extrasPass = false; fails.push('Over budget'); }
   }
 
-  // 5. Max Entry Fee — deal entry must be at or under (if buyer has preference)
   var maxEntry = getCF(contact, CF.MAX_ENTRY);
   if (maxEntry && +maxEntry > 0 && deal.entryFee > 0) {
-    if (deal.entryFee <= +maxEntry) reasons.push('Entry: $' + deal.entryFee.toLocaleString() + ' <= $' + (+maxEntry).toLocaleString());
-    else { fails.push('Entry too high ($' + deal.entryFee + ' > $' + maxEntry + ')'); return { match: false, reasons: reasons, fails: fails }; }
+    extrasCount++;
+    if (deal.entryFee <= +maxEntry) reasons.push('Entry in range');
+    else { extrasPass = false; fails.push('Entry too high'); }
   }
 
-  // 6. Min ARV — deal ARV must be at or above (if buyer has preference)
   var minArv = getCF(contact, CF.MIN_ARV);
-  if (minArv && +minArv > 0 && deal.arv > 0) {
-    if (deal.arv >= +minArv) reasons.push('ARV: $' + deal.arv.toLocaleString() + ' >= $' + (+minArv).toLocaleString());
-    else { fails.push('ARV too low ($' + deal.arv + ' < $' + minArv + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  var dealArv = +deal.compsArv || +deal.arv || 0;
+  if (minArv && +minArv > 0 && dealArv > 0) {
+    extrasCount++;
+    if (dealArv >= +minArv) reasons.push('ARV >= min');
+    else { extrasPass = false; fails.push('ARV too low'); }
   }
 
-  // 7. Min Beds
   var minBeds = getCF(contact, CF.MIN_BEDS);
-  if (minBeds && +minBeds > 0 && deal.beds) {
-    if (+deal.beds >= +minBeds) reasons.push('Beds: ' + deal.beds + ' >= ' + minBeds);
-    else { fails.push('Not enough beds (' + deal.beds + ' < ' + minBeds + ')'); return { match: false, reasons: reasons, fails: fails }; }
+  if (minBeds && +minBeds > 0 && +deal.beds > 0) {
+    extrasCount++;
+    if (+deal.beds >= +minBeds) reasons.push('Beds >= min');
+    else { extrasPass = false; fails.push('Not enough beds'); }
   }
 
-  // Must meet minimum match score for this tier
-  if (reasons.length < reqScore) {
-    fails.push('Only ' + reasons.length + ' criteria matched (need ' + reqScore + '+)');
-    return { match: false, reasons: reasons, fails: fails, score: reasons.length };
+  // ═ TIER ASSIGNMENT ═
+  var tier;
+  if (cityMatch) {
+    // City match → T1 if all extras passed, T2 otherwise
+    tier = (extrasPass && extrasCount > 0) ? 1 : 2;
+    // Note: if no extras are set (extrasCount == 0), treat as T2 — a city match
+    // with no additional restrictions is good but not "best fit"
+  } else {
+    // State fallback → T3
+    tier = 3;
   }
 
-  return { match: true, reasons: reasons, fails: fails, score: reasons.length };
+  return { match: true, tier: tier, reasons: reasons, fails: fails };
 }
 
 async function fetchAllBuyers(apiKey, locationId) {
@@ -317,7 +516,12 @@ async function fetchAllBuyers(apiKey, locationId) {
           isBuyer = String(contactRole).toLowerCase() === 'buyer';
         }
       }
-      if (isBuyer) allBuyers.push(contact);
+      if (!isBuyer) return;
+      // Skip buyers who asked to pause alerts (reply "C" on Day 2 follow-up SMS).
+      // Tag is set by buyer-response-tag.js and must be manually removed to re-enable.
+      var tags = contact.tags || [];
+      if (tags.indexOf('alerts-paused') > -1) return;
+      allBuyers.push(contact);
     });
 
     if (result.body.meta && result.body.meta.nextPageUrl) {
@@ -335,75 +539,33 @@ async function fetchAllBuyers(apiKey, locationId) {
 }
 
 async function findMatchingBuyers(apiKey, locationId, deal) {
+  // Load dynamic field IDs once per cron run (uses module-level cache)
+  await loadDynamicFieldIds(apiKey, locationId);
+
   var buyers = await fetchAllBuyers(apiKey, locationId);
   var tier1 = [], tier2 = [], tier3 = [];
-  var tier1Ids = {}, tier2Ids = {};
 
-  // TIER 1: Strict — minimum 2 buy box criteria match
-  buyers.forEach(function(contact) {
-    var r = matchesBuyBox(contact, deal, TIER1_MIN_SCORE);
-    if (r.match) {
-      tier1Ids[contact.id] = true;
-      tier1.push({
-        id: contact.id,
-        name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
-        email: contact.email || '',
-        phone: contact.phone || '',
-        score: r.score,
-        tier: 1,
-        matchReasons: r.reasons,
-        matchReason: r.reasons.join(' | ')
-      });
-    }
+  // Single pass — matchesBuyBox already assigns the tier based on
+  // market match + extras. Hard filters are the gate.
+  buyers.forEach(function (contact) {
+    var r = matchesBuyBox(contact, deal);
+    if (!r.match) return;
+    var entry = {
+      id: contact.id,
+      name: ((contact.firstName || '') + ' ' + (contact.lastName || '')).trim(),
+      email: contact.email || '',
+      phone: contact.phone || '',
+      score: (r.reasons || []).length,
+      tier: r.tier,
+      matchReasons: r.reasons,
+      matchReason: r.reasons.join(' | ')
+    };
+    if (r.tier === 1) tier1.push(entry);
+    else if (r.tier === 2) tier2.push(entry);
+    else tier3.push(entry);
   });
 
-  // TIER 2: Relaxed — only if tier 1 < 50. Requires 1 matching criterion.
-  if (tier1.length < MIN_BUYERS_TARGET) {
-    buyers.forEach(function(contact) {
-      if (tier1Ids[contact.id]) return;
-      var r = matchesBuyBox(contact, deal, TIER2_MIN_SCORE);
-      if (r.match) {
-        tier2Ids[contact.id] = true;
-        tier2.push({
-          id: contact.id,
-          name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
-          email: contact.email || '',
-          phone: contact.phone || '',
-          score: r.score,
-          tier: 2,
-          matchReasons: r.reasons,
-          matchReason: '(Expanded) ' + r.reasons.join(' | ')
-        });
-      }
-    });
-  }
-
-  // TIER 3: State-only — only if tier 1 + tier 2 < 50. Any buyer in the same state.
-  if (tier1.length + tier2.length < MIN_BUYERS_TARGET) {
-    var dealState = (deal.state || '').trim().toUpperCase();
-    buyers.forEach(function(contact) {
-      if (tier1Ids[contact.id] || tier2Ids[contact.id]) return;
-      // Check contact's own state field or target states
-      var contactState = (contact.state || '').trim().toUpperCase();
-      var targetStates = getCF(contact, CF.TARGET_STATES);
-      var stateMatch = contactState === dealState;
-      if (!stateMatch && targetStates && Array.isArray(targetStates)) {
-        stateMatch = targetStates.some(function(s) { return s.trim().toUpperCase() === dealState; });
-      }
-      if (stateMatch) {
-        tier3.push({
-          id: contact.id,
-          name: (contact.firstName || '') + ' ' + (contact.lastName || ''),
-          email: contact.email || '',
-          phone: contact.phone || '',
-          score: 0,
-          tier: 3,
-          matchReasons: ['Same state: ' + dealState],
-          matchReason: '(State fallback) Same state: ' + dealState
-        });
-      }
-    });
-  }
+  console.log('[notify-buyers] Matched T1=' + tier1.length + ' T2=' + tier2.length + ' T3=' + tier3.length);
 
   // Combine: tier 1 first, then tier 2, then tier 3 (up to target)
   var combined = tier1.concat(tier2).concat(tier3);
@@ -432,17 +594,25 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
   var addressSlug = slugifyAddress(deal.streetAddress, deal.city, deal.state);
   var sentTag = addressSlug ? 'sent:' + addressSlug : null;
+  // Per-blast tier tag: tier1:[slug] / tier2:[slug] / tier3:[slug]
+  //   tier 1 = strict buy-box match (≥ 2 criteria)
+  //   tier 2 = relaxed match (≥ 1 criterion) — only if tier 1 < 50 buyers
+  //   tier 3 = state-only fallback — only if tier 1 + 2 < 50 buyers
+  // Used by /admin/deal-buyers.html to distinguish real matches from padding.
+  var tierNum = contact.tier || contact._tier;  // set on the buyer object by findMatchingBuyers
+  var tierTag = (addressSlug && tierNum) ? 'tier' + tierNum + ':' + addressSlug : null;
   var existingTags = contact.tags || [];
   if (existingTags.indexOf(dealTag) > -1) {
     console.log('notify-buyers: SKIP ' + contact.name + ' — already alerted for deal ' + deal.id);
     return 'skipped-duplicate';
   }
 
-  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag
+  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag + tierN:[slug] match-quality tag
   // (sent:[slug] is the one the admin Deal Buyer List dashboard queries —
   //  without it, new deal blasts are invisible to /admin/deal-buyers.html)
   var tagsToAdd = ['new-deal-alert', dealTag];
   if (sentTag) tagsToAdd.push(sentTag);
+  if (tierTag) tagsToAdd.push(tierTag);
 
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';
   var result = await httpRequest(tagUrl, {
@@ -494,7 +664,9 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
     if (price) smsMsg += ' — ' + price;
     if (entry) smsMsg += ' entry ' + entry;
-    smsMsg += '. View: https://termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
+    // Short /d/{city}-{zip}-{code} link w/ ?c= for view tracking. The deal
+    // page JS reads ?c= and fires a track-view POST on load.
+    smsMsg += '. View: ' + buildTrackedDealUrl(deal, contact.id);
     if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
 
     try {
@@ -529,7 +701,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       deal.yearBuilt ? 'Built ' + deal.yearBuilt : ''
     ].filter(Boolean).join(' · ');
 
-    var trackUrl = 'https://termsforsale.com/api/track-view?c=' + contact.id + '&d=' + deal.id + '&r=1';
+    var trackUrl = buildTrackedDealUrl(deal, contact.id);
     var arvStr = deal.arv ? '$' + deal.arv.toLocaleString() : '';
     var rentStr = deal.rentFinal ? '$' + deal.rentFinal.toLocaleString() + '/mo' : '';
     var highlights = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean);

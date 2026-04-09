@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyer List — Admin — Terms For Sale</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<style>
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.filter-tab{
+  padding:8px 16px;
+  background:#fff;
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-mid);
+  cursor:pointer;
+  transition:all .15s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.filter-tab:hover{border-color:var(--blue);color:var(--blue)}
+.filter-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+.search-row{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.search-row input{flex:1;min-width:240px}
+
+.badge-ring{
+  width:36px;height:36px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--blue-light) 0%,#D0EBFB 100%);
+  color:var(--blue-dark);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;
+  flex-shrink:0;
+}
+.buyer-cell{display:flex;align-items:center;gap:10px}
+.buyer-name-wrap{min-width:0}
+.buyer-name{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.buyer-mail{font-size:11px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.load-more-wrap{padding:18px;text-align:center;border-top:1px solid var(--border)}
+.result-meta{font-size:12px;color:var(--text-light);margin-bottom:12px}
+.inline-spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Operations</div>
+        <div class="topbar-h">Buyer List</div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" id="export-btn" onclick="exportCsv()" disabled>
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Page</span>
+        </button>
+        <button class="topbar-btn primary" onclick="refetch()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Total Buyers</div>
+          <div class="stat-value" id="s-total">—</div>
+          <div class="stat-sub">In the buyer database</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label">New This Week</div>
+          <div class="stat-value" id="s-new">—</div>
+          <div class="stat-sub">Est. from recent page</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label">VIP Buyers</div>
+          <div class="stat-value" id="s-vip">—</div>
+          <div class="stat-sub">Early-access list</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label">Buy Box Complete</div>
+          <div class="stat-value" id="s-bbox">—</div>
+          <div class="stat-sub">Criteria on file</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              All Buyers
+            </div>
+            <div class="panel-sub">Server-side search — results come from GHL directly</div>
+          </div>
+          <div class="muted" style="font-size:12px" id="result-summary">—</div>
+        </div>
+        <div class="panel-body">
+
+          <div class="search-row">
+            <input type="text" id="search" class="ctl" placeholder="Search name, email, or phone... (min 2 chars)" autocomplete="off">
+          </div>
+
+          <div class="filter-tabs" id="tabs">
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="vip">VIP</button>
+            <button class="filter-tab" data-filter="buybox">Buy Box</button>
+            <button class="filter-tab" data-filter="nobuybox">No Buy Box</button>
+          </div>
+
+          <div id="results"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('buyers');
+
+// ─── State ─────────────────────────────────────────────────────
+var state = {
+  page: 1,
+  pageLimit: 100,
+  q: '',
+  filter: 'all',
+  contacts: [],    // accumulated across pages (same filter/query)
+  total: 0,
+  hasMore: false,
+  loading: false,
+  statsLoaded: false
+};
+
+function initials(name) {
+  if (!name) return '?';
+  var parts = name.trim().split(/\s+/);
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+// ─── Fetch ─────────────────────────────────────────────────────
+async function fetchPage(reset) {
+  if (state.loading) return;
+  state.loading = true;
+
+  if (reset) {
+    state.page = 1;
+    state.contacts = [];
+    document.getElementById('results').innerHTML = '<div class="spinner"></div>';
+  }
+
+  var url = '/api/admin-buyers'
+    + '?page=' + state.page
+    + '&pageLimit=' + state.pageLimit
+    + '&filter=' + encodeURIComponent(state.filter)
+    + (state.q ? '&q=' + encodeURIComponent(state.q) : '')
+    + (state.statsLoaded ? '' : '&stats=1');
+
+  try {
+    var res = await AdminShell.fetch(url);
+    if (!res.ok) {
+      var err = await res.json().catch(function () { return {}; });
+      document.getElementById('results').innerHTML =
+        '<div class="err">Error: ' + AdminShell.esc(err.error || ('HTTP ' + res.status)) + '</div>';
+      state.loading = false;
+      return;
+    }
+    var data = await res.json();
+
+    // Append contacts to accumulated list
+    state.contacts = state.contacts.concat(data.contacts || []);
+    state.total = data.total || state.contacts.length;
+    state.hasMore = !!data.hasMore;
+
+    // Populate stats the first time we see them
+    if (data.stats && !state.statsLoaded) {
+      document.getElementById('s-total').textContent = AdminShell.fmtNum(data.stats.total);
+      document.getElementById('s-vip').textContent = AdminShell.fmtNum(data.stats.vip);
+      document.getElementById('s-bbox').textContent = AdminShell.fmtNum(data.stats.hasBuyBox);
+      document.getElementById('s-new').textContent = AdminShell.fmtNum(data.stats.newThisWeek);
+      state.statsLoaded = true;
+    }
+
+    renderList();
+    document.getElementById('export-btn').disabled = !state.contacts.length;
+  } catch (err) {
+    document.getElementById('results').innerHTML =
+      '<div class="err">Network error: ' + AdminShell.esc(err.message) + '</div>';
+  } finally {
+    state.loading = false;
+  }
+}
+
+function refetch() { fetchPage(true); }
+window.refetch = refetch;
+
+async function loadMore() {
+  if (state.loading || !state.hasMore) return;
+  state.page++;
+  await fetchPage(false);
+}
+window.loadMore = loadMore;
+
+// ─── Render ────────────────────────────────────────────────────
+function renderList() {
+  var host = document.getElementById('results');
+  var buyers = state.contacts;
+
+  // Result summary
+  var summary = buyers.length + ' of ' + AdminShell.fmtNum(state.total) + ' shown';
+  if (state.q) summary += ' · search "' + state.q + '"';
+  if (state.filter !== 'all') summary += ' · ' + state.filter;
+  document.getElementById('result-summary').textContent = summary;
+
+  if (!buyers.length) {
+    host.innerHTML = '<div class="state"><h3>No buyers match</h3><p>Try a different search or filter.</p></div>';
+    return;
+  }
+
+  var rows = buyers.map(function (b) {
+    var badges = [];
+    if (b.isVip) badges.push('<span class="pill orange">VIP</span>');
+    if (b.hasBuyBox) badges.push('<span class="pill green">Buy Box</span>');
+    if (!b.hasBuyBox) badges.push('<span class="pill gray">Incomplete</span>');
+    if (b.isLegacy) badges.push('<span class="pill purple">Legacy</span>');
+
+    var markets = b.markets.slice(0, 3).map(function (m) {
+      return '<span class="mini-tag mkt">' + AdminShell.esc(m) + '</span>';
+    }).join('');
+    if (b.markets.length > 3) markets += '<span class="mini-tag mkt">+' + (b.markets.length - 3) + '</span>';
+    var strategies = b.strategies.slice(0, 3).map(function (s) {
+      return '<span class="mini-tag acq">' + AdminShell.esc(s) + '</span>';
+    }).join('');
+
+    return '<tr>'
+      + '<td>'
+      +   '<div class="buyer-cell">'
+      +     '<div class="badge-ring">' + AdminShell.esc(initials(b.name)) + '</div>'
+      +     '<div class="buyer-name-wrap">'
+      +       '<div class="buyer-name">' + AdminShell.esc(b.name || '(No name)') + '</div>'
+      +       '<div class="buyer-mail">' + AdminShell.esc(b.email || '—') + '</div>'
+      +     '</div>'
+      +   '</div>'
+      + '</td>'
+      + '<td class="nowrap">' + (b.phone
+            ? '<a href="tel:' + AdminShell.esc(b.phone) + '" style="color:var(--blue)">' + AdminShell.esc(b.phone) + '</a>'
+            : '<span class="muted">—</span>') + '</td>'
+      + '<td>' + (badges.join(' ') || '<span class="muted">—</span>') + '</td>'
+      + '<td><div class="tag-list">' + (markets + strategies || '<span class="muted">—</span>') + '</div></td>'
+      + '<td class="nowrap muted">' + AdminShell.fmtDate(b.dateAdded) + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var loadMoreHtml = '';
+  if (state.hasMore) {
+    loadMoreHtml = '<div class="load-more-wrap">'
+      + '<div class="result-meta">Showing ' + buyers.length + ' of ' + AdminShell.fmtNum(state.total) + '</div>'
+      + '<button class="btn secondary" id="load-more-btn" onclick="loadMore()">Load next ' + state.pageLimit + '</button>'
+      + '</div>';
+  } else if (buyers.length >= state.pageLimit) {
+    loadMoreHtml = '<div class="load-more-wrap"><div class="result-meta">End of results · ' + AdminShell.fmtNum(state.total) + ' total</div></div>';
+  }
+
+  host.innerHTML = '<div class="table-wrap"><table class="t">'
+    + '<thead><tr><th>Buyer</th><th>Phone</th><th>Status</th><th>Markets / Strategy</th><th>Joined</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div>'
+    + loadMoreHtml;
+}
+
+// ─── Events ────────────────────────────────────────────────────
+var searchTimer;
+document.getElementById('search').addEventListener('input', function (e) {
+  clearTimeout(searchTimer);
+  var v = e.target.value.trim();
+  searchTimer = setTimeout(function () {
+    // Require at least 2 chars for server-side search, or empty to clear
+    if (v.length === 1) return;
+    if (v === state.q) return;
+    state.q = v;
+    fetchPage(true);
+  }, 350);
+});
+
+document.querySelectorAll('#tabs .filter-tab').forEach(function (b) {
+  b.addEventListener('click', function () {
+    if (state.loading) return;
+    document.querySelectorAll('#tabs .filter-tab').forEach(function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    state.filter = b.dataset.filter;
+    fetchPage(true);
+  });
+});
+
+function exportCsv() {
+  if (!state.contacts.length) return;
+  var headers = ['Name','Email','Phone','VIP','Buy Box','Markets','Strategies','Date Added','GHL ID'];
+  var rows = state.contacts.map(function (b) {
+    return [
+      b.name || '',
+      b.email || '',
+      b.phone || '',
+      b.isVip ? 'yes' : '',
+      b.hasBuyBox ? 'yes' : '',
+      (b.markets || []).join('; '),
+      (b.strategies || []).join('; '),
+      b.dateAdded || '',
+      b.id || ''
+    ];
+  });
+  var csv = [headers].concat(rows).map(function (row) {
+    return row.map(function (cell) {
+      var s = String(cell == null ? '' : cell);
+      if (s.indexOf(',') > -1 || s.indexOf('"') > -1 || s.indexOf('\n') > -1) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'buyers_' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  AdminShell.toast('Exported ' + state.contacts.length + ' buyers');
+}
+window.exportCsv = exportCsv;
+
+AdminShell.requireAuth(function () { fetchPage(true); });
+</script>
+
+</body>
+</html>

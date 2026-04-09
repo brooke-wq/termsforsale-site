@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Active Deals — Admin — Terms For Sale</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<style>
+.search-row{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.search-row input,.search-row select{flex:1;min-width:200px}
+
+.deal-row-code{font-weight:800;color:var(--navy);font-size:12px;font-family:Menlo,Monaco,monospace}
+.deal-row-addr{font-weight:700;color:var(--navy);font-size:13px}
+.deal-row-loc{color:var(--text-light);font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Operations</div>
+        <div class="topbar-h">Active Deals</div>
+      </div>
+      <div class="topbar-right">
+        <a href="https://www.notion.so/a3c0a38fd9294d758dedabab2548ff29" class="topbar-btn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Open Notion DB</span>
+        </a>
+        <button class="topbar-btn primary" onclick="loadDeals()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Active Deals</div>
+          <div class="stat-value" id="s-count">—</div>
+          <div class="stat-sub">Currently marketing</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label">Avg Asking Price</div>
+          <div class="stat-value" id="s-avg">—</div>
+          <div class="stat-sub">Across all active deals</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label">Total Portfolio Value</div>
+          <div class="stat-value" id="s-total">—</div>
+          <div class="stat-sub">Sum of asking prices</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label">Metros Covered</div>
+          <div class="stat-value" id="s-metros">—</div>
+          <div class="stat-sub">Unique cities + states</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Deals in Pipeline
+            </div>
+            <div class="panel-sub">Live from Notion — filter for "Actively Marketing"</div>
+          </div>
+          <div class="muted" style="font-size:12px"><span id="row-count">0</span> shown</div>
+        </div>
+        <div class="panel-body">
+
+          <div class="search-row">
+            <input type="text" id="search" class="ctl" placeholder="Search address, city, or deal code..." autocomplete="off">
+            <select id="type-filter" class="ctl">
+              <option value="">All types</option>
+            </select>
+            <select id="state-filter" class="ctl">
+              <option value="">All states</option>
+            </select>
+          </div>
+
+          <div id="results"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('deals');
+
+var ALL_DEALS = [];
+var BUYER_COUNTS = {};   // slug -> { total, hot, interested, noResponse, passed } | 'loading' | 'error'
+
+async function loadDeals() {
+  document.getElementById('results').innerHTML = '<div class="spinner"></div>';
+  try {
+    // /api/deals is public (no auth required) — it's the same endpoint the buyer site uses
+    var res = await fetch('/api/deals');
+    if (!res.ok) {
+      document.getElementById('results').innerHTML =
+        '<div class="err">Error loading deals (HTTP ' + res.status + ')</div>';
+      return;
+    }
+    var data = await res.json();
+    ALL_DEALS = (data.deals || data || []);
+    if (!Array.isArray(ALL_DEALS)) ALL_DEALS = [];
+
+    populateFilters();
+    renderStats();
+    renderList();
+    loadAllBuyerCounts();
+  } catch (err) {
+    document.getElementById('results').innerHTML =
+      '<div class="err">Network error: ' + AdminShell.esc(err.message) + '</div>';
+  }
+}
+window.loadDeals = loadDeals;
+
+// For every active deal, fire a parallel /api/deal-buyer-list call and
+// populate the "Buyers" cell as each one returns. Results cached so
+// re-renders (search / filter) reuse them instead of re-fetching.
+function loadAllBuyerCounts() {
+  ALL_DEALS.forEach(function (d) {
+    var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
+    if (BUYER_COUNTS[slug]) return; // already loading or loaded
+    BUYER_COUNTS[slug] = 'loading';
+    updateBuyerCell(slug);
+
+    AdminShell.fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug))
+      .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
+      .then(function (data) {
+        var contacts = data.contacts || [];
+        var counts = { total: contacts.length, hot: 0, interested: 0, noResponse: 0, passed: 0 };
+        contacts.forEach(function (c) {
+          if (c.dealStatus === 'deal:hot') counts.hot++;
+          else if (c.dealStatus === 'deal:interested') counts.interested++;
+          else if (c.dealStatus === 'deal:no-response') counts.noResponse++;
+          else if (c.dealStatus === 'deal:passed') counts.passed++;
+        });
+        BUYER_COUNTS[slug] = counts;
+        updateBuyerCell(slug);
+      })
+      .catch(function () {
+        BUYER_COUNTS[slug] = 'error';
+        updateBuyerCell(slug);
+      });
+  });
+}
+
+function updateBuyerCell(slug) {
+  var cell = document.querySelector('[data-buyer-cell="' + slug + '"]');
+  if (!cell) return;
+  var v = BUYER_COUNTS[slug];
+  if (v === 'loading') {
+    cell.innerHTML = '<span class="muted" style="font-size:11px">loading…</span>';
+  } else if (v === 'error') {
+    cell.innerHTML = '<span class="muted" style="font-size:11px">—</span>';
+  } else if (v && typeof v === 'object') {
+    if (v.total === 0) {
+      cell.innerHTML = '<span class="pill gray">0 sent</span>';
+    } else {
+      var hotBit = v.hot ? ' <span class="pill green" title="Hot responses" style="padding:2px 7px;font-size:10px">' + v.hot + ' hot</span>' : '';
+      cell.innerHTML = '<span class="pill blue">' + v.total + ' sent</span>' + hotBit;
+    }
+  }
+}
+
+function populateFilters() {
+  var types = {}, states = {};
+  ALL_DEALS.forEach(function (d) {
+    if (d.dealType) types[d.dealType] = true;
+    if (d.state) states[d.state] = true;
+  });
+  var tf = document.getElementById('type-filter');
+  var sf = document.getElementById('state-filter');
+  tf.innerHTML = '<option value="">All types</option>' + Object.keys(types).sort().map(function (t) {
+    return '<option value="' + AdminShell.esc(t) + '">' + AdminShell.esc(t) + '</option>';
+  }).join('');
+  sf.innerHTML = '<option value="">All states</option>' + Object.keys(states).sort().map(function (s) {
+    return '<option value="' + AdminShell.esc(s) + '">' + AdminShell.esc(s) + '</option>';
+  }).join('');
+}
+
+function renderStats() {
+  var n = ALL_DEALS.length;
+  var totalAsking = 0, counted = 0;
+  var metros = {};
+  ALL_DEALS.forEach(function (d) {
+    if (d.askingPrice && !isNaN(+d.askingPrice)) { totalAsking += +d.askingPrice; counted++; }
+    var key = (d.city || '') + '|' + (d.state || '');
+    metros[key] = true;
+  });
+  var avg = counted ? Math.round(totalAsking / counted) : 0;
+  document.getElementById('s-count').textContent = AdminShell.fmtNum(n);
+  document.getElementById('s-avg').textContent = counted ? AdminShell.fmtMoney(avg) : '—';
+  document.getElementById('s-total').textContent = counted ? AdminShell.fmtMoney(totalAsking) : '—';
+  document.getElementById('s-metros').textContent = Object.keys(metros).length;
+}
+
+function getFiltered() {
+  var q = (document.getElementById('search').value || '').toLowerCase().trim();
+  var tf = document.getElementById('type-filter').value;
+  var sf = document.getElementById('state-filter').value;
+  return ALL_DEALS.filter(function (d) {
+    if (tf && d.dealType !== tf) return false;
+    if (sf && d.state !== sf) return false;
+    if (q) {
+      var blob = ((d.streetAddress || '') + ' ' + (d.city || '') + ' ' + (d.state || '') + ' ' + (d.dealCode || '')).toLowerCase();
+      if (blob.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function renderList() {
+  var host = document.getElementById('results');
+  var list = getFiltered();
+  document.getElementById('row-count').textContent = list.length;
+
+  if (!list.length) {
+    host.innerHTML = '<div class="state"><h3>No deals match</h3><p>Try clearing the filters or loading the full list.</p></div>';
+    return;
+  }
+
+  var rows = list.map(function (d) {
+    var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
+    var dealUrl = '/deal.html?id=' + encodeURIComponent(d.id || d.dealCode || slug);
+    var buyersUrl = '/admin/deal-buyers.html?deal=' + encodeURIComponent(slug);
+
+    return '<tr>'
+      + '<td><div class="deal-row-code">' + AdminShell.esc(d.dealCode || '—') + '</div></td>'
+      + '<td>'
+      +   '<div class="deal-row-addr">' + AdminShell.esc(d.streetAddress || '(No address)') + '</div>'
+      +   '<div class="deal-row-loc">' + AdminShell.esc(d.city || '') + (d.state ? ', ' + AdminShell.esc(d.state) : '') + (d.zip ? ' ' + AdminShell.esc(d.zip) : '') + '</div>'
+      + '</td>'
+      + '<td><span class="pill blue">' + AdminShell.esc(d.dealType || '—') + '</span></td>'
+      + '<td class="cell-strong tr">' + (d.askingPrice ? AdminShell.fmtMoney(d.askingPrice) : '<span class="muted">—</span>') + '</td>'
+      + '<td class="tr">' + (d.entryFee ? AdminShell.fmtMoney(d.entryFee) : '<span class="muted">—</span>') + '</td>'
+      + '<td class="tr">' + (d.compsArv ? AdminShell.fmtMoney(d.compsArv) : '<span class="muted">—</span>') + '</td>'
+      + '<td><a href="' + buyersUrl + '" data-buyer-cell="' + AdminShell.esc(slug) + '" style="text-decoration:none">'
+      +   '<span class="muted" style="font-size:11px">…</span>'
+      + '</a></td>'
+      + '<td class="nowrap">'
+      +   '<a href="' + dealUrl + '" target="_blank" class="btn secondary" style="padding:5px 10px;font-size:11px">View</a> '
+      +   '<a href="' + buyersUrl + '" class="btn secondary" style="padding:5px 10px;font-size:11px">Buyers</a>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+
+  host.innerHTML = '<div class="table-wrap"><table class="t">'
+    + '<thead><tr>'
+    +   '<th>ID</th>'
+    +   '<th>Address</th>'
+    +   '<th>Type</th>'
+    +   '<th class="tr">Asking</th>'
+    +   '<th class="tr">Entry</th>'
+    +   '<th class="tr">ARV</th>'
+    +   '<th>Buyers</th>'
+    +   '<th>Actions</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div>';
+
+  // Repopulate buyer cells from cache (for search / filter re-renders)
+  ALL_DEALS.forEach(function (d) {
+    var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
+    if (BUYER_COUNTS[slug]) updateBuyerCell(slug);
+  });
+}
+
+var searchTimer;
+document.getElementById('search').addEventListener('input', function () {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(renderList, 200);
+});
+document.getElementById('type-filter').addEventListener('change', renderList);
+document.getElementById('state-filter').addEventListener('change', renderList);
+
+AdminShell.requireAuth(loadDeals);
+</script>
+
+</body>
+</html>
