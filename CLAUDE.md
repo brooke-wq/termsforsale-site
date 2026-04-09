@@ -276,6 +276,52 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 9 2026 Offer/Inquiry Form Audit
+
+Triage of the buyer-facing offer + inquiry forms on `deal.html`. The
+confirmation email was never showing the buyer's funding structure or notes,
+and the inquiry form was bypassing Netlify entirely (posted straight to a GHL
+webhook → we had zero control over the buyer email).
+
+Items shipped on branch `claude/fix-offer-form-population-zqU2f`:
+
+- **`termsforsale/netlify/functions/submit-offer.js`** — logs the full received
+  body at the top so missing fields are visible in Netlify function logs;
+  accepts `structure` as a first-class field instead of having the frontend
+  cram it into `notes`; the GHL note now includes buyer name/phone/email,
+  funding source, target close, and notes in a clearly sectioned block; the
+  opportunity name includes the amount; Brooke's SMS includes structure +
+  close timeline; the confirmation email now renders every submitted field in
+  a labeled table (offer amount, funding source, target close, buyer notes)
+  and falls back to a visible warning if the email arrives with no details so
+  the buyer knows to reply. Email error handling now actually checks the
+  response status instead of logging "sent" for 4xx.
+- **`termsforsale/netlify/functions/submit-inquiry.js`** (NEW) — mirror of
+  submit-offer for the "Request Info" form. Logs payload, verifies contact,
+  posts a comprehensive note, applies `Website Inquiry` + `Active Buyer` +
+  `TFS Buyer` + `inquiry-[dealId]` tags, SMSes Brooke with the buyer's
+  question, and sends the buyer a branded confirmation email that lists the
+  deal, their phone/email, and the question they asked.
+- **`netlify.toml`** — `/api/submit-inquiry` → `/.netlify/functions/submit-inquiry`.
+- **`termsforsale/deal.html`** —
+  - New `prefillDealForms()` helper that auto-populates both forms with the
+    logged-in user's first/last/phone/email (called after `renderDeal()`), so
+    buyers don't re-type their info every time.
+  - `submitRequest()`: logged-in users now route through `/api/submit-inquiry`
+    with the full deal context (`city`, `state`, `dealType`, `streetAddress`)
+    — not just the raw GHL webhook. Logged-out users still hit the webhook as
+    before.
+  - `submitOffer()`: sends `structure`, `notes`, `coe`, `name`, `phone`,
+    `email` each as their own key. Previously `structure` was prefixed onto
+    `notes` and the backend never saw it as a separate field.
+
+**Verification:** local simulation (mocked `fetch`) confirms the offer and
+inquiry functions produce correct GHL notes, opportunity body, Brooke SMS,
+and branded confirmation email with every submitted field rendered. Degraded
+case (empty amount) now shows a red "we didn't receive offer details —
+please reply" banner in the email instead of silently omitting the line.
+All 60 Netlify function modules load cleanly.
+
 ## Completed — April 9 2026 Maintenance Audit
 
 Triage session that caught two silent regressions that were breaking buyer
