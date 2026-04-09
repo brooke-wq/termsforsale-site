@@ -7,6 +7,7 @@
 <meta name="description" content="View deal details, terms, and financials for this off-market real estate opportunity. Subject-to, seller finance, and cash deals from Deal Pros LLC.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/deal-page-tracker.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1340,6 +1341,13 @@ async function init(){
     if(!deal){document.getElementById('app').innerHTML='<div class="not-found"><h2>Deal Not Found</h2><p>This deal may have sold or been removed.</p><a href="/deals.html" class="btn btn-blue" style="margin-top:16px;text-decoration:none">View Active Deals</a></div>';return}
     window._currentDeal=deal;
     renderDeal(deal,allDeals);
+    // Inject deal-id meta tag so deal-page-tracker.js can pick it up.
+    // Uses dealCode (e.g. PHX-001) from Notion, not the Notion page UUID.
+    if(deal.dealCode){
+      var dealIdMeta=document.querySelector('meta[name="deal-id"]');
+      if(!dealIdMeta){dealIdMeta=document.createElement('meta');dealIdMeta.name='deal-id';document.head.appendChild(dealIdMeta);}
+      dealIdMeta.setAttribute('content',deal.dealCode);
+    }
     // Track deal view for logged-in users
     var viewer=getUser();
     if(viewer&&viewer.contactId&&id){
