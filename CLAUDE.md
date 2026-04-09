@@ -558,18 +558,55 @@ The meta tag must be templated with the actual Deal ID per deal.
 
 ---
 
+## Completed — Deal Tracking Tag System Hotfix (April 9, 2026)
+
+End-to-end verification session that shook out two production bugs in the
+engagement tag tracking system:
+
+1. **404 on `/api/buyer-alert` and `/api/deal-view-tracker`** — `netlify.toml`
+   has no wildcard `/api/*` rule, every function needs an explicit redirect.
+   I had shipped the new functions without adding their redirect entries, so
+   the bottom catchall `/* → /404.html` was swallowing every request. Fixed
+   in PR #35.
+
+2. **Regex missed lowercased tags** — GHL normalizes all tags to lowercase on
+   save. Our case-sensitive `[A-Z]+` regexes never matched real stored tags,
+   so `buyer-alert` always hit the "no sent- tags found" fallback path. Fixed
+   in PR #37:
+   - `termsforsale/netlify/functions/buyer-alert.js` — regex now
+     `/^sent-([a-z]+-[0-9]+)$/i`, captured dealId uppercased for display
+   - `termsforsale/netlify/functions/deal-view-tracker.js` — regex
+     `/^[A-Z]+-[0-9]+$/i`, dealId normalized to uppercase before tag write
+   - `jobs/deal-cleanup.js` — regex `/^[A-Z]+-[0-9]+$/i`, tag names
+     lowercased before GHL search/remove, contact tag arrays lowercased
+     before comparison (handles old mixed-case tags too)
+
+**Verified live:** curl against `/api/buyer-alert` with a real contactId
+that has `sent-test-001` returns `{"success":true,"dealIds":["TEST-001"]}`,
+adds `alert-test-001`, posts the note, and SMSes Brooke.
+
+The GHL "Buyer Interest Webhook" workflow is configured and live in the
+Terms For Sale sub-account. The full chain is now working end-to-end:
+buyer texts INTERESTED → GHL workflow fires → `/api/buyer-alert` → tags +
+notes + SMS to Brooke.
+
+---
+
 ## TODO — Next Session
 
 1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.netlify.app`: set `NOTIFICATIONS_LIVE=true` in Netlify env vars, test one real submission, re-enable `dispo-buddy-triage` cron on Droplet, point `dispobuddy.com` domain.
 
-2. **Deal Tracking Tag System — Remaining Wire-Up** (system built, deployed, and running as of April 2026):
-   - ✅ Branch merged to main (PRs #30, #31, #32, #33)
+2. **Deal Tracking Tag System — All wire-up complete as of April 9, 2026** ✅
+   - ✅ Branch merged to main (PRs #30–#37)
    - ✅ `deal.html` wired: includes `/deal-page-tracker.js` and dynamically injects `<meta name="deal-id">` after Notion load
    - ✅ `deals.js` exposes new `dealCode` field (`PHX-001` format)
    - ✅ `deal-cleanup` PM2 cron running on droplet (Mondays 06:00 UTC)
-   - ✅ Historical engagement snapshot captured (`jobs/export-engagement-snapshot.js` → 17,073 contacts scanned, only 79 with any old-format tags — very sparse, clean slate for new system)
-   - ❌ **Create GHL "Buyer Interest Webhook" workflow** in Terms For Sale sub-account (trigger: inbound SMS contains INTERESTED/YES; action: POST to `/api/buyer-alert` with Custom Data `contactId={{contact.id}}`). The function fetches the rest of the contact (including tags) from GHL directly, so only contactId is required.
-   - ❌ **Populate `Deal ID`** (e.g. `PHX-001`) on new Notion deal pages going forward — the cleanup job skips any deal missing this field. Legacy deals without Deal ID will stay skipped forever.
+   - ✅ Historical engagement snapshot captured (17,073 contacts scanned, only 79 with any old-format tags — clean slate for new system)
+   - ✅ Netlify redirects added for `/api/buyer-alert` and `/api/deal-view-tracker` (PR #35)
+   - ✅ Regex case-insensitivity fix for GHL lowercasing tags on save (PR #37)
+   - ✅ GHL "Buyer Interest Webhook" workflow live in Terms For Sale sub-account
+   - ✅ End-to-end verified: curl test on real contact returns `{"success":true,"dealIds":["TEST-001"]}`, tag+note+SMS all fire
+   - ⚠️ **Still ongoing:** populate `Deal ID` (e.g. `PHX-001`) on new Notion deal pages going forward — the cleanup job skips any deal missing this field. Legacy deals without Deal ID will stay skipped forever.
    - 🔧 Optional: expand `CLEANUP_STATUSES` env var on droplet if you want Lost/Canceled/Abandoned/EMD Released/Not Accepted deals also auto-cleaned: `echo 'CLEANUP_STATUSES="Closed,Lost,Canceled,Abandoned,EMD Released,Not Accepted"' >> /etc/environment`
 
 3. **GHL Client Portal — Buyer Contract Lifecycle** — The webhook function `buyer-contract-lifecycle.js` handles automated partner-style notifications on Buyer Inquiries pipeline stage changes (Offer Submitted → Contract Sent → Contract Signed → EMD Received → Closed / Lost). To activate:
