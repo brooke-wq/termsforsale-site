@@ -54,12 +54,9 @@ async function logClickToNotion({ dealCode, contactId, email, channel, userAgent
 }
 
 exports.handler = async (event) => {
-  // Path comes in as /r/CMF-001 — extract the deal code
-  const path = event.path || '';
-  const match = path.match(/\/r\/([A-Za-z0-9-]+)/);
-  const dealCode = (match?.[1] || '').toUpperCase();
-
+  // Deal code comes from the ?d= query param (Netlify rewrite maps /r/:dealCode → ?d=:dealCode)
   const q = event.queryStringParameters || {};
+  const dealCode = (q.d || '').toUpperCase();
   const contactId = q.c || '';
   const email = q.e || '';
   const channel = q.ch || '';
