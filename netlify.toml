@@ -247,6 +247,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/submit-inquiry"
+  to = "/.netlify/functions/submit-inquiry"
+  status = 200
+
+[[redirects]]
   from = "/api/buyer-contract-lifecycle"
   to = "/.netlify/functions/buyer-contract-lifecycle"
   status = 200

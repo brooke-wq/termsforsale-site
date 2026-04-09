@@ -72,7 +72,7 @@ exports.handler = async function(event) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escHtml(data.headline)} | Terms For Sale</title>
 <meta name="description" content="${escHtml(data.metaDesc)}">
-<link rel="canonical" href="https://deals.termsforsale.com/blog/posts/${slug}/">
+<link rel="canonical" href="https://termsforsale.com/blog/posts/${slug}/">
 <meta property="og:title" content="${escHtml(data.headline)}">
 <meta property="og:description" content="${escHtml(data.hook)}">
 <meta property="og:type" content="article">
@@ -418,7 +418,7 @@ function blogSubmit(){
     dealId:      data.dealId,
     coverImage:  '',
     date:        new Date().toISOString(),
-    url:         'https://deals.termsforsale.com/blog/posts/' + slug + '.html'
+    url:         'https://termsforsale.com/blog/posts/' + slug + '.html'
   });
 
   // Write updated index back to GitHub
@@ -452,7 +452,7 @@ function blogSubmit(){
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       success: true,
-      url: `https://deals.termsforsale.com/blog/posts/${slug}.html`,
+      url: `https://termsforsale.com/blog/posts/${slug}.html`,
       slug: slug
     })
   };

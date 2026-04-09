@@ -472,7 +472,7 @@ function respond(statusCode, body) {
  *
  * STEP 4 — Build GHL Workflow (Dispo Buddy sub-account):
  *   Trigger: Contact Tag Added → "uw-requested"
- *   Action: Send Webhook → POST https://deals.termsforsale.com/api/underwriting
+ *   Action: Send Webhook → POST https://termsforsale.com/api/underwriting
  *   Body (JSON):
  *     {
  *       "contact_id":         "{{contact.id}}",
@@ -496,7 +496,7 @@ function respond(statusCode, body) {
  *     }
  *
  * STEP 5 — Test manually:
- *   curl -X POST https://deals.termsforsale.com/api/underwriting \
+ *   curl -X POST https://termsforsale.com/api/underwriting \
  *     -H "Content-Type: application/json" \
  *     -d '{
  *       "address": "4821 W McDowell Rd",

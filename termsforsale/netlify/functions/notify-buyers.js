@@ -655,7 +655,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       { id: 'nNMHvkPbjGYRbOB1v7vQ', value: deal.yearBuilt ? 'Built in ' + deal.yearBuilt : '' },
       { id: 'MgNeVZgMdTcdatcTTHue', value: deal.sqft ? deal.sqft.toLocaleString() + ' sqft' : '' },
       { id: 'eke6ZGnex77y5aUCNgly', value: highlights },
-      { id: 'FXp9oPT4T4xqA1HIJuSC', value: (function(){ var m = (deal.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/); return m ? 'https://deals.termsforsale.com/api/drive-image?id=' + m[1] + '&sz=800' : ''; })() }
+      { id: 'FXp9oPT4T4xqA1HIJuSC', value: (function(){ var m = (deal.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/); return m ? 'https://termsforsale.com/api/drive-image?id=' + m[1] + '&sz=800' : ''; })() }
     ]
   });
 
@@ -692,7 +692,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   if (contact.email || contact.id) {
     var coverImg = '';
     var photoMatch = (deal.coverPhoto || '').match(/\/d\/([a-zA-Z0-9_-]{20,})/);
-    if (photoMatch) coverImg = 'https://deals.termsforsale.com/api/drive-image?id=' + photoMatch[1] + '&sz=800';
+    if (photoMatch) coverImg = 'https://termsforsale.com/api/drive-image?id=' + photoMatch[1] + '&sz=800';
 
     var specs = [
       deal.beds ? deal.beds + ' Beds' : '',
@@ -734,11 +734,11 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       + '<span style="font-size:12px;color:#718096">Need landlord insurance? </span>'
       + '<a href="https://dealpros.steadilypartner.com/" target="_blank" style="color:#29ABE2;font-size:12px;font-weight:700">Get an instant quote &rarr;</a>'
       + '</div>'
-      + '<p style="color:#718096;font-size:12px;margin-top:20px;text-align:center">This deal matched your buying criteria. <a href="https://deals.termsforsale.com/buying-criteria.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
+      + '<p style="color:#718096;font-size:12px;margin-top:20px;text-align:center">This deal matched your buying criteria. <a href="https://termsforsale.com/buying-criteria.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
       + '</div>'
       // Footer
       + '<div style="background:#F4F6F9;padding:16px 32px;border-radius:0 0 12px 12px;text-align:center">'
-      + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale &middot; Deal Pros LLC &middot; <a href="https://deals.termsforsale.com" style="color:#29ABE2">deals.termsforsale.com</a></p>'
+      + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale &middot; Deal Pros LLC &middot; <a href="https://termsforsale.com" style="color:#29ABE2">termsforsale.com</a></p>'
       + '</div></div>';
 
     try {

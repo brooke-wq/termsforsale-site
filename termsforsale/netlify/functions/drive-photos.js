@@ -8,8 +8,8 @@ function httpsGet(url) {
   return new Promise(function(resolve, reject) {
     https.get(url, {
       headers: {
-        'Referer': 'https://deals.termsforsale.com',
-        'Origin': 'https://deals.termsforsale.com',
+        'Referer': 'https://termsforsale.com',
+        'Origin': 'https://termsforsale.com',
         'User-Agent': 'TermsForSale/1.0'
       }
     }, function(res) {

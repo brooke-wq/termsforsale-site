@@ -12,7 +12,7 @@
  *           GHL_STAGE_OFFER_RECEIVED, BROOKE_PHONE
  */
 
-const { getContact, postNote, addTags, sendSMS } = require('./_ghl');
+const { getContact, postNote, addTags, sendSMS, sendEmail } = require('./_ghl');
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
@@ -32,17 +32,26 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch (e) { return respond(400, { error: 'Invalid JSON' }); }
 
-  var contactId = body.contactId;
-  var dealId = body.dealId;
-  var city = body.city || '';
-  var state = body.state || '';
-  var dealType = body.dealType || '';
-  var streetAddress = body.streetAddress || '';
-  var amount = body.amount || '';
-  var coe = body.coe || '';
-  var notes = body.notes || '';
+  // Log received payload so we can debug missing fields in production
+  console.log('[submit-offer] received body:', JSON.stringify(body));
+
+  var contactId    = body.contactId;
+  var dealId       = body.dealId;
+  var city         = body.city || '';
+  var state        = body.state || '';
+  var dealType     = body.dealType || '';
+  var streetAddress= body.streetAddress || '';
+  var amount       = body.amount || '';
+  var coe          = body.coe || '';
+  var structure    = body.structure || body.funding || '';
+  var notes        = body.notes || '';
+  // Form-level overrides for buyer contact (allow logged-in user to edit)
+  var formName     = (body.name || '').trim();
+  var formPhone    = (body.phone || '').trim();
+  var formEmail    = (body.email || '').trim();
 
   if (!contactId || !dealId) {
+    console.warn('[submit-offer] missing required fields:', { contactId: !!contactId, dealId: !!dealId });
     return respond(400, { error: 'Missing contactId or dealId' });
   }
 
@@ -50,22 +59,35 @@ exports.handler = async (event) => {
   var contactRes = await getContact(apiKey, contactId);
   if (contactRes.status >= 400) return respond(401, { error: 'Invalid contact' });
   var contact = contactRes.body && contactRes.body.contact;
-  var buyerName = contact ? (contact.firstName || '') + ' ' + (contact.lastName || '') : '';
-  var buyerEmail = contact ? contact.email : '';
-  var buyerPhone = contact ? contact.phone : '';
+  var ghlName  = contact ? ((contact.firstName || '') + ' ' + (contact.lastName || '')).trim() : '';
+  var ghlEmail = contact ? contact.email : '';
+  var ghlPhone = contact ? contact.phone : '';
+  // Prefer what the user typed in the form, fall back to GHL record
+  var buyerName  = formName  || ghlName;
+  var buyerEmail = formEmail || ghlEmail;
+  var buyerPhone = formPhone || ghlPhone;
+  var buyerFirst = (contact && contact.firstName) || buyerName.split(' ')[0] || 'there';
 
   var location = city && state ? city + ', ' + state : 'Deal ' + dealId.substring(0, 8);
   var fullAddress = streetAddress ? streetAddress + ', ' + city + ', ' + state : location;
+  var amountFmt = amount && !isNaN(+amount) ? '$' + Number(amount).toLocaleString() : amount;
 
-  // 1. Build note
+  // 1. Build comprehensive note — include buyer contact info AND every submitted field
   var noteLines = [
     '📋 OFFER SUBMITTED',
     '─────────────────',
+    'Buyer: ' + (buyerName || '(unknown)'),
+    buyerPhone ? 'Phone: ' + buyerPhone : '',
+    buyerEmail ? 'Email: ' + buyerEmail : '',
+    '─────────────────',
     'Deal: ' + location + (dealType ? ' (' + dealType + ')' : ''),
+    streetAddress ? 'Address: ' + fullAddress : '',
     'Deal ID: ' + dealId,
-    amount ? 'Offer Amount: $' + Number(amount).toLocaleString() : '',
-    coe ? 'Target Close: ' + coe : '',
-    notes ? 'Notes: ' + notes : '',
+    '─────────────────',
+    amount     ? 'Offer Amount: ' + amountFmt : 'Offer Amount: (not provided)',
+    structure  ? 'Funding Source: ' + structure : '',
+    coe        ? 'Target Close: ' + coe : '',
+    notes      ? 'Notes: ' + notes : '',
     '─────────────────',
     'Submitted: ' + new Date().toISOString().split('T')[0],
     'Source: Terms For Sale Website'
@@ -82,19 +104,21 @@ exports.handler = async (event) => {
   var stageId = process.env.GHL_STAGE_OFFER_RECEIVED;
   if (pipelineId && stageId) {
     try {
+      var oppName = (dealType || 'Offer') + ' — ' + fullAddress + ' — ' + (buyerName || 'Buyer');
+      if (amount) oppName += ' — ' + amountFmt;
       var oppBody = {
         pipelineId: pipelineId,
         pipelineStageId: stageId,
         locationId: locationId,
         contactId: contactId,
-        name: (dealType || 'Offer') + ' — ' + fullAddress + ' — ' + buyerName.trim(),
+        name: oppName,
         status: 'open',
-        monetaryValue: amount ? +amount : 0,
+        monetaryValue: amount && !isNaN(+amount) ? +amount : 0,
         customFields: [
           { key: 'property_address', field_value: fullAddress }
         ],
       };
-      await fetch(GHL_BASE + '/opportunities/', {
+      var oppRes = await fetch(GHL_BASE + '/opportunities/', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + apiKey,
@@ -103,18 +127,25 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify(oppBody)
       });
-      console.log('[submit-offer] opportunity created for ' + buyerName.trim());
+      if (oppRes.status >= 400) {
+        var errText = await oppRes.text();
+        console.warn('[submit-offer] opportunity create -> ' + oppRes.status, errText);
+      } else {
+        console.log('[submit-offer] opportunity created for ' + buyerName + ' amount=' + (amount || 'n/a'));
+      }
     } catch (e) {
       console.warn('[submit-offer] opportunity creation failed:', e.message);
     }
   }
 
-  // 4. Notify Brooke via SMS
+  // 4. Notify Brooke via SMS — include buyer name, location, amount, funding
   var brookePhone = process.env.BROOKE_PHONE || '+15167120113';
   if (brookePhone && locationId) {
-    var sms = 'New offer: ' + buyerName.trim() + ' on ' + location;
-    if (amount) sms += ' — $' + Number(amount).toLocaleString();
-    if (sms.length > 160) sms = sms.slice(0, 157) + '...';
+    var sms = 'New offer: ' + (buyerName || 'Buyer') + ' on ' + location;
+    if (amount) sms += ' — ' + amountFmt;
+    if (structure) sms += ' (' + structure + ')';
+    if (coe) sms += ', close ' + coe;
+    if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
       await sendSMS(apiKey, locationId, brookePhone, sms);
     } catch (e) {
@@ -122,59 +153,72 @@ exports.handler = async (event) => {
     }
   }
 
-  // 5. Send buyer confirmation email
+  // 5. Send buyer confirmation email — include EVERY submitted field
   if (buyerEmail && contactId) {
     try {
-      await fetch(GHL_BASE + '/conversations/messages', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + apiKey,
-          'Version': '2021-07-28',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'Email',
-          contactId: contactId,
-          subject: 'Offer received — ' + location,
-          html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
-            + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
-            + '<img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:32px">'
-            + '</div>'
-            + '<div style="padding:28px 32px">'
-            + '<h2 style="color:#0D1F3C;margin:0 0 12px">Offer Received!</h2>'
-            + '<p style="color:#4A5568;line-height:1.6">Thanks, ' + (contact.firstName || 'there') + '. We received your offer on the <strong>' + location + '</strong> deal.</p>'
-            + (amount ? '<p style="color:#4A5568"><strong>Offer amount:</strong> $' + Number(amount).toLocaleString() + '</p>' : '')
-            + (coe ? '<p style="color:#4A5568"><strong>Target close:</strong> ' + coe + '</p>' : '')
-            + '<p style="color:#4A5568;line-height:1.6">Our team will review and get back to you within 24 hours. If your offer is accepted, we\'ll send you the assignment contract for e-signature.</p>'
-            + '<p style="color:#4A5568;line-height:1.6"><strong>What happens next:</strong></p>'
-            + '<ol style="color:#4A5568;line-height:1.8;padding-left:20px">'
-            + '<li>We review your offer (24 hours)</li>'
-            + '<li>If accepted, you\'ll receive the assignment contract</li>'
-            + '<li>Sign + submit EMD to secure the deal</li>'
-            + '<li>Your deal coordinator guides you to close</li>'
-            + '</ol>'
-            + '<div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;margin-top:20px;text-align:center">'
-            + '<span style="font-size:12px;color:#718096">While you wait — </span>'
-            + '<a href="https://dealpros.steadilypartner.com/" target="_blank" style="color:#29ABE2;font-size:12px;font-weight:700">Lock in your insurance rate &rarr;</a>'
-            + '</div>'
-            + '<p style="color:#718096;font-size:13px;margin-top:16px">Questions? Reply to this email or call (480) 637-3117.</p>'
-            + '</div>'
-            + '<div style="background:#F4F6F9;padding:16px 32px;border-radius:0 0 12px 12px;text-align:center">'
-            + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale &middot; Deal Pros LLC</p>'
-            + '</div></div>',
-          emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
-        })
-      });
-      console.log('[submit-offer] confirmation email sent to ' + buyerEmail);
+      var detailRows = '';
+      if (amount)    detailRows += row('Offer amount', amountFmt);
+      if (structure) detailRows += row('Funding source', structure);
+      if (coe)       detailRows += row('Target close', coe);
+      if (notes)     detailRows += row('Your notes', escapeHtml(notes));
+
+      var html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+        + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
+        + '<img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:32px">'
+        + '</div>'
+        + '<div style="padding:28px 32px">'
+        + '<h2 style="color:#0D1F3C;margin:0 0 12px">Offer Received!</h2>'
+        + '<p style="color:#4A5568;line-height:1.6">Thanks, ' + escapeHtml(buyerFirst) + '. We received your offer on the <strong>' + escapeHtml(location) + (dealType ? ' (' + escapeHtml(dealType) + ')' : '') + '</strong> deal.</p>'
+        + (detailRows
+            ? '<table style="width:100%;border-collapse:collapse;margin:16px 0;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">'
+              + '<tbody>' + detailRows + '</tbody></table>'
+            : '<p style="color:#C53030;font-size:13px">We didn\'t receive offer details — please reply to this email with your offer amount and timeline.</p>')
+        + '<p style="color:#4A5568;line-height:1.6">Our team will review and get back to you within 24 hours. If your offer is accepted, we\'ll send you the assignment contract for e-signature.</p>'
+        + '<p style="color:#4A5568;line-height:1.6"><strong>What happens next:</strong></p>'
+        + '<ol style="color:#4A5568;line-height:1.8;padding-left:20px">'
+        + '<li>We review your offer (24 hours)</li>'
+        + '<li>If accepted, you\'ll receive the assignment contract</li>'
+        + '<li>Sign + submit EMD to secure the deal</li>'
+        + '<li>Your deal coordinator guides you to close</li>'
+        + '</ol>'
+        + '<div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;margin-top:20px;text-align:center">'
+        + '<span style="font-size:12px;color:#718096">While you wait — </span>'
+        + '<a href="https://dealpros.steadilypartner.com/" target="_blank" style="color:#29ABE2;font-size:12px;font-weight:700">Lock in your insurance rate &rarr;</a>'
+        + '</div>'
+        + '<p style="color:#718096;font-size:13px;margin-top:16px">Questions? Reply to this email or call (480) 637-3117.</p>'
+        + '</div>'
+        + '<div style="background:#F4F6F9;padding:16px 32px;border-radius:0 0 12px 12px;text-align:center">'
+        + '<p style="color:#718096;font-size:11px;margin:0">Terms For Sale &middot; Deal Pros LLC</p>'
+        + '</div></div>';
+
+      var emailRes = await sendEmail(apiKey, contactId, 'Offer received — ' + location, html);
+      if (emailRes.status >= 400) {
+        console.warn('[submit-offer] buyer email -> ' + emailRes.status, JSON.stringify(emailRes.body));
+      } else {
+        console.log('[submit-offer] confirmation email sent to ' + buyerEmail);
+      }
     } catch (e) {
       console.warn('[submit-offer] buyer email failed:', e.message);
     }
+  } else {
+    console.warn('[submit-offer] no buyer email on contact — skipping confirmation send');
   }
 
-  console.log('[submit-offer] contact=' + contactId + ' deal=' + dealId + ' amount=' + amount);
+  console.log('[submit-offer] contact=' + contactId + ' deal=' + dealId + ' amount=' + amount + ' structure=' + structure + ' coe=' + coe);
 
   return respond(200, { ok: true });
 };
+
+function row(label, value) {
+  return '<tr>'
+    + '<td style="padding:10px 14px;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;width:40%">' + label + '</td>'
+    + '<td style="padding:10px 14px;font-size:14px;color:#0D1F3C;font-weight:700;border-bottom:1px solid #E2E8F0">' + value + '</td>'
+    + '</tr>';
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 
 function corsHeaders() {
   return {

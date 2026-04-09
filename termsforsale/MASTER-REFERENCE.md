@@ -1,7 +1,7 @@
 # Terms For Sale — Master Reference
 
 > **Owner:** Deal Pros LLC
-> **Domain:** deals.termsforsale.com
+> **Domain:** termsforsale.com
 > **Portal:** termsforsale.app.clientclub.net
 > **Stack:** Static HTML + Netlify Functions + Notion + GoHighLevel
 > **Last updated:** 2026-03-25
@@ -32,7 +32,7 @@
 ## 1. Site Architecture
 
 ```
-deals.termsforsale.com (Netlify)
+termsforsale.com (Netlify)
 ├── / ................................. Homepage — deal listings, signup, buying criteria
 ├── /deal.html?id=XX ................. Deal detail page — photos, terms, offers
 ├── /dashboard.html .................. Buyer dashboard — saved deals, offers, activity
@@ -219,7 +219,7 @@ These fields are populated when a deal alert is sent to a buyer:
 | `ltmVcWUpbwZ0S3dBid3U` | State | Notion: State |
 | `UqJl4Dq6T8wfNb70EMrL` | ZIP | Notion: ZIP |
 | `0thrOdoETTLlFA45oN8U` | Deal type | Notion: Deal Type |
-| `5eEVPcp8nERlR6GpjZUn` | Deal URL | Generated: `deals.termsforsale.com/deal.html?id=XX` |
+| `5eEVPcp8nERlR6GpjZUn` | Deal URL | Generated: `termsforsale.com/deal.html?id=XX` |
 | `YjoPoDPv7Joo1izePpDx` | Summary line | Generated: "SubTo — Phoenix, AZ — $155K" |
 | `iur6TZsfKotwO3gZb8yk` | Alert asking price | Notion: Asking Price |
 | `DH4Ekmyw2dvzrE74JSzs` | Alert entry fee | Notion: Entry Fee |
@@ -402,7 +402,7 @@ All webhooks are under GHL Location ID: `7IyUgu1zpi38MDYpSDTs`
 2. Set Contact Role = "Buyer"
 3. Add to "Buyer Inquiries" pipeline → New Lead stage
 4. Send **Welcome Email** (plain text or branded)
-5. Wait 2 min → Send SMS: "Hey {first_name}, welcome to Terms For Sale! Browse deals at deals.termsforsale.com"
+5. Wait 2 min → Send SMS: "Hey {first_name}, welcome to Terms For Sale! Browse deals at termsforsale.com"
 6. Internal notification to team (Slack or email)
 
 ### 8.2 Portal Access Granted
@@ -587,7 +587,7 @@ Common objections and response frameworks:
 - "The entry fee is too high" → Compare to traditional down payment, show cash-on-cash return
 - "I'm worried about the due-on-sale clause" → Explain actual enforcement statistics, insurance options
 - "The rate seems high for seller finance" → Compare to hard money rates, show total cost of capital
-- "I don't understand subject-to" → Explain simply, reference the blog at deals.termsforsale.com/blog
+- "I don't understand subject-to" → Explain simply, reference the blog at termsforsale.com/blog
 - "Is this deal still available?" → Check status, offer alternatives if sold
 - "Can I negotiate the price?" → Explain offer process, encourage portal submission
 
@@ -765,7 +765,7 @@ All configured in Netlify Dashboard → Site settings → Environment variables.
 1. **Add deal to Notion** — Fill all required fields (Deal Type, Address, City, State, ZIP, Asking Price, Entry Fee, ARV, Rent, Beds, Baths, Sqft, Year Built, Highlights 1-3)
 2. **Upload photos** — Create Google Drive folder, upload property photos, paste folder URL into Notion "Photos" field
 3. **Set status** — Change Deal Status to "Actively Marketing"
-4. **Verify on site** — Visit `deals.termsforsale.com` and confirm deal appears (may take ~60s for cache)
+4. **Verify on site** — Visit `termsforsale.com` and confirm deal appears (may take ~60s for cache)
 5. **Verify deal page** — Click into deal, confirm photos load, terms display correctly
 6. **Buyer alerts fire automatically** — notify-buyers.js runs every 30 min, matches deal to buyers, triggers `new-deal-alert` tag
 7. **Optional: Manual test** — Hit `/api/notify-test?deal_id={NOTION_PAGE_ID}` to test matching without sending live alerts (unless `DEAL_ALERTS_LIVE=true`)
@@ -817,7 +817,7 @@ All configured in Netlify Dashboard → Site settings → Environment variables.
    - Step 3: Deal narrative (why it exists, strategies, buyer fit)
    - Step 4: Review and publish
 4. Post is created on GitHub → auto-deploys to Netlify
-5. Verify post at `deals.termsforsale.com/blog/posts/{slug}.html`
+5. Verify post at `termsforsale.com/blog/posts/{slug}.html`
 6. Share link on social media / email
 
 ### SOP 6: Granting Portal Access
@@ -936,7 +936,7 @@ Arizona, Texas, Florida, Georgia, Tennessee, Kentucky, Ohio, Indiana, North Caro
 | **Teal** | `#7296aa` (labels) |
 | **Background** | `#F4F6F9` |
 | **Logo SVG** | `https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg` |
-| **OG Image** | `https://deals.termsforsale.com/og-default.png` |
+| **OG Image** | `https://termsforsale.com/og-default.png` |
 | **GA4 ID** | `G-DRV6NWNY06` |
 | **Company** | Deal Pros LLC |
 | **Email** | info@termsforsale.com |

@@ -4,7 +4,7 @@
 //
 // === PandaDoc setup (preferred) ===
 // PandaDoc → Settings → Integrations → Webhooks → Create Webhook
-//   URL: https://deals.termsforsale.com/.netlify/functions/nda-signed-webhook
+//   URL: https://termsforsale.com/.netlify/functions/nda-signed-webhook
 //   Events: document_state_changed
 //   Shared key: set it to GHL_WEBHOOK_SECRET (we validate via x-pandadoc-signature header)
 // When creating an NDA send, tag the document with metadata:

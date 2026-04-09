@@ -276,6 +276,99 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 9 2026 Domain Migration to Apex termsforsale.com
+
+Brooke promoted `termsforsale.com` to the Netlify primary domain (with
+`deals.termsforsale.com` auto-301'ing to it). This session migrated every
+buyer-facing URL in the repo to the apex so emails, SMS, marketing copy,
+SEO canonicals, and sitemap all consolidate signals on the primary brand.
+
+**Three commits on `claude/fix-offer-form-population-zqU2f` (PR #38):**
+
+1. **`aeaced5` — Customer-facing SMS/email/marketing** (15 files)
+   - Outbound functions: `auth-signup`, `vip-buyer-submit`, `buyer-inquiry`,
+     `notify-buyers`, `buyer-contract-lifecycle`, `deal-package`,
+     `deal-package-poller`, `deal-follow-up`, `auto-blog`, `saved-deals`,
+     `track-view`, `track-click`
+   - Marketing copy: `ghl-nurture-sequence.md`, `buying-criteria.html` step 5
+     display text, `emails/portal-access-granted.html`
+
+2. **`a80f065` — Nav links, legal copy, CORS defensive fix** (23 files)
+   - All 8 Dispo Buddy static pages footer link to Terms For Sale
+   - 3 termsforsale static pages (`buyingcriteria-standalone`, `dispo-submit`,
+     `va-post-builder`)
+   - `privacy.html` legal copy, `cowork-sign.html` doc footer
+   - `commercial-deal.js` + `sign-commercial-nda.js`: CORS const replaced
+     with `cors(event)` helper that dynamically echoes the request Origin
+     if it matches `[termsforsale.com, www.termsforsale.com,
+     deals.termsforsale.com]`. Added `Vary: Origin`. Both old + new domains
+     work, no transition breakage.
+   - Internal docs: `MASTER-REFERENCE.md`/`.html`, both admin SOPs,
+     function doc comments (`buyer-alert`, `nda-signed-webhook`,
+     `underwriting`), `scripts/test-tagging.js` BASE_URL default
+
+3. **`2a1ba57` — SEO canonicals + sitemap** (21 files)
+   - Static HTML canonicals/OG/JSON-LD: root `index.html`, `termsforsale/`
+     index/deals/about/commercial + `commercial-deal.html`, `blog/index.html`,
+     all 8 blog posts + `deal-post-template.html`
+   - `sitemap.js` BASE_URL, `robots.txt` Sitemap line,
+     `blog/posts-index.json` (8 post URLs), `create-post.js` generated
+     canonicals for future blog posts
+   - `drive-photos.js` Referer/Origin headers now match primary domain
+
+**Deliberately kept at `deals.termsforsale.com`:**
+- `ALLOWED_ORIGINS` arrays in both commercial CORS functions (backward
+  compat during transition)
+- Explanatory note in `paperclip-sop.html` about the migration
+
+**PR #38 also includes the offer/inquiry form audit** (see next section).
+
+## Completed — April 9 2026 Offer/Inquiry Form Audit
+
+Triage of the buyer-facing offer + inquiry forms on `deal.html`. The
+confirmation email was never showing the buyer's funding structure or notes,
+and the inquiry form was bypassing Netlify entirely (posted straight to a GHL
+webhook → we had zero control over the buyer email).
+
+Items shipped on branch `claude/fix-offer-form-population-zqU2f`:
+
+- **`termsforsale/netlify/functions/submit-offer.js`** — logs the full received
+  body at the top so missing fields are visible in Netlify function logs;
+  accepts `structure` as a first-class field instead of having the frontend
+  cram it into `notes`; the GHL note now includes buyer name/phone/email,
+  funding source, target close, and notes in a clearly sectioned block; the
+  opportunity name includes the amount; Brooke's SMS includes structure +
+  close timeline; the confirmation email now renders every submitted field in
+  a labeled table (offer amount, funding source, target close, buyer notes)
+  and falls back to a visible warning if the email arrives with no details so
+  the buyer knows to reply. Email error handling now actually checks the
+  response status instead of logging "sent" for 4xx.
+- **`termsforsale/netlify/functions/submit-inquiry.js`** (NEW) — mirror of
+  submit-offer for the "Request Info" form. Logs payload, verifies contact,
+  posts a comprehensive note, applies `Website Inquiry` + `Active Buyer` +
+  `TFS Buyer` + `inquiry-[dealId]` tags, SMSes Brooke with the buyer's
+  question, and sends the buyer a branded confirmation email that lists the
+  deal, their phone/email, and the question they asked.
+- **`netlify.toml`** — `/api/submit-inquiry` → `/.netlify/functions/submit-inquiry`.
+- **`termsforsale/deal.html`** —
+  - New `prefillDealForms()` helper that auto-populates both forms with the
+    logged-in user's first/last/phone/email (called after `renderDeal()`), so
+    buyers don't re-type their info every time.
+  - `submitRequest()`: logged-in users now route through `/api/submit-inquiry`
+    with the full deal context (`city`, `state`, `dealType`, `streetAddress`)
+    — not just the raw GHL webhook. Logged-out users still hit the webhook as
+    before.
+  - `submitOffer()`: sends `structure`, `notes`, `coe`, `name`, `phone`,
+    `email` each as their own key. Previously `structure` was prefixed onto
+    `notes` and the backend never saw it as a separate field.
+
+**Verification:** local simulation (mocked `fetch`) confirms the offer and
+inquiry functions produce correct GHL notes, opportunity body, Brooke SMS,
+and branded confirmation email with every submitted field rendered. Degraded
+case (empty amount) now shows a red "we didn't receive offer details —
+please reply" banner in the email instead of silently omitting the line.
+All 60 Netlify function modules load cleanly.
+
 ## Completed — April 9 2026 Admin Console Rebuild
 
 Rebuilt `/admin/*` into a real corporate back-office hub with shared

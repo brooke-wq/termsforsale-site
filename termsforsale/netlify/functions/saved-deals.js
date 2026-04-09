@@ -55,7 +55,7 @@ exports.handler = async (event) => {
     if (action === 'save' && dealId) {
       await addTags(apiKey, contactId, ['saved:' + dealId, 'Active Saver']);
       await postNote(apiKey, contactId,
-        '❤️ DEAL SAVED\nDeal ID: ' + dealId + '\nURL: https://deals.termsforsale.com/deal.html?id=' + dealId + '\nDate: ' + new Date().toISOString().split('T')[0]
+        '❤️ DEAL SAVED\nDeal ID: ' + dealId + '\nURL: https://termsforsale.com/deal.html?id=' + dealId + '\nDate: ' + new Date().toISOString().split('T')[0]
       );
       return respond(200, { ok: true, action: 'saved' });
     }

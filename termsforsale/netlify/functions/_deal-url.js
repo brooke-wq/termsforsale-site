@@ -6,15 +6,15 @@
  * buyers (and search engines) see the city/zip right in the path.
  *
  * Example:
- *   legacy: https://deals.termsforsale.com/deal.html?id=a1b2c3d4-e5f6-...
- *   new:    https://deals.termsforsale.com/d/phoenix-85016-phx001
+ *   legacy: https://termsforsale.com/deal.html?id=a1b2c3d4-e5f6-...
+ *   new:    https://termsforsale.com/d/phoenix-85016-phx001
  *
  * `deal.html` handles both formats — `/d/*` is rewritten to
  * `deal.html` by netlify.toml, and the page JS pulls the dealCode
  * off the last hyphen-separated segment of the path.
  */
 
-var BASE_URL = 'https://deals.termsforsale.com';
+var BASE_URL = 'https://termsforsale.com';
 
 function slugifyPiece(s) {
   return String(s || '')

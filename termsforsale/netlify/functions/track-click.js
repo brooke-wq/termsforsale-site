@@ -1,7 +1,7 @@
 // Click-tracking redirect. Logs the click to Notion, then 302s to the deal page.
 //
 // Usage in blasts:
-//   https://deals.termsforsale.com/r/CMF-001?c={{contact.id}}&ch=sms
+//   https://termsforsale.com/r/CMF-001?c={{contact.id}}&ch=sms
 //
 // Query params:
 //   (path)  dealCode  — from /r/:dealCode
@@ -9,9 +9,9 @@
 //   e       email     — fallback if no contactId
 //   ch      channel   — 'sms' | 'email' | 'pandadoc' | 'social' (optional)
 //
-// Redirect target: https://deals.termsforsale.com/commercial-deal.html?code=DEALCODE
+// Redirect target: https://termsforsale.com/commercial-deal.html?code=DEALCODE
 
-const DEFAULT_TARGET = 'https://deals.termsforsale.com/commercial-deal.html';
+const DEFAULT_TARGET = 'https://termsforsale.com/commercial-deal.html';
 
 function redirect(url) {
   return { statusCode: 302, headers: { Location: url, 'Cache-Control': 'no-store' }, body: '' };

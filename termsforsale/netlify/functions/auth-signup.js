@@ -165,8 +165,8 @@ exports.handler = async (event) => {
       + '<li><strong>Set your buy box</strong> for automatic matching</li>'
       + '<li><strong>Get SMS/email alerts</strong> when deals fit your criteria</li>'
       + '</ul>'
-      + '<a href="https://deals.termsforsale.com/deals.html" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Browse Deals Now</a>'
-      + '<p style="color:#4A5568;line-height:1.6;margin:20px 0 12px"><strong>Next step:</strong> <a href="https://deals.termsforsale.com/buying-criteria.html" style="color:#29ABE2;font-weight:600">Set your buying criteria</a> so we can match you to the right deals automatically.</p>'
+      + '<a href="https://termsforsale.com/deals.html" style="display:inline-block;padding:14px 28px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Browse Deals Now</a>'
+      + '<p style="color:#4A5568;line-height:1.6;margin:20px 0 12px"><strong>Next step:</strong> <a href="https://termsforsale.com/buying-criteria.html" style="color:#29ABE2;font-weight:600">Set your buying criteria</a> so we can match you to the right deals automatically.</p>'
       + '<p style="color:#718096;font-size:13px;margin-top:24px">Questions? Reply to this email anytime.</p>'
       + '</div></div>';
 
@@ -176,7 +176,7 @@ exports.handler = async (event) => {
       sends.push(
         ghlFetch(GHL_BASE + '/conversations/messages', 'POST', {
           type: 'SMS', contactId,
-          message: 'Welcome to Terms For Sale, ' + firstName + '! Browse deals: https://deals.termsforsale.com/deals.html — Set your buy box: https://deals.termsforsale.com/buying-criteria.html'
+          message: 'Welcome to Terms For Sale, ' + firstName + '! Browse deals: https://termsforsale.com/deals.html — Set your buy box: https://termsforsale.com/buying-criteria.html'
         }, headers).then(function(r) { smsStatus = r.ok ? 'sent' : 'failed:' + r.status; return r; })
         .catch(function(e) { smsStatus = 'error:' + e.message; })
       );

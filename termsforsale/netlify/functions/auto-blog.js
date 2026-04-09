@@ -74,7 +74,7 @@ async function createDealPost(deal) {
   var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">'
     + '<title>' + escHtml(title) + ' | Terms For Sale</title>'
     + '<meta name="description" content="' + escHtml(hook) + '">'
-    + '<link rel="canonical" href="https://deals.termsforsale.com/blog/posts/' + slug + '/">'
+    + '<link rel="canonical" href="https://termsforsale.com/blog/posts/' + slug + '/">'
     + '<meta property="og:title" content="' + escHtml(title) + '">'
     + '<meta property="og:description" content="' + escHtml(hook) + '">'
     + '<meta property="og:type" content="article">'
@@ -144,7 +144,7 @@ async function createDealPost(deal) {
         estRent: deal.rentFinal || null,
         status: 'Active',
         date: new Date().toISOString(),
-        url: 'https://deals.termsforsale.com/blog/posts/' + slug + '.html'
+        url: 'https://termsforsale.com/blog/posts/' + slug + '.html'
       });
       await githubApi('PUT', '/repos/' + owner + '/' + repo + '/contents/' + indexPath, {
         message: 'Auto blog index: add ' + slug,
