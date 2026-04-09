@@ -19,7 +19,7 @@ function redirect(url) {
 
 async function logClickToNotion({ dealCode, contactId, email, channel, userAgent, ip }) {
   const dbId = process.env.NOTION_LINK_CLICKS_DB_ID;
-  const apiKey = process.env.NOTION_API_KEY;
+  const apiKey = process.env.NOTION_TOKEN || process.env.NOTION_API_KEY;
   if (!dbId || !apiKey) {
     console.warn('Notion env not set — click not logged');
     return;
