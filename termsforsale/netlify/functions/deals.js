@@ -233,6 +233,7 @@ exports.handler = async function(event) {
       var rent = prop(page, 'LTR Market Rent');
       return {
         id: page.id,
+        dealCode: prop(page, 'Deal ID'),
         dealType: prop(page, 'Deal Type'),
         dealStatus: prop(page, 'Deal Status'),
         streetAddress: prop(page, 'Street Address'),

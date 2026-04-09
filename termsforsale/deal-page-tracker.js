@@ -3,23 +3,27 @@
  *
  * HOW TO INSTALL
  * --------------
- * 1. Add a <meta> tag in the page <head> declaring the deal id:
+ * 1. Include this script in the page <head> (defer recommended):
+ *      <script src="/deal-page-tracker.js" defer></script>
+ *
+ * 2. Ensure a meta tag with the deal id is present somewhere in the <head>:
  *      <meta name="deal-id" content="PHX-001">
  *
- * 2. Include this script anywhere in the page (defer recommended):
- *      <script src="/deal-page-tracker.js" defer></script>
+ *    The meta tag can be present at page load (static pages) OR injected
+ *    dynamically later (e.g. after a fetch() loads the deal). This script
+ *    uses a MutationObserver to handle both cases transparently.
  *
  * WHAT IT DOES
  * ------------
- * On DOMContentLoaded it reads:
+ * Reads:
  *   - ?cid= from the URL (the buyer's GHL contact id, passed in by email links)
- *   - the "deal-id" meta tag from the page head
+ *   - <meta name="deal-id" content="..."> from the page head
  *
- * If BOTH are present, it fires a single POST to /api/deal-view-tracker with
+ * If BOTH are present, fires a single POST to /api/deal-view-tracker with
  *   { contactId, dealId }
  *
  * If no ?cid= is present, the visitor is anonymous and we can't tag them —
- * the script silently does nothing.
+ * the script silently does nothing and never observes.
  *
  * Fires exactly once per page load. No retries. All errors are swallowed and
  * logged to console only — a tracking failure must never break the page.
@@ -29,25 +33,26 @@
 (function () {
   'use strict';
 
-  function track() {
+  var fired = false;
+
+  function getDealIdFromMeta() {
+    var m = document.querySelector('meta[name="deal-id"]');
+    return m ? (m.getAttribute('content') || '').trim() : '';
+  }
+
+  function getContactId() {
     try {
-      // 1. Read ?cid= from the URL
       var params = new URLSearchParams(window.location.search);
-      var contactId = (params.get('cid') || '').trim();
-      if (!contactId) {
-        // Anonymous visitor — nothing to tag, exit silently.
-        return;
-      }
+      return (params.get('cid') || '').trim();
+    } catch (e) {
+      return '';
+    }
+  }
 
-      // 2. Read deal id from <meta name="deal-id" content="PHX-001">
-      var metaEl = document.querySelector('meta[name="deal-id"]');
-      var dealId = metaEl ? (metaEl.getAttribute('content') || '').trim() : '';
-      if (!dealId) {
-        console.warn('[deal-page-tracker] no <meta name="deal-id"> found — skipping');
-        return;
-      }
-
-      // 3. Fire POST — fire-and-forget, silent fail
+  function send(contactId, dealId) {
+    if (fired) return;
+    fired = true;
+    try {
       fetch('/api/deal-view-tracker', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,15 +70,47 @@
           console.warn('[deal-page-tracker] fetch failed:', err && err.message);
         });
     } catch (err) {
-      // Defensive catch — tracking must never break the page.
       console.warn('[deal-page-tracker] error:', err && err.message);
     }
   }
 
+  function attempt(contactId) {
+    if (fired) return true;
+    var dealId = getDealIdFromMeta();
+    if (!dealId) return false;
+    send(contactId, dealId);
+    return true;
+  }
+
+  function start() {
+    try {
+      var contactId = getContactId();
+      if (!contactId) {
+        // Anonymous visitor — nothing to tag, nothing to observe.
+        return;
+      }
+
+      // Try immediately — works for static pages where the meta tag exists at load
+      if (attempt(contactId)) return;
+
+      // Dynamic page (deal data loads async, meta tag injected after DOM ready).
+      // Watch the document for the meta tag to appear. Give up after 10 seconds
+      // to avoid observing forever on pages that never populate it.
+      var observer = new MutationObserver(function () {
+        if (attempt(contactId)) observer.disconnect();
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+      setTimeout(function () {
+        if (!fired) observer.disconnect();
+      }, 10000);
+    } catch (err) {
+      console.warn('[deal-page-tracker] start error:', err && err.message);
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', track);
+    document.addEventListener('DOMContentLoaded', start);
   } else {
-    // Document already parsed (e.g. defer/async loaded after DOM ready)
-    track();
+    start();
   }
 })();
