@@ -114,9 +114,69 @@
 }
 .errlist strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
 
+/* Filter bar */
+.filter-bar{
+  display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.filter-group{display:flex;flex-direction:column;gap:6px}
+.filter-group-label{
+  font-size:10px;font-weight:800;color:var(--text-light);
+  text-transform:uppercase;letter-spacing:.6px;
+}
+.preset-pills{display:flex;gap:6px;flex-wrap:wrap}
+.preset-pill{
+  background:#fff;
+  border:1.5px solid var(--border);
+  color:var(--text-mid);
+  padding:8px 14px;
+  border-radius:999px;
+  font-family:inherit;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .15s;
+}
+.preset-pill:hover{border-color:var(--blue);color:var(--blue)}
+.preset-pill.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.filter-input{
+  padding:8px 12px;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-family:inherit;
+  font-size:13px;
+  color:var(--text);
+  background:#fff;
+  outline:none;
+  transition:border .15s;
+  min-width:140px;
+}
+.filter-input:focus{border-color:var(--blue)}
+.filter-input.sm{min-width:110px}
+.filter-active-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-top:-8px;margin-bottom:20px;
+  font-size:12px;color:var(--text-light);
+}
+.filter-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px;background:var(--blue-light);color:var(--blue-dark);
+  border-radius:999px;font-weight:700;font-size:11px;
+}
+.filter-badge .x{cursor:pointer;opacity:.6}
+.filter-badge .x:hover{opacity:1}
+.clear-filters{
+  background:transparent;border:none;
+  color:var(--red);font-weight:700;cursor:pointer;
+  font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+}
+.clear-filters:hover{text-decoration:underline}
+
 @media(max-width:900px){
   .funnel{grid-template-columns:1fr 1fr}
   .chart-row{grid-template-columns:50px 1fr 70px 80px;gap:8px}
+  .filter-bar{gap:10px}
+  .filter-input{min-width:120px}
 }
 @media(max-width:560px){
   .funnel{grid-template-columns:1fr}
@@ -157,15 +217,57 @@
       <!-- Non-fatal errors (if any) -->
       <div id="errors" class="errlist" style="display:none"></div>
 
+      <!-- Filter bar -->
+      <div class="panel">
+        <div class="panel-body">
+          <div class="filter-bar">
+            <div class="filter-group" style="flex:1;min-width:320px">
+              <div class="filter-group-label">Date Range</div>
+              <div class="preset-pills" id="preset-pills">
+                <button type="button" class="preset-pill" data-preset="all">All Time</button>
+                <button type="button" class="preset-pill" data-preset="7d">7d</button>
+                <button type="button" class="preset-pill" data-preset="30d">30d</button>
+                <button type="button" class="preset-pill" data-preset="90d">90d</button>
+                <button type="button" class="preset-pill" data-preset="mtd">MTD</button>
+                <button type="button" class="preset-pill" data-preset="ytd">YTD</button>
+              </div>
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">From</div>
+              <input type="date" id="filter-start" class="filter-input sm">
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">To</div>
+              <input type="date" id="filter-end" class="filter-input sm">
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">Deal Type</div>
+              <select id="filter-type" class="filter-input">
+                <option value="">All types</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <div class="filter-group-label">State</div>
+              <select id="filter-state" class="filter-input sm">
+                <option value="">All states</option>
+              </select>
+            </div>
+            <button class="btn" onclick="applyFilters()" style="margin-bottom:1px">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-active-row" id="filter-active-row" style="display:none"></div>
+
       <!-- Revenue cards -->
       <div class="stat-grid">
         <div class="stat green">
           <div class="stat-label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Revenue YTD
+            <span id="stat-range-label">Revenue — All Time</span>
           </div>
-          <div class="stat-value" id="stat-rev-ytd">—</div>
-          <div class="stat-sub"><span id="stat-rev-ytd-deals">—</span> funded deals</div>
+          <div class="stat-value" id="stat-rev-range">—</div>
+          <div class="stat-sub"><span id="stat-rev-range-deals">—</span> funded deals</div>
         </div>
         <div class="stat">
           <div class="stat-label">
@@ -181,7 +283,7 @@
             Avg Assignment Fee
           </div>
           <div class="stat-value" id="stat-avg-deal">—</div>
-          <div class="stat-sub">Across all funded deals</div>
+          <div class="stat-sub" id="stat-avg-deal-sub">Across all funded deals</div>
         </div>
         <div class="stat purple">
           <div class="stat-label">
@@ -307,6 +409,10 @@
 <script>
 AdminShell.renderShell('analytics');
 
+// ─── Filter state ──────────────────────────────────────────────
+// Mirrors the query params accepted by /api/admin-analytics.
+var FILTERS = { preset: 'all', start: '', end: '', dealType: '', state: '' };
+
 function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
 
 function fmtPct(n) {
@@ -314,10 +420,73 @@ function fmtPct(n) {
   return n.toFixed(1) + '%';
 }
 
+function buildQuery() {
+  var p = new URLSearchParams();
+  if (FILTERS.preset && FILTERS.preset !== 'all') p.set('preset', FILTERS.preset);
+  if (FILTERS.start) p.set('start', FILTERS.start);
+  if (FILTERS.end) p.set('end', FILTERS.end);
+  if (FILTERS.dealType) p.set('dealType', FILTERS.dealType);
+  if (FILTERS.state) p.set('state', FILTERS.state);
+  var s = p.toString();
+  return s ? '?' + s : '';
+}
+
+function setActivePreset(preset) {
+  var pills = document.querySelectorAll('#preset-pills .preset-pill');
+  pills.forEach(function (p) {
+    p.classList.toggle('active', p.getAttribute('data-preset') === preset);
+  });
+}
+
+// Wire preset pill clicks: clicking a preset clears custom date inputs
+// and triggers an immediate reload.
+document.querySelectorAll('#preset-pills .preset-pill').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var preset = this.getAttribute('data-preset');
+    FILTERS.preset = preset;
+    FILTERS.start = '';
+    FILTERS.end = '';
+    document.getElementById('filter-start').value = '';
+    document.getElementById('filter-end').value = '';
+    setActivePreset(preset);
+    loadAll();
+  });
+});
+
+function applyFilters() {
+  var start = document.getElementById('filter-start').value;
+  var end = document.getElementById('filter-end').value;
+  var type = document.getElementById('filter-type').value;
+  var state = document.getElementById('filter-state').value;
+
+  // Explicit dates override any active preset
+  if (start || end) {
+    FILTERS.preset = 'custom';
+    setActivePreset('custom');
+  }
+  FILTERS.start = start;
+  FILTERS.end = end;
+  FILTERS.dealType = type;
+  FILTERS.state = state;
+  loadAll();
+}
+window.applyFilters = applyFilters;
+
+function clearFilters() {
+  FILTERS = { preset: 'all', start: '', end: '', dealType: '', state: '' };
+  document.getElementById('filter-start').value = '';
+  document.getElementById('filter-end').value = '';
+  document.getElementById('filter-type').value = '';
+  document.getElementById('filter-state').value = '';
+  setActivePreset('all');
+  loadAll();
+}
+window.clearFilters = clearFilters;
+
 async function loadAll() {
   AdminShell.toast('Loading analytics...');
   try {
-    var res = await AdminShell.fetch('/api/admin-analytics');
+    var res = await AdminShell.fetch('/api/admin-analytics' + buildQuery());
     if (!res.ok) {
       document.getElementById('pipeline-strip').innerHTML = '<div class="err">Failed to load analytics (HTTP ' + res.status + ')</div>';
       return;
@@ -339,7 +508,20 @@ async function loadAll() {
       errs.style.display = 'none';
     }
 
-    renderRevenue(data.revenue || {});
+    // Sync filter state from the server's canonical response
+    if (data.filters) {
+      FILTERS.preset = data.filters.preset || 'all';
+      FILTERS.start = data.filters.start || '';
+      FILTERS.end = data.filters.end || '';
+      FILTERS.dealType = data.filters.dealType || '';
+      FILTERS.state = data.filters.state || '';
+
+      populateDropdowns(data.filters.availableDealTypes || [], data.filters.availableStates || []);
+      setActivePreset(FILTERS.preset);
+      renderActiveFilters(data.filters);
+    }
+
+    renderRevenue(data.revenue || {}, data.filters || {});
     renderPipeline(data.pipeline || {});
     renderFunnel(data.engagement || {});
     renderChart(data.revenue && data.revenue.monthly || []);
@@ -352,12 +534,65 @@ async function loadAll() {
 }
 window.loadAll = loadAll;
 
-function renderRevenue(rev) {
-  setText('stat-rev-ytd', rev.ytd && rev.ytd.revenue ? AdminShell.fmtMoney(rev.ytd.revenue) : '$0');
-  setText('stat-rev-ytd-deals', AdminShell.fmtNum((rev.ytd && rev.ytd.deals) || 0));
+function populateDropdowns(types, states) {
+  var typeSel = document.getElementById('filter-type');
+  var stateSel = document.getElementById('filter-state');
+  // Only repopulate if the options are different — avoid wiping user selection
+  if (typeSel.children.length <= 1) {
+    types.forEach(function (t) {
+      var opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      typeSel.appendChild(opt);
+    });
+  }
+  if (stateSel.children.length <= 1) {
+    states.forEach(function (s) {
+      var opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      stateSel.appendChild(opt);
+    });
+  }
+  typeSel.value = FILTERS.dealType || '';
+  stateSel.value = FILTERS.state || '';
+  document.getElementById('filter-start').value = FILTERS.start || '';
+  document.getElementById('filter-end').value = FILTERS.end || '';
+}
+
+function renderActiveFilters(f) {
+  var host = document.getElementById('filter-active-row');
+  var badges = [];
+  if (f.preset && f.preset !== 'all') {
+    badges.push('<span class="filter-badge">' + AdminShell.esc(f.label || f.preset) + '</span>');
+  }
+  if (f.dealType) {
+    badges.push('<span class="filter-badge">Type: ' + AdminShell.esc(f.dealType) + '</span>');
+  }
+  if (f.state) {
+    badges.push('<span class="filter-badge">State: ' + AdminShell.esc(f.state) + '</span>');
+  }
+  if (!badges.length) {
+    host.style.display = 'none';
+    host.innerHTML = '';
+    return;
+  }
+  host.style.display = 'flex';
+  host.innerHTML = '<span>Filters:</span>' + badges.join('') + '<button class="clear-filters" onclick="clearFilters()">Clear all</button>';
+}
+
+function renderRevenue(rev, filters) {
+  var range = rev.range || { deals: 0, revenue: 0, label: 'All Time' };
+  setText('stat-range-label', 'Revenue — ' + (range.label || 'All Time'));
+  setText('stat-rev-range', range.revenue ? AdminShell.fmtMoney(range.revenue) : '$0');
+  setText('stat-rev-range-deals', AdminShell.fmtNum(range.deals || 0));
+
   setText('stat-rev-mtd', rev.mtd && rev.mtd.revenue ? AdminShell.fmtMoney(rev.mtd.revenue) : '$0');
   setText('stat-rev-mtd-deals', AdminShell.fmtNum((rev.mtd && rev.mtd.deals) || 0));
   setText('stat-avg-deal', rev.avgDealSize ? AdminShell.fmtMoney(rev.avgDealSize) : '$0');
+
+  // When a date filter is active, the avg reflects the range; otherwise all-time.
+  var hasDateFilter = (filters && filters.preset && filters.preset !== 'all');
+  setText('stat-avg-deal-sub', hasDateFilter ? 'Within selected range' : 'Across all funded deals');
+
   setText('stat-funded', AdminShell.fmtNum((rev.allTime && rev.allTime.deals) || 0));
 }
 

@@ -159,6 +159,90 @@ function lowercaseCode(code) {
   return String(code || '').toLowerCase();
 }
 
+// ─── Date range filter helpers ────────────────────────────────
+//
+// Accepts either an explicit start/end pair OR a named preset
+// ("7d" | "30d" | "90d" | "mtd" | "ytd" | "all"). Returns a
+// { start, end, preset, label } object where start/end are Date
+// instances or null (null = open-ended / all time).
+function resolveDateRange(preset, startStr, endStr) {
+  var now = new Date();
+  var start = null;
+  var end = null;
+  var label = 'All Time';
+  var presetOut = 'all';
+
+  // Explicit dates take precedence over preset.
+  if (startStr || endStr) {
+    if (startStr) {
+      var s = new Date(startStr);
+      if (!isNaN(s)) start = new Date(s.getFullYear(), s.getMonth(), s.getDate(), 0, 0, 0);
+    }
+    if (endStr) {
+      var e = new Date(endStr);
+      if (!isNaN(e)) end = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59);
+    }
+    presetOut = 'custom';
+    label = formatRangeLabel(start, end);
+    return { start: start, end: end, preset: presetOut, label: label };
+  }
+
+  var p = (preset || '').toLowerCase();
+  if (p === '7d') {
+    start = new Date(now); start.setDate(now.getDate() - 7); start.setHours(0, 0, 0, 0);
+    end = now;
+    label = 'Last 7 Days';
+    presetOut = '7d';
+  } else if (p === '30d') {
+    start = new Date(now); start.setDate(now.getDate() - 30); start.setHours(0, 0, 0, 0);
+    end = now;
+    label = 'Last 30 Days';
+    presetOut = '30d';
+  } else if (p === '90d') {
+    start = new Date(now); start.setDate(now.getDate() - 90); start.setHours(0, 0, 0, 0);
+    end = now;
+    label = 'Last 90 Days';
+    presetOut = '90d';
+  } else if (p === 'mtd') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    end = now;
+    label = 'Month to Date';
+    presetOut = 'mtd';
+  } else if (p === 'ytd') {
+    start = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+    end = now;
+    label = 'Year to Date';
+    presetOut = 'ytd';
+  } else {
+    // Default: all time
+    label = 'All Time';
+    presetOut = 'all';
+  }
+  return { start: start, end: end, preset: presetOut, label: label };
+}
+
+function formatRangeLabel(start, end) {
+  var opts = { month: 'short', day: 'numeric', year: 'numeric' };
+  if (start && end) {
+    return start.toLocaleDateString('en-US', opts) + ' – ' + end.toLocaleDateString('en-US', opts);
+  }
+  if (start) return 'Since ' + start.toLocaleDateString('en-US', opts);
+  if (end) return 'Through ' + end.toLocaleDateString('en-US', opts);
+  return 'All Time';
+}
+
+// Is a YYYY-MM-DD date string inside the selected range?
+// When the range is open-ended (both null), everything passes.
+function isInRange(dateStr, range) {
+  if (!range.start && !range.end) return true;
+  if (!dateStr) return false;
+  var d = new Date(dateStr);
+  if (isNaN(d)) return false;
+  if (range.start && d < range.start) return false;
+  if (range.end && d > range.end) return false;
+  return true;
+}
+
 // ─── GHL ──────────────────────────────────────────────────────
 /**
  * Count the number of GHL contacts matching a single tag filter.
@@ -215,14 +299,34 @@ exports.handler = async function (event) {
   var ghlKey = process.env.GHL_API_KEY;
   var locationId = process.env.GHL_LOCATION_ID_TERMS || process.env.GHL_LOCATION_ID;
 
+  // ─ Filter params ─
+  var qs = event.queryStringParameters || {};
+  var dateRange = resolveDateRange(qs.preset, qs.start, qs.end);
+  var dealTypeFilter = String(qs.dealType || '').trim().toLowerCase();
+  var stateFilter = String(qs.state || '').trim().toUpperCase();
+  var hasDateFilter = !!(dateRange.start || dateRange.end);
+  var hasAttrFilter = !!(dealTypeFilter || stateFilter);
+
   var out = {
     generatedAt: new Date().toISOString(),
+    filters: {
+      preset: dateRange.preset,
+      start: dateRange.start ? dateRange.start.toISOString().slice(0, 10) : null,
+      end: dateRange.end ? dateRange.end.toISOString().slice(0, 10) : null,
+      label: dateRange.label,
+      dealType: qs.dealType || '',
+      state: qs.state || '',
+      // Distinct values the frontend can use to populate dropdowns
+      availableDealTypes: [],
+      availableStates: []
+    },
     pipeline: {
       active: 0, assigned: 0, closed: 0, funded: 0, dead: 0,
       byStatus: {},
       byType: {}
     },
     revenue: {
+      range:   { deals: 0, revenue: 0, label: dateRange.label },
       ytd:     { deals: 0, revenue: 0 },
       mtd:     { deals: 0, revenue: 0 },
       allTime: { deals: 0, revenue: 0 },
@@ -264,18 +368,31 @@ exports.handler = async function (event) {
   var thisYear = now.getFullYear();
   var thisMonthKey = thisYear + '-' + String(now.getMonth() + 1).padStart(2, '0');
   var monthlyMap = {};   // "YYYY-MM" → { deals, revenue }
-  var allAmounts = [];   // for avg calc
+  var rangeAmounts = []; // for avg calc — respects date + attr filters
   var activeDeals = [];
+  var dealTypesSet = {};
+  var statesSet = {};
 
   allDeals.forEach(function (page) {
     var status = prop(page, 'Deal Status') || 'Unknown';
     var dealType = prop(page, 'Deal Type') || 'Unknown';
+    var dealState = prop(page, 'State') || '';
     var dateFunded = prop(page, 'Date Funded');
     var dateAssigned = prop(page, 'Date Assigned');
     var amountFundedRaw = prop(page, 'Amount Funded');
     var amountFunded = (amountFundedRaw !== '' && !isNaN(+amountFundedRaw)) ? +amountFundedRaw : 0;
 
-    // Status breakdown (raw)
+    // Distinct-value dropdown options — compiled from the UNFILTERED set
+    // so the frontend sees every possible option regardless of active filters.
+    if (dealType && dealType !== 'Unknown') dealTypesSet[dealType] = true;
+    if (dealState) statesSet[dealState] = true;
+
+    // Attribute filter (deal type + state) — applies to every bucket.
+    // A deal that fails this filter is invisible to the whole dashboard.
+    if (dealTypeFilter && dealType.toLowerCase() !== dealTypeFilter) return;
+    if (stateFilter && dealState.toUpperCase() !== stateFilter) return;
+
+    // Status breakdown (raw — filtered)
     out.pipeline.byStatus[status] = (out.pipeline.byStatus[status] || 0) + 1;
 
     // High-level buckets.
@@ -283,27 +400,42 @@ exports.handler = async function (event) {
     //         > Assigned (has Date Assigned, no Date Funded)
     //         > Dead (Lost/Canceled/Dead/Abandoned)
     //         > Closed (status=Closed but no funding data)
+    //
+    // For date-sensitive buckets (funded / closed / assigned) we honor the
+    // selected date range. Active + dead are "state of the world" counts
+    // that represent current inventory — they only honor type/state filters.
     var statusLower = status.toLowerCase();
     var isDead = /lost|cancel|dead|abandon|released|not accepted/.test(statusLower);
+    var fundedInRange = dateFunded && isInRange(dateFunded, dateRange);
+    var assignedInRange = dateAssigned && isInRange(dateAssigned, dateRange);
 
     if (dateFunded) {
-      out.pipeline.funded++;
-      out.pipeline.closed++;  // funded deals are also closed
+      // All-time totals (never date-filtered — useful context).
       out.revenue.allTime.deals++;
       out.revenue.allTime.revenue += amountFunded;
-      if (amountFunded > 0) allAmounts.push(amountFunded);
 
-      // YTD
+      // YTD (fixed-window, independent of the preset filter).
       if (dateFunded.slice(0, 4) === String(thisYear)) {
         out.revenue.ytd.deals++;
         out.revenue.ytd.revenue += amountFunded;
       }
-      // MTD
+      // MTD (fixed-window).
       if (dateFunded.slice(0, 7) === thisMonthKey) {
         out.revenue.mtd.deals++;
         out.revenue.mtd.revenue += amountFunded;
       }
-      // Monthly trend
+
+      // Pipeline buckets honor the active date range.
+      if (fundedInRange) {
+        out.pipeline.funded++;
+        out.pipeline.closed++;  // funded deals are also closed
+        out.revenue.range.deals++;
+        out.revenue.range.revenue += amountFunded;
+        if (amountFunded > 0) rangeAmounts.push(amountFunded);
+      }
+
+      // Monthly trend always reflects the last 12 months — not the filter.
+      // (Shown as contextual trend line rather than a filtered metric.)
       var monthKey = dateFunded.slice(0, 7);
       if (!monthlyMap[monthKey]) monthlyMap[monthKey] = { deals: 0, revenue: 0 };
       monthlyMap[monthKey].deals++;
@@ -313,19 +445,30 @@ exports.handler = async function (event) {
       out.pipeline.byType[dealType] = (out.pipeline.byType[dealType] || 0) + 1;
       activeDeals.push(page);
     } else if (dateAssigned || /contract|assigned|escrow|under contract/.test(statusLower)) {
-      out.pipeline.assigned++;
+      // Only count if the assignment date (when available) is in range.
+      // If no dateAssigned but status suggests it, count only when range is open.
+      if (dateAssigned ? assignedInRange : !hasDateFilter) {
+        out.pipeline.assigned++;
+      }
     } else if (isDead) {
       out.pipeline.dead++;
     } else if (status === 'Closed') {
-      // Closed but no Date Funded — historical data / missing field
-      out.pipeline.closed++;
+      // Closed but no Date Funded — only count when range is open.
+      if (!hasDateFilter) out.pipeline.closed++;
     }
   });
 
-  // Finalize revenue
-  if (allAmounts.length) {
-    var sum = allAmounts.reduce(function (a, b) { return a + b; }, 0);
-    out.revenue.avgDealSize = Math.round(sum / allAmounts.length);
+  // Finalize dropdown options (sorted, case-stable)
+  out.filters.availableDealTypes = Object.keys(dealTypesSet).sort();
+  out.filters.availableStates = Object.keys(statesSet).sort();
+
+  // Finalize revenue — avgDealSize reflects the active filter when set,
+  // otherwise falls back to all-time so the default view keeps working.
+  if (rangeAmounts.length) {
+    var sum = rangeAmounts.reduce(function (a, b) { return a + b; }, 0);
+    out.revenue.avgDealSize = Math.round(sum / rangeAmounts.length);
+  } else if (!hasDateFilter && out.revenue.allTime.deals > 0) {
+    out.revenue.avgDealSize = Math.round(out.revenue.allTime.revenue / out.revenue.allTime.deals);
   }
 
   // 12-month trend (fill in zero months so the chart is continuous)
