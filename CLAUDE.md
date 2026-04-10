@@ -449,6 +449,129 @@ workflows.
 
 ---
 
+## Completed — April 10 2026 Sales Tracking Dashboard
+
+Branch: `claude/sales-tracking-dashboard-pkp0N`.
+
+New admin sub-page at `/admin/analytics.html` that pulls deal pipeline
+data from Notion and engagement signals from GoHighLevel tag counters
+into a single sales-funnel view. Tracks: sent, viewed/clicked,
+interested, pipeline counts by status, revenue YTD/MTD/all-time, and
+per-deal engagement for the 10 most recently edited active deals.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/admin-analytics.js` (new)** — GET
+  endpoint gated by `X-Admin-Password`. Single-shot aggregator:
+  1. Paginates the Notion deals DB (unfiltered, up to 2000 rows),
+     buckets by status into active / assigned / closed / funded / dead,
+     builds `byStatus` + active-only `byType` breakdowns.
+  2. Walks `Date Funded` + `Amount Funded` for YTD, MTD, all-time
+     revenue, avg assignment fee, and a 12-month trailing trend
+     (`revenue.monthly[]` with zero-fill for quiet months).
+  3. Fires 5 cheap `ghlTagCount()` queries in parallel for global
+     engagement: `new-deal-alert` (sent), `Active Viewer` (viewed),
+     `buyer-interested` (converted), `buyer-pass`, `alerts-paused`.
+     Uses GHL `/contacts/search` page=1 limit=1 to read `meta.total`
+     — one round trip per tag, no full scans.
+  4. For each of the top 10 active deals (sorted by `last_edited_time`
+     desc), fires 3 parallel `ghlTagCount()` queries:
+     `sent:[slug]` (notify-buyers slug format),
+     `viewed-[dealCode]` (deal-view-tracker format, lowercased),
+     `alert-[dealCode]` (buyer-alert format, lowercased).
+     Returns sent/viewed/interested counts + viewRate + conversionRate.
+  5. All engagement lookups run in a single `Promise.all` so the
+     whole function stays well under Netlify's 10s timeout even when
+     we fire ~35 parallel GHL calls.
+  - `slugifyAddress()` is byte-identical to `notify-buyers.js` so the
+    `sent:[slug]` tag we query matches exactly what was written.
+  - Never throws — downstream errors get pushed to `out.errors[]` and
+    the partial result ships anyway.
+
+- **`termsforsale/admin/analytics.html` (new)** — admin sub-page with
+  4 revenue stat cards (YTD, MTD, avg deal size, deals funded), a
+  5-cell pipeline status strip (active / under contract / closed /
+  funded / dead), a 4-stage engagement funnel (sent → viewed →
+  interested → passed+paused with view+conversion rates), a 12-month
+  revenue bar chart (CSS-only, no chart library), a deal-type mix
+  progress-bar panel, and a per-deal engagement table with sent /
+  viewed (rate) / interested (rate) columns plus "View buyers"
+  deep-link straight into `/admin/deal-buyers.html?deal=[slug]`.
+  Rate pills get `good` / `ok` / `low` styling based on thresholds
+  (≥40% good, ≥15% ok, else low). Uses the shared admin shell
+  (`AdminShell.renderShell('analytics')`) and inherits sidebar, auth
+  gate, and toast from `admin.js`.
+
+- **`termsforsale/admin/admin.js`** — added `analytics` nav item to
+  the "Overview" group, right below Dashboard. Uses existing
+  `activity` icon (lightning bolt / pulse).
+
+- **`termsforsale/admin/index.html`** — added "Sales Tracking" as the
+  first quick-action card on the dashboard home so Brooke lands on it
+  by default when she opens `/admin/`.
+
+- **`netlify.toml`** — added `/api/admin-analytics` →
+  `/.netlify/functions/admin-analytics` redirect (alongside the
+  existing admin-stats / admin-buyers routes).
+
+### Data sources + tag shape reference
+
+The dashboard joins three tag families written by existing functions
+elsewhere in the codebase — it reads only, no writes:
+
+| Signal | Tag written by | Tag pattern | Queried here |
+|---|---|---|---|
+| Sent (per deal) | `notify-buyers.js` `triggerBuyerAlert()` | `sent:[city-state-code]` lowercase slug | `ghlTagCount(sent:${slug})` per deal |
+| Sent (global) | `notify-buyers.js` | `new-deal-alert` | single global count |
+| Viewed (per deal) | `deal-view-tracker.js` POST | `viewed-[PHX-001]` → lowercased by GHL | `ghlTagCount(viewed-${codeLower})` per deal |
+| Viewed (global) | `track-view.js` GET/POST | `Active Viewer` | single global count |
+| Interested (per deal) | `buyer-alert.js` (INTERESTED reply) | `alert-[PHX-001]` → lowercased | `ghlTagCount(alert-${codeLower})` per deal |
+| Interested (global) | `buyer-response-tag.js` | `buyer-interested` | single global count |
+| Passed (global) | `buyer-response-tag.js` | `buyer-pass` | single global count |
+| Paused (global) | `buyer-response-tag.js` (reply C) | `alerts-paused` | single global count |
+
+Deal counts + revenue come from Notion: `Deal Status`, `Deal Type`,
+`Date Assigned`, `Date Funded`, `Amount Funded`, `Started Marketing`.
+
+### Env vars used (no new vars required)
+
+- `ADMIN_PASSWORD` — gates the endpoint
+- `NOTION_TOKEN`, `NOTION_DB_ID` (falls back to the hardcoded
+  `a3c0a38fd9294d758dedabab2548ff29`)
+- `GHL_API_KEY`, `GHL_LOCATION_ID_TERMS` (falls back to
+  `GHL_LOCATION_ID`)
+
+### Smoke tests (all pass)
+
+- `admin-analytics.js` loads cleanly as a Node module
+- OPTIONS preflight returns 200 with CORS headers
+- Missing password returns 401 with `{error: "ADMIN_PASSWORD not configured"}`
+- HTML parses balanced (`div` tags 106/106, `script` tags 2/2)
+- `slugifyAddress()` byte-match confirmed against `notify-buyers.js`
+- All 4 admin functions (admin-stats, admin-buyers, admin-analytics,
+  deal-buyer-list) load together without conflicts
+
+### Open caveats
+
+- The "viewed-[dealCode]" per-deal lookup only surfaces engagement for
+  deals that have a `Deal ID` field set in Notion. Legacy deals
+  without a Deal ID will show 0 viewed / 0 interested even if the
+  older `viewed:[dealIdShort]` tag exists on their contacts. Not a
+  new limitation — the auto-Deal-ID generator (PR `f786ed6`) backfills
+  new submissions; historical deals need a one-time Deal ID assign.
+- `new-deal-alert` and `Active Viewer` are cumulative lifetime tags,
+  not per-deal. The global funnel numbers are an aggregate across all
+  blasts since tag writing began. For per-deal precision, use the
+  per-deal engagement table (which queries `sent:[slug]` +
+  `viewed-[code]` + `alert-[code]` directly).
+- Revenue math leans on `Date Funded` + `Amount Funded` being
+  populated correctly in Notion. Deals with status "Closed" but no
+  Date Funded will bump the closed count but not the funded count or
+  revenue. Accepts partial data — keeps running even if Notion is
+  missing fields.
+
+---
+
 ## Completed — April 10 2026 Buyer Lookup Fix (Unsent Deals)
 
 Admin deal-buyers lookup was returning 0 results for Philadelphia deals

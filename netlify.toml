@@ -198,6 +198,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/admin-analytics"
+  to = "/.netlify/functions/admin-analytics"
+  status = 200
+
+[[redirects]]
   from = "/api/tag-blast-sent"
   to = "/.netlify/functions/tag-blast-sent"
   status = 200
