@@ -20,6 +20,10 @@ try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; 
 var autoBlog;
 try { autoBlog = require('./auto-blog'); } catch(e) { autoBlog = null; }
 
+// ─── AI fit check (optional, gated by AI_MATCH_LIVE=true) ─
+var aiMatch;
+try { aiMatch = require('./_ai-match'); } catch(e) { aiMatch = null; }
+
 // ─── HTTP HELPERS ────────────────────────────────────────────
 
 function httpRequest(url, options, body) {
@@ -192,6 +196,11 @@ function parseDeal(page) {
     baths: prop(page, 'Baths'),
     sqft: prop(page, 'Living Area') || prop(page, 'Sqft'),
     yearBuilt: prop(page, 'Year Built') || prop(page, 'Year Build'),
+    // HOA raw string from Notion — used by the HOA hard filter. Was
+    // silently missing before, so parseHoaDeal() always returned false
+    // and the HOA filter never ran. See buyerRejectsHoa() for how the
+    // buyer side is evaluated.
+    hoa: prop(page, 'HOA'),
     highlight1: prop(page, 'Highlight 1'),
     highlight2: prop(page, 'Highlight 2'),
     highlight3: prop(page, 'Highlight 3'),
@@ -331,19 +340,40 @@ function parseHoaDeal(dealHoa) {
   return true;
 }
 
-function buyerRejectsHoa(contact) {
+// Returns { reject: bool, source: string } — source explains where the
+// rejection came from so it can be written to the buyer's GHL note.
+// Checks in priority order:
+//   1. contact.hoa structured checkbox ("no"/"false"/"0")
+//   2. contact.hoa_tolerance structured text ("no" as a word)
+//   3. contact.buy_box large-text free form ("no HOAs please")
+//   4. notes (optional — caller passes in pre-fetched notes)
+// Wide text patterns live in _ai-match.textRejectsHoa() so both the
+// deterministic layer and the AI layer agree on phrasing.
+function buyerRejectsHoa(contact, extraText) {
   var hoaFlag = getCFByKey(contact, 'contact.hoa');
   var hoaTol = getCFByKey(contact, 'contact.hoa_tolerance');
+  var buyBox = getCFByKey(contact, 'contact.buy_box');
   var flagStr = String(hoaFlag == null ? '' : hoaFlag).toLowerCase().trim();
   var tolStr = String(hoaTol == null ? '' : hoaTol).toLowerCase().trim();
-  // checkbox "no" / "false" / "0"
-  if (flagStr === 'no' || flagStr === 'false' || flagStr === '0') return true;
-  // tolerance field containing "no" (e.g. "No HOA", "No thanks")
-  // — reject only if the string starts with / contains "no" as a standalone word
-  if (tolStr) {
-    if (tolStr === 'no' || /\bno\b/.test(tolStr)) return true;
+
+  // 1. Checkbox: explicit "no"
+  if (flagStr === 'no' || flagStr === 'false' || flagStr === '0') {
+    return { reject: true, source: 'HOA flag = no' };
   }
-  return false;
+  // 2. Tolerance field: "no", "No HOA", etc.
+  if (tolStr && (tolStr === 'no' || /\bno\b/.test(tolStr))) {
+    return { reject: true, source: 'HOA tolerance: "' + tolStr.slice(0, 40) + '"' };
+  }
+  // 3. Buy box free text — wider regex catches "no HOAs", "avoid HOA",
+  //    "won't do HOA", "hoa = no", etc.
+  if (buyBox && aiMatch && aiMatch.textRejectsHoa(buyBox)) {
+    return { reject: true, source: 'Buy box mentions no-HOA' };
+  }
+  // 4. Extra text (typically contact notes) — same regex bank
+  if (extraText && aiMatch && aiMatch.textRejectsHoa(extraText)) {
+    return { reject: true, source: 'Note mentions no-HOA' };
+  }
+  return { reject: false };
 }
 
 function matchesBuyBox(contact, deal) {
@@ -401,9 +431,13 @@ function matchesBuyBox(contact, deal) {
   }
 
   // ═ HARD FILTER 4: HOA rule ═
+  // Deal.hoa is now populated from Notion (was silently missing before).
+  // buyerRejectsHoa() checks structured hoa/hoa_tolerance + free-text buy_box
+  // and returns a source string so we can log why the buyer was dropped.
   if (parseHoaDeal(deal.hoa)) {
-    if (buyerRejectsHoa(contact)) {
-      return { match: false, fails: ['HOA: buyer will not accept HOA'] };
+    var hoaCheck = buyerRejectsHoa(contact);
+    if (hoaCheck.reject) {
+      return { match: false, fails: ['HOA: ' + hoaCheck.source] };
     }
     reasons.push('HOA OK');
   }
@@ -577,12 +611,97 @@ async function fetchAllBuyers(apiKey, locationId) {
   return allBuyers;
 }
 
+// Build the compact buyer profile shape the AI matcher expects. We read
+// every relevant custom field once and pass plain strings so the AI helper
+// doesn't need to know about GHL custom field IDs.
+function buildBuyerProfile(contact) {
+  var targetStates = getCF(contact, CF.TARGET_STATES);
+  var targetCities = getCF(contact, CF.TARGET_CITIES);
+  var targetMarkets = getCF(contact, CF.TARGET_MARKETS);
+  var dealStructures = getCF(contact, CF.DEAL_STRUCTURES) || getCFByKey(contact, 'contact.deal_structure');
+  var propTypes = getCFByKey(contact, 'contact.property_type_preference') || getCF(contact, CF.PROPERTY_TYPE);
+  return {
+    name: ((contact.firstName || '') + ' ' + (contact.lastName || '')).trim(),
+    buyerStatus: String(getCFByKey(contact, 'contact.buyer_status') || ''),
+    targetStates: Array.isArray(targetStates) ? targetStates.join(', ') : (targetStates || ''),
+    targetCities: Array.isArray(targetCities) ? targetCities.join(', ') : (targetCities || ''),
+    targetMarkets: String(targetMarkets || ''),
+    dealStructures: Array.isArray(dealStructures) ? dealStructures.join(', ') : (dealStructures || ''),
+    propertyTypes: Array.isArray(propTypes) ? propTypes.join(', ') : (propTypes || ''),
+    maxPrice: getCF(contact, CF.MAX_PRICE) || '',
+    maxEntry: getCF(contact, CF.MAX_ENTRY) || '',
+    minArv: getCF(contact, CF.MIN_ARV) || '',
+    minBeds: getCF(contact, CF.MIN_BEDS) || '',
+    hoaFlag: String(getCFByKey(contact, 'contact.hoa') || ''),
+    hoaTolerance: String(getCFByKey(contact, 'contact.hoa_tolerance') || ''),
+    buyBoxText: String(getCFByKey(contact, 'contact.buy_box') || ''),
+    tags: (contact.tags || []).join(', ')
+  };
+}
+
+// Run the AI fit check on a shortlist of deterministic matches, in batches
+// of CONCURRENCY so we don't slam the Netlify function timeout.
+//
+// Rules for tier adjustment (only applied when fit !== 'unknown'):
+//   fit=reject  → drop the buyer entirely (added to dropped[] for logging)
+//   fit=strong  → upgrade tier by 1 (min 1)
+//   fit=weak    → downgrade tier by 1 (max 3)
+//   fit=fair    → no change
+async function runAiFitPass(claudeKey, ghlKey, deal, buyersByContact) {
+  var LIMIT_PER_DEAL = +(process.env.AI_MATCH_MAX_PER_DEAL || 100);
+  var CONCURRENCY = 5;
+  var shortlist = Object.keys(buyersByContact).slice(0, LIMIT_PER_DEAL);
+  var dropped = [];
+  var totalCost = 0;
+
+  async function processOne(contactId) {
+    var pair = buyersByContact[contactId];
+    if (!pair) return;
+    var contact = pair.contact;
+    var entry = pair.entry;
+    var profile = buildBuyerProfile(contact);
+    var res = await aiMatch.checkFit({
+      claudeKey: claudeKey,
+      ghlKey: ghlKey,
+      deal: deal,
+      contact: contact,
+      buyerProfile: profile
+    });
+    if (res.usage && res.usage.cost) totalCost += res.usage.cost;
+    entry.ai = res;
+    if (res.fit === 'reject') {
+      entry._drop = true;
+      dropped.push({ name: entry.name, reasons: res.redFlags || res.reasons || [] });
+      return;
+    }
+    if (res.fit === 'strong' && entry.tier > 1) entry.tier -= 1;
+    else if (res.fit === 'weak' && entry.tier < 3) entry.tier += 1;
+    // Merge AI reasons into the match reason string
+    var aiReasons = (res.reasons || []).slice(0, 3);
+    if (aiReasons.length) {
+      entry.matchReasons = (entry.matchReasons || []).concat(aiReasons.map(function (r) { return 'AI: ' + r; }));
+      entry.matchReason = entry.matchReasons.join(' | ');
+    }
+  }
+
+  for (var i = 0; i < shortlist.length; i += CONCURRENCY) {
+    var batch = shortlist.slice(i, i + CONCURRENCY);
+    await Promise.all(batch.map(processOne));
+  }
+
+  console.log('[notify-buyers] AI fit pass: shortlist=' + shortlist.length +
+    ' dropped=' + dropped.length +
+    ' cost=$' + totalCost.toFixed(4));
+  return { dropped: dropped, cost: totalCost };
+}
+
 async function findMatchingBuyers(apiKey, locationId, deal) {
   // Load dynamic field IDs once per cron run (uses module-level cache)
   await loadDynamicFieldIds(apiKey, locationId);
 
   var buyers = await fetchAllBuyers(apiKey, locationId);
   var tier1 = [], tier2 = [], tier3 = [];
+  var buyersByContact = {}; // contactId → { contact, entry }
 
   // Single pass — matchesBuyBox already assigns the tier based on
   // market match + extras. Hard filters are the gate.
@@ -599,12 +718,35 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
       matchReasons: r.reasons,
       matchReason: r.reasons.join(' | ')
     };
+    buyersByContact[contact.id] = { contact: contact, entry: entry };
     if (r.tier === 1) tier1.push(entry);
     else if (r.tier === 2) tier2.push(entry);
     else tier3.push(entry);
   });
 
   console.log('[notify-buyers] Matched T1=' + tier1.length + ' T2=' + tier2.length + ' T3=' + tier3.length);
+
+  // ─── AI holistic fit pass (opt-in via AI_MATCH_LIVE=true) ───
+  // Runs on the deterministic shortlist. Can upgrade/downgrade tier by 1
+  // and will drop buyers the model flags as outright rejects (e.g. "no HOAs"
+  // buried in buy_box or notes that the deterministic layer missed).
+  var aiEnabled = process.env.AI_MATCH_LIVE === 'true';
+  var claudeKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+  if (aiEnabled && aiMatch && claudeKey) {
+    await runAiFitPass(claudeKey, apiKey, deal, buyersByContact);
+    // Rebuild tier arrays from the possibly-mutated entries
+    tier1 = []; tier2 = []; tier3 = [];
+    Object.keys(buyersByContact).forEach(function (cid) {
+      var e = buyersByContact[cid].entry;
+      if (e._drop) return;
+      if (e.tier === 1) tier1.push(e);
+      else if (e.tier === 2) tier2.push(e);
+      else tier3.push(e);
+    });
+    console.log('[notify-buyers] Post-AI T1=' + tier1.length + ' T2=' + tier2.length + ' T3=' + tier3.length);
+  } else if (aiEnabled && !claudeKey) {
+    console.warn('[notify-buyers] AI_MATCH_LIVE=true but ANTHROPIC_API_KEY not set — skipping AI pass');
+  }
 
   // Combine: tier 1 first, then tier 2, then tier 3 (up to target)
   var combined = tier1.concat(tier2).concat(tier3);
@@ -664,6 +806,52 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   }, {
     tags: tagsToAdd
   });
+
+  // Post a buyer match note on the contact so Brooke can see why this
+  // buyer got this alert without leaving the GHL contact view.
+  // Always runs — even without the AI pass — so match reasons are auditable.
+  try {
+    var noteLines = [
+      '📨 Deal alert sent: ' + (deal.dealCode || '(no code)') + ' — ' +
+        [deal.streetAddress, deal.city, deal.state].filter(Boolean).join(', '),
+      'Type: ' + (deal.dealType || '?') +
+        (deal.askingPrice ? ' · ' + '$' + deal.askingPrice.toLocaleString() : '') +
+        (deal.entryFee ? ' entry $' + deal.entryFee.toLocaleString() : '') +
+        (contact.tier ? ' · Tier ' + contact.tier : ''),
+      ''
+    ];
+    if (contact.matchReasons && contact.matchReasons.length) {
+      noteLines.push('Match reasons:');
+      contact.matchReasons.forEach(function (r) { noteLines.push('  • ' + r); });
+      noteLines.push('');
+    }
+    if (contact.ai && contact.ai.fit && contact.ai.fit !== 'unknown') {
+      noteLines.push('AI fit: ' + contact.ai.fit + ' (score ' + contact.ai.score + '/10)');
+      if (contact.ai.reasons && contact.ai.reasons.length) {
+        noteLines.push('AI reasons:');
+        contact.ai.reasons.forEach(function (r) { noteLines.push('  • ' + r); });
+      }
+      if (contact.ai.redFlags && contact.ai.redFlags.length) {
+        noteLines.push('Red flags:');
+        contact.ai.redFlags.forEach(function (r) { noteLines.push('  ⚠ ' + r); });
+      }
+      if (contact.ai.notesUsed) {
+        noteLines.push('(scanned ' + contact.ai.notesUsed + ' recent contact note' + (contact.ai.notesUsed === 1 ? '' : 's') + ')');
+      }
+    }
+    noteLines.push('');
+    noteLines.push('View: ' + (deal.dealUrl || ''));
+    await httpRequest('https://services.leadconnectorhq.com/contacts/' + contact.id + '/notes', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json'
+      }
+    }, { body: noteLines.join('\n') });
+  } catch (noteErr) {
+    console.warn('notify-buyers: match note failed for ' + contact.name + ': ' + noteErr.message);
+  }
 
   // Update GHL custom fields with deal info
   var price = deal.askingPrice ? '$' + deal.askingPrice.toLocaleString() : '';

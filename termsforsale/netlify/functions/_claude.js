@@ -1,16 +1,19 @@
 // Shared Claude API helper — native fetch (Node 18+), no npm packages
 // Prefix _ means Netlify will NOT deploy this as a function (it's a private module)
 //
-// Model: claude-sonnet-4-20250514
+// Default model: claude-sonnet-4-20250514 (Sonnet 4)
 // Pricing approx: $3.00/MTok input, $15.00/MTok output
 //
-// Exports: complete(apiKey, { system, user, maxTokens, json })
+// Callers should pass { model: 'claude-haiku-4-5-20251001' } to use Haiku
+// (much cheaper) when output quality allows — see CLAUDE.md cost rules.
+//
+// Exports: complete(apiKey, { system, user, maxTokens, json, model })
 // Returns: { text, usage: { input_tokens, output_tokens, cost } }
 
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 
-// Approximate cost per token (USD)
+// Approximate cost per token (USD) for the default model
 const COST_PER_INPUT_TOKEN  = 3.00 / 1_000_000;
 const COST_PER_OUTPUT_TOKEN = 15.00 / 1_000_000;
 const COST_WARN_THRESHOLD   = 0.15;
@@ -23,15 +26,17 @@ const COST_WARN_THRESHOLD   = 0.15;
  *   user      {string}  - user message
  *   maxTokens {number}  - max output tokens (default 1024)
  *   json      {boolean} - if true, requests JSON output and parses the response
+ *   model     {string}  - override model (default: CLAUDE_MODEL)
  * @returns {{ text: string|object, usage: { input_tokens, output_tokens, cost } }}
  */
-async function complete(apiKey, { system, user, maxTokens, json }) {
+async function complete(apiKey, { system, user, maxTokens, json, model }) {
   var max = maxTokens || 1024;
+  var theModel = model || CLAUDE_MODEL;
 
   var messages = [{ role: 'user', content: user }];
 
   var body = {
-    model: CLAUDE_MODEL,
+    model: theModel,
     max_tokens: max,
     messages: messages
   };
@@ -65,13 +70,17 @@ async function complete(apiKey, { system, user, maxTokens, json }) {
     throw new Error('Claude API error ' + res.status + ': ' + (data.error ? data.error.message : text.slice(0, 200)));
   }
 
-  // Calculate token usage and cost
+  // Calculate token usage and cost. Haiku is ~25x cheaper than Sonnet; use
+  // the cheaper rates when a Haiku model is in play so the cost log is honest.
   var usage = data.usage || {};
   var inputTokens  = usage.input_tokens  || 0;
   var outputTokens = usage.output_tokens || 0;
-  var cost = (inputTokens * COST_PER_INPUT_TOKEN) + (outputTokens * COST_PER_OUTPUT_TOKEN);
+  var isHaiku = /haiku/i.test(theModel);
+  var inRate  = isHaiku ? (1.00 / 1_000_000) : COST_PER_INPUT_TOKEN;
+  var outRate = isHaiku ? (5.00 / 1_000_000) : COST_PER_OUTPUT_TOKEN;
+  var cost = (inputTokens * inRate) + (outputTokens * outRate);
 
-  console.log('[Claude] model=' + CLAUDE_MODEL +
+  console.log('[Claude] model=' + theModel +
     ' input=' + inputTokens + ' output=' + outputTokens +
     ' cost=$' + cost.toFixed(6));
 

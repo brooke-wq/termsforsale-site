@@ -276,6 +276,118 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 10 2026 Holistic AI Buyer Matching + HOA Fix
+
+Branch: `claude/improve-deal-search-zDHrj`.
+
+Brooke noticed that matching was missing obvious fits because it only
+looked at a handful of structured custom fields. Example: a buyer whose
+buy_box free text said "no HOAs please" was still getting alerted on
+HOA deals because the HOA rule only checked a checkbox field. She asked
+for (a) HOA matching that factors in the structured HOA field AND the
+hoa_tolerance field AND the buy_box large text, and (b) more AI logic
+that reads the whole contact (custom fields + notes) to decide fit.
+
+### Root cause found while fixing it
+
+`parseDeal()` in `notify-buyers.js` never read the `HOA` column from
+Notion — so `deal.hoa` was always `undefined` and the HOA hard filter
+`if (parseHoaDeal(deal.hoa))` never actually ran. Every HOA deal was
+silently being blasted to buyers who had said "no HOAs". Fixed.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/_ai-match.js` (new)** — shared
+  helper that does two jobs:
+  1. **`textRejectsHoa(text)`** — regex bank that detects "no HOA" /
+     "no HOAs" / "avoid HOA" / "won't do HOA" / "hoa = no" / "skip
+     hoa fees" etc. in free-form buyer text. 14 cases verified by a
+     local harness (9 rejects + 5 false-positive negatives like
+     "HOA ok under $100", "prefer HOAs").
+  2. **`checkFit({ claudeKey, ghlKey, deal, contact, buyerProfile })`**
+     — fetches the contact's last 5 notes from GHL (`GET
+     /contacts/{id}/notes`), trims each to 400 chars, builds a compact
+     deal + buyer + notes prompt, and asks Claude Haiku
+     (`claude-haiku-4-5-20251001`) to return a JSON
+     `{ fit: 'strong'|'fair'|'weak'|'reject', score, reasons[], redFlags[] }`.
+     Haiku is ~25× cheaper than Sonnet; per-call cost tracked and
+     logged. Network / auth / parse failures resolve to
+     `{ fit: 'unknown', error }` so the caller can still ship the
+     deterministic match without the AI layer.
+
+- **`termsforsale/netlify/functions/_claude.js`** — added optional
+  `model` param to `complete()` and cost-per-token logic that
+  switches to Haiku rates (~$1/MTok input, $5/MTok output) when a
+  Haiku model is passed. Default is still Sonnet 4 so existing
+  callers are unaffected.
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — 4 changes:
+  1. `parseDeal()` now reads `hoa: prop(page, 'HOA')` — the HOA
+     hard filter finally works.
+  2. `buyerRejectsHoa(contact, extraText)` returns
+     `{ reject, source }`. Checks (in order): hoa checkbox,
+     hoa_tolerance text, buy_box free text via
+     `aiMatch.textRejectsHoa()`, optional extra text (for future
+     use). Call site in `matchesBuyBox()` uses the source string so
+     the match failure reason is auditable.
+  3. New `buildBuyerProfile(contact)` + `runAiFitPass()` functions.
+     After the deterministic tiering, if `AI_MATCH_LIVE=true` env
+     var is set AND `ANTHROPIC_API_KEY` exists, the AI pass runs on
+     the deterministic shortlist (capped at `AI_MATCH_MAX_PER_DEAL`
+     which defaults to 100) in batches of 5 concurrent Claude calls.
+     The AI can: (a) drop a buyer outright if `fit=reject`,
+     (b) upgrade tier by 1 if `fit=strong`, (c) downgrade by 1 if
+     `fit=weak`, (d) no-op if `fit=fair`. AI reasons are merged into
+     the buyer's `matchReasons` array prefixed with `AI:`.
+  4. `triggerBuyerAlert()` now posts a GHL note on every alerted
+     contact summarizing: deal code + address, deal type + price +
+     tier, deterministic match reasons, AI fit/score + reasons +
+     red flags (when AI pass ran), and the deal URL. This was
+     missing entirely before — tags + custom fields were being
+     updated but nothing was auditable from the contact view.
+     Note write is wrapped in try/catch so a failure never blocks
+     the SMS/email send.
+
+### Env vars
+
+- **`ANTHROPIC_API_KEY`** (or legacy `CLAUDE_API_KEY`) — required
+  only if `AI_MATCH_LIVE=true`. Already set on the droplet + Netlify
+  for other Claude functions.
+- **`AI_MATCH_LIVE`** — set to `"true"` to turn on the AI fit pass.
+  Default is off so there's zero cost surprise.
+- **`AI_MATCH_MAX_PER_DEAL`** — optional int cap on how many buyers
+  per deal get the AI check. Defaults to 100. At Haiku pricing
+  (~$0.002/buyer), 100 buyers × 1 deal = ~$0.20/deal.
+
+### Cost math (Haiku)
+
+~1000 input tokens + ~200 output tokens per buyer → ~$0.002/buyer.
+100 buyers × 1 deal = ~$0.20/deal. At 5 deals/week = ~$1/week or
+**~$4/mo** on top of the existing ~$4/mo Claude budget. Still well
+under the $10/mo total spend target.
+
+### To enable (next session)
+
+1. In Netlify dashboard → Environment variables → add
+   `AI_MATCH_LIVE = true` (and confirm `ANTHROPIC_API_KEY` is set).
+2. On the droplet, add it to `/etc/environment`:
+   `echo 'AI_MATCH_LIVE=true' >> /etc/environment` then restart cron.
+3. Run `/api/notify-test?deal_id=PHX-001` once and check Netlify
+   function logs for `[notify-buyers] AI fit pass: shortlist=…` +
+   the `[Claude] cost=$…` lines.
+4. Spot-check the GHL contact notes on a few alerted buyers —
+   every match should have a "📨 Deal alert sent" note with the
+   match reasons + AI fit + red flags.
+
+### Deterministic fixes are live regardless of flag
+
+The HOA `parseDeal` bug and the widened `buyerRejectsHoa` (scanning
+buy_box + structured fields) run on every notify-buyers invocation
+— they do NOT require `AI_MATCH_LIVE=true`. Those alone should
+already improve HOA matching accuracy significantly.
+
+---
+
 ## Completed — April 10 2026 Admin Deals Inline Buyer Drawer
 
 Branch: `claude/improve-deal-search-zDHrj`.
