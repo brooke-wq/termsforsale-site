@@ -15,6 +15,223 @@
 .deal-row-code{font-weight:800;color:var(--navy);font-size:12px;font-family:Menlo,Monaco,monospace}
 .deal-row-addr{font-weight:700;color:var(--navy);font-size:13px}
 .deal-row-loc{color:var(--text-light);font-size:11px}
+
+/* Make rows feel clickable */
+table.t tbody tr{cursor:pointer;transition:background .12s}
+table.t tbody tr.is-open td{background:rgba(41,171,226,.09)}
+table.t tbody tr.is-open td:first-child{box-shadow:inset 3px 0 0 var(--blue)}
+
+/* ──────────── Buyers Drawer ──────────── */
+.drawer-backdrop{
+  position:fixed;inset:0;
+  background:rgba(13,31,60,.48);
+  opacity:0;pointer-events:none;
+  transition:opacity .22s;
+  z-index:80;
+}
+.drawer-backdrop.open{opacity:1;pointer-events:auto}
+
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;
+  width:min(720px,94vw);
+  background:var(--bg);
+  box-shadow:-18px 0 40px rgba(13,31,60,.22);
+  transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  z-index:90;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.drawer.open{transform:translateX(0)}
+
+.drawer-head{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:18px 22px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+.drawer-title-row{min-width:0;flex:1}
+.drawer-crumb{
+  font-size:10px;
+  color:var(--text-light);
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  font-weight:800;
+  margin-bottom:2px;
+}
+.drawer-title{
+  font-size:17px;
+  font-weight:800;
+  color:var(--navy);
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.drawer-sub{
+  font-size:12px;
+  color:var(--text-light);
+  margin-top:3px;
+}
+.drawer-close{
+  background:transparent;
+  border:1.5px solid var(--border);
+  color:var(--text-mid);
+  width:34px;height:34px;
+  border-radius:8px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  transition:all .15s;
+}
+.drawer-close:hover{border-color:var(--red);color:var(--red)}
+.drawer-close svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none}
+
+.drawer-body{flex:1;overflow-y:auto;padding:20px 22px}
+
+.drawer-stats{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-bottom:18px;
+}
+.drawer-stat{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:12px 10px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.drawer-stat::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:var(--gray);
+}
+.drawer-stat.total::before{background:var(--blue)}
+.drawer-stat.hot::before{background:var(--green)}
+.drawer-stat.int::before{background:var(--blue-dark)}
+.drawer-stat.no::before{background:var(--gray)}
+.drawer-stat.pass::before{background:var(--red)}
+.drawer-stat-v{
+  font-size:22px;
+  font-weight:900;
+  color:var(--navy);
+  line-height:1;
+  margin-top:6px;
+}
+.drawer-stat-l{
+  font-size:9px;
+  font-weight:800;
+  color:var(--text-light);
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  margin-top:5px;
+}
+
+.drawer-filter-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+.drawer-filter-row input{
+  flex:1;
+  min-width:180px;
+  padding:8px 12px;
+  border:1.5px solid var(--border);
+  border-radius:7px;
+  font-family:var(--font);
+  font-size:13px;
+  outline:none;
+}
+.drawer-filter-row input:focus{border-color:var(--blue)}
+.drawer-filter-row select{
+  padding:8px 12px;
+  border:1.5px solid var(--border);
+  border-radius:7px;
+  font-family:var(--font);
+  font-size:13px;
+  background:#fff;
+  outline:none;
+}
+
+.drawer-table{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:9px;
+  overflow:hidden;
+}
+.drawer-table table{width:100%;border-collapse:collapse}
+.drawer-table th{
+  background:var(--bg);
+  padding:9px 12px;
+  font-size:9px;
+  font-weight:800;
+  color:var(--text-light);
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+}
+.drawer-table td{
+  padding:11px 12px;
+  border-bottom:1px solid var(--border);
+  font-size:12px;
+  color:var(--text-mid);
+  vertical-align:middle;
+}
+.drawer-table tr:last-child td{border-bottom:none}
+.drawer-table .b-name{color:var(--navy);font-weight:700;font-size:12.5px}
+.drawer-table .b-contact{font-size:11px;color:var(--text-light);margin-top:1px}
+.drawer-table .b-contact a{color:var(--blue)}
+.status-pill{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:9px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  white-space:nowrap;
+}
+.status-pill.hot{background:rgba(16,185,129,.15);color:#047857}
+.status-pill.interested{background:rgba(41,171,226,.15);color:var(--blue-dark)}
+.status-pill.no-response{background:var(--bg-2);color:var(--text-light)}
+.status-pill.passed{background:rgba(229,62,62,.12);color:#991B1B}
+.status-pill.none{background:var(--bg-2);color:var(--text-light);font-style:italic}
+
+.drawer-empty{
+  padding:40px 20px;
+  text-align:center;
+  color:var(--text-light);
+  font-size:13px;
+}
+.drawer-empty strong{color:var(--navy);display:block;margin-bottom:6px;font-size:14px}
+
+.drawer-foot{
+  background:#fff;
+  border-top:1px solid var(--border);
+  padding:12px 22px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+}
+.drawer-foot .muted{font-size:11px}
+
+@media(max-width:640px){
+  .drawer-stats{grid-template-columns:repeat(3,1fr)}
+}
 </style>
 </head>
 <body>
@@ -94,12 +311,41 @@
   </main>
 </div>
 
+<!-- Slide-in buyer drawer -->
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-labelledby="drawer-title" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="drawer-title-row">
+      <div class="drawer-crumb">Buyers sent this deal</div>
+      <div class="drawer-title" id="drawer-title">—</div>
+      <div class="drawer-sub" id="drawer-sub">—</div>
+    </div>
+    <button class="drawer-close" id="drawer-close" aria-label="Close">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <div class="spinner"></div>
+  </div>
+  <div class="drawer-foot">
+    <span class="muted" id="drawer-foot-count">—</span>
+    <div style="display:flex;gap:8px">
+      <a href="#" class="btn secondary" id="drawer-full-link" style="padding:7px 12px;font-size:11px" target="_blank" rel="noopener">Full page</a>
+      <button class="btn secondary" id="drawer-refresh" style="padding:7px 12px;font-size:11px" onclick="refreshDrawer()">Refresh</button>
+    </div>
+  </div>
+</aside>
+
 <script src="/admin/admin.js"></script>
 <script>
 AdminShell.renderShell('deals');
 
 var ALL_DEALS = [];
 var BUYER_COUNTS = {};   // slug -> { total, hot, interested, noResponse, passed } | 'loading' | 'error'
+var BUYER_DETAILS = {};  // slug -> array of contact objects (full detail for drawer)
+var CURRENT_DRAWER_SLUG = '';
+var CURRENT_DRAWER_DEAL = null;
+var DRAWER_FILTER = { q: '', status: '' };
 
 async function loadDeals() {
   document.getElementById('results').innerHTML = '<div class="spinner"></div>';
@@ -128,7 +374,8 @@ window.loadDeals = loadDeals;
 
 // For every active deal, fire a parallel /api/deal-buyer-list call and
 // populate the "Buyers" cell as each one returns. Results cached so
-// re-renders (search / filter) reuse them instead of re-fetching.
+// re-renders (search / filter) reuse them instead of re-fetching, and
+// the full contact list is cached too so opening the drawer is instant.
 function loadAllBuyerCounts() {
   ALL_DEALS.forEach(function (d) {
     var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
@@ -136,25 +383,37 @@ function loadAllBuyerCounts() {
     BUYER_COUNTS[slug] = 'loading';
     updateBuyerCell(slug);
 
-    AdminShell.fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug))
-      .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
-      .then(function (data) {
-        var contacts = data.contacts || [];
-        var counts = { total: contacts.length, hot: 0, interested: 0, noResponse: 0, passed: 0 };
-        contacts.forEach(function (c) {
-          if (c.dealStatus === 'deal:hot') counts.hot++;
-          else if (c.dealStatus === 'deal:interested') counts.interested++;
-          else if (c.dealStatus === 'deal:no-response') counts.noResponse++;
-          else if (c.dealStatus === 'deal:passed') counts.passed++;
-        });
-        BUYER_COUNTS[slug] = counts;
-        updateBuyerCell(slug);
-      })
-      .catch(function () {
-        BUYER_COUNTS[slug] = 'error';
-        updateBuyerCell(slug);
-      });
+    fetchBuyersForSlug(slug).catch(function () {});
   });
+}
+
+// Shared fetch + cache helper. Returns a promise resolving to the contact
+// array once the call completes. Used by the initial batch, the drawer
+// open flow, and the refresh button.
+function fetchBuyersForSlug(slug) {
+  return AdminShell.fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug))
+    .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
+    .then(function (data) {
+      var contacts = data.contacts || [];
+      var counts = { total: contacts.length, hot: 0, interested: 0, noResponse: 0, passed: 0 };
+      contacts.forEach(function (c) {
+        if (c.dealStatus === 'deal:hot') counts.hot++;
+        else if (c.dealStatus === 'deal:interested') counts.interested++;
+        else if (c.dealStatus === 'deal:no-response') counts.noResponse++;
+        else if (c.dealStatus === 'deal:passed') counts.passed++;
+      });
+      BUYER_COUNTS[slug] = counts;
+      BUYER_DETAILS[slug] = contacts;
+      updateBuyerCell(slug);
+      if (CURRENT_DRAWER_SLUG === slug) renderDrawerBody();
+      return contacts;
+    })
+    .catch(function (err) {
+      BUYER_COUNTS[slug] = 'error';
+      updateBuyerCell(slug);
+      if (CURRENT_DRAWER_SLUG === slug) renderDrawerError();
+      throw err;
+    });
 }
 
 function updateBuyerCell(slug) {
@@ -232,12 +491,12 @@ function renderList() {
     return;
   }
 
-  var rows = list.map(function (d) {
+  var rows = list.map(function (d, i) {
     var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
     var dealUrl = '/deal.html?id=' + encodeURIComponent(d.id || d.dealCode || slug);
-    var buyersUrl = '/admin/deal-buyers.html?deal=' + encodeURIComponent(slug);
+    var openClass = CURRENT_DRAWER_SLUG === slug ? ' is-open' : '';
 
-    return '<tr>'
+    return '<tr class="deal-row' + openClass + '" data-deal-idx="' + i + '" title="Click to see buyers sent this deal">'
       + '<td><div class="deal-row-code">' + AdminShell.esc(d.dealCode || '—') + '</div></td>'
       + '<td>'
       +   '<div class="deal-row-addr">' + AdminShell.esc(d.streetAddress || '(No address)') + '</div>'
@@ -247,12 +506,11 @@ function renderList() {
       + '<td class="cell-strong tr">' + (d.askingPrice ? AdminShell.fmtMoney(d.askingPrice) : '<span class="muted">—</span>') + '</td>'
       + '<td class="tr">' + (d.entryFee ? AdminShell.fmtMoney(d.entryFee) : '<span class="muted">—</span>') + '</td>'
       + '<td class="tr">' + (d.compsArv ? AdminShell.fmtMoney(d.compsArv) : '<span class="muted">—</span>') + '</td>'
-      + '<td><a href="' + buyersUrl + '" data-buyer-cell="' + AdminShell.esc(slug) + '" style="text-decoration:none">'
+      + '<td><span data-buyer-cell="' + AdminShell.esc(slug) + '">'
       +   '<span class="muted" style="font-size:11px">…</span>'
-      + '</a></td>'
+      + '</span></td>'
       + '<td class="nowrap">'
-      +   '<a href="' + dealUrl + '" target="_blank" class="btn secondary" style="padding:5px 10px;font-size:11px">View</a> '
-      +   '<a href="' + buyersUrl + '" class="btn secondary" style="padding:5px 10px;font-size:11px">Buyers</a>'
+      +   '<a href="' + dealUrl + '" target="_blank" class="btn secondary" data-stop="1" style="padding:5px 10px;font-size:11px">View</a>'
       + '</td>'
       + '</tr>';
   }).join('');
@@ -276,7 +534,228 @@ function renderList() {
     var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
     if (BUYER_COUNTS[slug]) updateBuyerCell(slug);
   });
+
+  // Row click → open drawer. Delegated so we only bind once per render.
+  host.querySelectorAll('tr.deal-row').forEach(function (tr) {
+    tr.addEventListener('click', function (ev) {
+      // Let the "View" button + any other explicit links/buttons through.
+      var t = ev.target;
+      while (t && t !== tr) {
+        if (t.dataset && t.dataset.stop) return;
+        if (t.tagName === 'A' || t.tagName === 'BUTTON') return;
+        t = t.parentNode;
+      }
+      var idx = +tr.getAttribute('data-deal-idx');
+      var deal = list[idx];
+      if (deal) openDrawer(deal);
+    });
+  });
 }
+
+// ─── Drawer (inline buyer list) ─────────────────────────────────
+
+function dealSlug(d) {
+  return AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
+}
+
+function openDrawer(deal) {
+  CURRENT_DRAWER_DEAL = deal;
+  CURRENT_DRAWER_SLUG = dealSlug(deal);
+  DRAWER_FILTER = { q: '', status: '' };
+
+  var addr = deal.streetAddress || '(No address)';
+  var locBits = [deal.city, deal.state].filter(Boolean).join(', ');
+  if (deal.zip) locBits += ' ' + deal.zip;
+
+  document.getElementById('drawer-title').textContent = addr;
+  document.getElementById('drawer-sub').textContent =
+    (deal.dealCode ? deal.dealCode + ' · ' : '') +
+    locBits +
+    (deal.dealType ? ' · ' + deal.dealType : '');
+
+  var fullLink = document.getElementById('drawer-full-link');
+  fullLink.href = '/admin/deal-buyers.html?deal=' + encodeURIComponent(CURRENT_DRAWER_SLUG);
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer').setAttribute('aria-hidden', 'false');
+  document.getElementById('drawer-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Mark the active row (match by slug so it survives re-renders)
+  document.querySelectorAll('tr.deal-row.is-open').forEach(function (tr) { tr.classList.remove('is-open'); });
+  document.querySelectorAll('tr.deal-row').forEach(function (tr) {
+    var cell = tr.querySelector('[data-buyer-cell]');
+    if (cell && cell.getAttribute('data-buyer-cell') === CURRENT_DRAWER_SLUG) {
+      tr.classList.add('is-open');
+    }
+  });
+
+  // Render from cache if we already have it — instant open.
+  if (BUYER_DETAILS[CURRENT_DRAWER_SLUG]) {
+    renderDrawerBody();
+  } else {
+    document.getElementById('drawer-body').innerHTML = '<div class="spinner"></div>';
+    document.getElementById('drawer-foot-count').textContent = 'Loading…';
+    fetchBuyersForSlug(CURRENT_DRAWER_SLUG).catch(function () {});
+  }
+}
+window.openDrawer = openDrawer;
+
+function closeDrawer() {
+  CURRENT_DRAWER_SLUG = '';
+  CURRENT_DRAWER_DEAL = null;
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer').setAttribute('aria-hidden', 'true');
+  document.getElementById('drawer-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+  document.querySelectorAll('tr.deal-row.is-open').forEach(function (tr) { tr.classList.remove('is-open'); });
+}
+window.closeDrawer = closeDrawer;
+
+function refreshDrawer() {
+  if (!CURRENT_DRAWER_SLUG) return;
+  delete BUYER_DETAILS[CURRENT_DRAWER_SLUG];
+  BUYER_COUNTS[CURRENT_DRAWER_SLUG] = 'loading';
+  updateBuyerCell(CURRENT_DRAWER_SLUG);
+  document.getElementById('drawer-body').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('drawer-foot-count').textContent = 'Loading…';
+  fetchBuyersForSlug(CURRENT_DRAWER_SLUG).catch(function () {});
+}
+window.refreshDrawer = refreshDrawer;
+
+function renderDrawerError() {
+  document.getElementById('drawer-body').innerHTML =
+    '<div class="err">Could not load buyers. Try Refresh.</div>';
+  document.getElementById('drawer-foot-count').textContent = 'Error';
+}
+
+function statusLabel(s) {
+  switch (s) {
+    case 'deal:hot':         return { label: 'Hot', cls: 'hot' };
+    case 'deal:interested':  return { label: 'Interested', cls: 'interested' };
+    case 'deal:no-response': return { label: 'No Response', cls: 'no-response' };
+    case 'deal:passed':      return { label: 'Passed', cls: 'passed' };
+    default:                 return { label: 'Not responded', cls: 'none' };
+  }
+}
+
+function renderDrawerBody() {
+  var slug = CURRENT_DRAWER_SLUG;
+  var contacts = BUYER_DETAILS[slug] || [];
+  var body = document.getElementById('drawer-body');
+
+  if (!contacts.length) {
+    body.innerHTML =
+      '<div class="drawer-empty">'
+      +   '<strong>No buyers sent this deal yet</strong>'
+      +   'Tag looked up: <code>sent:' + AdminShell.esc(slug) + '</code><br>'
+      +   'Deals tagged after April 9, 2026 will appear here automatically.'
+      + '</div>';
+    document.getElementById('drawer-foot-count').textContent = '0 buyers';
+    return;
+  }
+
+  var counts = { total: contacts.length, hot: 0, interested: 0, noResponse: 0, passed: 0 };
+  contacts.forEach(function (c) {
+    if (c.dealStatus === 'deal:hot') counts.hot++;
+    else if (c.dealStatus === 'deal:interested') counts.interested++;
+    else if (c.dealStatus === 'deal:no-response') counts.noResponse++;
+    else if (c.dealStatus === 'deal:passed') counts.passed++;
+  });
+
+  var statHtml =
+    '<div class="drawer-stats">'
+    +   '<div class="drawer-stat total"><div class="drawer-stat-v">' + counts.total + '</div><div class="drawer-stat-l">Sent</div></div>'
+    +   '<div class="drawer-stat hot"><div class="drawer-stat-v">' + counts.hot + '</div><div class="drawer-stat-l">Hot</div></div>'
+    +   '<div class="drawer-stat int"><div class="drawer-stat-v">' + counts.interested + '</div><div class="drawer-stat-l">Interested</div></div>'
+    +   '<div class="drawer-stat no"><div class="drawer-stat-v">' + counts.noResponse + '</div><div class="drawer-stat-l">No reply</div></div>'
+    +   '<div class="drawer-stat pass"><div class="drawer-stat-v">' + counts.passed + '</div><div class="drawer-stat-l">Passed</div></div>'
+    + '</div>';
+
+  var filterHtml =
+    '<div class="drawer-filter-row">'
+    +   '<input type="text" id="drawer-q" placeholder="Search name / phone / email…" value="' + AdminShell.esc(DRAWER_FILTER.q) + '">'
+    +   '<select id="drawer-status">'
+    +     '<option value="">All statuses</option>'
+    +     '<option value="deal:hot"' + (DRAWER_FILTER.status === 'deal:hot' ? ' selected' : '') + '>Hot</option>'
+    +     '<option value="deal:interested"' + (DRAWER_FILTER.status === 'deal:interested' ? ' selected' : '') + '>Interested</option>'
+    +     '<option value="deal:no-response"' + (DRAWER_FILTER.status === 'deal:no-response' ? ' selected' : '') + '>No response</option>'
+    +     '<option value="deal:passed"' + (DRAWER_FILTER.status === 'deal:passed' ? ' selected' : '') + '>Passed</option>'
+    +     '<option value="__none__"' + (DRAWER_FILTER.status === '__none__' ? ' selected' : '') + '>Not responded</option>'
+    +   '</select>'
+    + '</div>';
+
+  var q = DRAWER_FILTER.q.toLowerCase();
+  var filtered = contacts.filter(function (c) {
+    if (DRAWER_FILTER.status === '__none__') {
+      if (c.dealStatus) return false;
+    } else if (DRAWER_FILTER.status) {
+      if (c.dealStatus !== DRAWER_FILTER.status) return false;
+    }
+    if (q) {
+      var blob = ((c.name || '') + ' ' + (c.phone || '') + ' ' + (c.email || '')).toLowerCase();
+      if (blob.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  var rows = filtered.map(function (c) {
+    var si = statusLabel(c.dealStatus);
+    var contactBits = [];
+    if (c.phone) contactBits.push('<a href="tel:' + AdminShell.esc(c.phone) + '">' + AdminShell.esc(c.phone) + '</a>');
+    if (c.email) contactBits.push('<a href="mailto:' + AdminShell.esc(c.email) + '">' + AdminShell.esc(c.email) + '</a>');
+    return '<tr>'
+      + '<td><span class="status-pill ' + si.cls + '">' + si.label + '</span></td>'
+      + '<td>'
+      +   '<div class="b-name">' + AdminShell.esc(c.name || '(no name)') + '</div>'
+      +   (contactBits.length ? '<div class="b-contact">' + contactBits.join(' · ') + '</div>' : '')
+      + '</td>'
+      + '<td class="tr">' + (c.tier ? '<span class="pill gray" style="padding:2px 7px;font-size:9px">T' + c.tier + '</span>' : '') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var tableHtml =
+    '<div class="drawer-table">'
+    +   '<table>'
+    +     '<thead><tr><th>Status</th><th>Contact</th><th class="tr">Tier</th></tr></thead>'
+    +     '<tbody>'
+    +       (rows || '<tr><td colspan="3" style="padding:30px;text-align:center;color:var(--text-light)">No buyers match this filter.</td></tr>')
+    +     '</tbody>'
+    +   '</table>'
+    + '</div>';
+
+  body.innerHTML = statHtml + filterHtml + tableHtml;
+  document.getElementById('drawer-foot-count').textContent =
+    filtered.length === contacts.length
+      ? contacts.length + ' buyer' + (contacts.length === 1 ? '' : 's')
+      : filtered.length + ' of ' + contacts.length + ' buyers';
+
+  // Wire drawer filters
+  var qEl = document.getElementById('drawer-q');
+  var sEl = document.getElementById('drawer-status');
+  var drawerTimer;
+  qEl.addEventListener('input', function () {
+    clearTimeout(drawerTimer);
+    drawerTimer = setTimeout(function () {
+      DRAWER_FILTER.q = qEl.value;
+      renderDrawerBody();
+      // Preserve focus + cursor position
+      var nq = document.getElementById('drawer-q');
+      if (nq) { nq.focus(); nq.setSelectionRange(nq.value.length, nq.value.length); }
+    }, 150);
+  });
+  sEl.addEventListener('change', function () {
+    DRAWER_FILTER.status = sEl.value;
+    renderDrawerBody();
+  });
+}
+
+// Drawer close wiring (bind once)
+document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+document.getElementById('drawer-backdrop').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && CURRENT_DRAWER_SLUG) closeDrawer();
+});
 
 var searchTimer;
 document.getElementById('search').addEventListener('input', function () {
