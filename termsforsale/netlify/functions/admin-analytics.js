@@ -395,66 +395,83 @@ exports.handler = async function (event) {
     // Status breakdown (raw — filtered)
     out.pipeline.byStatus[status] = (out.pipeline.byStatus[status] || 0) + 1;
 
-    // High-level buckets.
-    // Priority: Funded (has Date Funded) > Active (status=Actively Marketing)
-    //         > Assigned (has Date Assigned, no Date Funded)
-    //         > Dead (Lost/Canceled/Dead/Abandoned)
-    //         > Closed (status=Closed but no funding data)
+    // Each high-level bucket is an INDEPENDENT check so a single deal can
+    // contribute to multiple flow metrics at once:
+    //   - "Deals Funded in range"   → has Date Funded within range
+    //   - "Deals Assigned in range" → has Date Assigned within range
+    //   - "Active"                  → currently marketing (state-of-world)
+    //   - "Dead"                    → dead status (state-of-world)
     //
-    // For date-sensitive buckets (funded / closed / assigned) we honor the
-    // selected date range. Active + dead are "state of the world" counts
-    // that represent current inventory — they only honor type/state filters.
+    // Active/dead are current-snapshot counts that only honor type/state
+    // filters. Funded/assigned are flow-event counts that honor the date
+    // range too. A deal that was assigned last month and funded this month
+    // will count toward BOTH flow buckets when the range spans both events.
     var statusLower = status.toLowerCase();
     var isDead = /lost|cancel|dead|abandon|released|not accepted/.test(statusLower);
+    var isActivelyMarketing = status === 'Actively Marketing';
+    var statusSuggestsAssigned = /contract|assigned|escrow|under contract/.test(statusLower);
     var fundedInRange = dateFunded && isInRange(dateFunded, dateRange);
     var assignedInRange = dateAssigned && isInRange(dateAssigned, dateRange);
 
+    // ─── All-time revenue + fixed YTD/MTD windows + monthly trend ───
+    // These are never date-filtered — they provide context regardless of
+    // the active preset.
     if (dateFunded) {
-      // All-time totals (never date-filtered — useful context).
       out.revenue.allTime.deals++;
       out.revenue.allTime.revenue += amountFunded;
 
-      // YTD (fixed-window, independent of the preset filter).
       if (dateFunded.slice(0, 4) === String(thisYear)) {
         out.revenue.ytd.deals++;
         out.revenue.ytd.revenue += amountFunded;
       }
-      // MTD (fixed-window).
       if (dateFunded.slice(0, 7) === thisMonthKey) {
         out.revenue.mtd.deals++;
         out.revenue.mtd.revenue += amountFunded;
       }
-
-      // Pipeline buckets honor the active date range.
-      if (fundedInRange) {
-        out.pipeline.funded++;
-        out.pipeline.closed++;  // funded deals are also closed
-        out.revenue.range.deals++;
-        out.revenue.range.revenue += amountFunded;
-        if (amountFunded > 0) rangeAmounts.push(amountFunded);
-      }
-
-      // Monthly trend always reflects the last 12 months — not the filter.
-      // (Shown as contextual trend line rather than a filtered metric.)
       var monthKey = dateFunded.slice(0, 7);
       if (!monthlyMap[monthKey]) monthlyMap[monthKey] = { deals: 0, revenue: 0 };
       monthlyMap[monthKey].deals++;
       monthlyMap[monthKey].revenue += amountFunded;
-    } else if (status === 'Actively Marketing') {
+    }
+
+    // ─── Funded bucket (flow event, honors date range) ───
+    if (fundedInRange) {
+      out.pipeline.funded++;
+      out.pipeline.closed++;  // funded deals are also closed
+      out.revenue.range.deals++;
+      out.revenue.range.revenue += amountFunded;
+      if (amountFunded > 0) rangeAmounts.push(amountFunded);
+    }
+
+    // ─── Assigned bucket (flow event, honors date range) ───
+    // Counted independently of funded status so a deal that moved all the
+    // way through (assigned → funded) shows up in both metrics.
+    if (dateAssigned) {
+      if (assignedInRange) out.pipeline.assigned++;
+    } else if (!hasDateFilter && statusSuggestsAssigned && !dateFunded) {
+      // Legacy record: status says it's under contract but Date Assigned
+      // isn't populated. Count it only in the default all-time view since
+      // we don't know when the assignment happened.
+      out.pipeline.assigned++;
+    }
+
+    // ─── Active bucket (current snapshot) ───
+    if (isActivelyMarketing && !dateFunded) {
       out.pipeline.active++;
       out.pipeline.byType[dealType] = (out.pipeline.byType[dealType] || 0) + 1;
       activeDeals.push(page);
-    } else if (dateAssigned || /contract|assigned|escrow|under contract/.test(statusLower)) {
-      // Only count if the assignment date (when available) is in range.
-      // If no dateAssigned but status suggests it, count only when range is open.
-      if (dateAssigned ? assignedInRange : !hasDateFilter) {
-        out.pipeline.assigned++;
-      }
-    } else if (isDead) {
+    }
+
+    // ─── Dead bucket (current snapshot) ───
+    if (isDead) {
       out.pipeline.dead++;
-    } else if (status === 'Closed') {
-      // Closed but no Date Funded — only count when range is open.
-      if (!hasDateFilter) out.pipeline.closed++;
+    }
+
+    // ─── Legacy closed: status=Closed with no Date Funded ───
+    // Only count in the default view. Anything with Date Funded already
+    // hit the funded bucket above which also bumps closed.
+    if (!hasDateFilter && !dateFunded && status === 'Closed') {
+      out.pipeline.closed++;
     }
   });
 
