@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Tracking — Admin — Terms For Sale</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<style>
+/* Funnel stages */
+.funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+.funnel-stage{
+  background:#fff;
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;
+  position:relative;
+  text-align:center;
+}
+.funnel-stage.sent{border-top:3px solid var(--blue)}
+.funnel-stage.viewed{border-top:3px solid var(--orange)}
+.funnel-stage.interested{border-top:3px solid var(--green)}
+.funnel-stage.offers{border-top:3px solid var(--purple)}
+.funnel-label{
+  font-size:11px;font-weight:700;color:var(--text-light);
+  text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;
+}
+.funnel-value{font-size:32px;font-weight:900;color:var(--navy);line-height:1;letter-spacing:-.5px}
+.funnel-rate{font-size:11px;color:var(--text-light);margin-top:6px;font-weight:600}
+.funnel-rate .up{color:var(--green)}
+
+/* Mini bar chart for monthly trend */
+.chart-wrap{padding:10px 4px 0}
+.chart-row{
+  display:grid;
+  grid-template-columns:50px 1fr 100px 100px;
+  align-items:center;
+  gap:14px;
+  padding:8px 0;
+  border-bottom:1px dashed var(--border);
+  font-size:12px;
+}
+.chart-row:last-child{border-bottom:none}
+.chart-month{font-weight:700;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.chart-bar{
+  height:10px;
+  background:var(--bg-2);
+  border-radius:5px;
+  overflow:hidden;
+  position:relative;
+}
+.chart-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--blue) 0%,var(--blue-dark) 100%);
+  border-radius:5px;
+  transition:width .4s ease;
+}
+.chart-deals{text-align:right;color:var(--text-mid);font-weight:600}
+.chart-rev{text-align:right;color:var(--navy);font-weight:800}
+
+/* Pipeline status strip */
+.pipeline-strip{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:10px;
+  margin-bottom:20px;
+}
+.pipeline-cell{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:14px 16px;
+  position:relative;
+}
+.pipeline-cell .k{
+  font-size:10px;font-weight:700;color:var(--text-light);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;
+}
+.pipeline-cell .v{font-size:22px;font-weight:900;color:var(--navy);line-height:1}
+.pipeline-cell .bar{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--blue);border-top-left-radius:8px;border-top-right-radius:8px;
+}
+.pipeline-cell.green .bar{background:var(--green)}
+.pipeline-cell.orange .bar{background:var(--orange)}
+.pipeline-cell.purple .bar{background:var(--purple)}
+.pipeline-cell.gray .bar{background:var(--gray)}
+
+/* Per-deal engagement table cells */
+.rate-pill{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  background:var(--bg-2);
+  color:var(--text-mid);
+}
+.rate-pill.good{background:rgba(16,185,129,.15);color:#047857}
+.rate-pill.ok{background:rgba(247,148,29,.15);color:#c05621}
+.rate-pill.low{background:rgba(229,62,62,.1);color:#991b1b}
+
+.caption{font-size:11px;color:var(--text-light);margin-top:6px}
+.errlist{
+  background:#FFFBEB;
+  border:1px solid rgba(247,148,29,.3);
+  color:#92400E;
+  padding:10px 14px;
+  border-radius:6px;
+  font-size:12px;
+  margin-bottom:14px;
+}
+.errlist strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+
+@media(max-width:900px){
+  .funnel{grid-template-columns:1fr 1fr}
+  .chart-row{grid-template-columns:50px 1fr 70px 80px;gap:8px}
+}
+@media(max-width:560px){
+  .funnel{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Overview</div>
+        <div class="topbar-h">Sales Tracking</div>
+      </div>
+      <div class="topbar-right">
+        <span class="caption" id="generated-at" style="font-size:11px;color:var(--text-light)"></span>
+        <button class="topbar-btn primary" onclick="loadAll()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Hero -->
+      <div class="panel" style="background:linear-gradient(120deg,#0D1F3C 0%,#1a3163 55%,#29ABE2 130%);border:none;color:#fff">
+        <div class="panel-body" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sales Tracking Dashboard</div>
+            <div style="font-size:22px;font-weight:900;letter-spacing:-.3px">Deal flow, engagement, and revenue — all in one view.</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:6px;max-width:680px">Real-time pipeline from Notion + engagement signals from GoHighLevel. Track every deal from blast → view → response → close → fund.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Non-fatal errors (if any) -->
+      <div id="errors" class="errlist" style="display:none"></div>
+
+      <!-- Revenue cards -->
+      <div class="stat-grid">
+        <div class="stat green">
+          <div class="stat-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Revenue YTD
+          </div>
+          <div class="stat-value" id="stat-rev-ytd">—</div>
+          <div class="stat-sub"><span id="stat-rev-ytd-deals">—</span> funded deals</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Revenue MTD
+          </div>
+          <div class="stat-value" id="stat-rev-mtd">—</div>
+          <div class="stat-sub"><span id="stat-rev-mtd-deals">—</span> funded this month</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Avg Assignment Fee
+          </div>
+          <div class="stat-value" id="stat-avg-deal">—</div>
+          <div class="stat-sub">Across all funded deals</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Deals Funded
+          </div>
+          <div class="stat-value" id="stat-funded">—</div>
+          <div class="stat-sub">All-time</div>
+        </div>
+      </div>
+
+      <!-- Pipeline status strip -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              Pipeline Status
+            </div>
+            <div class="panel-sub">Deal counts across each stage of the funnel</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="pipeline-strip" id="pipeline-strip">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engagement funnel -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Buyer Engagement Funnel
+            </div>
+            <div class="panel-sub">Sent → Viewed → Interested across the whole buyer universe</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="funnel" id="funnel">
+            <div class="funnel-stage sent">
+              <div class="funnel-label">Sent</div>
+              <div class="funnel-value" id="fnl-sent">—</div>
+              <div class="funnel-rate">Received a deal alert</div>
+            </div>
+            <div class="funnel-stage viewed">
+              <div class="funnel-label">Viewed / Clicked</div>
+              <div class="funnel-value" id="fnl-viewed">—</div>
+              <div class="funnel-rate"><span id="fnl-view-rate">—</span> view rate</div>
+            </div>
+            <div class="funnel-stage interested">
+              <div class="funnel-label">Interested</div>
+              <div class="funnel-value" id="fnl-interested">—</div>
+              <div class="funnel-rate"><span id="fnl-conv-rate">—</span> conversion rate</div>
+            </div>
+            <div class="funnel-stage offers">
+              <div class="funnel-label">Passed / Paused</div>
+              <div class="funnel-value" id="fnl-passed">—</div>
+              <div class="funnel-rate"><span id="fnl-paused">—</span> paused alerts</div>
+            </div>
+          </div>
+          <div class="caption">Counts represent unique GHL contacts holding the respective tag. View/conversion rates are calculated against total sent.</div>
+        </div>
+      </div>
+
+      <!-- Two column: monthly trend + pipeline by type -->
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Revenue — Last 12 Months
+              </div>
+              <div class="panel-sub">Funded deal count + assignment revenue per month</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="chart" class="chart-wrap"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Active Deal Mix
+              </div>
+              <div class="panel-sub">Breakdown of active marketing deals by type</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="type-mix"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per-deal engagement table -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              Per-Deal Engagement — Active Deals
+            </div>
+            <div class="panel-sub">Sent / viewed / interested counts for the 10 most recently updated active deals</div>
+          </div>
+          <a href="/admin/deal-buyers.html" class="btn secondary" style="padding:7px 14px;font-size:12px">Deal Buyer Lookup</a>
+        </div>
+        <div class="panel-body flush">
+          <div id="deal-table" class="table-wrap"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('analytics');
+
+function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+function fmtPct(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return n.toFixed(1) + '%';
+}
+
+async function loadAll() {
+  AdminShell.toast('Loading analytics...');
+  try {
+    var res = await AdminShell.fetch('/api/admin-analytics');
+    if (!res.ok) {
+      document.getElementById('pipeline-strip').innerHTML = '<div class="err">Failed to load analytics (HTTP ' + res.status + ')</div>';
+      return;
+    }
+    var data = await res.json();
+
+    // Generated-at stamp
+    if (data.generatedAt) {
+      var d = new Date(data.generatedAt);
+      setText('generated-at', 'Updated ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
+    }
+
+    // Non-fatal errors
+    var errs = document.getElementById('errors');
+    if (data.errors && data.errors.length) {
+      errs.innerHTML = '<strong>Heads up — partial data</strong>' + data.errors.map(function (e) { return AdminShell.esc(e); }).join(' · ');
+      errs.style.display = 'block';
+    } else {
+      errs.style.display = 'none';
+    }
+
+    renderRevenue(data.revenue || {});
+    renderPipeline(data.pipeline || {});
+    renderFunnel(data.engagement || {});
+    renderChart(data.revenue && data.revenue.monthly || []);
+    renderTypeMix(data.pipeline && data.pipeline.byType || {});
+    renderDealTable(data.deals || []);
+  } catch (err) {
+    console.error(err);
+    AdminShell.toast('Error loading: ' + err.message);
+  }
+}
+window.loadAll = loadAll;
+
+function renderRevenue(rev) {
+  setText('stat-rev-ytd', rev.ytd && rev.ytd.revenue ? AdminShell.fmtMoney(rev.ytd.revenue) : '$0');
+  setText('stat-rev-ytd-deals', AdminShell.fmtNum((rev.ytd && rev.ytd.deals) || 0));
+  setText('stat-rev-mtd', rev.mtd && rev.mtd.revenue ? AdminShell.fmtMoney(rev.mtd.revenue) : '$0');
+  setText('stat-rev-mtd-deals', AdminShell.fmtNum((rev.mtd && rev.mtd.deals) || 0));
+  setText('stat-avg-deal', rev.avgDealSize ? AdminShell.fmtMoney(rev.avgDealSize) : '$0');
+  setText('stat-funded', AdminShell.fmtNum((rev.allTime && rev.allTime.deals) || 0));
+}
+
+function renderPipeline(p) {
+  var cells = [
+    { k: 'Active Marketing', v: p.active || 0, cls: '' },
+    { k: 'Under Contract',   v: p.assigned || 0, cls: 'orange' },
+    { k: 'Closed',           v: p.closed || 0, cls: 'purple' },
+    { k: 'Funded',           v: p.funded || 0, cls: 'green' },
+    { k: 'Dead / Lost',      v: p.dead || 0, cls: 'gray' }
+  ];
+  var html = cells.map(function (c) {
+    return '<div class="pipeline-cell ' + c.cls + '">'
+      + '<div class="bar"></div>'
+      + '<div class="k">' + AdminShell.esc(c.k) + '</div>'
+      + '<div class="v">' + AdminShell.fmtNum(c.v) + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('pipeline-strip').innerHTML = html;
+}
+
+function renderFunnel(e) {
+  setText('fnl-sent', AdminShell.fmtNum(e.totalSent || 0));
+  setText('fnl-viewed', AdminShell.fmtNum(e.totalViewed || 0));
+  setText('fnl-interested', AdminShell.fmtNum(e.totalInterested || 0));
+  setText('fnl-passed', AdminShell.fmtNum((e.totalPassed || 0)));
+  setText('fnl-paused', AdminShell.fmtNum(e.totalPaused || 0));
+  setText('fnl-view-rate', fmtPct(e.viewRate));
+  setText('fnl-conv-rate', fmtPct(e.conversionRate));
+}
+
+function renderChart(monthly) {
+  var host = document.getElementById('chart');
+  if (!monthly.length) {
+    host.innerHTML = '<div class="state"><p class="muted">No funded deals yet.</p></div>';
+    return;
+  }
+  var maxRevenue = Math.max.apply(null, monthly.map(function (m) { return m.revenue; }));
+  if (!maxRevenue) maxRevenue = 1;
+  var rows = monthly.map(function (m) {
+    var pct = Math.round((m.revenue / maxRevenue) * 100);
+    return '<div class="chart-row">'
+      + '<div class="chart-month">' + AdminShell.esc(m.label || m.month) + '</div>'
+      + '<div class="chart-bar"><div class="chart-bar-fill" style="width:' + pct + '%"></div></div>'
+      + '<div class="chart-deals">' + AdminShell.fmtNum(m.deals) + ' deal' + (m.deals === 1 ? '' : 's') + '</div>'
+      + '<div class="chart-rev">' + (m.revenue ? AdminShell.fmtMoney(m.revenue) : '$0') + '</div>'
+      + '</div>';
+  }).join('');
+  host.innerHTML = rows;
+}
+
+function renderTypeMix(byType) {
+  var keys = Object.keys(byType);
+  var host = document.getElementById('type-mix');
+  if (!keys.length) {
+    host.innerHTML = '<div class="state"><p class="muted">No active deals.</p></div>';
+    return;
+  }
+  var total = keys.reduce(function (s, k) { return s + byType[k]; }, 0);
+  keys.sort(function (a, b) { return byType[b] - byType[a]; });
+  var html = keys.map(function (k) {
+    var pct = Math.round((byType[k] / total) * 100);
+    return '<div style="margin-bottom:14px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'
+      + '<span style="font-weight:700;color:var(--navy)">' + AdminShell.esc(k) + '</span>'
+      + '<span class="muted">' + byType[k] + ' · ' + pct + '%</span>'
+      + '</div>'
+      + '<div style="height:6px;background:var(--bg-2);border-radius:4px;overflow:hidden">'
+      + '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:4px"></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  host.innerHTML = html;
+}
+
+function rateClass(rate) {
+  if (rate >= 40) return 'good';
+  if (rate >= 15) return 'ok';
+  return 'low';
+}
+
+function renderDealTable(deals) {
+  var host = document.getElementById('deal-table');
+  if (!deals.length) {
+    host.innerHTML = '<div class="state"><h3>No active deals</h3><p>Deals in Notion marked "Actively Marketing" will show up here with their engagement stats.</p></div>';
+    return;
+  }
+  var rows = deals.map(function (d) {
+    var loc = AdminShell.esc(d.city || '') + (d.state ? ', ' + AdminShell.esc(d.state) : '');
+    var price = d.askingPrice ? AdminShell.fmtMoney(d.askingPrice) : '—';
+    var days = (d.daysOnMarket !== null && d.daysOnMarket !== undefined) ? d.daysOnMarket + 'd' : '—';
+    var viewPill = '<span class="rate-pill ' + rateClass(d.viewRate) + '">' + fmtPct(d.viewRate) + '</span>';
+    var convPill = '<span class="rate-pill ' + rateClass(d.conversionRate) + '">' + fmtPct(d.conversionRate) + '</span>';
+    var lookupUrl = '/admin/deal-buyers.html?deal=' + encodeURIComponent(d.slug || '');
+    return '<tr>'
+      + '<td class="cell-strong">' + AdminShell.esc(d.dealCode || '—') + '</td>'
+      + '<td>' + loc + '</td>'
+      + '<td><span class="pill blue">' + AdminShell.esc(d.dealType || '—') + '</span></td>'
+      + '<td class="tr cell-strong">' + price + '</td>'
+      + '<td class="tc cell-muted">' + days + '</td>'
+      + '<td class="tc cell-strong">' + AdminShell.fmtNum(d.sent || 0) + '</td>'
+      + '<td class="tc">' + AdminShell.fmtNum(d.viewed || 0) + ' ' + viewPill + '</td>'
+      + '<td class="tc">' + AdminShell.fmtNum(d.interested || 0) + ' ' + convPill + '</td>'
+      + '<td class="tr"><a href="' + lookupUrl + '" class="btn secondary" style="padding:5px 10px;font-size:11px">View buyers</a></td>'
+      + '</tr>';
+  }).join('');
+  host.innerHTML = '<table class="t">'
+    + '<thead><tr>'
+    + '<th>Deal ID</th><th>Location</th><th>Type</th><th class="tr">Price</th>'
+    + '<th class="tc">Days</th><th class="tc">Sent</th><th class="tc">Viewed</th><th class="tc">Interested</th><th></th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody></table>';
+}
+
+AdminShell.requireAuth(loadAll);
+</script>
+
+</body>
+</html>
