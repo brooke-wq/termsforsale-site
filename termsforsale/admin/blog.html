@@ -3,21 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blog & Content — Admin — Terms For Sale</title>
+<title>Blog & Posts — Admin — Terms For Sale</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.png" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/admin/admin.css">
 <style>
-.cms-frame{
-  width:100%;
-  min-height:800px;
-  border:1px solid var(--border);
-  border-radius:var(--r);
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.filter-tab{
+  padding:8px 16px;
   background:#fff;
-  overflow:hidden;
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-mid);
+  cursor:pointer;
+  transition:all .15s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
 }
-.cms-frame iframe{width:100%;height:80vh;border:none;display:block}
+.filter-tab:hover{border-color:var(--blue);color:var(--blue)}
+.filter-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+.search-row{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.search-row input{flex:1;min-width:240px}
+
+.post-title{font-size:13px;font-weight:700;color:var(--navy);line-height:1.3;margin-bottom:3px}
+.post-hook{font-size:11px;color:var(--text-light);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.post-slug{font-size:10px;color:var(--text-light);font-family:Menlo,Monaco,monospace;margin-top:2px}
+
+.type-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:12px;display:inline-block;white-space:nowrap}
+.type-deal{background:rgba(247,148,29,.12);color:#c2610a;border:1px solid rgba(247,148,29,.28)}
+.type-education{background:rgba(41,171,226,.12);color:var(--blue-dark);border:1px solid rgba(41,171,226,.28)}
+
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.row-btn{
+  padding:6px 12px;
+  background:#fff;
+  border:1.5px solid var(--border);
+  border-radius:7px;
+  font-family:var(--font);
+  font-size:11px;
+  font-weight:700;
+  color:var(--text-mid);
+  text-decoration:none;
+  cursor:pointer;
+  transition:all .15s;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.row-btn:hover{border-color:var(--blue);color:var(--blue)}
+.row-btn svg{width:12px;height:12px}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
+.empty-state h3{font-size:16px;color:var(--navy);margin-bottom:6px}
+.empty-state p{font-size:13px;max-width:380px;margin:0 auto 18px}
+
+.info-box{
+  background:#EBF8FF;
+  border-left:4px solid var(--blue);
+  padding:14px 18px;
+  border-radius:0 8px 8px 0;
+  margin-bottom:22px;
+  font-size:13px;
+  color:var(--text-mid);
+  line-height:1.55;
+}
+.info-box strong{color:var(--navy)}
+.info-box code{background:#fff;padding:1px 6px;border-radius:4px;font-size:12px;font-family:Menlo,Monaco,monospace;color:var(--navy)}
 </style>
 </head>
 <body>
@@ -27,16 +83,20 @@
     <div class="topbar">
       <div class="topbar-title">
         <div class="topbar-crumb">Content</div>
-        <div class="topbar-h">Blog & Content</div>
+        <div class="topbar-h">Blog & Posts</div>
       </div>
       <div class="topbar-right">
         <a href="/blog/" class="topbar-btn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
           <span>View blog</span>
         </a>
-        <a href="/admin/cms.html" class="topbar-btn primary">
+        <button class="topbar-btn" onclick="refetch()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+        <a href="/va-post-builder.html" class="topbar-btn primary" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-          <span>Open Full CMS</span>
+          <span>New Post</span>
         </a>
       </div>
     </div>
@@ -45,63 +105,62 @@
 
       <div class="stat-grid">
         <div class="stat">
-          <div class="stat-label">Post Types</div>
-          <div class="stat-value">2</div>
-          <div class="stat-sub">Deal spotlights + education</div>
-        </div>
-        <div class="stat green">
-          <div class="stat-label">CMS</div>
-          <div class="stat-value" style="font-size:22px">Decap CMS</div>
-          <div class="stat-sub">Git-based editor</div>
+          <div class="stat-label">Total Posts</div>
+          <div class="stat-value" id="s-total">—</div>
+          <div class="stat-sub">Published on termsforsale.com/blog</div>
         </div>
         <div class="stat orange">
-          <div class="stat-label">Auto-Publishing</div>
-          <div class="stat-value" style="font-size:22px">Enabled</div>
-          <div class="stat-sub">Deal spotlights auto-generated</div>
+          <div class="stat-label">Deal Spotlights</div>
+          <div class="stat-value" id="s-deals">—</div>
+          <div class="stat-sub">Per-property write-ups</div>
         </div>
+        <div class="stat green">
+          <div class="stat-label">Education & Guides</div>
+          <div class="stat-value" id="s-edu">—</div>
+          <div class="stat-sub">Investor strategy articles</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label">Latest Post</div>
+          <div class="stat-value" id="s-latest" style="font-size:18px">—</div>
+          <div class="stat-sub" id="s-latest-sub">—</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>How publishing works:</strong> Posts are HTML files stored at
+        <code>termsforsale/blog/posts/</code> and committed directly to
+        <code>main</code> via the GitHub API. Click <strong>New Post</strong> to
+        open the Deal Post Builder — it walks through a 4-step wizard and
+        publishes in about 90 seconds. The builder uses its own <code>VA_PASSWORD</code>
+        (separate from this admin password).
       </div>
 
       <div class="panel">
         <div class="panel-head">
           <div>
             <div class="panel-title">
-              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Content Management
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Published Posts
             </div>
-            <div class="panel-sub">Create and edit blog posts for termsforsale.com/blog</div>
+            <div class="panel-sub">Everything live on the blog right now — pulled from <code>/blog/posts-index.json</code></div>
           </div>
         </div>
         <div class="panel-body">
-          <p style="color:var(--text-mid);font-size:13px;margin-bottom:18px">
-            The blog editor runs on <strong>Decap CMS</strong> — a git-based content editor.
-            Posts you create here commit directly to the <code>main</code> branch and trigger
-            a Netlify deploy. Two content types are available:
-          </p>
 
-          <div class="quick-grid" style="margin-bottom:24px">
-            <a href="/admin/cms.html#/collections/deal_posts" class="quick-card">
-              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-              <div class="quick-card-body">
-                <div class="quick-card-title">Deal Spotlight Posts</div>
-                <div class="quick-card-desc">Individual property spotlights — location, numbers, story, buyer fit.</div>
-              </div>
-            </a>
-            <a href="/admin/cms.html#/collections/education_posts" class="quick-card purple">
-              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-              <div class="quick-card-body">
-                <div class="quick-card-title">Education & Guides</div>
-                <div class="quick-card-desc">Creative finance 101, market insights, buyer strategy articles.</div>
-              </div>
-            </a>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">All Posts <span id="c-all" style="opacity:.55">·</span></button>
+            <button class="filter-tab" data-filter="deal">Deal Spotlights <span id="c-deal" style="opacity:.55">·</span></button>
+            <button class="filter-tab" data-filter="education">Education <span id="c-edu" style="opacity:.55">·</span></button>
           </div>
 
-          <div class="important" style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:14px 18px;border-radius:0 8px 8px 0">
-            <strong style="color:#92400E">Tip:</strong>
-            <span style="font-size:13px;color:var(--text-mid)">
-              The "Open Full CMS" button above gives you the full-screen Decap editor experience.
-              Authenticating there uses Netlify Identity / git-gateway (separate from this admin password).
-            </span>
+          <div class="search-row">
+            <input type="text" id="search" placeholder="Search posts by title, city, or slug…">
           </div>
+
+          <div id="posts-wrap" class="table-wrap">
+            <div class="spinner"></div>
+          </div>
+
         </div>
       </div>
 
@@ -112,7 +171,182 @@
 <script src="/admin/admin.js"></script>
 <script>
 AdminShell.renderShell('blog');
-AdminShell.requireAuth();
+
+var ALL_POSTS = [];
+var CURRENT_FILTER = 'all';
+
+function esc(s){ return AdminShell.esc(s); }
+
+function fmtDate(s){
+  if (!s) return '—';
+  try {
+    var d = new Date(s);
+    if (isNaN(d)) return '—';
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  } catch(e){ return '—'; }
+}
+
+function relDate(s){
+  if (!s) return '';
+  try {
+    var d = new Date(s);
+    if (isNaN(d)) return '';
+    var days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days < 1) return 'today';
+    if (days === 1) return '1 day ago';
+    if (days < 30) return days + ' days ago';
+    if (days < 60) return '1 month ago';
+    if (days < 365) return Math.floor(days/30) + ' months ago';
+    return Math.floor(days/365) + ' years ago';
+  } catch(e){ return ''; }
+}
+
+async function loadPosts(){
+  var wrap = document.getElementById('posts-wrap');
+  wrap.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    var res = await fetch('/blog/posts-index.json?t=' + Date.now(), { cache:'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var posts = await res.json();
+    if (!Array.isArray(posts)) throw new Error('Unexpected response shape');
+
+    // Sort newest first
+    posts.sort(function(a, b){
+      var da = a.date ? new Date(a.date).getTime() : 0;
+      var db = b.date ? new Date(b.date).getTime() : 0;
+      return db - da;
+    });
+
+    ALL_POSTS = posts;
+    updateStats();
+    render();
+  } catch(err){
+    console.error('Failed to load posts-index.json', err);
+    wrap.innerHTML = '<div class="empty-state"><h3>Could not load posts</h3>'
+      + '<p>Failed to fetch <code>/blog/posts-index.json</code>: ' + esc(err.message) + '</p>'
+      + '<button class="row-btn" onclick="refetch()">Try again</button></div>';
+  }
+}
+
+function updateStats(){
+  var total = ALL_POSTS.length;
+  var dealCount = ALL_POSTS.filter(function(p){ return p.type === 'deal'; }).length;
+  var eduCount = ALL_POSTS.filter(function(p){ return p.type === 'education'; }).length;
+
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-deals').textContent = dealCount;
+  document.getElementById('s-edu').textContent = eduCount;
+
+  document.getElementById('c-all').textContent = total;
+  document.getElementById('c-deal').textContent = dealCount;
+  document.getElementById('c-edu').textContent = eduCount;
+
+  if (total > 0) {
+    var latest = ALL_POSTS[0];
+    document.getElementById('s-latest').textContent = fmtDate(latest.date);
+    document.getElementById('s-latest-sub').textContent = relDate(latest.date) || '—';
+  } else {
+    document.getElementById('s-latest').textContent = '—';
+    document.getElementById('s-latest-sub').textContent = 'No posts yet';
+  }
+}
+
+function render(){
+  var q = (document.getElementById('search').value || '').toLowerCase().trim();
+  var filtered = ALL_POSTS.filter(function(p){
+    if (CURRENT_FILTER !== 'all' && p.type !== CURRENT_FILTER) return false;
+    if (!q) return true;
+    var hay = [p.title, p.slug, p.city, p.state, p.category, p.dealType, p.hook]
+      .filter(Boolean).join(' ').toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+
+  var wrap = document.getElementById('posts-wrap');
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<div class="empty-state">'
+      + '<h3>' + (ALL_POSTS.length ? 'No posts match' : 'No posts yet') + '</h3>'
+      + '<p>' + (ALL_POSTS.length
+          ? 'Try a different search or filter.'
+          : 'Click <strong>New Post</strong> in the top right to publish your first one.') + '</p>'
+      + '</div>';
+    return;
+  }
+
+  var rows = filtered.map(function(p){
+    var type = p.type === 'deal' ? 'deal' : 'education';
+    var typeLabel = type === 'deal' ? 'Deal Spotlight' : 'Education';
+    var category = p.category || (type === 'deal' ? (p.dealType || '—') : '—');
+    var loc = (p.city && p.state) ? (p.city + ', ' + p.state) : (p.city || p.state || '—');
+    var postUrl = p.url || ('https://termsforsale.com/blog/posts/' + p.slug + '.html');
+    // Prefer same-origin relative URL so it opens on whatever domain we're on
+    var relUrl = '/blog/posts/' + encodeURIComponent(p.slug) + '.html';
+
+    return '<tr>'
+      + '<td>'
+      +   '<div class="post-title">' + esc(p.title || p.slug || 'Untitled') + '</div>'
+      +   (p.hook ? '<div class="post-hook">' + esc(p.hook) + '</div>' : '')
+      +   '<div class="post-slug">' + esc(p.slug || '') + '</div>'
+      + '</td>'
+      + '<td><span class="type-badge type-' + type + '">' + typeLabel + '</span></td>'
+      + '<td style="font-size:12px;color:var(--text-mid)">' + esc(category) + '</td>'
+      + '<td style="font-size:12px;color:var(--text-mid)">' + esc(loc) + '</td>'
+      + '<td style="font-size:12px;color:var(--text-light);white-space:nowrap">' + fmtDate(p.date) + '</td>'
+      + '<td>'
+      +   '<div class="row-actions">'
+      +     '<a class="row-btn" href="' + esc(relUrl) + '" target="_blank" rel="noopener" title="Open post in a new tab">'
+      +       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
+      +       'View'
+      +     '</a>'
+      +     '<button class="row-btn" onclick="copyLink(\'' + esc(postUrl) + '\')" title="Copy full URL">'
+      +       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+      +       'Copy'
+      +     '</button>'
+      +   '</div>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+
+  wrap.innerHTML = '<table class="t"><thead><tr>'
+    + '<th>Post</th>'
+    + '<th>Type</th>'
+    + '<th>Category</th>'
+    + '<th>Location</th>'
+    + '<th>Published</th>'
+    + '<th style="text-align:right">Actions</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function copyLink(url){
+  AdminShell.copy(url);
+}
+window.copyLink = copyLink;
+
+function refetch(){
+  AdminShell.toast('Refreshing…');
+  loadPosts();
+}
+window.refetch = refetch;
+
+// Wire filter tabs
+document.querySelectorAll('.filter-tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.filter-tab').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    CURRENT_FILTER = btn.getAttribute('data-filter');
+    render();
+  });
+});
+
+// Wire search (debounced)
+var searchTimer;
+document.getElementById('search').addEventListener('input', function(){
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(render, 120);
+});
+
+AdminShell.requireAuth(loadPosts);
 </script>
 </body>
 </html>
