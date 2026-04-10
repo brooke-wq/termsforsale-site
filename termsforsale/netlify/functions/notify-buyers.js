@@ -648,7 +648,14 @@ function buildBuyerProfile(contact) {
 //   fit=weak    → downgrade tier by 1 (max 3)
 //   fit=fair    → no change
 async function runAiFitPass(claudeKey, ghlKey, deal, buyersByContact) {
-  var LIMIT_PER_DEAL = +(process.env.AI_MATCH_MAX_PER_DEAL || 100);
+  // Netlify function timeout is ~10-26s. At ~1.5s per Claude call (even
+  // batched 5-concurrent) a 100-buyer cap would overrun. Cap harder when
+  // we detect we're running on Netlify. Droplet cron has no timeout,
+  // so it keeps the 100 default. Explicit AI_MATCH_MAX_PER_DEAL env var
+  // always wins if set.
+  var isNetlify = !!process.env.NETLIFY;
+  var defaultLimit = isNetlify ? 20 : 100;
+  var LIMIT_PER_DEAL = +(process.env.AI_MATCH_MAX_PER_DEAL || defaultLimit);
   var CONCURRENCY = 5;
   var shortlist = Object.keys(buyersByContact).slice(0, LIMIT_PER_DEAL);
   var dropped = [];
@@ -689,7 +696,9 @@ async function runAiFitPass(claudeKey, ghlKey, deal, buyersByContact) {
     await Promise.all(batch.map(processOne));
   }
 
-  console.log('[notify-buyers] AI fit pass: shortlist=' + shortlist.length +
+  console.log('[notify-buyers] AI fit pass: env=' + (isNetlify ? 'netlify' : 'droplet') +
+    ' cap=' + LIMIT_PER_DEAL +
+    ' shortlist=' + shortlist.length +
     ' dropped=' + dropped.length +
     ' cost=$' + totalCost.toFixed(4));
   return { dropped: dropped, cost: totalCost };
