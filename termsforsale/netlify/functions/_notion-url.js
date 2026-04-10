@@ -63,7 +63,47 @@ async function setDealWebsiteLink(token, deal) {
   return patchWebsiteLink(token, deal.id, url);
 }
 
+// PATCH the Notion page's "Description" rich_text property.
+// Same pattern as patchWebsiteLink — never throws.
+function patchDescription(token, pageId, text) {
+  return new Promise(function(resolve) {
+    var body = JSON.stringify({
+      properties: {
+        'Description': {
+          rich_text: [{ type: 'text', text: { content: String(text || '') } }]
+        }
+      }
+    });
+    var opts = {
+      hostname: 'api.notion.com',
+      path: '/v1/pages/' + pageId,
+      method: 'PATCH',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      }
+    };
+    var req = https.request(opts, function(res) {
+      var data = '';
+      res.on('data', function(c) { data += c; });
+      res.on('end', function() {
+        var parsed;
+        try { parsed = JSON.parse(data); } catch(e) { parsed = data; }
+        resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body: parsed });
+      });
+    });
+    req.on('error', function(err) {
+      resolve({ ok: false, status: 0, body: { error: err.message } });
+    });
+    req.write(body);
+    req.end();
+  });
+}
+
 module.exports = {
   patchWebsiteLink: patchWebsiteLink,
-  setDealWebsiteLink: setDealWebsiteLink
+  setDealWebsiteLink: setDealWebsiteLink,
+  patchDescription: patchDescription
 };

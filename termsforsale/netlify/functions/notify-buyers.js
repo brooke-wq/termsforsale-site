@@ -10,7 +10,11 @@
 
 const https = require('https');
 const { buildDealUrl, buildTrackedDealUrl } = require('./_deal-url');
-const { setDealWebsiteLink } = require('./_notion-url');
+const { setDealWebsiteLink, patchDescription } = require('./_notion-url');
+
+// ─── AUTO DESCRIPTION ───────────────────────────────────────
+var dealDesc;
+try { dealDesc = require('./_deal-description'); } catch(e) { dealDesc = null; }
 
 // ─── FILE-BASED DEDUP (Droplet only) ────────────────────────
 var sentLog;
@@ -189,6 +193,17 @@ function parseDeal(page) {
     highlight1: prop(page, 'Highlight 1'),
     highlight2: prop(page, 'Highlight 2'),
     highlight3: prop(page, 'Highlight 3'),
+    coverPhoto: prop(page, 'Cover photo') || prop(page, 'Cover Photo'),
+    description: prop(page, 'Description') || prop(page, 'Details ') || prop(page, 'Details'),
+    subtoLoanBalance: +prop(page, 'SubTo Loan Balance') || 0,
+    subtoRate: +prop(page, 'SubTo Rate (%)') || 0,
+    piti: +prop(page, 'PITI ') || +prop(page, 'PITI') || 0,
+    sfLoanAmount: +prop(page, 'SF Loan Amount') || 0,
+    sfRate: prop(page, 'SF Rate'),
+    sfTerm: prop(page, 'SF Term'),
+    sfPayment: +prop(page, 'SF Payment') || 0,
+    occupancy: prop(page, 'Occupancy'),
+    hoa: prop(page, 'HOA'),
     lastEdited: page.last_edited_time
   };
   deal.dealUrl = buildDealUrl(deal);
@@ -876,6 +891,26 @@ exports.handler = async function(event) {
         }
       } catch (linkErr) {
         console.warn('notify-buyers: Website Link patch threw for ' + deal.id + ': ' + linkErr.message);
+      }
+
+      // Best-effort: auto-generate a Description via Claude Haiku if the
+      // deal doesn't have one yet. Writes back to Notion so the deal page
+      // and future blasts can use it. ~$0.001 per call.
+      if (!deal.description && dealDesc && process.env.CLAUDE_API_KEY) {
+        try {
+          var desc = await dealDesc.generateDescription(process.env.CLAUDE_API_KEY, deal);
+          if (desc) {
+            var descResult = await patchDescription(token, deal.id, desc);
+            if (descResult.ok) {
+              deal.description = desc;
+              console.log('notify-buyers: Description generated for ' + deal.id + ' (' + desc.length + ' chars)');
+            } else {
+              console.warn('notify-buyers: Description patch failed for ' + deal.id + ' status=' + descResult.status);
+            }
+          }
+        } catch (descErr) {
+          console.warn('notify-buyers: Description gen failed for ' + deal.id + ': ' + descErr.message);
+        }
       }
 
       var buyers = await findMatchingBuyers(apiKey, locationId, deal);
