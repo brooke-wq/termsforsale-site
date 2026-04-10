@@ -50,12 +50,18 @@ function httpRequest(url, options, body) {
 async function getRecentDeals(token, dbId, sinceMinutes) {
   // Use "Started Marketing" date field — only alerts on newly listed deals,
   // not on any random edit. Dedup tags prevent double sends per buyer per deal.
-  var today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  // Look back 7 days instead of just today so deals whose Started Marketing
+  // date was set on a day the cron didn't run (or before the cron fired)
+  // still get picked up. The per-buyer dedup tag (alerted-XXXXXXXX) prevents
+  // any buyer from receiving duplicate alerts for the same deal.
+  var lookback = new Date();
+  lookback.setDate(lookback.getDate() - 7);
+  var since = lookback.toISOString().split('T')[0]; // YYYY-MM-DD, 7 days ago
   var body = {
     filter: {
       and: [
         { property: 'Deal Status', status: { equals: 'Actively Marketing' } },
-        { property: 'Started Marketing ', date: { on_or_after: today } }
+        { property: 'Started Marketing ', date: { on_or_after: since } }
       ]
     },
     page_size: 20
