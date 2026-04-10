@@ -276,6 +276,67 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 10 2026 Admin Deals Inline Buyer Drawer
+
+Branch: `claude/improve-deal-search-zDHrj`.
+
+Brooke asked to make deal search easier — specifically, click an
+actively marketed deal and auto-pull the list of buyers it was sent
+to. The old flow required navigating from `/admin/deals.html` to
+`/admin/deal-buyers.html?deal=<slug>` (full page reload, lost scroll
+position, had to come back and click the next deal). Replaced with a
+slide-in right-side drawer that opens on row click and renders the
+buyer list inline.
+
+### Files shipped
+
+- **`termsforsale/admin/deals.html`** (+505 / -26)
+  - New slide-in `.drawer` + `.drawer-backdrop` panel (width
+    `min(720px, 94vw)`, right-anchored, CSS transform slide).
+  - Rows in the deals table are now clickable (`cursor:pointer`,
+    title hint "Click to see buyers sent this deal"). Clicking the
+    "View" link or any inner `<a>`/`<button>` is excluded via a
+    `data-stop` guard + tag walk so those actions still work.
+  - New `fetchBuyersForSlug(slug)` shared fetch helper that both
+    the initial batch load (`loadAllBuyerCounts`) and the drawer
+    open flow share. Caches the full contact list in
+    `BUYER_DETAILS[slug]` so opening an already-scanned deal is
+    instant (no second network hit).
+  - `openDrawer(deal)` hydrates the drawer head with
+    `dealCode · City, State ZIP · dealType`, marks the active row
+    with an `is-open` class, and either renders from cache or
+    shows a spinner + fires `fetchBuyersForSlug()`.
+  - `renderDrawerBody()` renders 5 stat tiles (Sent / Hot /
+    Interested / No reply / Passed), an in-drawer search box
+    (name/phone/email), a status filter `<select>` (including a
+    synthetic `__none__` option for contacts with no response tag),
+    and a compact contact table with status pills + phone/email
+    `tel:`/`mailto:` links + tier column.
+  - Drawer footer has a "Full page" link to the existing
+    `/admin/deal-buyer-list.html?deal=<slug>` view (for CSV export
+    and the richer tier breakdown) plus a Refresh button that
+    evicts the cache and re-fetches.
+  - Close via the X button, backdrop click, or Escape key. Body
+    scroll is locked while the drawer is open.
+
+### Backend — no changes
+
+Existing `/api/deal-buyer-list?deal=<slug>` endpoint already returns
+everything the drawer needs (contacts, dealStatus, tier, phone,
+email, acqTags, mktTags). Standalone `/admin/deal-buyers.html` still
+works unchanged — it's linked from the drawer footer for power-user
+workflows.
+
+### Known caveats
+
+- Initial page load fires one `/api/deal-buyer-list` call per active
+  deal in parallel (same as before). The drawer just reuses that
+  cache, so there's no new API cost unless the user hits Refresh.
+- The drawer filter input uses `setTimeout(150)` debounce and
+  restores cursor position after re-render to keep typing smooth.
+
+---
+
 ## Completed — April 10 2026 Buyer Lookup Fix (Unsent Deals)
 
 Admin deal-buyers lookup was returning 0 results for Philadelphia deals
