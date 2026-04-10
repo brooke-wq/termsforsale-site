@@ -1408,6 +1408,89 @@ deploy context.
 
 ---
 
+## Completed — April 10 2026 Admin Blog & Posts Page Fix (PR #60)
+
+Branch: `claude/fix-admin-blog-posts-GJY2s`. Shipped and merged.
+
+Brooke reported that the "Blog & Posts" section in the admin portal
+didn't work — clicking it sent her to the Decap CMS page. Root cause:
+the admin Blog landing page (`/admin/blog.html`) only had two CTAs and
+both pointed at `/admin/cms.html`, which is a fundamentally broken
+Decap CMS integration:
+
+1. `config.yml` uses `folder: "_posts/deals"` and `folder: "_posts/education"`
+   — but those directories don't exist. Real blog posts live at
+   `termsforsale/blog/posts/*.html` (as HTML, not Markdown).
+2. The `git-gateway` backend requires Netlify Identity, which isn't
+   set up on this site.
+3. The `media_folder` points at `blog/images` instead of
+   `termsforsale/blog/images`.
+
+Every path through the admin Blog section dead-ended on an empty/broken
+Decap screen.
+
+### Fix shipped
+
+**`termsforsale/admin/blog.html`** — rewrote from a Decap landing page
+into a real post management view. Key changes:
+- Fetches `/blog/posts-index.json` directly on load (publicly served,
+  no auth needed for the static file read) and renders the full list
+  sorted newest first
+- 4 stat cards: Total Posts, Deal Spotlights, Education & Guides,
+  Latest Post (with relative date like "3 days ago")
+- Filter tabs: All / Deal Spotlights / Education, with live counts
+- Debounced search box — searches title, slug, city, state, category,
+  deal type, and hook
+- Table with post title + hook + slug column, type badge, category,
+  location, published date, plus per-row **View** (opens live post in
+  new tab) and **Copy** (copies full URL via `AdminShell.copy()`)
+- Topbar has **View blog** (external link), **Refresh** (reloads the
+  index), and primary **New Post** button that opens
+  `/va-post-builder.html` in a new tab — the existing, working wizard
+  that commits HTML via `create-post.js` and the GitHub API
+- Inline info box tells operators: "Posts are HTML files stored at
+  `termsforsale/blog/posts/` and committed directly to main via the
+  GitHub API... The builder uses its own `VA_PASSWORD` (separate from
+  this admin password)."
+
+**`termsforsale/admin/index.html`** — updated the Blog & Posts quick
+card on the dashboard so the description no longer says "via Decap CMS"
+— now reads "Browse published posts and launch the Deal Post Builder to
+write new ones."
+
+### Orphaned files (intentionally left in place)
+
+- `termsforsale/admin/cms.html` — still loads the Decap CMS script but
+  nothing in the portal links to it anymore
+- `termsforsale/admin/config.yml` — still has the broken Decap config
+
+These are no longer reachable from the UI. If we want to ditch them
+entirely, that's a separate cleanup commit — not blocking.
+
+### Env vars required for end-to-end publishing (already set, confirm)
+
+- `VA_PASSWORD` — gates the post builder login
+- `GITHUB_TOKEN` — commits the new HTML file via GitHub API
+- `GITHUB_REPO_OWNER` — e.g. `brooke-wq`
+- `GITHUB_REPO_NAME` — e.g. `termsforsale-site`
+
+If any are missing, the builder will log in but hitting Publish returns
+"Server not configured. Contact your admin."
+
+### Verification after Netlify auto-deploy
+
+1. Open `/admin/` → click **Blog & Posts** in the sidebar. Should show
+   8 posts from `/blog/posts-index.json` — no Decap screen anywhere.
+2. Filter tabs (All / Deal Spotlights / Education) show the correct
+   counts (3 deal + 5 education = 8 total at time of writing).
+3. Search box filters live.
+4. Per-row **View** opens the live post in a new tab; **Copy** shows
+   the "Copied: …" toast with the full URL.
+5. Topbar **New Post** opens `/va-post-builder.html` and the VA
+   password login works.
+
+---
+
 ## TODO — Next Session
 
 1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.com` (which should now be pointed at the Netlify site): verify the OTP login flow works end to end (Brooke's phone → SMS → enter code → dashboard), confirm `NOTIFICATIONS_LIVE=true` is set in Netlify env vars, test one real submission (should produce a Deal ID like `PHX-001` in Notion), re-enable `dispo-buddy-triage` cron on Droplet.
