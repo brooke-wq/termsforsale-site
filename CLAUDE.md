@@ -276,6 +276,58 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 10 2026 Buyer Lookup Fix (Unsent Deals)
+
+Admin deal-buyers lookup was returning 0 results for Philadelphia deals
+`PHI-02` (1528 N Sydenham St) and `PHI-03` (1530 N Sydenham St). Root
+cause: `notify-buyers.js` `getRecentDeals()` filtered for
+`Started Marketing >= today`, so any deal whose Started Marketing date
+was set on a day the cron didn't run (or set retroactively to a past
+date) became permanently invisible to the scheduled cron. Both Philly
+deals had Started Marketing = 2026-04-09, one day in the past — no
+`sent:[slug]` tags ever got written to any buyer, so the admin lookup
+had nothing to find.
+
+### Files shipped (PR #56, merged to main)
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — widened
+  `getRecentDeals` lookback from `today` to `today − 7 days`. The
+  per-buyer dedup tag (`alerted-XXXXXXXX`) + file-based sentLog
+  guarantee no buyer receives duplicate alerts across multiple cron
+  runs, so a 7-day window is safe. Future deals whose Started Marketing
+  is set on a missed cron day will still get picked up for a week.
+
+- **`scripts/retrigger-unsent-deals.js` (new)** — one-shot sweep for
+  deals that slipped through. Scans Notion for all `Actively Marketing`
+  deals, generates the same `sent:[slug]` tag notify-buyers would
+  write, POSTs to GHL `/contacts/search` to count buyers holding that
+  tag, and if 0 are found, invokes the notify-buyers handler directly
+  via `require()` with `{ queryStringParameters: { deal_id: DEAL_CODE } }`
+  — same path `/api/notify-test` uses. Supports `DRY_RUN=1`,
+  `MAX_DEALS=N`, and `DEAL_IDS="PHI-02,PHI-03"` filters. Rate-limits
+  GHL searches at 200ms and notify-buyers invocations at 2s.
+
+### Droplet commands run (post-merge)
+
+```bash
+cd /root/termsforsale-site
+git pull origin main
+DRY_RUN=1 node scripts/retrigger-unsent-deals.js
+DEAL_IDS="PHI-02,PHI-03" node scripts/retrigger-unsent-deals.js
+```
+
+### Forward-looking behavior
+
+Future deals with past-dated Started Marketing within 7 days will be
+automatically caught by the next cron run. Deals older than 7 days still
+need the retrigger script. If this becomes a recurring pattern, consider
+(a) widening the lookback further, (b) switching to a
+"no `alerted-[id]` tag exists for this deal" check instead of a date
+window, or (c) adding a Notion webhook that fires notify-buyers on
+status change instead of a scheduled cron.
+
+---
+
 ## Completed — April 9 2026 Steadily Quote Helper Refactor + Metadata Support
 
 Branch: `claude/add-quote-metadata-support-8E65T`.
