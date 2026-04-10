@@ -95,6 +95,7 @@
 </div>
 
 <script src="/admin/admin.js"></script>
+<script src="/deal-url.js"></script>
 <script>
 AdminShell.renderShell('deals');
 
@@ -234,7 +235,7 @@ function renderList() {
 
   var rows = list.map(function (d) {
     var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
-    var dealUrl = '/deal.html?id=' + encodeURIComponent(d.id || d.dealCode || slug);
+    var dealUrl = buildDealPath(d);
     var buyersUrl = '/admin/deal-buyers.html?deal=' + encodeURIComponent(slug);
 
     return '<tr>'

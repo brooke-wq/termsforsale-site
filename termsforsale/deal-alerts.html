@@ -34,6 +34,7 @@ h1{font-size:24px;font-weight:800;margin-bottom:4px}
 <p class="sub">Deals that matched your buying criteria</p>
 <div id="alerts"><div class="loading">Loading your deal alerts...</div></div>
 </div>
+<script src="/deal-url.js"></script>
 <script>
 (function(){
   var user;
@@ -69,7 +70,7 @@ h1{font-size:24px;font-weight:800;margin-bottom:4px}
             var m=(d.coverPhoto||'').match(/\/d\/([a-zA-Z0-9_-]{20,})/);
             if(m)thumb='<img src="/api/drive-thumb?id='+m[1]+'&sz=200" alt="">';
           }
-          return'<a class="alert-card" href="/deal.html?id='+encodeURIComponent(d.id)+'">'
+          return'<a class="alert-card" href="'+buildDealPath(d)+'">'
             +'<div class="alert-thumb">'+thumb+'</div>'
             +'<div class="alert-info">'
             +'<div class="alert-type">'+(d.dealType||'Deal')+'</div>'

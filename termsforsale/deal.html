@@ -7,6 +7,7 @@
 <meta name="description" content="View deal details, terms, and financials for this off-market real estate opportunity. Subject-to, seller finance, and cash deals from Deal Pros LLC.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/deal-url.js"></script>
 <script src="/deal-page-tracker.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -851,7 +852,7 @@ function renderDeal(d,allDeals){
         <button style="width:32px;height:32px;border-radius:50%;border:none;background:var(--blue);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('sim-scroll').scrollBy({left:320,behavior:'smooth'})">→</button>
       </div>
     </div>
-    <div class="similar-grid" id="sim-scroll">${simAll.map(s=>{const sti=typeInfo(s.dealType);const simCover=driveFileId(s.coverPhoto);const simImg=simCover?thumbUrl(simCover,400):null;return`<a class="sim-card" href="deal.html?id=${s.id}" onclick="sessionStorage.setItem('deal',JSON.stringify(${JSON.stringify(s).replace(/"/g,'&quot;')}))">
+    <div class="similar-grid" id="sim-scroll">${simAll.map(s=>{const sti=typeInfo(s.dealType);const simCover=driveFileId(s.coverPhoto);const simImg=simCover?thumbUrl(simCover,400):null;return`<a class="sim-card" href="${buildDealPath(s)}" onclick="sessionStorage.setItem('deal',JSON.stringify(${JSON.stringify(s).replace(/"/g,'&quot;')}))">
       <div class="sim-photo">${simImg?`<img src="${simImg}" alt="${s.city}, ${s.state}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#c8e8f5,#a8d4ea);display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'}<div class="sim-loc">${s.nearestMetro||s.city+', '+s.state}</div></div>
       <div class="sim-body">
         <div class="sim-price">${fc(s.askingPrice)}</div>

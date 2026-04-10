@@ -727,6 +727,7 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </footer>
 
+<script src="/deal-url.js"></script>
 <script>
 // ─── CONFIG ────────────────────────────────────────────────────
 const SHEET_ID  = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
@@ -844,7 +845,7 @@ function getFirstPhoto(d){
 // ─── DEAL STORE ──────────────────────────────────────────────
 const DEAL_STORE={};
 function storeDeal(d){DEAL_STORE[d.id]=d;}
-function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href='deal.html?id='+encodeURIComponent(id);}
+function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href=d?buildDealPath(d):'/deal.html?id='+encodeURIComponent(id);}
 
 // ─── UPDATE STATS ─────────────────────────────────────────────
 function updateStats(n){
