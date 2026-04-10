@@ -26,7 +26,8 @@
       {
         label: 'Overview',
         items: [
-          { key: 'dashboard', href: '/admin/', label: 'Dashboard', icon: 'grid' }
+          { key: 'dashboard', href: '/admin/', label: 'Dashboard', icon: 'grid' },
+          { key: 'analytics', href: '/admin/analytics.html', label: 'Sales Tracking', icon: 'activity' }
         ]
       },
       {
