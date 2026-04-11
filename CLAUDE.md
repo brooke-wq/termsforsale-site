@@ -276,6 +276,83 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 11 2026 On-Site Deal URL Short-Path Fix
+
+Buyer complaint: every deal link on the site was still rendering as
+`https://termsforsale.com/deal.html?id=32f090d6-75e7-81b6-bb34-ed95b4758b76`
+even though the April 9 session had migrated all outbound SMS/email/blog
+links to the short `/d/{city}-{zip}-{code}` format. Root cause: the short-
+path work only touched server-side functions (`notify-buyers`, `auto-blog`,
+`sitemap`, `deal-package`). Client-side JS on the HTML pages was still
+building URLs as `'deal.html?id=' + encodeURIComponent(id)` because the
+inline handlers only had the Notion page ID in scope — not the city/zip/
+dealCode needed to build a slug.
+
+Branch: `claude/fix-domain-url-format-ZnqYQ`, commit `3e1518c`.
+
+### Files shipped
+
+- **`termsforsale/deal-url.js` (new)** — 30-line shared client-side slug
+  builder that mirrors `termsforsale/netlify/functions/_deal-url.js`.
+  Exposes `window.buildDealPath(deal)` which returns
+  `/d/{city}-{zip}-{code}` from a deal object. Same slugify rules, same
+  shortCode derivation (prefers Notion `dealCode` like `PHX-001` →
+  `phx001`, falls back to first 8 chars of Notion UUID for legacy
+  deals). Falls back to `/d/{uuid}` if neither city nor zip nor code
+  are present.
+
+- **10 HTML pages + 1 backend function** updated to use the short path:
+  - `termsforsale/index.html` — `clickDeal()` uses `buildDealPath(d)`
+  - `termsforsale/deals.html` — `clickDeal()` + map popup "View Deal" button
+  - `termsforsale/about.html` — `clickDeal()`
+  - `termsforsale/blog/index.html` — `clickDeal()`
+  - `termsforsale/deal.html` — similar deals grid `<a class="sim-card">` links
+  - `termsforsale/map.html` — map popup "View Deal" button
+  - `termsforsale/dashboard.html` — recently viewed / saved deal row links
+  - `termsforsale/deal-alerts.html` — alert card links
+  - `termsforsale/admin/deals.html` — admin table row "View Deal" buttons
+  - `termsforsale/netlify/functions/saved-deals.js` — GHL "DEAL SAVED"
+    note URL now uses `buildDealUrl()` from `_deal-url.js` instead of
+    hardcoding `https://termsforsale.com/deal.html?id=`.
+
+Each HTML page got a `<script src="/deal-url.js"></script>` include
+above the existing inline `<script>` block so `window.buildDealPath`
+is defined before any handler fires.
+
+### Backwards compatibility preserved
+
+- `clickDeal()` keeps the old `/deal.html?id=X` URL as a fallback when
+  the deal isn't in `DEAL_STORE` (defensive — shouldn't normally hit).
+- `deal.html` already supports three URL formats (short `/d/` path,
+  legacy `?id=UUID`, `?slug=` escape hatch) so old SMS/email links,
+  bookmarks, and GHL click history all still resolve.
+- `track-view.js` GET mode intentionally NOT changed — it still redirects
+  legacy `?id=UUID` links with the 1500 ms timeout race, because there's
+  no point paying a Notion round trip on a legacy link just to produce
+  a prettier URL.
+
+### Verification
+
+- Client-side `buildDealPath` smoke-tested with 4 cases (full deal →
+  `/d/phoenix-85016-phx001`, UUID fallback → `/d/mesa-85201-32f090d6`,
+  no city/zip → `/d/tuc005`, empty → `/d/`) — 4/4 pass.
+- `saved-deals.js` and `_deal-url.js` both load cleanly as modules.
+- Searched the repo for any remaining `deal.html?id=` references — only
+  matches left are (a) defensive fallbacks, (b) `track-view.js`
+  intentional legacy handling, and (c) docs (`MASTER-REFERENCE.md/.html`).
+
+### Follow-up discussion: GHL trigger links
+
+User asked whether we should autogenerate GHL trigger links instead.
+Answer: trigger links would be additive for outbound (SMS/email) click
+analytics but wouldn't solve the on-site navigation problem, which is
+what buyers were actually seeing. `notify-buyers.js` already builds
+tracked short URLs with `?c=contactId`; GHL trigger links are a
+separate analytics layer that can be added later if desired. The
+on-site fix above is the direct answer to the user's complaint.
+
+---
+
 ## Completed — April 9 2026 Steadily Quote Helper Refactor + Metadata Support
 
 Branch: `claude/add-quote-metadata-support-8E65T`.
