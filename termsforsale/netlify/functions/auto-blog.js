@@ -104,6 +104,19 @@ async function createDealPost(deal) {
     + (highlights.length ? '<div class="highlights"><h2 style="font-size:18px;font-weight:800;margin-bottom:12px">Deal Highlights</h2>' + highlights.map(function(h) { return '<div class="hl"><span class="hl-check">✓</span>' + escHtml(h) + '</div>'; }).join('') + '</div>' : '')
     + '<p>This is an active off-market deal available through Terms For Sale. View full terms, photos, and financials on the deal page.</p>'
     + '<a href="' + dealUrl + '" class="btn">View Full Deal Details →</a>'
+    // tfs-blog-cta-bottom — VIP buyer + JV submission two-column footer
+    + '<div class="tfs-cta-bot" style="display:flex;flex-wrap:wrap;gap:16px;margin:48px 0 28px">'
+      + '<div style="flex:1 1 280px;background:#0D1F3C;border-radius:14px;padding:26px 24px;color:#fff">'
+        + '<h3 style="font-size:18px;font-weight:800;color:#fff;margin:0 0 8px;line-height:1.3">Get First-Access to Off-Market Deals</h3>'
+        + '<p style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.55;margin:0 0 16px">Tell us your buy box once. We&rsquo;ll send only matching SubTo, seller finance, and cash deals — before they hit any group.</p>'
+        + '<a href="/buying-criteria.html" style="display:inline-block;padding:11px 22px;background:#29ABE2;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">Share My Buy Box →</a>'
+      + '</div>'
+      + '<div style="flex:1 1 280px;background:linear-gradient(135deg,#FFF8EF,#FFEFD9);border:1.5px solid #F7C77A;border-radius:14px;padding:26px 24px">'
+        + '<h3 style="font-size:18px;font-weight:800;color:#0D1F3C;margin:0 0 8px;line-height:1.3">Have a Deal That Needs Dispo Help?</h3>'
+        + '<p style="font-size:13px;color:#5a3c0b;line-height:1.55;margin:0 0 16px">Wholesalers: upload the basic numbers, we&rsquo;ll tell you if it&rsquo;s a fit and handle dispo. <strong>No upfront fees, 50/50 at close.</strong></p>'
+        + '<a href="https://dispobuddy.com/submit-deal.html" target="_blank" rel="noopener" style="display:inline-block;padding:11px 22px;background:#F7941D;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">Submit a Deal for Review →</a>'
+      + '</div>'
+    + '</div>'
     + '<p style="margin-top:40px;font-size:12px;color:#A0AEC0">Terms For Sale · Deal Pros LLC · All figures are estimates. Verify with your own due diligence.</p>'
     + '</div></body></html>';
 
