@@ -385,7 +385,7 @@ footer{background:var(--navy);padding:52px 55px 0}
 .jv-cta-card{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;padding:32px 36px;background:linear-gradient(135deg,#FFF8EF 0%,#FFEFD9 100%);border:1.5px solid #F7C77A;border-radius:18px;box-shadow:0 8px 32px rgba(247,148,29,.12)}
 .jv-cta-icon{width:54px;height:54px;border-radius:14px;background:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0;float:left;margin-right:20px;box-shadow:0 6px 16px rgba(247,148,29,.32)}
 .jv-cta-icon svg{color:#fff;width:26px;height:26px}
-.jv-cta-text h2{font-size:24px;font-weight:900;color:var(--navy);line-height:1.2;margin-bottom:8px;letter-spacing:-.3px}
+.jv-cta-text h2,.jv-cta-text .jv-cta-h{font-size:24px;font-weight:900;color:var(--navy);line-height:1.2;margin-bottom:8px;letter-spacing:-.3px}
 .jv-cta-text p{font-size:14px;color:var(--text-mid);line-height:1.55;max-width:620px}
 .jv-cta-text p strong{color:var(--navy)}
 .jv-cta-btn{flex-shrink:0;padding:14px 28px;background:var(--orange);color:#fff;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;text-decoration:none;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer}
@@ -419,9 +419,12 @@ footer{background:var(--navy);padding:52px 55px 0}
 .blog-inline-cta-btn{flex-shrink:0;padding:13px 26px;background:var(--orange);color:#fff;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:none;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;border:none;cursor:pointer}
 .blog-inline-cta-btn:hover{background:var(--orange-dark);transform:translateY(-1px)}
 
-/* Section divider above the deal-marketplace cross-sell sections */
-.below-blog-divider{padding:20px 40px 0;max-width:1200px;margin:0 auto}
-.below-blog-divider .label{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:1.2px;text-align:center;padding:18px 0;border-top:1px solid var(--border)}
+/* "Explore Live Off-Market Deals" section header — labels the marketplace blocks below */
+.explore-live-deals{background:#fff;padding:32px 40px 20px;border-top:1px solid var(--border)}
+.explore-live-deals-inner{max-width:1100px;margin:0 auto;text-align:center}
+.explore-live-eyebrow{font-size:12px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:10px}
+.explore-live-h2{font-size:36px;font-weight:900;color:var(--navy);line-height:1.1;letter-spacing:-.5px;margin-bottom:10px}
+.explore-live-sub{font-size:14px;color:var(--text-mid);line-height:1.6;max-width:600px;margin:0 auto}
 
 @media(max-width:900px){
   .blog-hero{padding:60px 20px 40px}
@@ -595,22 +598,7 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </header>
 
-<!-- JV PARTNER CTA CARD (right under hero, above blog listing) -->
-<section class="jv-cta">
-  <div class="jv-cta-inner">
-    <div class="jv-cta-card">
-      <div class="jv-cta-text">
-        <div class="jv-cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <h2>Wholesaler With a Locked-Up Deal You Can't Move?</h2>
-        <p>Upload the basic numbers, we'll tell you if it's a fit and handle dispo if it is. <strong>No upfront fees, 50/50 at close.</strong></p>
-      </div>
-      <a href="https://dispobuddy.com/submit-deal.html" target="_blank" rel="noopener" class="jv-cta-btn">
-        Submit a Deal for Review
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-      </a>
-    </div>
-  </div>
-</section>
+<!-- JV PARTNER CTA — moved below the blog list per content hub spec -->
 
 <!-- HERO (hidden on blog page — kept on disk for shared CSS but never rendered) -->
 <section class="hero" style="display:none" aria-hidden="true">
@@ -653,7 +641,7 @@ footer{background:var(--navy);padding:52px 55px 0}
 
 <!-- BLOG POSTS -->
 <section class="blog-section" id="blog-section">
-  <h2 class="blog-section-title">All Articles</h2>
+  <h2 class="blog-section-title">Blog &amp; Investor Guides</h2>
   <p class="blog-section-sub">Education, deal breakdowns, and strategy guides for creative finance investors.</p>
   <div class="blog-tabs" id="blog-tabs">
     <button class="blog-tab on" data-filter="all">All Posts</button>
@@ -667,8 +655,31 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </section>
 
-<!-- Divider between blog content and deal-marketplace cross-sell sections -->
-<div class="below-blog-divider"><div class="label">Ready to See Live Deals? — Browse the Marketplace ↓</div></div>
+<!-- JV PARTNER CTA CARD (under blog list, above the deals section) -->
+<section class="jv-cta">
+  <div class="jv-cta-inner">
+    <div class="jv-cta-card">
+      <div class="jv-cta-text">
+        <div class="jv-cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <h2 class="jv-cta-h">Wholesaler With a Locked-Up Deal You Can't Move?</h2>
+        <p>Upload the basic numbers, we'll tell you if it's a fit and handle dispo if it is. <strong>No upfront fees, 50/50 at close.</strong></p>
+      </div>
+      <a href="https://dispobuddy.com/submit-deal.html" target="_blank" rel="noopener" class="jv-cta-btn">
+        Submit a Deal for Review
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── EXPLORE LIVE OFF-MARKET DEALS — section header for the marketplace blocks below ── -->
+<section class="explore-live-deals">
+  <div class="explore-live-deals-inner">
+    <div class="explore-live-eyebrow">Now: live deals</div>
+    <h2 class="explore-live-h2">Explore Live Off-Market Deals</h2>
+    <p class="explore-live-sub">Subject-To, seller finance, hybrid, and cash deals — sourced and packaged by Deal Pros LLC. Browse the map and full marketplace below.</p>
+  </div>
+</section>
 
 <!-- STREAMLINED (hidden on blog page) -->
 <section class="streamlined" style="display:none">
@@ -715,10 +726,10 @@ footer{background:var(--navy);padding:52px 55px 0}
       </div>
       <div class="step-visual">
         <div class="mini-grid" id="how-mini-grid">
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#d4eadf,#a8d4c0)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#f5e6c8,#e8d5a8)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
-          <div class="mini-card"><div class="mini-card-photo" style="background:linear-gradient(135deg,#e8c8f5,#d4a8e8)"></div><div class="mini-card-body"><div class="mini-card-price">Loading&hellip;</div></div></div>
+          <div class="mini-card" aria-hidden="true"><div class="mini-card-photo" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea);height:120px"></div></div>
+          <div class="mini-card" aria-hidden="true"><div class="mini-card-photo" style="background:linear-gradient(135deg,#d4eadf,#a8d4c0);height:120px"></div></div>
+          <div class="mini-card" aria-hidden="true"><div class="mini-card-photo" style="background:linear-gradient(135deg,#f5e6c8,#e8d5a8);height:120px"></div></div>
+          <div class="mini-card" aria-hidden="true"><div class="mini-card-photo" style="background:linear-gradient(135deg,#e8c8f5,#d4a8e8);height:120px"></div></div>
         </div>
       </div>
     </div>
@@ -730,15 +741,10 @@ footer{background:var(--navy);padding:52px 55px 0}
         <p>When you're ready, send in your offer for review. If accepted, lock in your position with an EMD deposit.</p>
       </div>
       <div class="step-visual" style="direction:ltr;background:transparent;border:none">
-        <div class="big-card-wrap" id="how-big-card">
+        <div class="big-card-wrap" id="how-big-card" aria-hidden="true">
           <div class="big-card-check"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
           <div class="big-card">
-            <div class="big-card-img" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea)"></div>
-            <div class="big-card-body">
-              <div class="big-card-price">Loading&hellip;</div>
-              <div class="big-card-loc"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>&mdash;</div>
-              <div class="big-card-specs">&mdash;</div>
-            </div>
+            <div class="big-card-img" style="background:linear-gradient(135deg,#c8e8f5,#a8d4ea);height:240px"></div>
           </div>
         </div>
       </div>

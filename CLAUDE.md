@@ -445,6 +445,46 @@ $100M Hooks framework.
   second inline CTA further down the grid. Trivial to add — just
   splice another item into the `cards` array in `renderBlog()`.
 
+### Follow-up tightening (same day)
+
+Brooke followed up with a tightened section-order spec. Made these
+adjustments to the same branch in a second commit:
+
+- **JV CTA card moved BELOW the blog list** (was directly under the
+  hero in the first pass). Now the order is: blog hero → blog post
+  grid (with inline VIP banner spliced after card #3) → JV CTA card
+  → "Explore Live Off-Market Deals" H2 → existing marketplace
+  sections.
+- **New `<section class="explore-live-deals">` with `<h2>Explore
+  Live Off-Market Deals</h2>`** replaces the previous slim
+  `.below-blog-divider` strip. Eyebrow + subhead + centered layout
+  inside a 1100px container, sitting on top of the existing How It
+  Works / Map / Testimonials / VIP form blocks so the marketplace
+  has a proper section header.
+- **JV CTA heading is `<h2>` (not `<h3>`)** so the heading rank
+  flows cleanly: H1 (hero) → H2 (Blog & Investor Guides) → H2 (JV
+  CTA) → H2 (Explore Live Off-Market Deals) with no inversion.
+- **Blog section H2 changed back to `Blog & Investor Guides`** (was
+  "All Articles") to preserve the existing supporting-text copy as
+  the spec requested.
+- **Stripped `Loading…` text from the decorative mini-cards and
+  big-card** in the visible "How It Works" section. Those cards
+  were leftover deal placeholders from when the page was a homepage
+  clone — they used to get populated by the deals fetch, but the
+  blog page skips that fetch, so they were stuck on `Loading…`
+  forever. Now they're empty colored visual placeholders with
+  `aria-hidden="true"`. The hidden `section.explore` (still
+  `display:none`) keeps its `Loading deals…` spinner because it
+  never renders.
+- **Single-H1 still enforced.** Verified post-reorg: 1 h1 ("Creative
+  Finance Investor Guides & Deal Breakdowns"), 8 h2s in the
+  document (4 visible: Blog & Investor Guides / Wholesaler... / 
+  Explore Live Off-Market Deals / How Does This Work / See Deals
+  Near You / Get First-Access; rest hidden inside `display:none`
+  sections or auth modal).
+- All div/section/script/a tags balanced; both inline scripts still
+  parse; all 14 required form IDs still present.
+
 ---
 
 ## Completed — April 10 2026 Admin Blog Page Rebuild (replaces broken Decap)
