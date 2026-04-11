@@ -1668,16 +1668,29 @@ function runGeoQueue(){
 }
 
 // ─── MARKER CREATION ───────────────────────────────────────────
+// Uses normType() (defined above) so Notion values like "Subject To",
+// "Morby Method", "Wrap" etc. get the correct color + short label instead
+// of falling through to the purple Hybrid default.
 function markerColor(type){
-  if(!type)return'#8B5CF6';
-  if(type==='Cash')return'#10B981';
-  if(type==='SubTo')return'#29ABE2';
-  if(/Seller Finance/i.test(type))return'#F7941D';
-  return'#8B5CF6';
+  var n=normType(type);
+  if(n==='cash')return'#10B981';   // green
+  if(n==='subto')return'#29ABE2';  // blue
+  if(n==='sf')return'#F7941D';     // orange
+  return'#8B5CF6';                 // purple — hybrid / wrap / lease / novation / unknown
+}
+function markerLabel(type){
+  var n=normType(type);
+  if(n==='cash')return'$';
+  if(n==='subto')return'ST';
+  if(n==='sf')return'SF';
+  if(n==='wrap')return'WR';
+  if(n==='lease')return'LO';
+  if(n==='novation')return'NV';
+  return'HY';
 }
 function makeMarkerIcon(deal){
   var color=markerColor(deal.dealType);
-  var label=deal.dealType==='Seller Finance'?'SF':deal.dealType==='SubTo'?'ST':deal.dealType==='Cash'?'$':'HY';
+  var label=markerLabel(deal.dealType);
   var html='<div style="width:32px;height:32px;background:'+color+';border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s">'
     +'<span style="transform:rotate(45deg);font-size:9px;font-weight:800;color:#fff;font-family:Poppins,sans-serif">'+label+'</span>'
     +'</div>';

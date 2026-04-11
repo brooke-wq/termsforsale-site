@@ -1408,6 +1408,102 @@ deploy context.
 
 ---
 
+## Completed — April 11 2026 Deal Map Only Showing Hybrid + Cash (Fix)
+
+Branch: `claude/fix-deal-map-display-UN9wI`.
+
+Brooke reported the deal map was only showing Hybrid (purple) and Cash
+(green) markers — every Subject To deal was rendering as a purple
+Hybrid pin. Same bug in both the standalone map (`map.html`) and the
+split-screen deals page (`deals.html`).
+
+### Root cause
+
+Both map implementations hand-rolled the marker color + label logic
+with **exact case-sensitive string matching** on `dealType`:
+
+```js
+// BROKEN:
+function markerColor(type){
+  if(type==='Cash')return'#10B981';
+  if(type==='SubTo')return'#29ABE2';
+  if(/Seller Finance/i.test(type))return'#F7941D';
+  return'#8B5CF6'; // purple Hybrid fallback
+}
+var label = deal.dealType==='Seller Finance'?'SF'
+          : deal.dealType==='SubTo'?'ST'
+          : deal.dealType==='Cash'?'$':'HY';
+```
+
+But Notion's "Deal Type" select actually holds values like
+`"Subject To"` (space), `"Morby Method"`, `"Morby/Stack Method"`,
+`"Wrap"`, etc. — NOT `"SubTo"` as the legacy code assumed. Any
+non-matching value fell through to purple + `HY` label, which looks
+identical to Hybrid. Only `Cash` (exact match) and `Hybrid` (exact match
+on the purple fallback) were rendering "correctly" — everything else
+was silently mislabeled.
+
+Per CLAUDE.md: *"Deal type matching — case-insensitive (Subject To =
+SubTo = sub-to)"*. The deals.html card list already used a `normType()`
+helper correctly (line 1194), but the map marker code at line 1671 was
+never updated to match.
+
+### Files shipped
+
+- **`termsforsale/deals.html`** — replaced `markerColor()` at line 1674
+  with a version that calls the existing `normType()` helper. Added a
+  new `markerLabel()` helper that also uses `normType()` so Wrap →
+  `WR`, Lease Option → `LO`, Novation → `NV` instead of all collapsing
+  to `HY`. `makeMarkerIcon()` now calls `markerLabel(deal.dealType)`.
+  Popup header at line 1706 left alone — the CSS `text-transform:
+  uppercase` + the raw Notion value ("SUBJECT TO", "MORBY METHOD")
+  renders fine.
+
+- **`termsforsale/map.html`** — added a `normType()` helper (byte
+  identical to the one in deals.html, since map.html didn't have one).
+  Replaced `markerColor()` and inlined label ternary at lines 330/340
+  with the normType-based versions. Rewrote `typeClass()` at line 375
+  to use normType. Added a new `typeLabel()` helper for the list item
+  badge text so Subject To deals show "Subject To" instead of whatever
+  raw Notion value was stored. Also fixed `applyFilters()` at line 433
+  — was doing `d.dealType !== type` exact match, so filtering by
+  "SubTo" would miss "Subject To" deals. Now uses
+  `normType(d.dealType) !== normType(type)`.
+
+### Correct mappings now
+
+| Notion value | Old marker | New marker |
+|---|---|---|
+| Cash | GREEN $ ✓ | GREEN $ |
+| Subject To | **PURPLE HY** (wrong!) | BLUE ST |
+| SubTo | BLUE ST ✓ | BLUE ST |
+| Sub-To | **PURPLE HY** (wrong!) | BLUE ST |
+| Seller Finance | ORANGE SF ✓ | ORANGE SF |
+| Hybrid | PURPLE HY ✓ | PURPLE HY |
+| Morby Method | PURPLE HY ✓ | PURPLE HY |
+| Wrap | **PURPLE HY** | PURPLE WR |
+| Lease Option | **PURPLE HY** | PURPLE LO |
+| Novation | **PURPLE HY** | PURPLE NV |
+
+### Verified
+
+- Node harness exercised the new `normType` + `markerColor` +
+  `markerLabel` against 18 Notion-format inputs (all variants:
+  "Cash", "Subject To", "SubTo", "Sub-To", "sub to", "subto", "Seller
+  Finance", "seller finance", "SF", "Hybrid", "Morby Method",
+  "Morby/Stack Method", "Wrap", "Lease Option", "Novation", empty,
+  null, undefined). All 18 map correctly.
+- `<script>` tag balance checked on both files (13/13 + 4/4).
+- All 13 JS script blocks in deals.html + 4 in map.html parse cleanly
+  via `new Function(body)` (the only "error" is the JSON-LD structured
+  data block, which isn't JavaScript — expected).
+- `normType()` is defined at line 1194 in deals.html and before
+  `markerColor` in map.html, so it's in scope when the marker
+  functions run.
+
+No backend changes — this is a pure frontend color/label fix. No Notion
+schema updates needed, no API changes, no new env vars.
+
 ## Completed — April 10 2026 Admin Blog & Posts Page Fix (PR #60)
 
 Branch: `claude/fix-admin-blog-posts-GJY2s`. Shipped and merged.
