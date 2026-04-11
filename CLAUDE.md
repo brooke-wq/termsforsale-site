@@ -276,6 +276,306 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 11 2026 Blog Page Restructure (Hub, not Marketplace)
+
+Branch: `claude/fix-admin-blog-posts-B4qy3`.
+
+Brooke pasted in a content/UX audit: the `/blog/` page was really just
+the homepage with a slim blog hero glued on top. Above-the-fold was
+deal hero + signup modal + active deals — the actual blog content was
+visually buried, post cards had no excerpt visible, there was no
+article search, no JV-partner cross-sell, no in-article CTAs leading
+back to the buy box or dispo flows. She wanted the blog to act like a
+true content hub that ladders into offers, per the $100M Leads /
+$100M Hooks framework.
+
+### Files shipped
+
+- **`termsforsale/blog/index.html`** (1353 → 1536 lines)
+  - **Meta:** new `<title>` `Creative Finance Real Estate Blog |
+    Subject-To & Seller Finance Guides`. New canonical
+    `https://termsforsale.com/blog/` (was pointing at the apex root —
+    a copy-paste leftover from when the blog page was forked off
+    `index.html`). Description, og:title/description/url, twitter
+    fields all rewritten for the blog hub. Full social/SEO refresh.
+  - **Single H1 enforced:** the previous file had two `<h1>`s — the
+    visible blog hero + a hidden one inside `section.hero` (which is
+    `display:none` but still indexed by Google). Hidden one was
+    demoted to `<div class="hero-h1">` so the page now has exactly
+    one H1 (the new hero title). Verified by static count.
+  - **New hero `<header class="blog-hero">`** with H1 `Creative
+    Finance Investor Guides & Deal Breakdowns`, the requested
+    subhead, a `<input id="blog-search" type="search">` Search
+    Articles input, and a 3-card "Start Here" strip linking to:
+    1. `what-is-subject-to-real-estate.html` — "New to Creative
+       Finance? Start with the Basics"
+    2. `how-to-analyze-creative-finance-deal.html` — "How Investors
+       Actually Buy Subject-To & Seller Finance"
+    3. `what-is-off-market-real-estate.html` — "How We Dispo Creative
+       Deals for Wholesalers 50/50"
+  - **JV partner CTA `<section class="jv-cta">`** placed
+    immediately under the hero, above the article listing. Headline
+    `Wholesaler With a Locked-Up Deal You Can't Move?`, body, and
+    `Submit a Deal for Review` button → opens
+    `https://dispobuddy.com/submit-deal.html` in a new tab.
+  - **Article listing `<section class="blog-section">`** —
+    rewritten cards: `<h3 class="blog-card-title">` (was a div),
+    `Education` / `Deal Spotlight` pill instead of category text,
+    1-2 sentence excerpt via a new `shortExcerpt()` helper that
+    splits on sentence boundaries and caps at 180 chars. Tabs
+    (All / Education / Deal Spotlights) preserved.
+  - **Inline CTA banner** auto-injected into the rendered grid as
+    item #4 (i.e. after the first 3 cards). Headline `Get First
+    Access to Creative Finance Deals Before They Hit Groups`, body,
+    `Share My Buy Box` button → `/buying-criteria.html`. Re-injected
+    on every filter/search re-render via `INLINE_CTA_HTML` const +
+    `cards.splice(insertAt, 0, INLINE_CTA_HTML)`.
+  - **Search filter:** debounced 120 ms; matches against
+    title/hook/description/category/dealType/city/state. Empty
+    state shows the queried string back to the user.
+  - **Deal-marketplace cross-sell** (How It Works / Map /
+    Testimonials / VIP form / Footer) all preserved verbatim and
+    moved below a new `.below-blog-divider` strip labeled
+    `Ready to See Live Deals? — Browse the Marketplace ↓`. The
+    homepage-clone hero, streamlined section, and explore section
+    are still `display:none` (left untouched).
+  - **`<noscript>`** fallback inside the empty grid links to the
+    three cornerstone posts directly so Google still sees them
+    in raw HTML.
+  - **Preserved unchanged:** `#main-nav` shell, the auth modal
+    (`#auth-overlay` + all 26 form IDs), GA4 (`G-DRV6NWNY06`),
+    GHL signup + login webhook constants, `openAuth/closeAuth/
+    switchAuthTab/doLogin/doSignup/submitVIP/setHWTab/syncSearch/
+    scrollToDeals` JS entry points, the entire `<footer>`. Verified
+    via a static check that loops over every required ID + function
+    name and confirms presence — 26/26 IDs, 9/9 functions still
+    present after the rewrite.
+
+- **`termsforsale/blog/posts/*.html`** (9 files)
+  - One Node script (`/tmp/inject-blog-ctas.js`, run twice to
+    confirm idempotency, then deleted) injected:
+    - `<!-- tfs-blog-cta-top -->` block right after `<div
+      class="post-wrap">` (5 hand-written education posts) or
+      `<div class="article-body">` (3 generated deal-spotlight
+      posts + the deal post template). Currently all 9 are buyer-
+      facing so they all got the buyer variant. Script supports a
+      JV variant for any future post that has `data-post-audience=
+      "jv"` on body or has `jv|wholesaler|dispo-buddy` in its
+      filename.
+    - `<!-- tfs-blog-cta-bottom -->` two-column footer block right
+      before `<div class="disclaimer">` in all 9 posts. Left
+      column = navy VIP buyer card linking to
+      `/buying-criteria.html`. Right column = orange JV submission
+      card linking to `https://dispobuddy.com/submit-deal.html`.
+      Uses flexbox + `flex:1 1 280px` so it wraps to a single
+      column on narrow screens without needing a media query.
+  - Marker comments make re-runs no-op — verified by running the
+    script twice; second pass reports `0 injected, 9 already done`.
+  - Per-post sanity check: every post still has exactly 1 H1, all
+    div tags balanced, all anchor tags balanced.
+
+- **`termsforsale/netlify/functions/create-post.js`** — generator
+  template now bakes the same top + bottom CTAs into newly-created
+  deal-spotlight posts so future posts ship with them by default.
+  Top CTA after `<div class="article-body">`, bottom CTA after the
+  existing `.callout-orange` and before `<div class="disclaimer">`.
+  Marker comments included for future idempotency. Module load test
+  + simulated handler call (with `ADMIN_PASSWORD` set, no
+  `GITHUB_TOKEN`) confirms the template renders without throwing —
+  expected 500 `Server not configured` from the GitHub PUT call,
+  meaning auth + template build succeeded.
+
+- **`termsforsale/netlify/functions/auto-blog.js`** — also gained
+  the bottom 2-column CTA in its minimal template. Auto-blog posts
+  don't have a `.disclaimer` block to anchor on, so the CTA is
+  inserted right after the existing `View Full Deal Details →`
+  button and before the small footer line. h3 instead of h2 for
+  consistency with the manual post CTAs.
+
+### Component map (where each new piece lives in the file)
+
+| Component | File / Section |
+|---|---|
+| `BlogHero` (hero + search + Start Here strip) | `blog/index.html` `<header class="blog-hero">` |
+| `JvCtaCard` | `blog/index.html` `<section class="jv-cta">` |
+| `BlogPostsGrid` (with inline CTA injection) | `blog/index.html` `<section class="blog-section">` + render JS in last `<script>` block |
+| `InlineCtaBanner` (mid-grid) | JS const `INLINE_CTA_HTML` in last `<script>` block |
+| `PostTopCta` (text band, conditional buyer/JV) | per-post `tfs-cta-top` div, also baked into `create-post.js` template |
+| `PostFooterCtas` (2-column VIP + JV) | per-post `tfs-cta-bot` flex container, also in `create-post.js` + `auto-blog.js` templates |
+
+### Routes / forms wired to (no new endpoints required)
+
+- VIP buy-box CTA → `/buying-criteria.html` (existing form, also the
+  post-signup landing page per the auth flow)
+- JV submission CTA → `https://dispobuddy.com/submit-deal.html`
+  (existing JV partner site, separate Netlify deploy)
+- Cornerstone Start Here cards → 3 existing slugs in
+  `/blog/posts/`
+
+### Deliberately NOT touched
+
+- `termsforsale/index.html` — unchanged. The /blog page was the
+  scope.
+- `termsforsale/dashboard.html`, `termsforsale/deal.html`, the deal
+  detail rendering — unchanged.
+- The deal-spotlight sidebar `.cta-card` form on the 3 generated
+  posts — kept as-is. The new bottom 2-column CTA is additive, not
+  a replacement, since the sidebar is buyer-acquisition and the
+  new bottom block adds JV cross-sell that wasn't there before.
+- The hidden `section.hero` block at the top of `blog/index.html`
+  (`display:none`) — kept on disk for shared CSS reasons but its
+  inner H1 was demoted to a div. Could be deleted entirely later
+  to slim the file.
+
+### Known follow-ups
+
+- Education-vs-JV conditional on post top CTA is wired in the
+  injection script and the create-post.js template, but every
+  current post gets the buyer variant because all 8 published posts
+  are buyer-facing. To opt a future post into the JV variant, set
+  `<body data-post-audience="jv">` or include `jv` /
+  `wholesaler` / `dispo-buddy` in the filename.
+- The "Start Here" cards' read-time labels are placeholder estimates
+  (`~6 min read`, `~7 min read`, `~5 min read`). If the team wants
+  real read-time numbers, we could compute word count from each
+  post's HTML at build time and patch `posts-index.json` to include
+  a `readingMinutes` field.
+- The inline CTA banner is currently inserted at index 3
+  (after 3 cards). If posts grow much past 9, we might want a
+  second inline CTA further down the grid. Trivial to add — just
+  splice another item into the `cards` array in `renderBlog()`.
+
+---
+
+## Completed — April 10 2026 Admin Blog Page Rebuild (replaces broken Decap)
+
+Branch: `claude/fix-admin-blog-posts-B4qy3`.
+
+Brooke reported that the "Blog & Posts" section in the admin portal
+didn't work — clicking any action from `/admin/blog.html` sent the user
+to `/admin/cms.html` (Decap CMS), which hangs because it requires
+Netlify Identity + git-gateway, neither of which are configured on this
+site. The old blog.html was a stub — 3 cards, all of them linked to
+Decap. There was no actual post-creation UI in the admin console.
+
+Meanwhile, `termsforsale/netlify/functions/create-post.js` already
+shipped a fully-working "create blog post via GitHub API" endpoint, and
+`termsforsale/va-post-builder.html` was a working 4-step form that used
+it — but gated behind a separate `VA_PASSWORD` env var, outside the
+admin shell, and nobody on the team was actually using it.
+
+### Files shipped
+
+- **`termsforsale/admin/blog.html`** (complete rewrite, 119 → ~470
+  lines) — full admin-shelled blog management page:
+  - 4 stat tiles pulled from `/blog/posts-index.json`: Total Posts,
+    Deal Spotlights, Education, Last Published (with the most recent
+    post title as sub-text).
+  - "New Post" button in the topbar toggles an inline create-post form
+    panel (same panel → same page, no Decap, no modals). Single-scroll
+    form (not multi-step) with 6 logical sections: Deal Info, Headline
+    & Copy, Deal Numbers, SubTo/Hybrid Fields, Seller Finance Fields,
+    Write-Up. All 12 required-field validations ported from
+    `va-post-builder.html` + the 155-char SEO meta description guard.
+  - Published Posts panel below: search box (title/city/state/dealType
+    substring), type filter (all / deal only / education only), and a
+    table with title + hook preview, type pill (blue Deal / purple
+    Education), location, deal type, status pill, date, and View
+    button that opens the live post in a new tab. Table re-renders
+    client-side on every search/filter change.
+  - On publish: calls `AdminShell.fetch('/api/create-post', …)` which
+    auto-attaches the `X-Admin-Password` header. Also passes
+    `adminPassword` in the body for belt-and-suspenders (different
+    wire paths in case one env strips headers). Shows success/error
+    banner, clears the form fields, and reloads the posts list after
+    4 s so the new post shows up in the table.
+  - Posts index fetched with `?t=` cache-bust so freshly-published
+    posts show up immediately on refresh.
+  - Zero references to Decap CMS, `cms.html`, git-gateway, or Netlify
+    Identity anywhere on the page.
+
+- **`termsforsale/netlify/functions/create-post.js`** — now accepts
+  either `VA_PASSWORD` (legacy: `body.password`) or `ADMIN_PASSWORD`
+  (new: `X-Admin-Password` header OR `body.adminPassword`). Auth logic
+  is fail-closed: if an env var is unset, that path is simply unusable
+  — you can't authenticate against an empty string. Legacy
+  `va-post-builder.html` still works unchanged (it sends
+  `body.password` and expects the old 200 `{success:true,authOnly:true}`
+  response for its login screen — verified via local module load
+  test).
+
+- **`termsforsale/admin/index.html`** — dashboard "Blog & Content"
+  quick-card updated: title is now "Blog & Posts", description changed
+  from "Create deal spotlight posts and education articles via Decap
+  CMS" to "Publish deal spotlights and manage the blog — commits
+  straight to GitHub." Link target is unchanged (`/admin/blog.html`).
+
+### Deliberately NOT touched
+
+- **`termsforsale/admin/cms.html`** — left in place (loads Decap from
+  unpkg, shows a broken-auth error page). Nothing in the admin shell
+  or dashboard links to it anymore, but keeping the file on disk
+  avoids a hard 404 if anyone has it bookmarked. Can be removed later
+  if the team decides Decap is fully dead.
+- **`termsforsale/admin/config.yml`** — Decap collection schema.
+  Unreferenced now, left on disk for future reference in case we want
+  to bring a different git-backed CMS online.
+- **`termsforsale/va-post-builder.html`** — still functional via its
+  own VA_PASSWORD gate. Admin users don't need it anymore but VAs who
+  only have `VA_PASSWORD` can keep using it.
+- **`termsforsale/netlify/functions/auto-blog.js`** — unchanged. That
+  function auto-generates deal-spotlight blog posts when
+  `notify-buyers` processes a new deal; it uses the GitHub API
+  directly (not `create-post.js`) and has nothing to do with this
+  fix.
+
+### Auth math (verified locally)
+
+Tested 5 cases against `create-post.js` with `VA_PASSWORD=va-test` +
+`ADMIN_PASSWORD=admin-test`:
+
+| Case | Auth result |
+|---|---|
+| Admin password via `X-Admin-Password` header | ✅ authorized |
+| Admin password via `body.adminPassword` | ✅ authorized |
+| VA password via `body.password` (legacy) | ✅ authorized |
+| Wrong password in either slot | 401 |
+| `authCheck: true` with valid VA password | 200 `{success:true,authOnly:true}` (legacy login screen intact) |
+
+### Env vars (nothing new required)
+
+- `ADMIN_PASSWORD` — already set; gates the admin console. Now also
+  authorizes `create-post.js`.
+- `VA_PASSWORD` — already set; still works for legacy
+  `va-post-builder.html` flow.
+- `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME` — already
+  set; unchanged.
+
+### Known caveats / follow-ups
+
+- No "Edit existing post" flow yet. `create-post.js` does handle
+  updates (it reads the existing file SHA from GitHub and PUTs with
+  `sha` set), but the admin UI doesn't expose a Load button to
+  pre-populate the form from an existing post's `posts-index.json`
+  entry. Next enhancement: add an "Edit" button on each row that
+  pulls the existing HTML via GitHub contents API, parses back the
+  field values, and hydrates the form.
+- No "Delete post" flow. Would require a new endpoint or a new action
+  in `create-post.js` that takes `{ slug, delete: true }` and calls
+  the GitHub DELETE API on the contents path, plus removes the entry
+  from `posts-index.json`. Skipped for v1.
+- Education-post creation not exposed (same fields as deal posts
+  would be wrong). The form only handles Deal Spotlights because
+  that's what `create-post.js` generates. Education posts currently
+  come from Decap-era hand-written files in `blog/posts/*.html`. If
+  the team wants to manage those from admin too, we'd need a new
+  function + a second form mode.
+- Posts list takes a beat (~5-10 s) to refresh after publish because
+  GitHub's API lags the `posts-index.json` write. Soft mitigated by
+  the 4 s delayed reload on success.
+
+---
+
 ## Completed — April 10 2026 Holistic AI Buyer Matching + HOA Fix
 
 Branch: `claude/improve-deal-search-zDHrj`.
