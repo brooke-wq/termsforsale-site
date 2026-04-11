@@ -130,14 +130,20 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   <div class="builder-nav">
     <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale">
     <div class="nav-right">
-      <span class="nav-tag">Deal Post Builder</span>
+      <span class="nav-tag" id="nav-tag">Deal Post Builder</span>
       <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
   </div>
 
   <div class="builder-wrap">
-    <div class="builder-title">📝 New Deal Post</div>
-    <div class="builder-sub">Fill in the deal details below. Takes about 10 minutes. Post goes live in ~90 seconds after you click Publish.</div>
+    <div class="builder-title" id="builder-title">📝 New Deal Post</div>
+    <div class="builder-sub" id="builder-sub">Fill in the deal details below. Takes about 10 minutes. Post goes live in ~90 seconds after you click Publish.</div>
+
+    <!-- Edit-mode banner (hidden by default) -->
+    <div id="edit-banner" style="display:none;background:#EBF8FF;border-left:4px solid var(--blue);padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:13px;color:#1a3560">
+      <strong id="edit-banner-title">Editing existing post</strong>
+      <div id="edit-banner-body" style="margin-top:3px;color:#4A5568;font-size:12px"></div>
+    </div>
 
     <!-- PROGRESS -->
     <div class="progress-bar">
@@ -390,7 +396,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
     <!-- ── SUCCESS ── -->
     <div class="result-card" id="result-card">
       <div class="result-icon">✅</div>
-      <h3>Post Published!</h3>
+      <h3 id="result-heading">Post Published!</h3>
       <p>Your deal post is live. It may take up to 90 seconds for Netlify to deploy. Share this link:</p>
       <a id="result-url" class="result-url" href="#" target="_blank"></a>
       <br>
@@ -582,7 +588,7 @@ function publishPost() {
   err.style.display = 'none';
 
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Publishing…';
+  btn.innerHTML = '<span class="spinner"></span> ' + (EDIT_MODE ? 'Updating…' : 'Publishing…');
 
   var payload = {
     password:     sessionStorage.getItem('tfs_builder_pw') || '',
@@ -628,13 +634,15 @@ function publishPost() {
       err.textContent = '❌ ' + data.error;
       err.style.display = 'block';
       btn.disabled = false;
-      btn.textContent = '🚀 Publish Post';
+      btn.textContent = EDIT_MODE ? '💾 Update Post' : '🚀 Publish Post';
       return;
     }
     // Success
     document.getElementById('step-4').style.display = 'none';
     var rc = document.getElementById('result-card');
     rc.style.display = 'block';
+    var heading = document.getElementById('result-heading');
+    if (heading) heading.textContent = EDIT_MODE ? 'Post Updated!' : 'Post Published!';
     document.getElementById('result-url').textContent = data.url;
     document.getElementById('result-url').href = data.url;
     document.getElementById('result-view').href = data.url;
@@ -643,7 +651,7 @@ function publishPost() {
     err.textContent = '❌ Network error. Please try again.';
     err.style.display = 'block';
     btn.disabled = false;
-    btn.textContent = '🚀 Publish Post';
+    btn.textContent = EDIT_MODE ? '💾 Update Post' : '🚀 Publish Post';
   });
 }
 
@@ -662,8 +670,132 @@ function startNew() {
   document.querySelectorAll('select').forEach(function(el) { el.selectedIndex = 0; });
   document.getElementById('result-card').style.display = 'none';
   document.getElementById('step-4').style.display = 'block';
+  // Leaving edit mode — reset all labels back to "new post" copy.
+  EDIT_MODE = false;
+  EDIT_SLUG = '';
+  var bt = document.getElementById('builder-title');
+  var bs = document.getElementById('builder-sub');
+  var nt = document.getElementById('nav-tag');
+  var pb = document.getElementById('pub-btn');
+  var eb = document.getElementById('edit-banner');
+  if (bt) bt.textContent = '📝 New Deal Post';
+  if (bs) bs.textContent = 'Fill in the deal details below. Takes about 10 minutes. Post goes live in ~90 seconds after you click Publish.';
+  if (nt) nt.textContent = 'Deal Post Builder';
+  if (pb) pb.textContent = '🚀 Publish Post';
+  if (eb) eb.style.display = 'none';
+  // Drop ?edit= from the URL so a refresh doesn't re-enter edit mode.
+  try { history.replaceState(null, '', location.pathname); } catch(e) {}
   goToStep(1);
 }
+
+// ── EDIT MODE ──────────────────────────────────────────────────
+// Set to true when the builder loads with ?edit=<slug>. Controls copy
+// on the title, subtitle, publish button, and success card. The actual
+// slug→file path on the server is recomputed from dealType/city/state
+// in create-post.js, so the slug must stay consistent — we enforce this
+// by prefilling those three fields from the sidecar.
+var EDIT_MODE = false;
+var EDIT_SLUG = '';
+
+function getQueryParam(name) {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    return params.get(name) || '';
+  } catch(e) { return ''; }
+}
+
+// List of sidecar fields → form field IDs. Any missing fields are
+// silently skipped so old sidecars (or ones with extra keys) still
+// prefill whatever they can.
+var EDIT_FIELDS = [
+  'dealId', 'status', 'dealType', 'propertyType',
+  'city', 'state', 'zip',
+  'headline', 'hook', 'metaDesc',
+  'access', 'occupancy',
+  'askingPrice', 'entryFee', 'arv', 'estRent', 'coe', 'yearBuilt',
+  'bedsBaths', 'sqft', 'hoa',
+  'loanBalance', 'interestRate', 'piti', 'sfTerms',
+  'whyExists', 'strategies', 'buyerFitYes'
+];
+
+function applySidecarToForm(sc) {
+  for (var i = 0; i < EDIT_FIELDS.length; i++) {
+    var id = EDIT_FIELDS[i];
+    var el = document.getElementById(id);
+    if (!el) continue;
+    var v = (sc[id] == null) ? '' : String(sc[id]);
+    el.value = v;
+  }
+  // Re-trigger the meta char counter so the "x / 155" hint updates.
+  var metaEl = document.getElementById('metaDesc');
+  if (metaEl) updateCharCount(metaEl, 'meta-count', 155);
+}
+
+function enterEditMode(slug, sc) {
+  EDIT_MODE = true;
+  EDIT_SLUG = slug;
+  var bt = document.getElementById('builder-title');
+  var bs = document.getElementById('builder-sub');
+  var nt = document.getElementById('nav-tag');
+  var pb = document.getElementById('pub-btn');
+  var eb = document.getElementById('edit-banner');
+  var ebt = document.getElementById('edit-banner-title');
+  var ebb = document.getElementById('edit-banner-body');
+  if (bt) bt.textContent = '✏️ Edit Deal Post';
+  if (bs) bs.textContent = 'Update the fields below and click Update Post. Changes go live in ~90 seconds.';
+  if (nt) nt.textContent = 'Editing: ' + slug;
+  if (pb) pb.textContent = '💾 Update Post';
+  if (eb && ebt && ebb) {
+    ebt.textContent = 'Editing ' + slug;
+    ebb.innerHTML = 'Changing the <strong>Deal Type</strong>, <strong>City</strong>, or <strong>State</strong> '
+      + 'will publish a new post at a different URL. Keep them the same to overwrite the existing post.';
+    eb.style.display = 'block';
+  }
+  applySidecarToForm(sc);
+}
+
+function showEditError(slug, msg) {
+  var eb = document.getElementById('edit-banner');
+  var ebt = document.getElementById('edit-banner-title');
+  var ebb = document.getElementById('edit-banner-body');
+  if (!eb || !ebt || !ebb) return;
+  eb.style.background = '#FFF5F5';
+  eb.style.borderLeftColor = '#e53e3e';
+  ebt.textContent = 'Could not load edit data for ' + slug;
+  var ghUrl = 'https://github.com/brooke-wq/termsforsale-site/edit/main/termsforsale/blog/posts/' + slug + '.html';
+  ebb.innerHTML = (msg || 'This post was created before the edit flow was added.')
+    + ' You can edit the HTML directly on GitHub: '
+    + '<a href="' + ghUrl + '" target="_blank" rel="noopener" style="color:#1a8bbf;font-weight:600">Open in GitHub</a>';
+  eb.style.display = 'block';
+}
+
+async function tryEnterEditMode() {
+  var slug = getQueryParam('edit');
+  if (!slug) return;
+  // Basic slug sanity — ASCII letters, digits, dashes only.
+  if (!/^[a-z0-9-]+$/i.test(slug)) return;
+  try {
+    var res = await fetch('/blog/posts/' + encodeURIComponent(slug) + '.json?t=' + Date.now(), { cache: 'no-store' });
+    if (res.status === 404) {
+      showEditError(slug, 'No source data found for this post (no <code>.json</code> sidecar).');
+      return;
+    }
+    if (!res.ok) {
+      showEditError(slug, 'Server returned HTTP ' + res.status + ' fetching the sidecar.');
+      return;
+    }
+    var sc = await res.json();
+    enterEditMode(slug, sc);
+  } catch (err) {
+    showEditError(slug, 'Network error: ' + (err && err.message ? err.message : 'unknown'));
+  }
+}
+
+// Run edit bootstrap once the builder screen is actually visible. The
+// login gate hides the whole builder until password verifies, but the
+// DOM elements still exist so we can safely prefill them up-front —
+// the user will see their edits the moment they unlock the gate.
+tryEnterEditMode();
 </script>
 
 </body>

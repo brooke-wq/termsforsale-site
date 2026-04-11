@@ -380,6 +380,83 @@ function blogSubmit(){
     };
   }
 
+  // ── WRITE SOURCE SIDECAR ──────────────────────────────────────
+  // Store the raw form data as <slug>.json so the VA Post Builder can
+  // reopen the post in edit mode and prefill every field. Without this
+  // sidecar, edit mode would have to parse the rendered HTML back into
+  // form fields, which is brittle. The sidecar is a read-only record of
+  // what was submitted — it is NOT used by the live site.
+  var sidecarPath = 'termsforsale/blog/posts/' + slug + '.json';
+  var sidecarPayload = {
+    version:      1,
+    slug:         slug,
+    updatedAt:    new Date().toISOString(),
+    dealId:       data.dealId       || '',
+    status:       data.status       || 'Active',
+    dealType:     data.dealType     || '',
+    propertyType: data.propertyType || '',
+    city:         data.city         || '',
+    state:        data.state        || '',
+    zip:          data.zip          || '',
+    headline:     data.headline     || '',
+    hook:         data.hook         || '',
+    metaDesc:     data.metaDesc     || '',
+    access:       data.access       || '',
+    occupancy:    data.occupancy    || '',
+    askingPrice:  data.askingPrice  || '',
+    entryFee:     data.entryFee     || '',
+    arv:          data.arv          || '',
+    estRent:      data.estRent      || '',
+    coe:          data.coe          || '',
+    yearBuilt:    data.yearBuilt    || '',
+    bedsBaths:    data.bedsBaths    || '',
+    sqft:         data.sqft         || '',
+    hoa:          data.hoa          || '',
+    loanBalance:  data.loanBalance  || '',
+    interestRate: data.interestRate || '',
+    piti:         data.piti         || '',
+    sfTerms:      data.sfTerms      || '',
+    whyExists:    data.whyExists    || '',
+    strategies:   data.strategies   || '',
+    buyerFitYes:  data.buyerFitYes  || ''
+  };
+  var sidecarEncoded = Buffer.from(JSON.stringify(sidecarPayload, null, 2), 'utf8').toString('base64');
+
+  var existingSidecar = null;
+  try {
+    var sidecarCheck = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${sidecarPath}?ref=${branch}`,
+      { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+    );
+    if (sidecarCheck.ok) existingSidecar = await sidecarCheck.json();
+  } catch(e) {}
+
+  var sidecarBody = {
+    message: (existingSidecar ? 'Update' : 'Add') + ' post source: ' + data.headline,
+    content: sidecarEncoded,
+    branch: branch
+  };
+  if (existingSidecar && existingSidecar.sha) sidecarBody.sha = existingSidecar.sha;
+
+  try {
+    await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${sidecarPath}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(sidecarBody)
+      }
+    );
+  } catch(e) {
+    // Sidecar failure is non-fatal — HTML post still published, edit mode
+    // just won't be able to prefill this post until next save.
+    console.error('Failed to write post sidecar:', e.message);
+  }
+
   // ── UPDATE POSTS INDEX ────────────────────────────────────────
   // Read existing posts-index.json, add new post, write back
   var indexPath = 'termsforsale/blog/posts-index.json';
