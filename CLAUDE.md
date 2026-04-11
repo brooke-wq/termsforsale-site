@@ -1491,6 +1491,135 @@ If any are missing, the builder will log in but hitting Publish returns
 
 ---
 
+## Completed — April 11 2026 Blog Post Edit Flow (PR #61)
+
+Branch: `claude/fix-admin-blog-posts-GJY2s`. Shipped and merged.
+
+Follow-up to PR #60. Brooke asked how operators were supposed to edit
+existing blog posts — and the honest answer was "you can't, you'd have
+to hand-edit HTML on GitHub or re-enter every field from memory."
+Built a proper edit flow end-to-end.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/create-post.js`** — on every publish,
+  now writes a `<slug>.json` sidecar alongside the `<slug>.html` at
+  `termsforsale/blog/posts/`. Uses the same SHA-based update path as the
+  HTML write, so republishing overwrites both atomically. Sidecar is a
+  version-tagged JSON object with all 31 form fields from the VA Post
+  Builder (dealId, status, dealType, city, state, zip, headline, hook,
+  metaDesc, access, occupancy, askingPrice, entryFee, arv, estRent, coe,
+  yearBuilt, bedsBaths, sqft, hoa, loanBalance, interestRate, piti,
+  sfTerms, whyExists, strategies, buyerFitYes, propertyType, plus
+  slug+updatedAt+version). Newlines in the write-up fields are preserved.
+  The sidecar write is wrapped in try/catch — a sidecar failure never
+  blocks the HTML publish; at worst the post just can't be edited via
+  the builder until next save.
+
+- **`termsforsale/va-post-builder.html`** — supports `?edit=<slug>` URL
+  param:
+  - On page load, `tryEnterEditMode()` parses the param (regex-validated
+    to `[a-z0-9-]+`), fetches `/blog/posts/<slug>.json?t=<now>` with
+    `cache: 'no-store'`, and calls `applySidecarToForm()` which iterates
+    a shared `EDIT_FIELDS` list and writes every field's `.value`. The
+    meta char counter is re-triggered so the "x / 155" hint updates.
+  - UI labels switch on edit mode: title → "Edit Deal Post", subtitle →
+    "Update the fields below and click Update Post", nav tag → "Editing:
+    <slug>", publish button → "💾 Update Post", spinner text →
+    "Updating…", error fallback text → "💾 Update Post", success
+    heading → "Post Updated!".
+  - Blue info banner explains that changing Deal Type / City / State
+    will publish a new post at a different URL (since the slug is
+    recomputed from those three fields in `create-post.js`). Keeping
+    them the same overwrites the existing post.
+  - If the sidecar fetch 404s or errors, the banner flips red and
+    shows a direct GitHub edit link for that post
+    (`https://github.com/brooke-wq/termsforsale-site/edit/main/termsforsale/blog/posts/<slug>.html`).
+    Graceful degradation for legacy posts with no sidecar.
+  - "Create Another Post" button (on the success card) resets
+    `EDIT_MODE`, restores every label back to "new post" copy, and
+    strips `?edit=` from the URL via `history.replaceState()` so a
+    refresh doesn't re-enter edit mode.
+
+- **`termsforsale/admin/blog.html`** — primary **Edit** button (navy,
+  leftmost) on every row's action column, ahead of View and Copy:
+  - Deal spotlight rows → `/va-post-builder.html?edit=<slug>` in a new
+    tab. The builder's internal fallback handles the missing-sidecar
+    case so the row button can be uniform.
+  - Education post rows → GitHub web editor URL directly
+    (`https://github.com/brooke-wq/termsforsale-site/edit/main/termsforsale/blog/posts/<slug>.html`)
+    in a new tab. There's no builder form for education posts yet, so
+    skipping the builder is the right call.
+  - Info box updated with an "Editing:" paragraph explaining the split
+    between sidecar-backed edits and the GitHub fallback.
+
+### Backward compatibility
+
+The 8 existing posts in the repo (3 deal spotlights + 5 education) have
+no `.json` sidecars — they were all created before this flow shipped.
+Clicking Edit on any of them produces:
+- **Education posts**: opens the GitHub web editor directly (expected).
+- **Legacy deal posts**: opens the builder, shows a red "no source data
+  found" banner with a direct GitHub link. Not broken — just the graceful
+  fallback.
+
+Sidecars are created lazily on next republish of each post.
+
+### Verified locally with mocked fetch
+
+A throwaway node harness exercised the full create-post.js happy path
+with a mocked `global.fetch`. Six API calls fire in the right order:
+HEAD+PUT on the HTML file, HEAD+PUT on the sidecar, HEAD+PUT on
+posts-index.json. The decoded sidecar payload contained all 31 expected
+fields with newlines preserved in `whyExists` / `strategies` /
+`buyerFitYes`. Both modified HTML files pass tag-balance checks
+(div 88/88, script 1/1 for builder; div 42/42, script 2/2 for admin
+blog page).
+
+### Env vars (no change from PR #60)
+
+- `VA_PASSWORD`, `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`
+  all still required by `create-post.js`. No new vars.
+
+### Verification after Netlify auto-deploy
+
+1. Open `/admin/` → **Blog & Posts** → confirm the **Edit** button
+   appears in every row's actions column (primary navy button, leftmost).
+2. **Education post** — click Edit on any of the 5 education posts
+   (e.g. "What Is Subject-To Real Estate") → should open the GitHub web
+   editor in a new tab.
+3. **Legacy deal post** — click Edit on one of the 3 existing deal
+   spotlights (e.g. "Hybrid Deal Tucson") → builder opens with a red
+   banner saying "No source data found" + a working GitHub link.
+4. **Fresh deal post round-trip**:
+   a. Click **New Post** → publish a throwaway test (e.g. dealType=Cash,
+      city=TestCity, state=TS).
+   b. Return to `/admin/blog.html` → click Edit on the test post.
+   c. Builder should open with title "Edit Deal Post", every field
+      prefilled from the sidecar, publish button showing "💾 Update Post".
+   d. Change one field (e.g. bump askingPrice), click Update Post.
+   e. Success card should say "Post Updated!" — verify by reloading the
+      live post URL.
+   f. Delete the test post's HTML + JSON + posts-index entry directly
+      on GitHub to clean up.
+
+### Open caveats
+
+- Education posts still have no builder form. If someone wants to add
+  a proper education-post editor in the future, they'd need a second
+  form track in `va-post-builder.html` + a new collection branch in
+  `create-post.js` that emits the education HTML template + sidecar.
+  Scope creep — not needed right now.
+- The sidecar is deliberately public (served from the static site) —
+  nothing in it is sensitive (it's just the form data that's already
+  rendered in the public HTML), but if we ever add private fields
+  (e.g. internal dispo notes) they should NOT go in the sidecar.
+- Concurrent edit isn't handled — if two people open the same post's
+  edit page and click Update Post, the second save wins and silently
+  overwrites the first. Acceptable for a small team.
+
+---
+
 ## TODO — Next Session
 
 1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.com` (which should now be pointed at the Netlify site): verify the OTP login flow works end to end (Brooke's phone → SMS → enter code → dashboard), confirm `NOTIFICATIONS_LIVE=true` is set in Netlify env vars, test one real submission (should produce a Deal ID like `PHX-001` in Notion), re-enable `dispo-buddy-triage` cron on Droplet.
