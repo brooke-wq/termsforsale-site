@@ -276,6 +276,113 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 11 2026 Admin Buyer Status Sync (Not Responded Bug)
+
+Branch: `claude/sync-buyer-statuses-U44Rj`.
+
+Brooke reported that every buyer on every deal in the admin portal was
+showing as "Not Responded" — the Hot / Interested / Passed pills were
+always empty, even on deals where buyers had obviously replied.
+
+### Root cause
+
+Three-way tag mismatch between the writers and the reader:
+
+1. `deal-buyer-list.js` (the admin API) was reading `deal:hot`,
+   `deal:interested`, `deal:passed`, `deal:no-response` tags that are
+   **never written anywhere in the codebase**. Dead mapping.
+2. `buyer-response-tag.js` writes global `buyer-interested`,
+   `buyer-maybe`, `buyer-pass` tags plus sprint tags `deal-hot`,
+   `deal-warm`, `deal-paused` (hyphen, not colon) — none of which match
+   the reader.
+3. `buyer-alert.js` promotes `sent-[CODE]` → `alert-[CODE]` on
+   INTERESTED replies, BUT `notify-buyers.js` only writes `sent:[slug]`
+   (colon + slug), never `sent-[CODE]` (hyphen + Deal Code). So the
+   `alert-[CODE]` tag — the strongest per-deal Hot signal — never got
+   written by the live blast path. Only manually-tagged test contacts
+   ever triggered it.
+
+Net effect: every buyer's `dealStatus` fell into the default null bucket
+and rendered as "Not Responded" across the whole admin portal.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/deal-buyer-list.js`** — replaced
+  `findStatusTag()` (which hardcoded the dead `deal:*` tag names) with
+  `computeDealStatus(tags, dealCodeRaw)`. Normalizes tags to lowercase
+  (GHL lowercases on save), builds a tag set, then resolves the strongest
+  signal in priority order:
+  1. Legacy `deal:hot` / `deal:interested` / `deal:passed` (if hand-applied)
+  2. **Per-deal**: `alert-[code]` → `deal:hot`; `viewed-[code]` → `deal:interested`
+  3. **Global fallback**: `buyer-interested` / `buyer-maybe` → `deal:interested`;
+     `buyer-pass` → `deal:passed`
+  4. `deal:no-response` legacy tag
+  5. null (UI renders "Not responded")
+
+  Per-deal signals always outrank global ones so a buyer who PASSED on
+  some other deal last week but clicked through to this specific deal
+  still shows as Interested. Accepts optional `?code=PHX-001` query
+  param — without it, only global signals are considered.
+
+  14-case local harness: all pass. Module loads cleanly.
+
+- **`termsforsale/admin/deals.html`** — added `dealForSlug(slug)` helper
+  that reverse-looks-up `ALL_DEALS` so `fetchBuyersForSlug(slug)` can
+  append `&code=[dealCode]` to every `/api/deal-buyer-list` call
+  (initial batch load, drawer open, refresh). Drawer's "Full page" link
+  also now carries `&code=` forward to `/admin/deal-buyers.html`.
+
+- **`termsforsale/admin/deal-buyers.html`** — reads `?code=` from
+  URL on mount, stores in `CURRENT_CODE`, and appends it to the API
+  call when Brooke types an address manually or follows a link from the
+  drawer. Standalone lookups without a code fall back to global signals
+  only (same loose behavior as before).
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — now ALSO
+  writes `sent-[code]` (hyphen + lowercased Deal Code, e.g. `sent-phx-001`)
+  alongside the existing `sent:[slug]` audit tag. This is the tag
+  `buyer-alert.js` actually searches for when a buyer replies
+  INTERESTED — paired with the existing webhook, INTERESTED replies
+  will now promote each matching `sent-[code]` to `alert-[code]`,
+  which is the signal the admin portal reads to show a Hot status.
+
+### Backwards compatibility
+
+- Historical deals that went out before this commit never got the
+  `sent-[code]` tag. Contacts who already replied INTERESTED to those
+  deals will show as "Interested" via the global `buyer-interested`
+  fallback, not "Hot" per-deal — but that's an improvement from
+  "Not Responded" which is what they were showing before.
+- Going forward, every new blast fires BOTH the slug and code sent
+  tags, so the full per-deal Hot/Interested/Passed pipeline works
+  end-to-end.
+- Any handwritten `deal:hot` tag on a contact is still honored.
+
+### Smoke tests (local)
+
+- `computeDealStatus()` — 14 cases covering per-deal alert/viewed,
+  global fallback, case-insensitive GHL normalization, per-deal beats
+  global, empty tags, missing code, legacy deal:hot override, etc.
+  **14/14 pass.**
+- `deal-buyer-list.js` — `require()` loads without error.
+- `notify-buyers.js` — `require()` loads without error.
+- `deals.html` / `deal-buyers.html` — tag balance verified
+  (script 2/2, div balanced).
+
+### Next session — verification after Netlify auto-deploy
+
+1. Open `/admin/deals.html`, click a deal row with known-responded
+   buyers. Drawer should show non-zero Hot / Interested counts.
+2. Check a deal where you know a buyer replied INTERESTED via SMS —
+   they should appear Interested (global fallback) until the next blast
+   writes the per-deal `sent-[code]` tag and the reply flow promotes
+   it to `alert-[code]`, at which point they upgrade to Hot.
+3. `/api/notify-test?deal_id=XXX-00N` then `/api/buyer-alert` test
+   contact that was just sent → should now find `sent-[code]` and
+   write `alert-[code]`, bumping them to Hot.
+
+---
+
 ## Completed — April 10 2026 Holistic AI Buyer Matching + HOA Fix
 
 Branch: `claude/improve-deal-search-zDHrj`.

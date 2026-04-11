@@ -784,6 +784,14 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   var dealTag = 'alerted-' + (deal.id || '').slice(0, 8);
   var addressSlug = slugifyAddress(deal.streetAddress, deal.city, deal.state);
   var sentTag = addressSlug ? 'sent:' + addressSlug : null;
+  // Per-deal sent-[CODE] tag (e.g. sent-PHX-001) — paired with sent:[slug].
+  // buyer-alert.js scans for /^sent-([a-z]+-[0-9]+)$/i when a buyer replies
+  // INTERESTED and promotes each match to alert-[code]. Without this tag,
+  // the INTERESTED reply flow always falls into the "no active sent- tags"
+  // branch and never records a per-deal hot status. Admin deal-buyer-list
+  // then can't compute a Hot status because the alert-[code] tag never lands.
+  var dealCodeLower = String(deal.dealCode || '').toLowerCase().trim();
+  var sentCodeTag = dealCodeLower ? 'sent-' + dealCodeLower : null;
   // Per-blast tier tag: tier1:[slug] / tier2:[slug] / tier3:[slug]
   //   tier 1 = strict buy-box match (≥ 2 criteria)
   //   tier 2 = relaxed match (≥ 1 criterion) — only if tier 1 < 50 buyers
@@ -797,11 +805,14 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     return 'skipped-duplicate';
   }
 
-  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag + tierN:[slug] match-quality tag
-  // (sent:[slug] is the one the admin Deal Buyer List dashboard queries —
-  //  without it, new deal blasts are invisible to /admin/deal-buyers.html)
+  // Add dedup tag + new-deal-alert tag + sent:[slug] audit tag +
+  // sent-[code] interest-alert tag + tierN:[slug] match-quality tag.
+  //   sent:[slug]  — queried by admin/deal-buyers.html
+  //   sent-[code]  — required by buyer-alert.js so INTERESTED replies
+  //                  promote to alert-[code], which drives admin Hot status
   var tagsToAdd = ['new-deal-alert', dealTag];
   if (sentTag) tagsToAdd.push(sentTag);
+  if (sentCodeTag) tagsToAdd.push(sentCodeTag);
   if (tierTag) tagsToAdd.push(tierTag);
 
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';

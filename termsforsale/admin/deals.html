@@ -390,8 +390,18 @@ function loadAllBuyerCounts() {
 // Shared fetch + cache helper. Returns a promise resolving to the contact
 // array once the call completes. Used by the initial batch, the drawer
 // open flow, and the refresh button.
+//
+// IMPORTANT: we pass &code=[dealCode] (Notion Deal ID, e.g. PHX-001) so
+// the backend can resolve per-deal response tags (alert-[code], viewed-[code])
+// into real Hot / Interested statuses. Without it every buyer shows as
+// "Not responded" because the global buyer-interested/buyer-pass fallback
+// is the only signal left.
 function fetchBuyersForSlug(slug) {
-  return AdminShell.fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug))
+  var deal = dealForSlug(slug);
+  var code = deal && deal.dealCode ? deal.dealCode : '';
+  var url = '/api/deal-buyer-list?deal=' + encodeURIComponent(slug);
+  if (code) url += '&code=' + encodeURIComponent(code);
+  return AdminShell.fetch(url)
     .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
     .then(function (data) {
       var contacts = data.contacts || [];
@@ -558,6 +568,15 @@ function dealSlug(d) {
   return AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
 }
 
+// Reverse lookup: given a slug, find the deal object in ALL_DEALS so
+// fetchBuyersForSlug() can pass the Notion Deal Code to the API.
+function dealForSlug(slug) {
+  for (var i = 0; i < ALL_DEALS.length; i++) {
+    if (dealSlug(ALL_DEALS[i]) === slug) return ALL_DEALS[i];
+  }
+  return null;
+}
+
 function openDrawer(deal) {
   CURRENT_DRAWER_DEAL = deal;
   CURRENT_DRAWER_SLUG = dealSlug(deal);
@@ -574,7 +593,9 @@ function openDrawer(deal) {
     (deal.dealType ? ' · ' + deal.dealType : '');
 
   var fullLink = document.getElementById('drawer-full-link');
-  fullLink.href = '/admin/deal-buyers.html?deal=' + encodeURIComponent(CURRENT_DRAWER_SLUG);
+  var fullHref = '/admin/deal-buyers.html?deal=' + encodeURIComponent(CURRENT_DRAWER_SLUG);
+  if (deal.dealCode) fullHref += '&code=' + encodeURIComponent(deal.dealCode);
+  fullLink.href = fullHref;
 
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer').setAttribute('aria-hidden', 'false');

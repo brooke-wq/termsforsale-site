@@ -104,6 +104,7 @@ AdminShell.renderShell('deal-buyers');
 
 var BUYERS = [];
 var CURRENT_SLUG = '';
+var CURRENT_CODE = '';     // Notion Deal Code (e.g. PHX-001) — enables per-deal status tags
 var TIER_FILTER = 'all';   // 'all' | '1' | '2' | '3' | 'none'
 
 function statusInfo(dealStatus) {
@@ -147,11 +148,17 @@ async function loadBuyers() {
   var slug = input.indexOf(' ') === -1 && input.indexOf('-') > -1 ? input : AdminShell.slugifyAddress(input);
   CURRENT_SLUG = slug;
 
+  // Pass the Notion Deal Code if we have one (from ?code= URL param or
+  // a previous load). Without it we can only read global response tags,
+  // not per-deal alert-[code] / viewed-[code].
+  var url = '/api/deal-buyer-list?deal=' + encodeURIComponent(slug);
+  if (CURRENT_CODE) url += '&code=' + encodeURIComponent(CURRENT_CODE);
+
   var results = document.getElementById('results');
   results.innerHTML = '<div class="panel"><div class="panel-body"><div class="spinner"></div></div></div>';
 
   try {
-    var res = await AdminShell.fetch('/api/deal-buyer-list?deal=' + encodeURIComponent(slug));
+    var res = await AdminShell.fetch(url);
     var data = await res.json();
 
     if (!res.ok) {
@@ -307,9 +314,13 @@ document.getElementById('deal-input').addEventListener('keydown', function (e) {
 });
 
 AdminShell.requireAuth(function () {
-  // If a deal is preloaded in URL, load it now
+  // If a deal is preloaded in URL, load it now. The drawer in
+  // /admin/deals.html passes &code=PHX-001 alongside the slug so we
+  // can resolve per-deal response tags (alert-[code] / viewed-[code]).
   var params = new URLSearchParams(window.location.search);
   var deal = params.get('deal');
+  var code = params.get('code');
+  if (code) CURRENT_CODE = code;
   if (deal) {
     document.getElementById('deal-input').value = deal;
     loadBuyers();

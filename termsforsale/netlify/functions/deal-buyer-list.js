@@ -1,12 +1,28 @@
 /**
- * Deal Buyer List — GET /.netlify/functions/deal-buyer-list?deal=123-main-st-mesa-az
+ * Deal Buyer List — GET /.netlify/functions/deal-buyer-list?deal=123-main-st-mesa-az&code=PHX-001
  *
  * Returns all GHL contacts who were sent a specific deal (have tag
- * sent:[deal-slug]), enriched with their acq:*, mkt:*, and deal:* tags
- * and sorted by response status: hot → interested → no-response → passed.
+ * sent:[deal-slug]), enriched with their acq:* / mkt:* tags and a
+ * per-deal response status derived from the real tags actually written
+ * by the rest of the system. Sorted hot → interested → no-response → passed.
  *
  * Query params:
  *   deal=<deal-slug>  (required)  The slugified deal address
+ *   code=<deal-code>  (optional)  The Notion Deal ID (e.g. PHX-001). When
+ *                                 provided, per-deal `alert-[code]` and
+ *                                 `viewed-[code]` tags are read to
+ *                                 populate Hot / Interested status.
+ *                                 Without it, only global response tags
+ *                                 are considered (loose, not per-deal).
+ *
+ * Tag → status mapping (strongest signal wins):
+ *   alert-[code]          → deal:hot          (per-deal explicit INTERESTED reply)
+ *   viewed-[code]         → deal:interested   (per-deal click-through engagement)
+ *   global buyer-interested → deal:interested (global — loose fallback)
+ *   global buyer-maybe      → deal:interested (global — loose fallback)
+ *   global buyer-pass       → deal:passed     (global — loose fallback)
+ *   (legacy deal:hot/deal:interested/deal:passed/deal:no-response tags
+ *    are also honored for forward compatibility)
  *
  * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID_TERMS (or GHL_LOCATION_ID)
  */
@@ -17,7 +33,9 @@ const crypto = require('crypto');
 const GHL_HOST = 'services.leadconnectorhq.com';
 const GHL_VERSION = '2021-07-28';
 
-// Response-status tag → sort priority (lower = earlier)
+// Output status key → sort priority (lower = earlier). These are the
+// normalized values the frontend (admin/deals.html drawer + admin/deal-buyers.html)
+// switches on — the UI already maps them to Hot / Interested / etc.
 const STATUS_PRIORITY = {
   'deal:hot': 0,
   'deal:interested': 1,
@@ -127,11 +145,62 @@ async function searchContactsByTag(apiKey, locationId, tag) {
   return { contacts: all };
 }
 
-/** Extract current deal:* status tag from a contact's tag list (first match wins). */
-function findStatusTag(tags) {
-  for (var i = 0; i < tags.length; i++) {
-    if (STATUS_PRIORITY.hasOwnProperty(tags[i])) return tags[i];
+/**
+ * Compute the per-deal response status for a contact by inspecting
+ * their actual tags. Returns one of the STATUS_PRIORITY keys or null
+ * (null means "no response signal at all" — the UI shows "Not responded").
+ *
+ * Strongest signal wins. Per-deal signals (alert-[code], viewed-[code])
+ * always outrank global ones (buyer-interested, buyer-pass, …) so a
+ * buyer who said PASS on some other deal last week but clicked on this
+ * specific deal is still shown as Interested.
+ *
+ * @param {string[]} tags        All tags on the contact (any case).
+ * @param {string}   dealCodeRaw Notion Deal Code for THIS deal, e.g. "PHX-001".
+ *                               Pass "" when the caller doesn't know the
+ *                               code (we'll fall back to global signals only).
+ */
+function computeDealStatus(tags, dealCodeRaw) {
+  if (!Array.isArray(tags) || tags.length === 0) return null;
+
+  // Normalize once — GHL lowercases tags on save, so we compare lowercase.
+  var lowered = tags.map(function (t) { return String(t || '').toLowerCase(); });
+  var set = Object.create(null);
+  for (var i = 0; i < lowered.length; i++) set[lowered[i]] = true;
+
+  var code = String(dealCodeRaw || '').toLowerCase().trim();
+
+  // ── 1. Legacy explicit deal:* tags (if anything still writes them) ──
+  // Listed first so a hand-applied deal:hot tag always wins.
+  if (set['deal:hot'])         return 'deal:hot';
+  if (set['deal:interested'])  return 'deal:interested';
+  if (set['deal:passed'])      return 'deal:passed';
+
+  // ── 2. Per-deal signals (only when we know the deal code) ──
+  if (code) {
+    // alert-[code] is written by buyer-alert.js when the buyer replies
+    // INTERESTED to a blast. Strongest "hot" signal we have per-deal.
+    if (set['alert-' + code]) return 'deal:hot';
+    // viewed-[code] is written by deal-view-tracker.js when a logged-in
+    // buyer loads the deal page (from SMS/email click or the dashboard).
+    // Solid "interested" signal — they clicked through.
+    if (set['viewed-' + code]) return 'deal:interested';
   }
+
+  // ── 3. Global response tags (loose fallback — NOT per-deal) ──
+  // These come from buyer-response-tag.js which writes one of these any
+  // time a buyer replies 1/2/3/IN/MAYBE/PASS/etc to ANY deal blast SMS.
+  // They get overwritten on every new reply, so they represent the
+  // buyer's most recent reply overall — which for a recent deal blast
+  // is usually (but not guaranteed to be) this deal.
+  if (set['buyer-interested']) return 'deal:interested';
+  if (set['buyer-maybe'])      return 'deal:interested';
+  if (set['buyer-pass'])       return 'deal:passed';
+
+  // ── 4. Legacy explicit no-response tag ──
+  if (set['deal:no-response']) return 'deal:no-response';
+
+  // No signal at all — UI will show "Not responded"
   return null;
 }
 
@@ -194,6 +263,7 @@ exports.handler = async function(event) {
 
   var params = event.queryStringParameters || {};
   var dealSlug = params.deal || '';
+  var dealCode = params.code || '';
   if (!dealSlug) {
     return { statusCode: 400, headers: headers, body: JSON.stringify({ error: 'deal query param is required' }) };
   }
@@ -201,7 +271,7 @@ exports.handler = async function(event) {
   var searchTag = 'sent:' + dealSlug;
 
   try {
-    console.log('[deal-buyer-list] searching for contacts tagged "' + searchTag + '"');
+    console.log('[deal-buyer-list] searching for contacts tagged "' + searchTag + '"' + (dealCode ? ' (code=' + dealCode + ')' : ''));
     var result = await searchContactsByTag(apiKey, locationId, searchTag);
     var contacts = result.contacts || [];
 
@@ -215,7 +285,7 @@ exports.handler = async function(event) {
         email: c.email || '',
         acqTags: tagsWithPrefix(tags, 'acq:'),
         mktTags: tagsWithPrefix(tags, 'mkt:'),
-        dealStatus: findStatusTag(tags),  // may be null if they haven't responded yet
+        dealStatus: computeDealStatus(tags, dealCode),  // may be null if no signal
         tier: findTierForDeal(tags, dealSlug)  // 1|2|3|null — null for historical blasts
       };
     });
@@ -236,6 +306,7 @@ exports.handler = async function(event) {
       body: JSON.stringify({
         ok: true,
         dealSlug: dealSlug,
+        dealCode: dealCode || null,
         tag: searchTag,
         count: mapped.length,
         contacts: mapped,
