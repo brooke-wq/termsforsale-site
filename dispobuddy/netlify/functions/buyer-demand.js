@@ -46,13 +46,22 @@ var CF = {
   EXIT_STRATEGIES:  '98i8EKc3OWYSqS4Qb1nP',
   BUYER_TYPE:       '95PgdlIYfXYcMymnjsIv',
   CONTACT_ROLE:     'agG4HMPB5wzsZXiRxfmR',
+  PURCHASE_TIMELINE: 'purchase_timeline',
 };
+
+var TIMELINE_ORDER = [
+  'Immediate — 0-30 days',
+  'Short-Term — 31-90 days',
+  'Long-Term — Beyond 90 days'
+];
+
+var TIMELINE_EXCLUDE = ['homerun only', 'just researching options'];
 
 // ─── HELPERS ─────────────────────────────────────────────────
 
 function getCF(contact, fieldId) {
   var cfs = contact.customFields || [];
-  var field = cfs.find(function(f) { return f.id === fieldId; });
+  var field = cfs.find(function(f) { return f.id === fieldId || f.key === fieldId || f.fieldKey === fieldId; });
   if (!field) return null;
   return field.value;
 }
@@ -122,7 +131,13 @@ async function fetchAllBuyers(apiKey, locationId) {
           isBuyer = true;
         }
       }
-      if (isBuyer) allBuyers.push(contact);
+      if (isBuyer) {
+        // Hard-filter: exclude buyers whose purchase_timeline matches TIMELINE_EXCLUDE
+        var timeline = getCF(contact, CF.PURCHASE_TIMELINE);
+        var timelineStr = timeline ? String(timeline).toLowerCase().trim() : '';
+        var excluded = TIMELINE_EXCLUDE.some(function(ex) { return timelineStr === ex.toLowerCase(); });
+        if (!excluded) allBuyers.push(contact);
+      }
     });
 
     if (result.body.meta && result.body.meta.nextPageUrl) {
@@ -185,6 +200,7 @@ function aggregateBuyerData(buyers) {
   var globalPropertyTypes = {};
   var globalExitStrategies = {};
   var globalBuyerTypes = {};
+  var globalTimelines = {};
   var totalBuyers = buyers.length;
 
   buyers.forEach(function(contact) {
@@ -210,6 +226,12 @@ function aggregateBuyerData(buyers) {
     }
     if (buyerType) {
       incrementMap(globalBuyerTypes, Array.isArray(buyerType) ? buyerType[0] : String(buyerType));
+    }
+
+    var purchaseTimeline = getCF(contact, CF.PURCHASE_TIMELINE);
+    var timelineVal = purchaseTimeline ? String(purchaseTimeline).trim() : '';
+    if (timelineVal) {
+      incrementMap(globalTimelines, timelineVal);
     }
 
     // Parse TARGET_MARKETS (free text) into additional cities if no TARGET_CITIES
@@ -252,6 +274,7 @@ function aggregateBuyerData(buyers) {
             dealTypes: {},
             propertyTypes: {},
             exitStrategies: {},
+            timelines: {},
             prices: [],
             entries: []
           };
@@ -268,6 +291,9 @@ function aggregateBuyerData(buyers) {
         }
         if (exitStrategies && Array.isArray(exitStrategies)) {
           exitStrategies.forEach(function(es) { incrementMap(m.exitStrategies, es); });
+        }
+        if (timelineVal) {
+          incrementMap(m.timelines, timelineVal);
         }
         if (maxPrice > 0) m.prices.push(maxPrice);
         if (maxEntry > 0) m.entries.push(maxEntry);
@@ -299,6 +325,7 @@ function aggregateBuyerData(buyers) {
       dealTypes: m.dealTypes,
       propertyTypes: m.propertyTypes,
       exitStrategies: m.exitStrategies,
+      timelines: m.timelines,
       priceRange: computeRange(m.prices),
       entryRange: computeRange(m.entries)
     });
@@ -332,6 +359,19 @@ function aggregateBuyerData(buyers) {
   });
   statesSummary.sort(function(a, b) { return b.buyerCount - a.buyerCount; });
 
+  // Build timelinesSummary ordered by TIMELINE_ORDER, then any extras
+  var timelinesSummary = {};
+  TIMELINE_ORDER.forEach(function(tl) {
+    if (globalTimelines[tl]) {
+      timelinesSummary[tl] = globalTimelines[tl];
+    }
+  });
+  Object.keys(globalTimelines).forEach(function(tl) {
+    if (!timelinesSummary[tl]) {
+      timelinesSummary[tl] = globalTimelines[tl];
+    }
+  });
+
   return {
     totalBuyers: totalBuyers,
     lastUpdated: new Date().toISOString(),
@@ -341,6 +381,7 @@ function aggregateBuyerData(buyers) {
     propertyTypesSummary: globalPropertyTypes,
     exitStrategiesSummary: globalExitStrategies,
     buyerTypesSummary: globalBuyerTypes,
+    timelinesSummary: timelinesSummary,
     totalMarkets: marketsArray.length
   };
 }

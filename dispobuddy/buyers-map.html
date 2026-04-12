@@ -72,8 +72,8 @@ a{text-decoration:none;color:inherit}
 .sidebar-sub{font-size:12px;color:var(--text-light);line-height:1.5;margin-bottom:16px}
 
 /* Filters */
-.filters{display:flex;gap:8px;margin-bottom:16px;padding:0 20px}
-.filter-select{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:12px;color:var(--text);background:var(--white);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23718096'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:0 20px}
+.filter-select{flex:1 1 0;min-width:92px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:12px;color:var(--text);background:var(--white);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23718096'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
 .filter-select:focus{outline:none;border-color:var(--blue)}
 
 /* Stats row */
@@ -196,6 +196,7 @@ a{text-decoration:none;color:inherit}
     <div class="filters">
       <select class="filter-select" id="filterState"><option value="">All States</option></select>
       <select class="filter-select" id="filterDeal"><option value="">All Deal Types</option></select>
+      <select class="filter-select" id="filterTimeline"><option value="">All Timelines</option></select>
     </div>
     <div class="stats-row" id="statsRow">
       <div class="stat-card">
@@ -323,6 +324,13 @@ function markerColor(count) {
   return '#94A3B8';
 }
 
+function shortTimelineLabel(label) {
+  if (/immediate/i.test(label)) return 'Immediate (0-30d)';
+  if (/short/i.test(label)) return 'Short-Term (31-90d)';
+  if (/long/i.test(label)) return 'Long-Term (90d+)';
+  return label;
+}
+
 /* ── INIT MAP ────────────────────────── */
 const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([39.8, -98.5], 4);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -354,6 +362,7 @@ async function loadData() {
 function populateFilters() {
   const stateSelect = document.getElementById('filterState');
   const dealSelect = document.getElementById('filterDeal');
+  const timelineSelect = document.getElementById('filterTimeline');
   if (allData.statesSummary) {
     allData.statesSummary
       .sort((a, b) => b.buyerCount - a.buyerCount)
@@ -374,6 +383,15 @@ function populateFilters() {
         dealSelect.appendChild(o);
       });
   }
+  if (allData.timelinesSummary) {
+    Object.entries(allData.timelinesSummary)
+      .forEach(([label, count]) => {
+        const o = document.createElement('option');
+        o.value = label;
+        o.textContent = shortTimelineLabel(label) + ' (' + count + ')';
+        timelineSelect.appendChild(o);
+      });
+  }
 }
 
 function getFilteredMarkets() {
@@ -381,11 +399,15 @@ function getFilteredMarkets() {
   let markets = allData.markets;
   const stateVal = document.getElementById('filterState').value;
   const dealVal = document.getElementById('filterDeal').value;
+  const timelineVal = document.getElementById('filterTimeline').value;
   if (stateVal) {
     markets = markets.filter(m => m.state === stateVal);
   }
   if (dealVal) {
     markets = markets.filter(m => m.dealTypes && m.dealTypes[dealVal] > 0);
+  }
+  if (timelineVal) {
+    markets = markets.filter(m => m.timelines && m.timelines[timelineVal] > 0);
   }
   return markets.sort((a, b) => b.buyerCount - a.buyerCount);
 }
@@ -554,6 +576,20 @@ async function renderMarkers(markets) {
         '</div>';
     }
 
+    const tlTags = m.timelines
+      ? Object.entries(m.timelines).map(([k, v]) =>
+          '<span class="popup-deal-tag" style="background:rgba(34,197,94,.1);color:#16a34a">' + shortTimelineLabel(k) + ': ' + v + '</span>'
+        ).join('')
+      : '';
+
+    if (tlTags) {
+      popupHtml +=
+        '<div class="popup-section">' +
+          '<div class="popup-section-label">Purchase Timeline</div>' +
+          '<div class="popup-deals">' + tlTags + '</div>' +
+        '</div>';
+    }
+
     popupHtml +=
       '<a href="/submit-deal" class="popup-cta">Have a deal in ' + m.city + '? Submit it.</a>';
 
@@ -565,6 +601,7 @@ async function renderMarkers(markets) {
 /* ── FILTER LISTENERS ────────────────── */
 document.getElementById('filterState').addEventListener('change', renderAll);
 document.getElementById('filterDeal').addEventListener('change', renderAll);
+document.getElementById('filterTimeline').addEventListener('change', renderAll);
 
 /* ── HAMBURGER ───────────────────────── */
 document.querySelector('.hamburger').addEventListener('click', function() {
