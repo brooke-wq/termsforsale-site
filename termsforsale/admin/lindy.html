@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lindy AI — Terms For Sale Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<style>
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;margin-bottom:28px}
+.agent-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:22px;position:relative;transition:all .18s;cursor:default}
+.agent-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md)}
+.agent-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.agent-card-name{font-size:15px;font-weight:800;color:var(--navy)}
+.agent-card-desc{font-size:12px;color:var(--text-light);line-height:1.5;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.agent-card-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.agent-card-actions{display:flex;gap:8px;border-top:1px solid var(--border);padding-top:14px;margin-top:auto}
+.agent-card-actions .btn{flex:1;justify-content:center;padding:8px 12px;font-size:12px}
+.tool-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.tool-chip{font-size:9px;padding:2px 7px;border-radius:4px;background:var(--bg-2);color:var(--text-mid);font-weight:600}
+.modal-overlay{position:fixed;inset:0;background:rgba(13,31,60,.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.35);padding:0}
+.modal-head{padding:24px 28px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-size:18px;font-weight:800;color:var(--navy);margin:0}
+.modal-close{background:none;border:none;font-size:22px;color:var(--text-light);cursor:pointer;padding:4px 8px}
+.modal-close:hover{color:var(--red)}
+.modal-body{padding:24px 28px}
+.modal-foot{padding:18px 28px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.field textarea{min-height:120px;resize:vertical;font-family:Menlo,Monaco,monospace;font-size:12px;line-height:1.6}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tool-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;font-size:12px;font-weight:600;color:var(--text-mid)}
+.tool-toggle:hover{border-color:var(--blue)}
+.tool-toggle.on{background:var(--blue-light);border-color:var(--blue);color:var(--blue-dark)}
+.tool-toggle input{display:none}
+.run-output{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:18px;font-family:Menlo,Monaco,monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;color:var(--text)}
+.run-stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px}
+.run-stat{font-size:11px;color:var(--text-light);font-weight:600}
+.run-stat span{color:var(--navy);font-weight:800}
+.setup-card{background:#fff;border:2px dashed var(--border);border-radius:16px;padding:48px;text-align:center;max-width:600px;margin:60px auto}
+.setup-card h2{font-size:22px;font-weight:900;color:var(--navy);margin-bottom:8px}
+.setup-card p{font-size:14px;color:var(--text-light);margin-bottom:24px;line-height:1.6}
+.setup-card code{display:block;background:var(--bg);padding:14px;border-radius:8px;font-size:13px;text-align:left;margin:16px 0}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state h3{font-size:18px;color:var(--navy);margin-bottom:8px}
+.empty-state p{color:var(--text-light);margin-bottom:24px}
+.template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:20px}
+.template-card{padding:18px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .18s;text-align:left}
+.template-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.template-card h4{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.template-card p{font-size:11px;color:var(--text-light);line-height:1.5;margin:0}
+.run-history .t td{font-size:12px}
+</style>
+</head>
+<body class="locked">
+<div class="admin-shell">
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <div class="topbar-crumb">Paperclip AI OS</div>
+      <div class="topbar-h">Lindy AI Agents</div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn" onclick="loadRuns()">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Run History</span>
+      </button>
+      <button class="topbar-btn primary" onclick="openCreate()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>New Agent</span>
+      </button>
+    </div>
+  </div>
+  <div class="content" id="app">
+    <div class="spinner" id="loading"></div>
+  </div>
+</main>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal-overlay" id="agentModal">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="modalTitle">New Agent</h2>
+    <button class="modal-close" onclick="closeModal('agentModal')">&times;</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="editId">
+    <div class="field"><label class="field-label">Agent Name</label><input id="fName" class="ctl" placeholder="e.g. Deal Analyzer"></div>
+    <div class="field"><label class="field-label">Description</label><input id="fDesc" class="ctl" placeholder="What does this agent do?"></div>
+    <div class="field"><label class="field-label">System Prompt</label><textarea id="fPrompt" class="ctl" placeholder="You are a real estate analyst..."></textarea></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Model</label>
+        <select id="fModel" class="ctl"><option value="haiku">Haiku (fast + cheap)</option><option value="sonnet">Sonnet (smarter)</option></select>
+      </div>
+      <div class="field"><label class="field-label">Max Tokens</label><input id="fMaxTok" class="ctl" type="number" value="4096"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Trigger</label>
+        <select id="fTrigger" class="ctl"><option value="manual">Manual</option><option value="webhook">Webhook</option></select>
+      </div>
+      <div class="field"><label class="field-label">Status</label>
+        <select id="fStatus" class="ctl"><option value="active">Active</option><option value="paused">Paused</option><option value="draft">Draft</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Tools</label>
+      <div class="tools-grid" id="toolsGrid"></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn secondary" onclick="closeModal('agentModal')">Cancel</button>
+    <button class="btn blue" id="saveBtn" onclick="saveAgent()">Create Agent</button>
+  </div>
+</div>
+</div>
+
+<!-- Run Modal -->
+<div class="modal-overlay" id="runModal">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="runTitle">Run Agent</h2>
+    <button class="modal-close" onclick="closeModal('runModal')">&times;</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="runAgentId">
+    <div class="field"><label class="field-label">Input</label><textarea id="runInput" class="ctl" placeholder="What should the agent do?" style="min-height:80px"></textarea></div>
+    <button class="btn blue" id="runBtn" onclick="executeRun()" style="width:100%;justify-content:center;margin-bottom:16px">Run Agent</button>
+    <div id="runResult" style="display:none">
+      <label class="field-label">Output</label>
+      <div class="run-output" id="runOutput"></div>
+      <div class="run-stats" id="runStats"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- History Modal -->
+<div class="modal-overlay" id="historyModal">
+<div class="modal" style="max-width:880px">
+  <div class="modal-head">
+    <h2>Run History</h2>
+    <button class="modal-close" onclick="closeModal('historyModal')">&times;</button>
+  </div>
+  <div class="modal-body run-history">
+    <div id="historyContent"><div class="spinner"></div></div>
+  </div>
+</div>
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('lindy');
+
+var ALL_TOOLS = {
+  search_contacts: 'Search CRM Contacts',
+  get_contact: 'Get Contact Details',
+  add_tags: 'Add Tags',
+  remove_tags: 'Remove Tags',
+  post_note: 'Post Note to Contact',
+  send_sms: 'Send SMS',
+  send_email: 'Send Email',
+  query_deals: 'Query Deals Database',
+  update_contact: 'Update Contact',
+  create_contact: 'Create Contact'
+};
+
+var TEMPLATES = [
+  { name:'Deal Analyzer', description:'Analyze deal financials and market potential', model:'haiku', tools:['query_deals','search_contacts'], prompt:'You are a real estate deal analyst for Deal Pros LLC, an Arizona wholesale company. When given a deal or city/zip, analyze the financials: ARV vs asking price, entry fee reasonableness, deal type structure, and market conditions. Be concise and actionable. Use the query_deals tool to look up active inventory. Format your response with clear sections: Deal Summary, Financial Analysis, Risk Factors, and Recommendation.' },
+  { name:'Buyer Matcher', description:'Find matching buyers for a specific deal', model:'haiku', tools:['query_deals','search_contacts','get_contact','post_note'], prompt:'You are a buyer-matching assistant for Deal Pros LLC. When given a deal description or deal ID, find buyers in the CRM whose criteria match the deal. Search by city/state, price range, and deal type. For each match, note why they fit. Post a summary note to each matched buyer\'s contact record. Be thorough but efficient.' },
+  { name:'Lead Qualifier', description:'Score and qualify incoming seller leads', model:'haiku', tools:['search_contacts','get_contact','add_tags','post_note'], prompt:'You are a lead qualification specialist for Deal Pros LLC. When given a seller lead (name, property address, situation), look them up in the CRM and assess: motivation level (1-10), property potential, timeline urgency, and recommended next action. Add appropriate tags (lead-hot, lead-warm, lead-cold) and post a qualification note. Be direct and brief.' },
+  { name:'Email Drafter', description:'Draft marketing emails for deals or follow-ups', model:'sonnet', tools:['query_deals','search_contacts'], prompt:'You are a real estate email copywriter for Deal Pros LLC (brand: Terms For Sale). Draft compelling, professional emails for deal marketing, buyer follow-ups, or announcements. Keep subject lines under 50 chars. Use a friendly but professional tone. Never include street addresses in marketing emails - use city/state only. Include a clear CTA. Output the subject line and HTML body separately.' },
+  { name:'Portfolio Reporter', description:'Generate summary reports on active deals', model:'haiku', tools:['query_deals'], prompt:'You are a reporting assistant for Deal Pros LLC. Generate concise portfolio reports on active deal inventory. Include: total deals, breakdown by type (SubTo, Seller Finance, Cash, Hybrid), breakdown by state/metro, price range distribution, and average entry fee. Present data in a clean, scannable format with key metrics highlighted.' }
+];
+
+var agents = [];
+var esc = AdminShell.esc;
+
+function renderToolsGrid() {
+  var g = document.getElementById('toolsGrid');
+  g.innerHTML = Object.keys(ALL_TOOLS).map(function(k) {
+    return '<label class="tool-toggle" data-tool="' + k + '" onclick="toggleTool(this)">' +
+      '<input type="checkbox" value="' + k + '">' +
+      ALL_TOOLS[k] + '</label>';
+  }).join('');
+}
+
+function toggleTool(el) {
+  var cb = el.querySelector('input');
+  cb.checked = !cb.checked;
+  el.classList.toggle('on', cb.checked);
+}
+
+function getSelectedTools() {
+  var checks = document.querySelectorAll('#toolsGrid input:checked');
+  return Array.from(checks).map(function(c) { return c.value; });
+}
+
+function setSelectedTools(tools) {
+  document.querySelectorAll('#toolsGrid .tool-toggle').forEach(function(el) {
+    var cb = el.querySelector('input');
+    var on = tools.indexOf(cb.value) >= 0;
+    cb.checked = on;
+    el.classList.toggle('on', on);
+  });
+}
+
+// ── API helpers ──
+function api(path, opts) { return AdminShell.fetch('/api/' + path, opts); }
+
+async function loadAgents() {
+  try {
+    var res = await api('lindy-agents?action=setup-check');
+    var check = await res.json();
+    if (!check.configured) { renderSetup(); return; }
+    var res2 = await api('lindy-agents');
+    var data = await res2.json();
+    agents = data.agents || [];
+    renderAgents();
+  } catch (e) {
+    document.getElementById('app').innerHTML = '<div class="err">Failed to load: ' + esc(e.message) + '</div>';
+  }
+}
+
+function renderSetup() {
+  document.getElementById('app').innerHTML =
+    '<div class="setup-card">' +
+      '<h2>Set Up Lindy AI</h2>' +
+      '<p>Lindy needs a Notion database to store agent configs and run history. Click below to auto-create it, or create it manually.</p>' +
+      '<button class="btn blue" onclick="runSetup()" id="setupBtn">Auto-Create Database</button>' +
+      '<div id="setupResult"></div>' +
+    '</div>';
+}
+
+async function runSetup() {
+  var btn = document.getElementById('setupBtn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    var res = await api('lindy-agents?action=setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    document.getElementById('setupResult').innerHTML =
+      '<div style="margin-top:20px;text-align:left">' +
+        '<p style="color:var(--green);font-weight:700">Database created!</p>' +
+        '<p>Add this environment variable in Netlify:</p>' +
+        '<code>NOTION_LINDY_DB=' + esc(data.databaseId) + '</code>' +
+        '<p style="margin-top:12px;font-size:12px;color:var(--text-light)">After setting the env var, redeploy and refresh this page.</p>' +
+      '</div>';
+  } catch (e) {
+    document.getElementById('setupResult').innerHTML =
+      '<div class="err" style="margin-top:16px">Setup failed: ' + esc(e.message) + '</div>' +
+      '<p style="margin-top:12px;font-size:12px;color:var(--text-light)">Manual setup: create a Notion database with properties matching the schema in _lindy.js, then set NOTION_LINDY_DB in Netlify env vars.</p>';
+  }
+  btn.disabled = false; btn.textContent = 'Auto-Create Database';
+}
+
+function renderAgents() {
+  var app = document.getElementById('app');
+  if (agents.length === 0) {
+    app.innerHTML =
+      '<div class="stat-grid">' +
+        '<div class="stat"><div class="stat-label">Total Agents</div><div class="stat-value">0</div></div>' +
+        '<div class="stat green"><div class="stat-label">Active</div><div class="stat-value">0</div></div>' +
+      '</div>' +
+      '<div class="empty-state">' +
+        '<h3>No agents yet</h3>' +
+        '<p>Create your first AI agent or start from a template below.</p>' +
+        '<button class="btn blue" onclick="openCreate()">Create Agent</button>' +
+        '<div class="template-grid">' + TEMPLATES.map(function(t, i) {
+          return '<div class="template-card" onclick="useTemplate(' + i + ')">' +
+            '<h4>' + esc(t.name) + '</h4><p>' + esc(t.description) + '</p></div>';
+        }).join('') + '</div>' +
+      '</div>';
+    return;
+  }
+
+  var active = agents.filter(function(a) { return a.status === 'active'; }).length;
+  var totalCost = agents.reduce(function(s, a) { return s + (a.totalCost || 0); }, 0);
+  var totalRuns = agents.reduce(function(s, a) { return s + (a.runCount || 0); }, 0);
+
+  var html =
+    '<div class="stat-grid">' +
+      '<div class="stat"><div class="stat-label">Total Agents</div><div class="stat-value">' + agents.length + '</div></div>' +
+      '<div class="stat green"><div class="stat-label">Active</div><div class="stat-value">' + active + '</div></div>' +
+      '<div class="stat purple"><div class="stat-label">Total Runs</div><div class="stat-value">' + totalRuns + '</div></div>' +
+      '<div class="stat orange"><div class="stat-label">Total Cost</div><div class="stat-value">$' + totalCost.toFixed(2) + '</div></div>' +
+    '</div>' +
+    '<div class="agent-grid">' + agents.map(renderAgentCard).join('') + '</div>' +
+    '<div class="panel"><div class="panel-head"><div class="panel-title">Quick Create from Template</div></div>' +
+    '<div class="panel-body"><div class="template-grid">' + TEMPLATES.map(function(t, i) {
+      return '<div class="template-card" onclick="useTemplate(' + i + ')">' +
+        '<h4>' + esc(t.name) + '</h4><p>' + esc(t.description) + '</p></div>';
+    }).join('') + '</div></div></div>';
+
+  app.innerHTML = html;
+}
+
+function renderAgentCard(a) {
+  var statusColor = a.status === 'active' ? 'green' : a.status === 'paused' ? 'orange' : 'gray';
+  var triggerColor = a.trigger === 'webhook' ? 'blue' : 'gray';
+  var modelColor = a.model === 'sonnet' ? 'purple' : 'blue';
+  return '<div class="agent-card">' +
+    '<div class="agent-card-head">' +
+      '<div class="agent-card-name">' + esc(a.name) + '</div>' +
+      '<span class="pill ' + statusColor + '">' + esc(a.status) + '</span>' +
+    '</div>' +
+    '<div class="agent-card-desc">' + esc(a.description || 'No description') + '</div>' +
+    '<div class="agent-card-meta">' +
+      '<span class="pill ' + triggerColor + '">' + esc(a.trigger) + '</span>' +
+      '<span class="pill ' + modelColor + '">' + esc(a.model) + '</span>' +
+      (a.runCount ? '<span class="pill gray">' + a.runCount + ' runs</span>' : '') +
+      (a.totalCost ? '<span class="pill gray">$' + a.totalCost.toFixed(3) + '</span>' : '') +
+    '</div>' +
+    (a.tools.length ? '<div class="tool-chips">' + a.tools.map(function(t) {
+      return '<span class="tool-chip">' + esc(ALL_TOOLS[t] || t) + '</span>';
+    }).join('') + '</div>' : '') +
+    '<div class="agent-card-actions">' +
+      '<button class="btn blue" onclick="openRun(\'' + a.id + '\')">Run</button>' +
+      '<button class="btn secondary" onclick="openEdit(\'' + a.id + '\')">Edit</button>' +
+      '<button class="btn secondary" onclick="toggleAgent(\'' + a.id + '\',\'' + a.status + '\')">' + (a.status === 'active' ? 'Pause' : 'Activate') + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+// ── Modal helpers ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openCreate() {
+  document.getElementById('modalTitle').textContent = 'New Agent';
+  document.getElementById('saveBtn').textContent = 'Create Agent';
+  document.getElementById('editId').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fDesc').value = '';
+  document.getElementById('fPrompt').value = '';
+  document.getElementById('fModel').value = 'haiku';
+  document.getElementById('fMaxTok').value = '4096';
+  document.getElementById('fTrigger').value = 'manual';
+  document.getElementById('fStatus').value = 'active';
+  setSelectedTools([]);
+  openModal('agentModal');
+}
+
+function openEdit(id) {
+  var a = agents.find(function(x) { return x.id === id; });
+  if (!a) return;
+  document.getElementById('modalTitle').textContent = 'Edit Agent';
+  document.getElementById('saveBtn').textContent = 'Save Changes';
+  document.getElementById('editId').value = a.id;
+  document.getElementById('fName').value = a.name;
+  document.getElementById('fDesc').value = a.description;
+  document.getElementById('fPrompt').value = a.systemPrompt;
+  document.getElementById('fModel').value = a.model || 'haiku';
+  document.getElementById('fMaxTok').value = a.maxTokens || 4096;
+  document.getElementById('fTrigger').value = a.trigger || 'manual';
+  document.getElementById('fStatus').value = a.status || 'active';
+  setSelectedTools(a.tools || []);
+  openModal('agentModal');
+}
+
+function useTemplate(idx) {
+  var t = TEMPLATES[idx];
+  openCreate();
+  document.getElementById('fName').value = t.name;
+  document.getElementById('fDesc').value = t.description;
+  document.getElementById('fPrompt').value = t.prompt;
+  document.getElementById('fModel').value = t.model || 'haiku';
+  setSelectedTools(t.tools || []);
+}
+
+async function saveAgent() {
+  var btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  var id = document.getElementById('editId').value;
+  var payload = {
+    name: document.getElementById('fName').value.trim(),
+    description: document.getElementById('fDesc').value.trim(),
+    systemPrompt: document.getElementById('fPrompt').value.trim(),
+    model: document.getElementById('fModel').value,
+    maxTokens: parseInt(document.getElementById('fMaxTok').value) || 4096,
+    trigger: document.getElementById('fTrigger').value,
+    status: document.getElementById('fStatus').value,
+    tools: getSelectedTools()
+  };
+  if (!payload.name) { AdminShell.toast('Name is required'); btn.disabled = false; btn.textContent = id ? 'Save Changes' : 'Create Agent'; return; }
+  try {
+    if (id) {
+      payload.id = id;
+      await api('lindy-agents', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    } else {
+      await api('lindy-agents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    }
+    closeModal('agentModal');
+    AdminShell.toast(id ? 'Agent updated' : 'Agent created');
+    loadAgents();
+  } catch (e) {
+    AdminShell.toast('Error: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = id ? 'Save Changes' : 'Create Agent';
+}
+
+async function toggleAgent(id, currentStatus) {
+  var newStatus = currentStatus === 'active' ? 'paused' : 'active';
+  try {
+    await api('lindy-agents', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id, status: newStatus }) });
+    AdminShell.toast('Agent ' + newStatus);
+    loadAgents();
+  } catch (e) { AdminShell.toast('Error: ' + e.message); }
+}
+
+// ── Run agent ──
+function openRun(id) {
+  var a = agents.find(function(x) { return x.id === id; });
+  if (!a) return;
+  document.getElementById('runAgentId').value = id;
+  document.getElementById('runTitle').textContent = 'Run: ' + a.name;
+  document.getElementById('runInput').value = '';
+  document.getElementById('runResult').style.display = 'none';
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('runBtn').textContent = 'Run Agent';
+  openModal('runModal');
+}
+
+async function executeRun() {
+  var btn = document.getElementById('runBtn');
+  var agentId = document.getElementById('runAgentId').value;
+  var input = document.getElementById('runInput').value.trim();
+  if (!input) { AdminShell.toast('Enter input for the agent'); return; }
+  btn.disabled = true; btn.textContent = 'Running...';
+  document.getElementById('runResult').style.display = 'none';
+  try {
+    var res = await api('lindy-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: agentId, input: input })
+    });
+    var data = await res.json();
+    if (data.error && data.status === 'failed') throw new Error(data.error);
+    document.getElementById('runOutput').textContent = data.output || '(no output)';
+    document.getElementById('runStats').innerHTML =
+      '<div class="run-stat">Duration: <span>' + (data.duration / 1000).toFixed(1) + 's</span></div>' +
+      '<div class="run-stat">Cost: <span>$' + (data.cost || 0).toFixed(4) + '</span></div>' +
+      '<div class="run-stat">Tokens: <span>' + ((data.inputTokens || 0) + (data.outputTokens || 0)) + '</span></div>' +
+      '<div class="run-stat">Tool Calls: <span>' + (data.toolCalls || 0) + '</span></div>' +
+      '<div class="run-stat">Rounds: <span>' + (data.rounds || 1) + '</span></div>';
+    document.getElementById('runResult').style.display = 'block';
+    loadAgents(); // refresh stats
+  } catch (e) {
+    document.getElementById('runOutput').textContent = 'ERROR: ' + e.message;
+    document.getElementById('runStats').innerHTML = '';
+    document.getElementById('runResult').style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Run Again';
+}
+
+// ── History ──
+async function loadRuns() {
+  openModal('historyModal');
+  document.getElementById('historyContent').innerHTML = '<div class="spinner"></div>';
+  try {
+    var res = await api('lindy-run?limit=30');
+    var data = await res.json();
+    var runs = data.runs || [];
+    if (runs.length === 0) {
+      document.getElementById('historyContent').innerHTML = '<p class="muted" style="text-align:center;padding:20px">No runs yet.</p>';
+      return;
+    }
+    var html = '<div class="table-wrap"><table class="t"><thead><tr>' +
+      '<th>Agent</th><th>Status</th><th>Duration</th><th>Cost</th><th>Tools</th><th>Time</th>' +
+      '</tr></thead><tbody>' +
+      runs.map(function(r) {
+        var sc = r.status === 'complete' ? 'green' : r.status === 'failed' ? 'red' : 'blue';
+        return '<tr>' +
+          '<td class="cell-strong">' + esc(r.agentName || '—') + '</td>' +
+          '<td><span class="pill ' + sc + '">' + esc(r.status) + '</span></td>' +
+          '<td>' + (r.duration ? (r.duration / 1000).toFixed(1) + 's' : '—') + '</td>' +
+          '<td>' + (r.cost ? '$' + r.cost.toFixed(4) : '—') + '</td>' +
+          '<td>' + (r.toolCalls || 0) + '</td>' +
+          '<td class="cell-muted">' + AdminShell.fmtDate(r.created) + '</td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+    document.getElementById('historyContent').innerHTML = html;
+  } catch (e) {
+    document.getElementById('historyContent').innerHTML = '<div class="err">Failed to load runs: ' + esc(e.message) + '</div>';
+  }
+}
+
+// ── Init ──
+renderToolsGrid();
+AdminShell.requireAuth(loadAgents);
+</script>
+</body>
+</html>
