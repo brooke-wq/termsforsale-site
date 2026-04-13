@@ -687,7 +687,7 @@ async function runAgent(agent, userInput) {
 async function setupDatabase(parentPageId) {
   // If no parent given, try to find the parent of the existing deals DB
   if (!parentPageId) {
-    var dealsDb = process.env.NOTION_DATABASE_ID || process.env.NOTION_DB_ID;
+    var dealsDb = process.env.NOTION_DATABASE_ID || process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
     if (dealsDb) {
       var dbRes = await notionFetch('GET', '/v1/databases/' + dealsDb);
       if (dbRes.ok && dbRes.body.parent) {
