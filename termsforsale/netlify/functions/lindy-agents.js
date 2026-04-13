@@ -79,6 +79,7 @@ exports.handler = async function(event) {
         tools: body.tools || [],
         trigger: body.trigger || 'manual',
         schedule: body.schedule || '',
+        defaultInput: body.defaultInput || '',
         status: body.status || 'active',
         model: body.model || 'haiku',
         maxTokens: body.maxTokens || 4096

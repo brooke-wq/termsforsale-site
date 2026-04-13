@@ -172,8 +172,8 @@ async function main() {
       // Fetch full agent with system prompt
       var fullAgent = await lindy.getAgent(agent.id);
 
-      // The scheduled input is a trigger message
-      var input = 'Scheduled run triggered at ' + new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }) + ' (Arizona time). Execute your primary objective.';
+      // Use the agent's default input (autonomous task), fall back to generic trigger
+      var input = fullAgent.defaultInput || 'Execute your primary objective now. Today is ' + new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }) + ' Arizona time.';
 
       // Create run record
       var run = await lindy.createRun({

@@ -62,6 +62,11 @@ exports.handler = async function(event) {
       input = rawBody;
     }
 
+    // If webhook body is empty or just {}, use the agent's default input
+    if (!input || input === '{}' || input.trim() === '') {
+      input = agent.defaultInput || 'Execute your primary objective.';
+    }
+
     // Create run record
     var run = await lindy.createRun({
       agentId: agent.id,
