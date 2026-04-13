@@ -72,16 +72,21 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsHeaders(), body: '' };
   }
-  if (event.httpMethod !== 'POST') {
-    return respond(405, { error: 'POST only' });
+  if (event.httpMethod !== 'POST' && event.httpMethod !== 'GET') {
+    return respond(405, { error: 'GET or POST only' });
   }
 
   const apiKey = process.env.GHL_API_KEY;
   if (!apiKey) return respond(500, { error: 'Server config error' });
 
+  // Accept data from POST body or GET query params (GHL webhooks may send either)
   let body;
-  try { body = JSON.parse(event.body); }
-  catch (e) { return respond(400, { error: 'Invalid JSON' }); }
+  if (event.httpMethod === 'POST') {
+    try { body = JSON.parse(event.body); }
+    catch (e) { return respond(400, { error: 'Invalid JSON' }); }
+  } else {
+    body = event.queryStringParameters || {};
+  }
 
   const contactId = body.contact_id || body.contactId || (body.contact && body.contact.id);
   const message = (body.message || body.body || body.text || '').trim();
@@ -158,7 +163,7 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   };
 }
 
