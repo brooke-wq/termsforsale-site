@@ -28,9 +28,9 @@ const GHL_BASE = 'https://services.leadconnectorhq.com';
 
 // Commission structure constants (tweak here to change program economics)
 const COMMISSION = {
-  SIGNUP_FLAT:        0,     // nothing on raw signup — only on qualified first deal
-  FIRST_DEAL_FLAT:    250,   // $250 when referred partner submits first deal
-  CLOSED_DEAL_RATE:   0.10,  // 10% of assignment fee
+  SIGNUP_FLAT:        0,     // nothing on raw signup — only on qualified first deal close
+  FIRST_DEAL_FLAT:    200,   // $200 when referred partner closes first deal within 6 months
+  CLOSED_DEAL_RATE:   0.05,  // 5% of net dispo fee for 12 months
 };
 
 exports.handler = async (event) => {
