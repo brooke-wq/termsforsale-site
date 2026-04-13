@@ -99,11 +99,16 @@
     </div>
     <div class="field-row">
       <div class="field"><label class="field-label">Trigger</label>
-        <select id="fTrigger" class="ctl"><option value="manual">Manual</option><option value="webhook">Webhook</option></select>
+        <select id="fTrigger" class="ctl" onchange="toggleScheduleField()"><option value="manual">Manual</option><option value="webhook">Webhook</option><option value="schedule">Scheduled</option></select>
       </div>
       <div class="field"><label class="field-label">Status</label>
         <select id="fStatus" class="ctl"><option value="active">Active</option><option value="paused">Paused</option><option value="draft">Draft</option></select>
       </div>
+    </div>
+    <div class="field" id="scheduleField" style="display:none">
+      <label class="field-label">Schedule</label>
+      <input id="fSchedule" class="ctl" placeholder="e.g. daily 7am, every 30m, hourly, weekly">
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Options: every 5m, every 15m, every 30m, hourly, daily, daily 7am, daily 9am, weekly</div>
     </div>
     <div class="field">
       <label class="field-label">Tools</label>
@@ -312,7 +317,7 @@ function renderAgentCard(a) {
     '</div>' +
     '<div class="agent-card-desc">' + esc(a.description || 'No description') + '</div>' +
     '<div class="agent-card-meta">' +
-      '<span class="pill ' + triggerColor + '">' + esc(a.trigger) + '</span>' +
+      '<span class="pill ' + triggerColor + '">' + esc(a.trigger) + (a.schedule ? ' · ' + esc(a.schedule) : '') + '</span>' +
       '<span class="pill ' + modelColor + '">' + esc(a.model) + '</span>' +
       (a.runCount ? '<span class="pill gray">' + a.runCount + ' runs</span>' : '') +
       (a.totalCost ? '<span class="pill gray">$' + a.totalCost.toFixed(3) + '</span>' : '') +
@@ -326,6 +331,11 @@ function renderAgentCard(a) {
       '<button class="btn secondary" onclick="toggleAgent(\'' + a.id + '\',\'' + a.status + '\')">' + (a.status === 'active' ? 'Pause' : 'Activate') + '</button>' +
     '</div>' +
   '</div>';
+}
+
+function toggleScheduleField() {
+  var v = document.getElementById('fTrigger').value;
+  document.getElementById('scheduleField').style.display = v === 'schedule' ? 'block' : 'none';
 }
 
 // ── Modal helpers ──
@@ -342,8 +352,10 @@ function openCreate() {
   document.getElementById('fModel').value = 'haiku';
   document.getElementById('fMaxTok').value = '4096';
   document.getElementById('fTrigger').value = 'manual';
+  document.getElementById('fSchedule').value = '';
   document.getElementById('fStatus').value = 'active';
   setSelectedTools([]);
+  toggleScheduleField();
   openModal('agentModal');
 }
 
@@ -359,8 +371,10 @@ function openEdit(id) {
   document.getElementById('fModel').value = a.model || 'haiku';
   document.getElementById('fMaxTok').value = a.maxTokens || 4096;
   document.getElementById('fTrigger').value = a.trigger || 'manual';
+  document.getElementById('fSchedule').value = a.schedule || '';
   document.getElementById('fStatus').value = a.status || 'active';
   setSelectedTools(a.tools || []);
+  toggleScheduleField();
   openModal('agentModal');
 }
 
@@ -385,6 +399,7 @@ async function saveAgent() {
     model: document.getElementById('fModel').value,
     maxTokens: parseInt(document.getElementById('fMaxTok').value) || 4096,
     trigger: document.getElementById('fTrigger').value,
+    schedule: document.getElementById('fSchedule').value.trim(),
     status: document.getElementById('fStatus').value,
     tools: getSelectedTools()
   };

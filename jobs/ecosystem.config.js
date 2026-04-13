@@ -115,5 +115,13 @@ module.exports = {
       watch: false,
       max_memory_restart: '150M',
     },
+    {
+      name: 'deal-buddy-scheduler',
+      script: './deal-buddy-scheduler.js',
+      cron_restart: '*/5 * * * *',
+      autorestart: false,
+      watch: false,
+      max_memory_restart: '200M',
+    },
   ],
 };

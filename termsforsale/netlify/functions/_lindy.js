@@ -114,6 +114,7 @@ function parseAgent(page) {
     systemPrompt: readRichText(p['System Prompt']),
     tools: readMultiSelect(p['Tools']),
     trigger: readSelect(p['Trigger']),
+    schedule: readRichText(p['Schedule']),
     status: readSelect(p['Status']),
     model: readSelect(p['Model']),
     maxTokens: readNumber(p['Max Tokens']) || 4096,
@@ -166,6 +167,7 @@ function agentProps(data) {
   if (data.systemPrompt != null) props['System Prompt'] = { rich_text: richText(data.systemPrompt) };
   if (data.tools != null)       props['Tools'] = { multi_select: data.tools.map(function(t) { return { name: t }; }) };
   if (data.trigger != null)     props['Trigger'] = { select: { name: data.trigger } };
+  if (data.schedule != null)    props['Schedule'] = { rich_text: richText(data.schedule) };
   if (data.status != null)      props['Status'] = { select: { name: data.status } };
   if (data.model != null)       props['Model'] = { select: { name: data.model } };
   if (data.maxTokens != null)   props['Max Tokens'] = { number: data.maxTokens };
@@ -762,7 +764,8 @@ async function setupDatabase(parentPageId) {
       'Slug':          { rich_text: {} },
       'System Prompt': { rich_text: {} },
       'Tools':         { multi_select: { options: Object.keys(TOOL_CATALOG).map(function(k) { return { name: k }; }) } },
-      'Trigger':       { select: { options: [{ name: 'manual', color: 'default' }, { name: 'webhook', color: 'green' }] } },
+      'Trigger':       { select: { options: [{ name: 'manual', color: 'default' }, { name: 'webhook', color: 'green' }, { name: 'schedule', color: 'blue' }] } },
+      'Schedule':      { rich_text: {} },
       'Status':        { select: { options: [
         { name: 'active', color: 'green' },
         { name: 'paused', color: 'yellow' },
