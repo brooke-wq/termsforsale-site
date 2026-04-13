@@ -47,6 +47,7 @@ var CF = {
   BUYER_TYPE:       '95PgdlIYfXYcMymnjsIv',
   CONTACT_ROLE:     'agG4HMPB5wzsZXiRxfmR',
   PURCHASE_TIMELINE: 'purchase_timeline',
+  CLOSE_TIMELINE:    'close_timeline',
 };
 
 var TIMELINE_ORDER = [
@@ -64,6 +65,31 @@ function getCF(contact, fieldId) {
   var field = cfs.find(function(f) { return f.id === fieldId || f.key === fieldId || f.fieldKey === fieldId; });
   if (!field) return null;
   return field.value;
+}
+
+function normalizeTimeline(val) {
+  if (!val) return '';
+  var v = val.trim();
+  if (/^Immediate/i.test(v) || /^Short-Term/i.test(v) || /^Long-Term/i.test(v)) return v;
+  var lower = v.toLowerCase();
+  if (lower === 'asap (7 days)' || lower === '10-14 days' || lower === '14-21 days' || lower === '21-30 days') {
+    return 'Immediate — 0-30 days';
+  }
+  if (lower === '30-45 days' || lower === '45-60 days') {
+    return 'Short-Term — 31-90 days';
+  }
+  if (lower === 'flexible') {
+    return 'Long-Term — Beyond 90 days';
+  }
+  return v;
+}
+
+function getBuyerTimeline(contact) {
+  var pt = getCF(contact, CF.PURCHASE_TIMELINE);
+  if (pt) return normalizeTimeline(String(pt));
+  var ct = getCF(contact, CF.CLOSE_TIMELINE);
+  if (ct) return normalizeTimeline(String(ct));
+  return '';
 }
 
 // ─── IN-MEMORY CACHE (10 min TTL) ───────────────────────────
@@ -112,13 +138,21 @@ async function resolveFieldId(apiKey, locationId, fieldKey) {
 // ─── FETCH ALL BUYERS FROM GHL ──────────────────────────────
 
 async function fetchAllBuyers(apiKey, locationId) {
-  // Resolve purchase_timeline key → UUID if it's not already a UUID
+  // Resolve timeline field keys → UUIDs if not already resolved
   if (CF.PURCHASE_TIMELINE && !/^[a-zA-Z0-9]{20}/.test(CF.PURCHASE_TIMELINE)) {
-    var resolvedId = await resolveFieldId(apiKey, locationId, CF.PURCHASE_TIMELINE);
-    if (resolvedId) {
-      CF.PURCHASE_TIMELINE = resolvedId;
+    var resolvedPt = await resolveFieldId(apiKey, locationId, CF.PURCHASE_TIMELINE);
+    if (resolvedPt) {
+      CF.PURCHASE_TIMELINE = resolvedPt;
     } else {
-      console.log('buyer-demand: Could not resolve purchase_timeline field, timeline features disabled');
+      console.log('buyer-demand: Could not resolve purchase_timeline field');
+    }
+  }
+  if (CF.CLOSE_TIMELINE && !/^[a-zA-Z0-9]{20}/.test(CF.CLOSE_TIMELINE)) {
+    var resolvedCt = await resolveFieldId(apiKey, locationId, CF.CLOSE_TIMELINE);
+    if (resolvedCt) {
+      CF.CLOSE_TIMELINE = resolvedCt;
+    } else {
+      console.log('buyer-demand: Could not resolve close_timeline field (ok if merged)');
     }
   }
 
@@ -173,9 +207,8 @@ async function fetchAllBuyers(apiKey, locationId) {
         }
       }
       if (isBuyer) {
-        // Hard-filter: exclude buyers whose purchase_timeline matches TIMELINE_EXCLUDE
-        var timeline = getCF(contact, CF.PURCHASE_TIMELINE);
-        var timelineStr = timeline ? String(timeline).toLowerCase().trim() : '';
+        // Hard-filter: exclude buyers whose timeline matches TIMELINE_EXCLUDE
+        var timelineStr = getBuyerTimeline(contact).toLowerCase();
         var excluded = TIMELINE_EXCLUDE.some(function(ex) { return timelineStr === ex.toLowerCase(); });
         if (!excluded) allBuyers.push(contact);
       }
@@ -269,8 +302,7 @@ function aggregateBuyerData(buyers) {
       incrementMap(globalBuyerTypes, Array.isArray(buyerType) ? buyerType[0] : String(buyerType));
     }
 
-    var purchaseTimeline = getCF(contact, CF.PURCHASE_TIMELINE);
-    var timelineVal = purchaseTimeline ? String(purchaseTimeline).trim() : '';
+    var timelineVal = getBuyerTimeline(contact);
     if (timelineVal) {
       incrementMap(globalTimelines, timelineVal);
     }

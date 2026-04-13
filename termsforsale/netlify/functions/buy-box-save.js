@@ -27,6 +27,26 @@ async function getFieldIds(apiKey, locationId) {
   return map;
 }
 
+// Map old granular timeline values to the new standard buckets
+function normalizeTimeline(val) {
+  if (!val) return '';
+  var v = val.trim();
+  // Already a new-format value
+  if (/^Immediate/i.test(v) || /^Short-Term/i.test(v) || /^Long-Term/i.test(v)) return v;
+  // Map old granular values
+  var lower = v.toLowerCase();
+  if (lower === 'asap (7 days)' || lower === '10-14 days' || lower === '14-21 days' || lower === '21-30 days') {
+    return 'Immediate — 0-30 days';
+  }
+  if (lower === '30-45 days' || lower === '45-60 days') {
+    return 'Short-Term — 31-90 days';
+  }
+  if (lower === 'flexible') {
+    return 'Long-Term — Beyond 90 days';
+  }
+  return v; // pass through unknown values as-is
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return respond(200, {});
   if (event.httpMethod !== 'POST') return respond(405, { error: 'POST only' });
@@ -89,7 +109,7 @@ exports.handler = async function(event) {
       'contact.remodel_level': body.remodel_level || '',
       'contact.hoa_tolerance': body.hoa_tolerance || '',
       'contact.pool': body.pool || '',
-      'contact.purchase_timeline': body.purchase_timeline || '',
+      'contact.purchase_timeline': normalizeTimeline(body.purchase_timeline) || '',
       'contact.buy_box': body.buy_box || '',
       'contact.buyer_type': body.buyer_type || 'Buyer',
       'contact.buyer_profile_type': body.buyer_profile_type || '',

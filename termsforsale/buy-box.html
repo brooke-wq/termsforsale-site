@@ -348,9 +348,9 @@ function renderForm(){
   </div>
 
   <div class="bb-card">
-    <div class="bb-card-title">Close Timeline</div>
+    <div class="bb-card-title">Purchase Timeline</div>
     <div class="chips" id="grp-timeline">
-      ${['ASAP (7 days)','10-14 days','14-21 days','21-30 days','30-45 days','Flexible'].map(v=>chipHtml(v,v,'grp-timeline',true,s.timeline||'')).join('')}
+      ${['Immediate — 0-30 days','Short-Term — 31-90 days','Long-Term — Beyond 90 days'].map(v=>chipHtml(v,v,'grp-timeline',true,s.timeline||'')).join('')}
     </div>
   </div>
 
@@ -706,7 +706,7 @@ function saveBuyBox(){
     property_types:     assetLabel,
     buy_box:            data.notes||'',
     contact_role:       'Buyer',
-    close_timeline:     data.timeline||'',
+    purchase_timeline:  data.timeline||'',
     tags: ['tfs buyer', _profile==='creative'?'creative-buyer':'cash-buyer', 'buy box complete', 'buyer-signup'],
   }, getUTMs());
 

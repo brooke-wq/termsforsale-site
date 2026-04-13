@@ -889,15 +889,12 @@ textarea.fi { resize: vertical; min-height: 80px; }
                 </div>
               </div>
               <div class="fg" style="margin-bottom:0">
-                <label class="fl">Close Timeline</label>
+                <label class="fl">Purchase Timeline</label>
                 <select class="fi" id="bc-timeline" style="margin-top:6px">
                   <option value="">Any timeline</option>
-                  <option>ASAP (7 days)</option>
-                  <option>10-14 days</option>
-                  <option>14-21 days</option>
-                  <option>21-30 days</option>
-                  <option>30-45 days</option>
-                  <option>45-60 days</option>
+                  <option>Immediate — 0-30 days</option>
+                  <option>Short-Term — 31-90 days</option>
+                  <option>Long-Term — Beyond 90 days</option>
                 </select>
               </div>
             </div>
@@ -1264,7 +1261,7 @@ async function submitForm(){
     bb_min_beds: v('bc-min-beds'),
     bb_year_built_min: v('bc-year-built'),
     bb_max_hoa: getExcl('grp-hoa'),
-    close_timeline: v('bc-timeline'),
+    purchase_timeline: v('bc-timeline'),
     bb_occupancy_pref: getExcl('grp-occupancy'),
     sms_opt_in: getExcl('grp-sms-opt'),
     email_opt_in: getExcl('grp-email-opt'),

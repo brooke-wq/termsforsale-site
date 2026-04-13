@@ -442,15 +442,12 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:68px;di
       </div>
       <div class="row-2" style="margin-top:14px">
         <div class="field-group">
-          <label class="field-label">Close Timeline</label>
+          <label class="field-label">Purchase Timeline</label>
           <select class="f-select" id="bc-timeline">
             <option value="">Any</option>
-            <option>ASAP (7 days)</option>
-            <option>10-14 days</option>
-            <option>14-21 days</option>
-            <option>21-30 days</option>
-            <option>30-45 days</option>
-            <option>45-60 days</option>
+            <option>Immediate — 0-30 days</option>
+            <option>Short-Term — 31-90 days</option>
+            <option>Long-Term — Beyond 90 days</option>
           </select>
         </div>
       </div>
@@ -790,7 +787,7 @@ function buildSummaryText(p) {
   if(p.cash_max_price) lines.push('Max Price: $' + Number(p.cash_max_price).toLocaleString());
   if(p.creative_max_entry) lines.push('Max Entry: $' + Number(p.creative_max_entry).toLocaleString());
   if(p.creative_max_pmt) lines.push('Max PITI: $' + Number(p.creative_max_pmt).toLocaleString());
-  if(p.close_timeline) lines.push('Timeline: ' + p.close_timeline);
+  if(p.purchase_timeline) lines.push('Timeline: ' + p.purchase_timeline);
   if(p.notes) lines.push('Notes: ' + p.notes);
   return lines.filter(Boolean).join('\n');
 }
