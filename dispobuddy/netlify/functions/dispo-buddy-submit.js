@@ -478,6 +478,7 @@ function buildContactPayload(d, locationId, fieldMap) {
   cf('sf_balloon',                    d.sf_balloon);
   cf('dscr_loan_amount',              d.dscr_loan_amount);
   cf('important_details', d.important_details);
+  cf('referred_by_affiliate', d.affiliate_id);
 
   // Property details (if GHL custom fields exist for these)
   cf('property_type', d.property_type);
@@ -518,6 +519,7 @@ function buildTags(d) {
   if (type.includes('novation'))       tags.push('db-novation');
 
   if (d.is_this_your_first_deal_with_dispo_buddy === 'Yes') tags.push('db-first-deal');
+  if (d.affiliate_id) tags.push('db-affiliate-referred');
 
   const contract = (d.do_you_have_the_property_under_contract || '').toLowerCase();
   if (contract.includes('direct to seller') || contract.includes('agent')) tags.push('db-direct-to-seller');

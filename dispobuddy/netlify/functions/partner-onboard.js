@@ -377,6 +377,7 @@ function buildOnboardingContactPayload(d, locationId) {
 
   cf('jv_partner_name', d.full_name);
   cf('how_did_you_hear_about_us', d.referral_source);
+  cf('referred_by_affiliate', d.affiliate_id);
 
   const detailParts = [];
   if (d.partner_type)     detailParts.push(`Partner Type: ${d.partner_type}`);
@@ -443,6 +444,7 @@ function buildOnboardingTags(d) {
   const tags = ['dispo-buddy', 'jv-partner', 'db-onboarding'];
   if (d.partner_type === 'Real Estate Agent') tags.push('db-agent');
   if (d.deal_ready === 'Yes') tags.push('db-deal-ready');
+  if (d.affiliate_id) tags.push('db-affiliate-referred');
   return [...new Set(tags)];
 }
 

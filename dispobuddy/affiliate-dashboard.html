@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affiliate Dashboard | Dispo Buddy</title>
+<meta name="description" content="Track your Dispo Buddy affiliate referrals, clicks, and commissions.">
+<link rel="canonical" href="https://dispobuddy.com/affiliate-dashboard">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0D1F3C;--navy2:#0a1828;--orange:#F7941D;--orange-dark:#d97c0e;--blue:#29ABE2;--blue-dark:#1a8bbf;--blue-light:#EBF8FF;--green:#22c55e;--white:#fff;--bg:#F4F6F9;--text:#0D1F3C;--text-mid:#4A6070;--text-light:#718096;--border:#E2E8F0;--r:12px;--r-sm:8px;--font:'Poppins',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
+.nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000;transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 2px 20px rgba(13,31,60,.08)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
+.nav-logo img{height:48px;width:auto}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
+.nav-links a:hover{color:var(--blue)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:var(--r-sm);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
+.btn-o{background:var(--orange);color:var(--white);border-color:var(--orange)}
+.btn-o:hover{background:var(--orange-dark);border-color:var(--orange-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,148,29,.35)}
+.btn-ghost{background:transparent;color:var(--blue);border-color:rgba(41,171,226,.3)}
+.btn-ghost:hover{background:var(--blue);color:var(--white);border-color:var(--blue);transform:translateY(-1px)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+.hamburger span{display:block;width:22px;height:2px;background:var(--navy);border-radius:2px;transition:all .3s}
+.hamburger.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.on span:nth-child(2){opacity:0}
+.hamburger.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
+.mob-menu.on{display:flex}
+.mob-menu a{padding:14px 0;font-size:15px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border)}
+.mob-menu .mob-btns{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.mob-menu .mob-btns .btn{width:100%;text-align:center}
+
+.page-wrap{max-width:800px;margin:0 auto;padding:100px 24px 80px}
+.page-wrap h1{font-size:clamp(1.6rem,3.5vw,2rem);font-weight:900;color:var(--navy);margin-bottom:8px}
+.page-wrap .subtitle{font-size:14px;color:var(--text-mid);margin-bottom:32px}
+
+/* LOGIN BOX */
+.login-box{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:32px 28px;max-width:440px;margin:0 auto}
+.login-box h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.login-box .login-sub{font-size:13px;color:var(--text-light);margin-bottom:20px}
+.fg{margin-bottom:18px}
+.fg label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:5px}
+.fg label .req{color:#e53e3e;margin-left:2px}
+.fg input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:14px;color:var(--text);background:var(--white);transition:border-color .2s,box-shadow .2s;outline:none}
+.fg input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.12)}
+.btn-submit{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 24px;background:var(--blue);color:var(--white);border:none;border-radius:var(--r-sm);font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-submit:hover{background:var(--blue-dark)}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed}
+.btn-submit .spinner{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:var(--white);border-radius:50%;animation:spin .6s linear infinite}
+.btn-submit.loading .spinner{display:block}
+.btn-submit.loading .btn-text{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.form-error{display:none;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r-sm);color:#991b1b;font-size:13px;margin-bottom:18px}
+.form-error.show{display:block}
+
+/* DASHBOARD */
+.dash{display:none}
+.dash.show{display:block}
+.dash-header{margin-bottom:32px}
+.dash-header h2{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.dash-header p{font-size:13px;color:var(--text-light)}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px;text-align:center}
+.stat-card .val{font-size:28px;font-weight:900;color:var(--navy);margin-bottom:2px}
+.stat-card .val.money{color:var(--green)}
+.stat-card .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-light);font-weight:600}
+.link-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px}
+.link-section h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px}
+.share-link{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.share-link .url{flex:1;font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;color:var(--blue);background:var(--bg);padding:10px 12px;border-radius:var(--r-sm);border:1px solid var(--border);word-break:break-all}
+.share-link .copy-btn{padding:10px 16px;background:var(--blue);color:var(--white);border:none;border-radius:var(--r-sm);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.share-link .copy-btn:hover{background:var(--blue-dark)}
+.link-label{font-size:11px;color:var(--text-light);margin-bottom:12px}
+.payout-info{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;display:flex;gap:24px;flex-wrap:wrap}
+.payout-info .pi{font-size:13px;color:var(--text-mid)}
+.payout-info .pi b{color:var(--navy)}
+.dash-logout{margin-top:24px;text-align:center}
+.dash-logout button{background:none;border:none;color:var(--text-light);font-family:var(--font);font-size:13px;cursor:pointer;text-decoration:underline}
+
+/* FOOTER */
+.footer{padding:48px 0 28px;background:var(--navy2)}
+.footer-inner{max-width:1100px;margin:0 auto;padding:0 24px}
+.footer-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:24px;flex-wrap:wrap;gap:32px}
+.footer-brand img{height:36px;width:auto;margin-bottom:10px}
+.footer-brand p{font-size:13px;color:rgba(255,255,255,.35);max-width:260px;line-height:1.6}
+.footer-links{display:flex;gap:40px;flex-wrap:wrap}
+.footer-links a{font-size:13px;color:rgba(255,255,255,.4);transition:color .15s}
+.footer-links a:hover{color:var(--white)}
+.footer-bot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px;color:rgba(255,255,255,.25)}
+.footer-bot a{color:rgba(255,255,255,.35);transition:color .15s}
+.footer-bot a:hover{color:var(--white)}
+
+@media(max-width:900px){
+  .nav-links,.nav-right{display:none}
+  .hamburger{display:flex}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .page-wrap{padding:84px 16px 60px}
+  .stat-grid{grid-template-columns:1fr}
+  .login-box{padding:24px 18px}
+  .footer-links{flex-direction:column;gap:12px}
+  .footer-top{flex-direction:column}
+  .footer-bot{flex-direction:column;text-align:center}
+}
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DRV6NWNY06"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-DRV6NWNY06");</script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><img src="/logo-dark.svg" alt="Dispo Buddy"></a>
+    <div class="nav-links">
+      <a href="/process">How It Works</a>
+      <a href="/what-we-look-for">What We Look For</a>
+      <a href="/buyers-map">Active Buyers</a>
+      <a href="/proof">Proof</a>
+      <a href="/faq">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <a href="/join" class="btn btn-ghost">Join Network</a>
+      <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+    </div>
+    <button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div class="mob-menu" id="mobMenu">
+  <a href="/process">How It Works</a>
+  <a href="/what-we-look-for">What We Look For</a>
+  <a href="/buyers-map">Active Buyers</a>
+  <a href="/proof">Proof</a>
+  <a href="/faq">FAQ</a>
+  <a href="/contact">Contact</a>
+  <a href="/affiliates">Affiliates</a>
+  <div class="mob-btns">
+    <a href="/join" class="btn btn-ghost">Join Network</a>
+    <a href="/submit-deal" class="btn btn-o">Submit a Deal</a>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <h1>Affiliate Dashboard</h1>
+  <p class="subtitle">Track your referrals, clicks, and commissions.</p>
+
+  <!-- LOGIN -->
+  <div class="login-box" id="loginBox">
+    <h2>View Your Stats</h2>
+    <p class="login-sub">Enter your affiliate ID and email to access your dashboard.</p>
+    <div class="form-error" id="loginError"></div>
+    <form id="loginForm">
+      <div class="fg">
+        <label>Affiliate ID <span class="req">*</span></label>
+        <input type="text" name="affId" required placeholder="e.g. john-doe-a7x3" id="inputAffId">
+      </div>
+      <div class="fg">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" name="email" required placeholder="you@example.com" id="inputEmail">
+      </div>
+      <button type="submit" class="btn-submit" id="loginBtn">
+        <span class="btn-text">View Dashboard</span>
+        <span class="spinner"></span>
+      </button>
+    </form>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dash" id="dashView">
+    <div class="dash-header">
+      <h2 id="dashName">Welcome back!</h2>
+      <p id="dashStatus">Status: Active</p>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="val" id="sClicks">0</div><div class="lbl">Link Clicks</div></div>
+      <div class="stat-card"><div class="val" id="sSignups">0</div><div class="lbl">Partner Signups</div></div>
+      <div class="stat-card"><div class="val" id="sDeals">0</div><div class="lbl">Deals Submitted</div></div>
+      <div class="stat-card"><div class="val" id="sClosed">0</div><div class="lbl">Deals Closed</div></div>
+      <div class="stat-card"><div class="val money" id="sEarned">$0</div><div class="lbl">Total Earned</div></div>
+      <div class="stat-card"><div class="val money" id="sPending">$0</div><div class="lbl">Pending Payout</div></div>
+    </div>
+
+    <div class="link-section">
+      <h3>Your Referral Links</h3>
+      <div class="link-label">Homepage</div>
+      <div class="share-link"><div class="url" id="linkHome"></div><button class="copy-btn" onclick="copyUrl('linkHome',this)">Copy</button></div>
+      <div class="link-label">Join Page</div>
+      <div class="share-link"><div class="url" id="linkJoin"></div><button class="copy-btn" onclick="copyUrl('linkJoin',this)">Copy</button></div>
+      <div class="link-label">Submit Deal Page</div>
+      <div class="share-link"><div class="url" id="linkDeal"></div><button class="copy-btn" onclick="copyUrl('linkDeal',this)">Copy</button></div>
+    </div>
+
+    <div class="payout-info">
+      <div class="pi"><b>Payout Method:</b> <span id="piMethod">—</span></div>
+      <div class="pi"><b>Member Since:</b> <span id="piJoined">—</span></div>
+      <div class="pi"><b>Affiliate ID:</b> <code id="piId">—</code></div>
+    </div>
+
+    <div class="dash-logout">
+      <button onclick="logout()">Log out</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/logo-light.svg" alt="Dispo Buddy">
+        <p>JV dispo partner for wholesalers, bird dogs, and agents. A Deal Pros LLC brand.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/process">How It Works</a>
+        <a href="/submit-deal">Submit a Deal</a>
+        <a href="/join">Join Network</a>
+        <a href="/faq">FAQ</a>
+        <a href="/contact">Contact</a>
+        <a href="/affiliates">Affiliates</a>
+      </div>
+    </div>
+    <div class="footer-bot">
+      <span>&copy; 2025 Deal Pros LLC</span>
+      <span><a href="mailto:info@dispobuddy.com">info@dispobuddy.com</a> &middot; <a href="tel:4808425332">(480) 842-5332</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="/affiliate.js" defer></script>
+<script>
+(function(){
+  var nav=document.querySelector('.nav');
+  window.addEventListener('scroll',function(){nav.classList.toggle('scrolled',window.scrollY>10)},{passive:true});
+  var ham=document.querySelector('.hamburger'),mob=document.getElementById('mobMenu');
+  ham.addEventListener('click',function(){ham.classList.toggle('on');mob.classList.toggle('on');document.body.style.overflow=mob.classList.contains('on')?'hidden':''});
+  mob.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){ham.classList.remove('on');mob.classList.remove('on');document.body.style.overflow=''})});
+
+  // Pre-fill from URL params
+  var params=new URLSearchParams(window.location.search);
+  var refParam=params.get('ref')||params.get('affiliate_id')||'';
+  if(refParam) document.getElementById('inputAffId').value=refParam;
+
+  // Check localStorage for saved session
+  try{
+    var saved=JSON.parse(localStorage.getItem('dispobuddy_aff_session')||'null');
+    if(saved&&saved.ref&&saved.email){
+      document.getElementById('inputAffId').value=saved.ref;
+      document.getElementById('inputEmail').value=saved.email;
+      loadDashboard(saved.ref,saved.email);
+    }
+  }catch(e){}
+
+  document.getElementById('loginForm').addEventListener('submit',async function(e){
+    e.preventDefault();
+    var affId=document.getElementById('inputAffId').value.trim().toLowerCase();
+    var email=document.getElementById('inputEmail').value.trim().toLowerCase();
+    if(!affId||!email) return;
+    await loadDashboard(affId,email);
+  });
+
+  async function loadDashboard(affId,email){
+    var btn=document.getElementById('loginBtn');
+    var errorEl=document.getElementById('loginError');
+    errorEl.classList.remove('show');
+    btn.classList.add('loading');
+    btn.disabled=true;
+
+    try{
+      var url='/.netlify/functions/affiliate-stats?ref='+encodeURIComponent(affId)+'&email='+encodeURIComponent(email);
+      var res=await fetch(url);
+      var data=await res.json();
+      if(!res.ok) throw new Error(data.error||'Not found');
+
+      // Save session
+      try{localStorage.setItem('dispobuddy_aff_session',JSON.stringify({ref:affId,email:email}))}catch(e){}
+
+      // Populate dashboard
+      var a=data.affiliate||{};
+      var s=data.stats||{};
+      var links=data.share_links||{};
+
+      document.getElementById('dashName').textContent='Welcome back, '+(a.full_name||'Affiliate')+'!';
+      document.getElementById('dashStatus').textContent='Status: '+(a.status||'active').charAt(0).toUpperCase()+(a.status||'active').slice(1);
+
+      document.getElementById('sClicks').textContent=s.clicks||0;
+      document.getElementById('sSignups').textContent=s.signups||0;
+      document.getElementById('sDeals').textContent=s.deals_submitted||0;
+      document.getElementById('sClosed').textContent=s.deals_closed||0;
+      document.getElementById('sEarned').textContent='$'+(s.commission_earned||0).toLocaleString();
+      document.getElementById('sPending').textContent='$'+(s.commission_pending||0).toLocaleString();
+
+      document.getElementById('linkHome').textContent=links.home||'';
+      document.getElementById('linkJoin').textContent=links.join||'';
+      document.getElementById('linkDeal').textContent=links.submit_deal||'';
+
+      document.getElementById('piMethod').textContent=a.payout_method||'—';
+      document.getElementById('piJoined').textContent=a.joined_at?new Date(a.joined_at).toLocaleDateString():'—';
+      document.getElementById('piId').textContent=affId;
+
+      document.getElementById('loginBox').style.display='none';
+      document.getElementById('dashView').classList.add('show');
+
+    }catch(err){
+      errorEl.textContent=err.message||'Could not find your affiliate account. Check your ID and email.';
+      errorEl.classList.add('show');
+    }finally{
+      btn.classList.remove('loading');
+      btn.disabled=false;
+    }
+  }
+
+  window.copyUrl=function(elId,btn){
+    var text=document.getElementById(elId).textContent;
+    navigator.clipboard.writeText(text).then(function(){
+      btn.textContent='Copied!';
+      setTimeout(function(){btn.textContent='Copy'},2000);
+    });
+  };
+
+  window.logout=function(){
+    try{localStorage.removeItem('dispobuddy_aff_session')}catch(e){}
+    document.getElementById('dashView').classList.remove('show');
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('inputAffId').value='';
+    document.getElementById('inputEmail').value='';
+  };
+})();
+</script>
+</body>
+</html>
