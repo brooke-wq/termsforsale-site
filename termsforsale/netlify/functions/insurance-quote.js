@@ -109,12 +109,14 @@ exports.handler = async function (event) {
     return { statusCode: 500, headers: headers, body: JSON.stringify({ error: err.message }) };
   }
 
-  console.log('[insurance-quote] Steadily 200 body=' + JSON.stringify(result.body).substring(0, 300));
+  console.log('[insurance-quote] Steadily 200 body=' + JSON.stringify(result.body).substring(0, 500));
 
-  // Response shape based on observed staging responses: `estimates[]` with
-  // `estimate.lowest` (annual premium, USD), `start_url`, and `property_id`.
-  // Redoc was not reachable from this environment; callers should treat the
-  // mapping below as a best-effort projection and fall back gracefully.
+  // Response shape based on observed staging responses: `estimates[]` with an
+  // `estimate` object that contains TWO rates — `lowest` (bare-bones coverage)
+  // and `highest` (full coverage). We always project the HIGHEST rate so the
+  // deal page never shows a stripped-down number the buyer can't actually buy.
+  // If only `lowest` is present (older API versions / edge cases), we fall
+  // back to it rather than showing nothing.
   const estimates = (result.body && result.body.estimates) || [];
   if (!estimates.length) {
     return {
@@ -125,11 +127,15 @@ exports.handler = async function (event) {
   }
 
   const est = estimates[0] || {};
-  const annual = (est.estimate && typeof est.estimate.lowest === 'number') ? est.estimate.lowest : 0;
+  const estObj = est.estimate || {};
+  const highest = typeof estObj.highest === 'number' ? estObj.highest : 0;
+  const lowest  = typeof estObj.lowest  === 'number' ? estObj.lowest  : 0;
+  const annual  = highest > 0 ? highest : lowest;
   const monthly = annual > 0 ? Math.round(annual / 12) : 0;
   const startUrl = est.start_url || '';
+  const rateTier = highest > 0 ? 'highest' : (lowest > 0 ? 'lowest(fallback)' : 'none');
 
-  console.log('[insurance-quote] ' + city + ', ' + state + ' — $' + monthly + '/mo, url=' + (startUrl ? 'yes' : 'no'));
+  console.log('[insurance-quote] ' + city + ', ' + state + ' — $' + monthly + '/mo tier=' + rateTier + ' (high=$' + highest + ' low=$' + lowest + ') url=' + (startUrl ? 'yes' : 'no'));
 
   return {
     statusCode: 200,
@@ -138,6 +144,9 @@ exports.handler = async function (event) {
       available: monthly > 0,
       annual: annual,
       monthly: monthly,
+      annualHighest: highest,
+      annualLowest: lowest,
+      rateTier: rateTier,
       startUrl: startUrl,
       propertyId: est.property_id || ''
     })
