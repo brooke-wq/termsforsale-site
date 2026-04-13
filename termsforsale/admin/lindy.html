@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lindy AI — Terms For Sale Admin</title>
+<title>Deal Buddy — Terms For Sale Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/admin/admin.css">
@@ -60,7 +60,7 @@
   <div class="topbar">
     <div class="topbar-title">
       <div class="topbar-crumb">Paperclip AI OS</div>
-      <div class="topbar-h">Lindy AI Agents</div>
+      <div class="topbar-h">Deal Buddy</div>
     </div>
     <div class="topbar-right">
       <button class="topbar-btn" onclick="loadRuns()">
@@ -168,11 +168,11 @@ var ALL_TOOLS = {
 };
 
 var TEMPLATES = [
-  { name:'Deal Analyzer', description:'Analyze deal financials and market potential', model:'haiku', tools:['query_deals','search_contacts'], prompt:'You are a real estate deal analyst for Deal Pros LLC, an Arizona wholesale company. When given a deal or city/zip, analyze the financials: ARV vs asking price, entry fee reasonableness, deal type structure, and market conditions. Be concise and actionable. Use the query_deals tool to look up active inventory. Format your response with clear sections: Deal Summary, Financial Analysis, Risk Factors, and Recommendation.' },
-  { name:'Buyer Matcher', description:'Find matching buyers for a specific deal', model:'haiku', tools:['query_deals','search_contacts','get_contact','post_note'], prompt:'You are a buyer-matching assistant for Deal Pros LLC. When given a deal description or deal ID, find buyers in the CRM whose criteria match the deal. Search by city/state, price range, and deal type. For each match, note why they fit. Post a summary note to each matched buyer\'s contact record. Be thorough but efficient.' },
-  { name:'Lead Qualifier', description:'Score and qualify incoming seller leads', model:'haiku', tools:['search_contacts','get_contact','add_tags','post_note'], prompt:'You are a lead qualification specialist for Deal Pros LLC. When given a seller lead (name, property address, situation), look them up in the CRM and assess: motivation level (1-10), property potential, timeline urgency, and recommended next action. Add appropriate tags (lead-hot, lead-warm, lead-cold) and post a qualification note. Be direct and brief.' },
-  { name:'Email Drafter', description:'Draft marketing emails for deals or follow-ups', model:'sonnet', tools:['query_deals','search_contacts'], prompt:'You are a real estate email copywriter for Deal Pros LLC (brand: Terms For Sale). Draft compelling, professional emails for deal marketing, buyer follow-ups, or announcements. Keep subject lines under 50 chars. Use a friendly but professional tone. Never include street addresses in marketing emails - use city/state only. Include a clear CTA. Output the subject line and HTML body separately.' },
-  { name:'Portfolio Reporter', description:'Generate summary reports on active deals', model:'haiku', tools:['query_deals'], prompt:'You are a reporting assistant for Deal Pros LLC. Generate concise portfolio reports on active deal inventory. Include: total deals, breakdown by type (SubTo, Seller Finance, Cash, Hybrid), breakdown by state/metro, price range distribution, and average entry fee. Present data in a clean, scannable format with key metrics highlighted.' }
+  { name:'JV Partner Activator', description:'Activate and re-activate JV partners so they consistently submit deals', model:'haiku', tools:['search_contacts','get_contact','add_tags','remove_tags','post_note','send_sms','send_email','update_contact'], prompt:'Primary Objective: Activate and re-activate JV partners so they consistently submit deals.\n\nWhen triggered, search for contacts with role JV_PARTNER. Identify dormant partners (no deal submission in 30+ days) and new partners (tagged JV_NEW). For dormant partners, craft a personalized re-engagement message referencing their last deal or market. For new partners, send an onboarding check-in. Update tags (JV_DORMANT -> JV_REACTIVATED, JV_NEW -> JV_ONBOARDING) and post a note documenting what was sent and the recommended follow-up date. Limit to 2 messages per contact per day.' },
+  { name:'Deal-Buyer Matcher', description:'Match ready-to-market deals with the best buyers and execute 7-day follow-up', model:'haiku', tools:['query_deals','search_contacts','get_contact','add_tags','remove_tags','post_note','send_sms','send_email','update_contact'], prompt:'Primary Objective: Match ready-to-market deals with the best buyers and execute 7-day follow-up.\n\nWhen given a deal (by ID or description), use query_deals to get full details. Then search_contacts for buyers whose criteria (city, state, deal type, price range, strategy) match. For each match, get_contact to verify fit, then send a personalized deal alert via SMS (short, time-sensitive) referencing the specific city and deal type. Add tag BUYER_HOT_<DEAL_ID> to matched buyers. Post a note on each buyer documenting the match rationale. Never include street addresses in outbound messages — city/state only.' },
+  { name:'Pipeline Briefing', description:'Summarize the pipeline daily so humans focus on the highest-leverage actions', model:'haiku', tools:['query_deals','search_contacts'], prompt:'Primary Objective: Summarize the pipeline daily so humans focus on the highest-leverage actions.\n\nQuery all actively marketed deals. For each, note: deal type, city/state, asking price, entry fee, days on market. Search for recent buyer activity (contacts tagged buyer-interested, buyer-maybe in last 7 days). Produce a concise briefing with sections: Top Priority Deals (highest buyer interest), Stale Deals (no activity in 7+ days), New Inventory (added in last 3 days), and Recommended Actions (specific next steps for each priority deal). Keep it scannable — bullet points, not paragraphs.' },
+  { name:'Lead Qualifier', description:'Score and qualify incoming seller leads with proper tagging', model:'haiku', tools:['search_contacts','get_contact','add_tags','remove_tags','post_note','update_contact'], prompt:'Primary Objective: Score and qualify incoming seller leads so the team focuses on the highest-potential opportunities.\n\nWhen given a seller lead (name, property address, situation), search_contacts to find them. If found, get_contact for full details. Assess: motivation level (1-10), property potential, timeline urgency, and deal viability. Update lead_score via update_contact. Add tags: lead-hot (score 8+), lead-warm (5-7), lead-cold (1-4). Post a detailed qualification note with your reasoning and recommended next action. If uncertain about any assessment, document your uncertainty in the note and do NOT guess.' },
+  { name:'Email Drafter', description:'Draft personalized marketing emails for deals or follow-ups', model:'sonnet', tools:['query_deals','search_contacts','get_contact'], prompt:'Primary Objective: Draft personalized, on-brand marketing emails for deal marketing, buyer follow-ups, or partner communications.\n\nWhen given a deal or communication need, use query_deals and search_contacts to gather context. Draft emails with: subject line under 50 chars, direct and professional tone, no ROI guarantees or hype language, city/state only (never street addresses), and a clear CTA. For small high-value lists, personalize by referencing the recipient\'s specific market, strategy preference, or past activity. Output the subject line and HTML body separately.' }
 ];
 
 var agents = [];
@@ -227,8 +227,8 @@ async function loadAgents() {
 function renderSetup() {
   document.getElementById('app').innerHTML =
     '<div class="setup-card">' +
-      '<h2>Set Up Lindy AI</h2>' +
-      '<p>Lindy needs a Notion database to store agent configs and run history. Click below to auto-create it, or create it manually.</p>' +
+      '<h2>Set Up Deal Buddy</h2>' +
+      '<p>Deal Buddy needs a Notion database to store agent configs and run history. Click below to auto-create it, or create it manually.</p>' +
       '<button class="btn blue" onclick="runSetup()" id="setupBtn">Auto-Create Database</button>' +
       '<div id="setupResult"></div>' +
     '</div>';

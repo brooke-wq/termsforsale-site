@@ -47,7 +47,7 @@
       {
         label: 'AI',
         items: [
-          { key: 'lindy', href: '/admin/lindy.html', label: 'Lindy AI Agents', icon: 'activity' }
+          { key: 'lindy', href: '/admin/lindy.html', label: 'Deal Buddy', icon: 'activity' }
         ]
       },
       {
