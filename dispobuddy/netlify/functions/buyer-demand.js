@@ -78,9 +78,50 @@ function isCacheValid() {
   return cache.data && (Date.now() - cache.timestamp < cache.TTL);
 }
 
+// ─── RESOLVE FIELD KEY → UUID ───────────────────────────────
+
+async function resolveFieldId(apiKey, locationId, fieldKey) {
+  try {
+    var url = 'https://services.leadconnectorhq.com/locations/' + locationId + '/customFields';
+    var result = await httpRequest(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json'
+      }
+    });
+    if (result.status === 200 && result.body) {
+      var fields = result.body.customFields || result.body.fields || [];
+      for (var i = 0; i < fields.length; i++) {
+        var f = fields[i];
+        var key = f.fieldKey || f.key || f.name || '';
+        if (key === fieldKey || key === 'contact.' + fieldKey) {
+          console.log('buyer-demand: Resolved ' + fieldKey + ' → ' + f.id);
+          return f.id;
+        }
+      }
+      console.log('buyer-demand: Field key "' + fieldKey + '" not found in ' + fields.length + ' custom fields');
+    }
+  } catch (err) {
+    console.error('buyer-demand: resolveFieldId error:', err.message);
+  }
+  return null;
+}
+
 // ─── FETCH ALL BUYERS FROM GHL ──────────────────────────────
 
 async function fetchAllBuyers(apiKey, locationId) {
+  // Resolve purchase_timeline key → UUID if it's not already a UUID
+  if (CF.PURCHASE_TIMELINE && !/^[a-zA-Z0-9]{20}/.test(CF.PURCHASE_TIMELINE)) {
+    var resolvedId = await resolveFieldId(apiKey, locationId, CF.PURCHASE_TIMELINE);
+    if (resolvedId) {
+      CF.PURCHASE_TIMELINE = resolvedId;
+    } else {
+      console.log('buyer-demand: Could not resolve purchase_timeline field, timeline features disabled');
+    }
+  }
+
   var allBuyers = [];
   var hasMore = true;
   var startAfter = '';
