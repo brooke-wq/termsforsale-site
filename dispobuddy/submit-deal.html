@@ -1401,6 +1401,11 @@ img{max-width:100%;display:block}
       additional_notes: v('additionalNotes'),
     };
 
+    // Attach logged-in partner ID if available
+    if (_loggedInPartner && _loggedInPartner.id) {
+      data.partner_contact_id = _loggedInPartner.id;
+    }
+
     // Merge UTM data
     var utmData = getUTMData();
     Object.keys(utmData).forEach(function(k) {
@@ -1572,6 +1577,30 @@ img{max-width:100%;display:block}
 
   /* -- INIT --------------------------------------------------- */
   restoreProgress();
+
+  // Auto-fill Step 1 from logged-in partner session
+  var _loggedInPartner = null;
+  try {
+    var _raw = sessionStorage.getItem('db_partner');
+    if (_raw) {
+      _loggedInPartner = JSON.parse(_raw);
+      if (_loggedInPartner && _loggedInPartner.name) {
+        document.getElementById('jvName').value = _loggedInPartner.name;
+        document.getElementById('jvPhone').value = _loggedInPartner.phone || '';
+        document.getElementById('jvEmail').value = _loggedInPartner.email || '';
+        // Returning partner — set firstDeal to No
+        document.getElementById('firstDeal').value = 'No';
+        var retLabel = document.querySelector('#firstDealGroup .radio-opt[data-val="No"]');
+        if (retLabel) {
+          retLabel.classList.add('checked');
+          retLabel.querySelector('input').checked = true;
+          // Hide "how did you hear" since they're returning
+          document.getElementById('hearAboutUsGroup').style.display = 'none';
+        }
+      }
+    }
+  } catch(e) {}
+
   setupAutoSave();
 
   // ── TEST MODE: add ?test to URL to auto-fill and submit ──
