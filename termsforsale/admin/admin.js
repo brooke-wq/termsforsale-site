@@ -45,6 +45,12 @@
         ]
       },
       {
+        label: 'AI',
+        items: [
+          { key: 'lindy', href: '/admin/lindy.html', label: 'Lindy AI Agents', icon: 'activity' }
+        ]
+      },
+      {
         label: 'System',
         items: [
           { key: 'sop', href: '/admin/paperclip-sop.html', label: 'Paperclip SOP', icon: 'book' }
