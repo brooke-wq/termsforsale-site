@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Buyers Map — Dispo Buddy</title>
 <meta name="description" content="See where active buyers are looking for deals. Real-time demand map from the Dispo Buddy network. No personal info shown.">
 <link rel="canonical" href="https://dispobuddy.com/buyers-map">
@@ -36,9 +39,9 @@ img{max-width:100%;display:block}
 a{text-decoration:none;color:inherit}
 
 /* ── NAV ─────────────────────────────── */
-.nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000}
+.nav{position:fixed;top:0;left:0;right:0;height:72px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
-.nav-logo img{height:48px;width:auto}
+.nav-logo img{height:60px;width:auto}
 .nav-links{display:flex;gap:28px}
 .nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
 .nav-links a:hover{color:var(--blue)}
@@ -54,14 +57,14 @@ a{text-decoration:none;color:inherit}
 .hamburger.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
 .hamburger.on span:nth-child(2){opacity:0}
 .hamburger.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
-.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
+.mob-menu{display:none;position:fixed;top:72px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
 .mob-menu.on{display:flex}
 .mob-menu a{padding:14px 0;font-size:15px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border)}
 .mob-menu .mob-btns{display:flex;flex-direction:column;gap:10px;margin-top:20px}
 .mob-menu .mob-btns .btn{width:100%;text-align:center}
 
 /* ── MAIN LAYOUT ─────────────────────── */
-.page-wrap{position:fixed;top:64px;left:0;right:0;bottom:0;display:flex}
+.page-wrap{position:fixed;top:72px;left:0;right:0;bottom:0;display:flex}
 
 /* ── SIDEBAR ─────────────────────────── */
 .sidebar{width:340px;min-width:340px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;overflow:hidden}
@@ -137,7 +140,7 @@ a{text-decoration:none;color:inherit}
 @media(max-width:768px){
   .nav-links,.nav-right{display:none}
   .hamburger{display:flex}
-  .sidebar{position:fixed;top:64px;left:0;right:0;bottom:52px;width:100%;min-width:0;height:45%;top:auto;border-right:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(0);transition:transform .3s ease;z-index:15}
+  .sidebar{position:fixed;top:72px;left:0;right:0;bottom:52px;width:100%;min-width:0;height:45%;top:auto;border-right:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;transform:translateY(0);transition:transform .3s ease;z-index:15}
   .sidebar.collapsed{transform:translateY(calc(100% - 0px));pointer-events:none}
   .mobile-toggle{display:block}
   .page-wrap{flex-direction:column}

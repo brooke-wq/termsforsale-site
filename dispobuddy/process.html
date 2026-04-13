@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>How It Works — Dispo Buddy | From Submit to Paid in 6 Steps</title>
-<link rel="icon" href="/dispobuddy/favicon.png" type="image/png">
-<link rel="apple-touch-icon" href="/dispobuddy/favicon.png">
 <meta name="description" content="How Dispo Buddy works: submit your deal, we review in 24-48 hours, package it professionally, market to our national buyer network, and split the assignment fee 50/50. No upfront fees.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://dispobuddy.com/process">
@@ -46,10 +47,10 @@ img{max-width:100%;display:block}
 a{text-decoration:none;color:inherit}
 
 /* ── NAV ───────────────────────────── */
-.nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000;transition:box-shadow .3s}
+.nav{position:fixed;top:0;left:0;right:0;height:72px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:1000;transition:box-shadow .3s}
 .nav.scrolled{box-shadow:0 2px 20px rgba(13,31,60,.08)}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1100px;margin:0 auto;padding:0 24px}
-.nav-logo img{height:48px;width:auto}
+.nav-logo img{height:60px;width:auto}
 .nav-links{display:flex;gap:28px}
 .nav-links a{font-size:13px;font-weight:500;color:var(--text-mid);transition:color .15s}
 .nav-links a:hover,.nav-links a.active{color:var(--navy)}
@@ -67,19 +68,19 @@ a{text-decoration:none;color:inherit}
 .hamburger.on span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
 .hamburger.on span:nth-child(2){opacity:0}
 .hamburger.on span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
-.mob-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
+.mob-menu{display:none;position:fixed;top:72px;left:0;right:0;bottom:0;background:var(--white);padding:24px;z-index:999;flex-direction:column;gap:4px}
 .mob-menu.on{display:flex}
 .mob-menu a{padding:14px 0;font-size:15px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border)}
 .mob-menu .mob-btns{display:flex;flex-direction:column;gap:10px;margin-top:20px}
 .mob-menu .mob-btns .btn{width:100%;text-align:center}
 
 /* ── HERO ──────────────────────────── */
-.hero{padding:140px 0 100px;background:var(--navy);position:relative;overflow:hidden}
+.hero{padding:148px 0 100px;background:var(--navy);position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;top:-200px;right:-100px;width:700px;height:700px;background:radial-gradient(circle,rgba(247,148,29,.08) 0%,transparent 70%);pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:-200px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(41,171,226,.06) 0%,transparent 70%);pointer-events:none}
 .hero-inner{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 .hero-logo{margin-bottom:40px}
-.hero-logo img{height:80px;width:auto;}
+.hero-logo img{height:100px;width:auto;}
 .hero-content{max-width:680px}
 .hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:900;color:var(--white);line-height:1.08;letter-spacing:-.03em;margin-bottom:24px}
 .hero h1 em{font-style:normal;color:var(--orange)}
@@ -135,7 +136,7 @@ a{text-decoration:none;color:inherit}
 .footer{padding:48px 0 28px;background:var(--navy2)}
 .footer-inner{max-width:1100px;margin:0 auto;padding:0 24px}
 .footer-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:24px;flex-wrap:wrap;gap:32px}
-.footer-brand img{height:36px;width:auto;;margin-bottom:10px}
+.footer-brand img{height:48px;width:auto;;margin-bottom:10px}
 .footer-brand p{font-size:13px;color:rgba(255,255,255,.35);max-width:260px;line-height:1.6}
 .footer-links{display:flex;gap:40px;flex-wrap:wrap}
 .footer-links a{font-size:13px;color:rgba(255,255,255,.4);transition:color .15s}
@@ -159,7 +160,7 @@ a{text-decoration:none;color:inherit}
   .hamburger{display:flex}
   .sticky{display:block}
   .hero{padding:110px 0 72px}
-  .hero-logo img{height:48px}
+  .hero-logo img{height:60px}
   .needs-split{grid-template-columns:1fr;gap:32px}
   .tl-steps{padding-left:64px}
   .tl-num{font-size:48px;left:-64px}
@@ -170,7 +171,7 @@ a{text-decoration:none;color:inherit}
 @media(max-width:600px){
   .hero{padding:100px 0 56px}
   .hero h1{font-size:1.9rem}
-  .hero-logo img{height:40px}
+  .hero-logo img{height:52px}
   .hero-pills{flex-direction:column;gap:10px}
   .tl-steps{padding-left:48px}
   .tl-num{font-size:40px;left:-48px}
