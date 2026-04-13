@@ -685,7 +685,9 @@ async function runAgent(agent, userInput) {
 // ─── Database Setup ──────────────────────────────────────────────
 
 async function setupDatabase(parentPageId) {
-  // If no parent given, try to find the parent of the existing deals DB
+  // Strategy 1: explicit parent page ID passed in
+  // Strategy 2: find parent of the existing deals DB
+  // Strategy 3: search Notion for any accessible page
   if (!parentPageId) {
     var dealsDb = process.env.NOTION_DATABASE_ID || process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
     if (dealsDb) {
@@ -695,6 +697,19 @@ async function setupDatabase(parentPageId) {
           parentPageId = dbRes.body.parent.page_id;
         }
       }
+    }
+  }
+
+  // Strategy 3: search for any page the integration can access
+  if (!parentPageId) {
+    console.log('[Lindy] No parent from deals DB, searching for any accessible page...');
+    var searchRes = await notionFetch('POST', '/v1/search', {
+      filter: { value: 'page', property: 'object' },
+      page_size: 5
+    });
+    if (searchRes.ok && searchRes.body.results && searchRes.body.results.length > 0) {
+      parentPageId = searchRes.body.results[0].id;
+      console.log('[Lindy] Using page as parent: ' + parentPageId);
     }
   }
 
