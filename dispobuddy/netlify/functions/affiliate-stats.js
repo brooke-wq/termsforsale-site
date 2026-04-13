@@ -78,7 +78,7 @@ exports.handler = async (event) => {
       if (key.indexOf('affiliate_') === 0) counters[key] = val;
     });
 
-    const site = process.env.SITE_URL || 'https://dispobuddy.com';
+    const site = process.env.SITE_URL || 'https://dispobuddy.netlify.app';
     const referralLink = counters.affiliate_referral_link || `${site}/?ref=${affiliateId}`;
 
     return respond(200, {

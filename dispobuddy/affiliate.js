@@ -162,7 +162,7 @@
     if (!clean) return '';
     var origin = (typeof window !== 'undefined' && window.location && window.location.origin)
       ? window.location.origin
-      : 'https://dispobuddy.com';
+      : 'https://dispobuddy.netlify.app';
     var p = path || '/';
     var sep = p.indexOf('?') >= 0 ? '&' : '?';
     return origin + p + sep + 'ref=' + encodeURIComponent(clean);

@@ -13,11 +13,11 @@
  * Optional:
  *   INTERNAL_ALERT_PHONE — internal SMS alerts
  *   INTERNAL_ALERT_EMAIL — internal email alerts
- *   SITE_URL             — defaults to https://dispobuddy.com
+ *   SITE_URL             — defaults to https://dispobuddy.netlify.app
  */
 
 const GHL_BASE       = 'https://services.leadconnectorhq.com';
-const SITE_URL       = process.env.SITE_URL || 'https://dispobuddy.com';
+const SITE_URL       = process.env.SITE_URL || 'https://dispobuddy.netlify.app';
 
 // ─────────────────────────────────────────────────────────────
 // MAIN HANDLER
