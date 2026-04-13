@@ -48,8 +48,8 @@ exports.handler = async (event) => {
   const notes     = (body.notes     || '').trim();
   const consent   = !!body.consent;
 
-  if (!full_name || !email || !phone || !payout_method) {
-    return respond(400, { error: 'Missing required fields: full_name, email, phone, payout_method' });
+  if (!full_name || !email || !phone) {
+    return respond(400, { error: 'Missing required fields: full_name, email, phone' });
   }
   if (!consent) {
     return respond(400, { error: 'You must accept the affiliate program terms to sign up.' });
@@ -274,9 +274,8 @@ function buildAffiliateWelcomeEmail({ first, full_name, affiliate_id, referral_l
 
         <h2 style="font-size:16px;font-weight:700;margin-bottom:10px">Commission Structure</h2>
         <div style="background:#F4F6F9;border-radius:12px;padding:20px 24px;margin-bottom:24px">
-          <p style="margin-bottom:10px"><strong style="color:#F7941D">$250</strong> — per qualified partner you refer who submits their first deal</p>
-          <p style="margin-bottom:10px"><strong style="color:#F7941D">10%</strong> — of Dispo Buddy's net assignment fee on every deal your referrals close</p>
-          <p><strong style="color:#F7941D">$100 bonus</strong> — for every 5 closed referrals in a rolling 90-day window</p>
+          <p style="margin-bottom:10px"><strong style="color:#F7941D">$200</strong> — when a referred JV Partner closes their first deal with us (within 6 months of signup)</p>
+          <p><strong style="color:#F7941D">5%</strong> — of Dispo Buddy's net dispo fee on every deal that partner closes for 12 months</p>
         </div>
 
         <h2 style="font-size:16px;font-weight:700;margin-bottom:10px">How It Works</h2>
