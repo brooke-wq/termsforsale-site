@@ -49,6 +49,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/property-lookup"
+  to = "/.netlify/functions/property-lookup"
+  status = 200
+
+[[redirects]]
   from = "/api/buyer-demand"
   to = "/.netlify/functions/buyer-demand"
   status = 200
