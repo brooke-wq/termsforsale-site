@@ -102,6 +102,43 @@ button{font-family:var(--font);cursor:pointer}
 .footer-inner a:hover{color:var(--white)}
 .footer-links{display:flex;gap:20px}
 
+/* Walkthrough modal */
+.wt-backdrop{display:none;position:fixed;inset:0;background:rgba(13,31,60,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center;padding:24px}
+.wt-backdrop.open{display:flex}
+.wt-modal{background:var(--white);border-radius:16px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(13,31,60,.25);animation:wtIn .25s ease-out}
+@keyframes wtIn{from{opacity:0;transform:scale(.95) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.wt-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border)}
+.wt-title{font-size:16px;font-weight:800;color:var(--navy)}
+.wt-close{background:none;border:none;font-size:28px;color:var(--text-light);line-height:1;padding:0 4px;cursor:pointer;transition:color .15s}
+.wt-close:hover{color:var(--navy)}
+.wt-progress{height:4px;background:var(--border-light);overflow:hidden}
+.wt-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--orange));border-radius:2px;transition:width .35s ease}
+.wt-slides{overflow:hidden;flex:1;position:relative}
+.wt-slide{display:none;padding:32px 28px 24px;text-align:center;animation:wtSlide .3s ease-out}
+.wt-slide.active{display:block}
+@keyframes wtSlide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+.wt-step-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--blue);color:var(--white);font-size:15px;font-weight:800;margin-bottom:16px}
+.wt-icon{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:16px;background:var(--blue-light);margin-bottom:18px}
+.wt-icon svg{width:32px;height:32px;color:var(--blue)}
+.wt-icon-green{background:#ecfdf5}
+.wt-icon-green svg{color:var(--green)}
+.wt-slide h3{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:10px;line-height:1.2}
+.wt-slide p{font-size:14px;color:var(--text-mid);line-height:1.7;max-width:440px;margin:0 auto 16px}
+.wt-detail{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
+.wt-chip{display:inline-block;padding:5px 12px;border-radius:20px;background:var(--blue-light);color:var(--blue-dark);font-size:12px;font-weight:600}
+.wt-chip-green{background:#ecfdf5;color:#16a34a}
+.wt-note{font-size:12px;color:var(--text-light);font-style:italic;line-height:1.5;max-width:380px;margin:0 auto;padding-top:6px;border-top:1px solid var(--border-light)}
+.wt-footer{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-top:1px solid var(--border)}
+.wt-counter{font-size:13px;font-weight:600;color:var(--text-light)}
+.wt-btn{padding:10px 24px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.wt-btn-primary{background:var(--orange);color:var(--white);border-color:var(--orange)}
+.wt-btn-primary:hover{background:var(--orange-dark);border-color:var(--orange-dark)}
+.wt-btn-ghost{background:transparent;color:var(--text-mid);border-color:var(--border)}
+.wt-btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.wt-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+.wt-btn-cta{background:var(--green);color:var(--white);border-color:var(--green)}
+.wt-btn-cta:hover{background:#16a34a;border-color:#16a34a}
+
 @media(max-width:900px){
   .nav-links,.nav-right{display:none}
   .hamburger{display:flex}
@@ -110,4 +147,13 @@ button{font-family:var(--font);cursor:pointer}
 @media(max-width:640px){
   .page{padding:80px 16px 60px}
   .section{padding:22px 20px}
+  .wt-backdrop{padding:12px}
+  .wt-modal{max-height:95vh;border-radius:12px}
+  .wt-slide{padding:24px 20px 18px}
+  .wt-slide h3{font-size:17px}
+  .wt-slide p{font-size:13px}
+  .wt-icon{width:52px;height:52px;border-radius:12px}
+  .wt-icon svg{width:26px;height:26px}
+  .wt-header{padding:14px 18px}
+  .wt-footer{padding:14px 18px}
 }

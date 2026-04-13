@@ -50,26 +50,241 @@
 
   <!-- Videos -->
   <div class="video-grid">
-    <a class="video-card" href="https://www.loom.com" target="_blank" rel="noopener">
+    <div class="video-card" onclick="openWalkthrough('how-we-work')">
       <div class="video-thumb">
         <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <span class="time">3 min</span>
+        <span class="time">6 steps</span>
       </div>
       <div class="video-info">
         <h3>How we work your deal</h3>
         <p>From submission to close, step by step</p>
       </div>
-    </a>
-    <a class="video-card" href="https://www.loom.com" target="_blank" rel="noopener">
+    </div>
+    <div class="video-card" onclick="openWalkthrough('perfect-deal')">
       <div class="video-thumb">
         <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <span class="time">2 min</span>
+        <span class="time">6 steps</span>
       </div>
       <div class="video-info">
         <h3>How to submit a perfect deal</h3>
         <p>What to include for fastest review</p>
       </div>
-    </a>
+    </div>
+  </div>
+
+  <!-- Walkthrough: How We Work Your Deal -->
+  <div class="wt-backdrop" id="wt-how-we-work" onclick="if(event.target===this)closeWalkthrough()">
+    <div class="wt-modal">
+      <div class="wt-header">
+        <div class="wt-title">How We Work Your Deal</div>
+        <button class="wt-close" onclick="closeWalkthrough()" aria-label="Close">&times;</button>
+      </div>
+      <div class="wt-progress"><div class="wt-bar" id="bar-how-we-work"></div></div>
+      <div class="wt-slides" id="slides-how-we-work">
+
+        <div class="wt-slide">
+          <div class="wt-step-num">1</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </div>
+          <h3>You Submit Your Deal</h3>
+          <p>Fill out our 4-step form with the property address, numbers, photos, and contract details. Takes about 5 minutes.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">5 min to submit</span>
+            <span class="wt-chip">Confirmation email sent instantly</span>
+          </div>
+          <div class="wt-note">Your deal info is never shared before a JV agreement is signed.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">2</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <h3>We Review &amp; Underwrite</h3>
+          <p>Within 24-48 hours, our team digs into the numbers. We pull comps, check marketability, and verify the spread to make sure this deal can sell.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">24-48 hour turnaround</span>
+            <span class="wt-chip">Honest feedback if numbers don't work</span>
+          </div>
+          <div class="wt-note">If we need more info, we call or text you. No ghosting.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">3</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Sign the JV Agreement</h3>
+          <p>Simple, non-exclusive, one-page agreement via DocuSign. Lays out the 50/50 split (or 30/70 for proven partners) and who does what. Takes 2 minutes to sign.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">Non-exclusive</span>
+            <span class="wt-chip">No hidden clauses</span>
+            <span class="wt-chip">Keep marketing it yourself</span>
+          </div>
+          <div class="wt-note">If your buyer closes first, no penalty. We only get paid if we bring the buyer.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">4</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3>We Package &amp; Market the Deal</h3>
+          <p>We build a professional deal sheet with financial breakdown, photos, and property details. Then we push it directly to matched buyers in our 2,000+ network.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">Professional deal sheet</span>
+            <span class="wt-chip">Targeted buyer outreach</span>
+            <span class="wt-chip">Not a Facebook blast</span>
+          </div>
+          <div class="wt-note">Real, direct outreach to vetted investors who match the deal type, market, and price point.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">5</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Negotiate &amp; Push to Close</h3>
+          <p>We handle buyer inquiries, field offers, negotiate terms, and coordinate with the title company. You stay in the loop on every major update.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">We handle buyer questions</span>
+            <span class="wt-chip">Updates on every offer</span>
+            <span class="wt-chip">You approve final terms</span>
+          </div>
+          <div class="wt-note">We handle the heavy lifting. You approve the final terms.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">6</div>
+          <div class="wt-icon wt-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>You Get Paid</h3>
+          <p>50/50 of the net assignment fee, paid through the title company at close. No invoicing, no chasing payments, no 30-day wire waits.</p>
+          <div class="wt-detail">
+            <span class="wt-chip wt-chip-green">Paid at close through title</span>
+            <span class="wt-chip wt-chip-green">Funds hit in 1-2 business days</span>
+          </div>
+          <div class="wt-note">Hit $25K in funded fees or 3 closed deals in a quarter and your split bumps to 30/70.</div>
+        </div>
+
+      </div>
+      <div class="wt-footer">
+        <button class="wt-btn wt-btn-ghost" id="prev-how-we-work" onclick="wtNav('how-we-work',-1)">Back</button>
+        <span class="wt-counter" id="counter-how-we-work">1 / 6</span>
+        <button class="wt-btn wt-btn-primary" id="next-how-we-work" onclick="wtNav('how-we-work',1)">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Walkthrough: How to Submit a Perfect Deal -->
+  <div class="wt-backdrop" id="wt-perfect-deal" onclick="if(event.target===this)closeWalkthrough()">
+    <div class="wt-modal">
+      <div class="wt-header">
+        <div class="wt-title">How to Submit a Perfect Deal</div>
+        <button class="wt-close" onclick="closeWalkthrough()" aria-label="Close">&times;</button>
+      </div>
+      <div class="wt-progress"><div class="wt-bar" id="bar-perfect-deal"></div></div>
+      <div class="wt-slides" id="slides-perfect-deal">
+
+        <div class="wt-slide">
+          <div class="wt-step-num">1</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <h3>Complete Property Details</h3>
+          <p>Full street address (not just "house in Phoenix"), beds, baths, sqft, year built, lot size, and property type. We need this to pull comps and verify the numbers.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">Full address required</span>
+            <span class="wt-chip">Beds / Baths / Sqft</span>
+            <span class="wt-chip">Property type</span>
+          </div>
+          <div class="wt-note">The more detail you give upfront, the faster we can review. Incomplete submissions get delayed.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">2</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <h3>Know Your Numbers</h3>
+          <p>Contract price, desired asking price, ARV, and entry fee. We can't underwrite "make me an offer" &mdash; show us the spread so we know there's margin for our buyers.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">Contract price</span>
+            <span class="wt-chip">Asking price</span>
+            <span class="wt-chip">ARV</span>
+            <span class="wt-chip">Entry fee</span>
+          </div>
+          <div class="wt-note">Inflated ARVs to make the spread look better won't fool our underwriting. Keep it real.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">3</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <h3>Include Photos &amp; Docs</h3>
+          <p>Interior and exterior photos (phone quality is fine), plus your purchase agreement, mortgage docs, and any disclosures. Use a Google Drive or Dropbox link.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">Interior + exterior photos</span>
+            <span class="wt-chip">Purchase agreement</span>
+            <span class="wt-chip">Mortgage docs (for creative deals)</span>
+          </div>
+          <div class="wt-note">"I'll get photos later" kills momentum. Deals with complete info get marketed same-day.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">4</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <h3>Specify Deal Structure</h3>
+          <p>Cash, Subject-To, Seller Finance, Hybrid, Morby, Novation, or Lease Option. Each type needs different details &mdash; the form adapts based on what you pick.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">SubTo: loan balance, rate, PITI</span>
+            <span class="wt-chip">SF: amount, payment, term</span>
+            <span class="wt-chip">Cash: contract + asking price</span>
+          </div>
+          <div class="wt-note">For creative deals, include existing mortgage info &mdash; balance, rate, monthly payment, and lender.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">5</div>
+          <div class="wt-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>Include Timeline &amp; Motivation</h3>
+          <p>When does the contract expire? When does the seller need to close? Why are they selling? Urgency sells &mdash; if the seller needs to close in 30 days, buyers pay attention.</p>
+          <div class="wt-detail">
+            <span class="wt-chip">Contract expiration date</span>
+            <span class="wt-chip">Seller's motivation</span>
+            <span class="wt-chip">Occupancy status</span>
+          </div>
+          <div class="wt-note">If the contract closes in 5 days and you're just now submitting, it's probably too late. Give us time to work.</div>
+        </div>
+
+        <div class="wt-slide">
+          <div class="wt-step-num">6</div>
+          <div class="wt-icon wt-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3>Submit Clean &amp; Complete</h3>
+          <p>Review every field before hitting submit. Clean, complete submissions get reviewed and marketed faster than deals we have to chase you for missing info.</p>
+          <div class="wt-detail">
+            <span class="wt-chip wt-chip-green">Complete = same-day marketing</span>
+            <span class="wt-chip wt-chip-green">Faster review, faster close</span>
+          </div>
+          <div class="wt-note">The best deals move in 18-28 days from submission to close. Give us everything upfront and we'll move fast.</div>
+        </div>
+
+      </div>
+      <div class="wt-footer">
+        <button class="wt-btn wt-btn-ghost" id="prev-perfect-deal" onclick="wtNav('perfect-deal',-1)">Back</button>
+        <span class="wt-counter" id="counter-perfect-deal">1 / 6</span>
+        <button class="wt-btn wt-btn-primary" id="next-perfect-deal" onclick="wtNav('perfect-deal',1)">Next</button>
+      </div>
+    </div>
   </div>
 
   <!-- FAQ -->
@@ -233,6 +448,70 @@ var ham = document.getElementById('hamburger');
 if (ham) ham.addEventListener('click', function() {
   this.classList.toggle('on');
   document.getElementById('mobMenu').classList.toggle('on');
+});
+
+// ── Walkthrough player ──
+var wtState = {};
+
+function openWalkthrough(id) {
+  var el = document.getElementById('wt-' + id);
+  if (!el) return;
+  wtState[id] = 0;
+  el.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  showSlide(id, 0);
+}
+
+function closeWalkthrough() {
+  document.querySelectorAll('.wt-backdrop.open').forEach(function(b) { b.classList.remove('open'); });
+  document.body.style.overflow = '';
+}
+
+function showSlide(id, idx) {
+  var slides = document.querySelectorAll('#slides-' + id + ' .wt-slide');
+  var total = slides.length;
+  if (idx < 0) idx = 0;
+  if (idx >= total) idx = total - 1;
+  wtState[id] = idx;
+  slides.forEach(function(s, i) { s.classList.toggle('active', i === idx); });
+  var bar = document.getElementById('bar-' + id);
+  if (bar) bar.style.width = ((idx + 1) / total * 100) + '%';
+  var counter = document.getElementById('counter-' + id);
+  if (counter) counter.textContent = (idx + 1) + ' / ' + total;
+  var prev = document.getElementById('prev-' + id);
+  if (prev) prev.disabled = idx === 0;
+  var next = document.getElementById('next-' + id);
+  if (next) {
+    if (idx === total - 1) {
+      next.textContent = 'Done';
+      next.className = 'wt-btn wt-btn-cta';
+      next.onclick = function() { closeWalkthrough(); };
+    } else {
+      next.textContent = 'Next';
+      next.className = 'wt-btn wt-btn-primary';
+      next.onclick = function() { wtNav(id, 1); };
+    }
+  }
+}
+
+function wtNav(id, dir) {
+  var idx = (wtState[id] || 0) + dir;
+  showSlide(id, idx);
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeWalkthrough();
+  if (e.key === 'ArrowRight') {
+    for (var id in wtState) {
+      if (document.getElementById('wt-' + id).classList.contains('open')) wtNav(id, 1);
+    }
+  }
+  if (e.key === 'ArrowLeft') {
+    for (var id in wtState) {
+      if (document.getElementById('wt-' + id).classList.contains('open')) wtNav(id, -1);
+    }
+  }
 });
 </script>
 </body>
