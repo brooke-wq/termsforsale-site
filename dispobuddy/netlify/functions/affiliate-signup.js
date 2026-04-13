@@ -89,32 +89,39 @@ exports.handler = async (event) => {
     const tags = ['dispo-buddy', 'db-affiliate', 'affiliate-active'];
     await ghlFetch(`${GHL_BASE}/contacts/${contactId}/tags`, 'POST', { tags }, headers);
 
-    // ── 3. Notifications ───────────────────────────────────────
-    const notifs = [];
+    // ── 3. Welcome SMS + Email (send first, await explicitly) ──
     const first = full_name.split(' ')[0] || 'there';
 
     // Welcome SMS
-    notifs.push(
-      sendSMS(contactId, headers,
+    try {
+      const smsRes = await sendSMS(contactId, headers,
         `Hey ${first}! You're in the Dispo Buddy affiliate program.\n\n` +
         `Your unique link:\n${referral_link}\n\n` +
         `Track your clicks & earnings at ${SITE_URL}/affiliate-dashboard\n\n` +
         `Reply STOP to opt out.`
-      ).catch(err => console.warn('Affiliate welcome SMS failed:', err.message))
-    );
+      );
+      console.log('Affiliate welcome SMS result:', JSON.stringify(smsRes));
+    } catch (err) {
+      console.error('Affiliate welcome SMS failed:', err.message);
+    }
 
-    // Welcome email
-    notifs.push(
-      sendEmail(contactId, headers, {
+    // Welcome email (await so it doesn't get killed by a race timeout)
+    try {
+      const emailRes = await sendEmail(contactId, headers, {
         subject: "You're a Dispo Buddy Affiliate — Here's Your Link",
         html: buildAffiliateWelcomeEmail({ first, full_name, affiliate_id, referral_link }),
-      }).catch(err => console.warn('Affiliate welcome email failed:', err.message))
-    );
+      });
+      console.log('Affiliate welcome email result:', JSON.stringify(emailRes));
+    } catch (err) {
+      console.error('Affiliate welcome email FAILED:', err.message);
+    }
 
-    // Internal SMS alert
+    // ── 4. Internal alerts + note (best-effort, raced with timeout) ──
+    const bgNotifs = [];
+
     const alertPhone = process.env.INTERNAL_ALERT_PHONE;
     if (alertPhone) {
-      notifs.push(
+      bgNotifs.push(
         sendInternalSMS(alertPhone, headers, locationId,
           `🎯 NEW AFFILIATE\n` +
           `Name: ${full_name}\n` +
@@ -126,10 +133,9 @@ exports.handler = async (event) => {
       );
     }
 
-    // Internal email alert
     const alertEmail = process.env.INTERNAL_ALERT_EMAIL;
     if (alertEmail) {
-      notifs.push(
+      bgNotifs.push(
         sendInternalEmail(alertEmail, headers, locationId, {
           subject: `New Affiliate: ${full_name}`,
           html: buildInternalAffiliateEmail({
@@ -140,13 +146,11 @@ exports.handler = async (event) => {
       );
     }
 
-    // Note
-    notifs.push(
+    bgNotifs.push(
       addNote(contactId, headers,
         `🎯 AFFILIATE SIGNUP\n` +
         `Affiliate ID: ${affiliate_id}\n` +
         `Referral Link: ${referral_link}\n` +
-        `Payout: ${payout_method}${payout_details ? ' — ' + payout_details : ''}\n` +
         `Audience: ${audience || 'N/A'}\n` +
         `Promo plan: ${promo_plan || 'N/A'}\n` +
         `Website: ${website || 'N/A'}\n` +
@@ -155,7 +159,7 @@ exports.handler = async (event) => {
     );
 
     await Promise.race([
-      Promise.allSettled(notifs),
+      Promise.allSettled(bgNotifs),
       new Promise(resolve => setTimeout(resolve, 5000)),
     ]);
 
