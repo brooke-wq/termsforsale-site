@@ -1404,6 +1404,9 @@ img{max-width:100%;display:block}
       data[k] = utmData[k];
     });
 
+    // Attach affiliate attribution if present
+    if (window.DBAffiliate) window.DBAffiliate.attachToPayload(data);
+
     return data;
   }
 
@@ -1615,5 +1618,6 @@ img{max-width:100%;display:block}
 
 })();
 </script>
+<script src="/affiliate.js" defer></script>
 </body>
 </html>

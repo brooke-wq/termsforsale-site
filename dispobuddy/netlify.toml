@@ -54,6 +54,21 @@
   status = 200
 
 [[redirects]]
+  from = "/api/affiliate-signup"
+  to = "/.netlify/functions/affiliate-signup"
+  status = 200
+
+[[redirects]]
+  from = "/api/affiliate-track"
+  to = "/.netlify/functions/affiliate-track"
+  status = 200
+
+[[redirects]]
+  from = "/api/affiliate-stats"
+  to = "/.netlify/functions/affiliate-stats"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
@@ -127,6 +142,21 @@
 [[redirects]]
   from = "/buyers-map"
   to = "/buyers-map.html"
+  status = 200
+
+[[redirects]]
+  from = "/affiliates"
+  to = "/affiliates.html"
+  status = 200
+
+[[redirects]]
+  from = "/affiliate-dashboard"
+  to = "/affiliate-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/affiliate-terms"
+  to = "/affiliate-terms.html"
   status = 200
 
 # ── 404 fallback ──
