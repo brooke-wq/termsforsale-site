@@ -305,26 +305,29 @@ async function loadDynamicFieldIds(apiKey, locationId) {
 // ═══════════════════════════════════════════════════════════════
 //
 // Hard filters (all tiers require these to pass):
-//   1. Contact role = Buyer                (enforced in fetchAllBuyers)
+//   0. Buy box criteria exist             (buyer must have SOMETHING filled)
+//   1. Contact role = Buyer               (enforced in fetchAllBuyers)
 //   2. Vetted / buyer_status ≠ "not buying now"
-//   3. Deal structure contains deal type   (if buyer has prefs)
-//   4. Property type contains deal type    (if buyer has prefs)
-//   5. HOA rule: if deal has HOA, buyer hoa ≠ "no" AND hoa_tolerance doesn't
-//      contain "no"
+//   3. Deal structure contains deal type  (if buyer has prefs)
+//   4. Property type contains deal type   (if buyer has prefs)
+//   5. HOA rule: if deal has HOA, buyer hoa ≠ "no" AND hoa_tolerance
+//      doesn't contain "no"
 //
 // Market match (required, determines tier):
 //   - CITY MATCH: deal city or metro appears in target_markets, buy_box,
 //     or target_cities → tier 1 or 2 (based on extras)
-//   - STATE FALLBACK: buyer has no city-level preferences filled (only state)
-//     and buyer's state matches deal state → tier 3
-//   - If buyer HAS city preferences but none matched, fall back to state
-//     match → tier 3 (the user's explicit "fallback to state" rule)
+//   - STATE-ONLY FALLBACK: buyer has TARGET_STATES or state mentioned
+//     in free text, but NO structured TARGET_CITIES → tier 3
+//   - If buyer HAS structured TARGET_CITIES but deal city didn't match
+//     any of them → REJECTED. We respect the buyer's explicit city list.
+//   - contact.state (mailing address) is NEVER used for matching.
+//     Only the TARGET_STATES custom field and free-text state mentions count.
 //
 // Tier scoring (among buyers who passed hard + market):
 //   - TIER 1: City match + all optional extras satisfied (price, beds, ARV
 //     where populated — each populated field must pass)
 //   - TIER 2: City match but not all extras satisfied (or no extras set)
-//   - TIER 3: State-only fallback
+//   - TIER 3: State-only fallback (only for buyers with no city prefs)
 //
 // Buyers who fail a populated "Max Price" / "Min Beds" / "Max Entry" / "Min
 // ARV" are STILL eligible — they just drop to Tier 2 or 3 instead of Tier 1.
@@ -383,6 +386,35 @@ function matchesBuyBox(contact, deal) {
   // Day-2 "pref-market-only" tag — buyer explicitly wants their target
   // market only. If set, disable the state fallback for this buyer.
   var marketOnly = (contact.tags || []).indexOf('pref-market-only') > -1;
+
+  // ═ HARD FILTER 0: buyer must have SOME buy box criteria ═
+  // Buyers with zero criteria (no target states, no target cities, no target
+  // markets, no buy_box text, no deal structures, no property types, no price
+  // limits) must NOT receive alerts — we have no basis to match them.
+  // This prevents the "Santiago" bug where a buyer with an empty buy box
+  // got blasted because their mailing address state matched.
+  var _ts = getCF(contact, CF.TARGET_STATES);
+  var _tc = getCF(contact, CF.TARGET_CITIES);
+  var _tm = getCF(contact, CF.TARGET_MARKETS);
+  var _bb = getCFByKey(contact, 'contact.buy_box');
+  var _ds = getCF(contact, CF.DEAL_STRUCTURES) || getCFByKey(contact, 'contact.deal_structure');
+  var _pt = getCFByKey(contact, 'contact.property_type_preference') || getCF(contact, CF.PROPERTY_TYPE);
+  var _mp = getCF(contact, CF.MAX_PRICE);
+  var _me = getCF(contact, CF.MAX_ENTRY);
+  var hasAnyStates = Array.isArray(_ts) ? _ts.length > 0 : (typeof _ts === 'string' && _ts.trim().length > 0);
+  var hasAnyCities = Array.isArray(_tc) ? _tc.length > 0 : (typeof _tc === 'string' && _tc.trim().length > 0);
+  var hasAnyMarkets = typeof _tm === 'string' && _tm.trim().length > 0;
+  var hasAnyBuyBox = typeof _bb === 'string' && _bb.trim().length > 0;
+  var hasAnyStructures = Array.isArray(_ds) ? _ds.length > 0 : (typeof _ds === 'string' && _ds.trim().length > 0);
+  var hasAnyPropTypes = Array.isArray(_pt) ? _pt.length > 0 : (typeof _pt === 'string' && _pt.trim().length > 0);
+  var hasAnyPriceLimit = (_mp && +_mp > 0) || (_me && +_me > 0);
+
+  var hasBuyBoxCriteria = hasAnyStates || hasAnyCities || hasAnyMarkets || hasAnyBuyBox
+    || hasAnyStructures || hasAnyPropTypes || hasAnyPriceLimit;
+
+  if (!hasBuyBoxCriteria) {
+    return { match: false, fails: ['No buy box criteria set — buyer has no targeting preferences'] };
+  }
 
   // ═ HARD FILTER 1: buyer status ═
   var buyerStatus = getCFByKey(contact, 'contact.buyer_status');
@@ -465,7 +497,10 @@ function matchesBuyBox(contact, deal) {
 
   var hasAnyCityPreference = cityFields.length > 0;
 
-  // State preferences
+  // State preferences — ONLY from the explicit TARGET_STATES custom field.
+  // NEVER use contact.state (mailing address) — a buyer living in PA who
+  // wants to invest in TX/FL should NOT get PA deals. Removed the
+  // contact.state fallback that was causing the Steve Podlaski bug.
   var targetStates = getCF(contact, CF.TARGET_STATES);
   var stateMatch = false;
   if (Array.isArray(targetStates) && targetStates.length > 0) {
@@ -473,10 +508,12 @@ function matchesBuyBox(contact, deal) {
   } else if (typeof targetStates === 'string' && targetStates.trim()) {
     stateMatch = String(targetStates).trim().toUpperCase() === dealState;
   }
-  // Fall back to contact.state
-  if (!stateMatch) {
-    var contactState = (contact.state || '').trim().toUpperCase();
-    if (contactState && contactState === dealState) stateMatch = true;
+  // Also check if the deal state appears in the target_markets or buy_box
+  // free text (e.g. "looking in PA, FL, TX"). Only a 2-letter state code
+  // surrounded by word boundaries is matched to avoid false positives.
+  if (!stateMatch && dealState.length === 2) {
+    var stateRegex = new RegExp('\\b' + dealState.toLowerCase() + '\\b');
+    stateMatch = cityFields.some(function (txt) { return stateRegex.test(txt); });
   }
 
   // City match — does the deal city or metro appear in any of the city fields?
@@ -491,6 +528,28 @@ function matchesBuyBox(contact, deal) {
 
   if (!cityMatch && !stateMatch) {
     return { match: false, fails: ['No market match (no city/state/market overlap)'] };
+  }
+
+  // Determine if buyer has EXPLICIT city preferences (structured TARGET_CITIES
+  // multi-select field). This is the definitive "I want these specific cities"
+  // signal. Free-text fields (TARGET_MARKETS, buy_box) may mention cities or
+  // states and are used for matching, but they don't block state fallback —
+  // a buyer who writes "Looking in PA and NJ area" hasn't named specific cities.
+  //
+  // Rule: if TARGET_CITIES is populated and deal city isn't in it (or any text
+  // field), reject. This prevents the Steve Podlaski bug: his TARGET_CITIES has
+  // Atlanta, Charlotte, Tampa, Dallas but NOT Philadelphia. He should NOT get
+  // PA deals just because PA is in his TARGET_STATES.
+  var hasExplicitCities = false;
+  var tcRaw = getCF(contact, CF.TARGET_CITIES);
+  if (Array.isArray(tcRaw) && tcRaw.length > 0) hasExplicitCities = true;
+  else if (typeof tcRaw === 'string' && tcRaw.trim().length > 0) hasExplicitCities = true;
+
+  if (!cityMatch && hasExplicitCities) {
+    return {
+      match: false,
+      fails: ['Buyer has explicit target cities but deal city ' + (deal.city || '?') + ' not in them']
+    };
   }
 
   // pref-market-only: buyer asked for their target market only — never fall
