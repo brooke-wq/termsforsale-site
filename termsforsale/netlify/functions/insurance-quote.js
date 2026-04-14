@@ -109,14 +109,72 @@ exports.handler = async function (event) {
     return { statusCode: 500, headers: headers, body: JSON.stringify({ error: err.message }) };
   }
 
-  console.log('[insurance-quote] Steadily 200 body=' + JSON.stringify(result.body).substring(0, 500));
+  console.log('[insurance-quote] Steadily 200 body=' + JSON.stringify(result.body).substring(0, 800));
 
-  // Response shape based on observed staging responses: `estimates[]` with an
-  // `estimate` object that contains TWO rates — `lowest` (bare-bones coverage)
-  // and `highest` (full coverage). We always project the HIGHEST rate so the
-  // deal page never shows a stripped-down number the buyer can't actually buy.
-  // If only `lowest` is present (older API versions / edge cases), we fall
-  // back to it rather than showing nothing.
+  // Steadily's /v1/quote/estimate returns an `estimates[]` array. Each entry
+  // has an `estimate` object containing one or more annual-premium numbers.
+  // We want the HIGHEST (full-coverage) rate, never the bare-bones number.
+  //
+  // Problem: Steadily's field names have shifted across API versions (and
+  // their Redoc docs are unreachable from this build env), so hard-coding
+  // `estimate.highest` is fragile — if the field is actually `maximum` or
+  // `annual_high` or nested inside a `coverages[]` array, we'd silently fall
+  // back to `lowest` and the deal page would quote the bare-bones premium
+  // (that's exactly the $22/mo bug Brooke reported on 2026-04-14).
+  //
+  // Robust approach: walk every numeric value reachable under `estimate`
+  // AND under the top-level estimate record (so if Steadily returns a
+  // `coverages[]` or `tiers[]` array we still find it) and pick the MAX.
+  // Values < $50/yr or > $50k/yr are ignored as likely non-premium noise
+  // (percentages, deductibles, policy IDs, year_built, etc).
+  //
+  // Also return the FULL set of numeric fields found so we can audit the
+  // shape from API logs / the frontend without another request.
+  // Known property-metadata / non-premium field names. Exact match only so
+  // we don't accidentally drop legitimate premium paths like `coverages[]`
+  // (contains "age") or `property_id` (ends with "id"). Keys compared
+  // case-insensitively.
+  const META_KEYS = new Set([
+    'id', 'property_id', 'policy_id', 'quote_id',
+    'year', 'year_built', 'yearbuilt',
+    'zip', 'zip_code', 'zipcode', 'postal_code',
+    'bedrooms', 'bed', 'beds', 'num_bedrooms',
+    'bathrooms', 'bath', 'baths', 'num_bathrooms',
+    'stories', 'num_stories',
+    'units', 'num_units',
+    'sqft', 'size_sqft', 'square_feet', 'squarefeet',
+    'age', 'property_age',
+    'deductible', 'deductibles',
+    'coverage_limit', 'limit',
+    'home_value', 'property_value', 'market_value', 'purchase_price',
+    'latitude', 'longitude', 'lat', 'lng', 'lon',
+    'month', 'months', 'day', 'days', 'time', 'timestamp', 'created_at', 'updated_at'
+  ]);
+
+  function collectPremiumCandidates(root) {
+    const out = [];
+    (function walk(node, path) {
+      if (node === null || node === undefined) return;
+      if (typeof node === 'number') {
+        if (isFinite(node) && node >= 50 && node <= 50000) {
+          out.push({ path: path, value: node });
+        }
+        return;
+      }
+      if (Array.isArray(node)) {
+        for (let i = 0; i < node.length; i++) walk(node[i], path + '[' + i + ']');
+        return;
+      }
+      if (typeof node === 'object') {
+        for (const k of Object.keys(node)) {
+          if (META_KEYS.has(k.toLowerCase())) continue;
+          walk(node[k], path ? path + '.' + k : k);
+        }
+      }
+    })(root, '');
+    return out;
+  }
+
   const estimates = (result.body && result.body.estimates) || [];
   if (!estimates.length) {
     return {
@@ -128,14 +186,50 @@ exports.handler = async function (event) {
 
   const est = estimates[0] || {};
   const estObj = est.estimate || {};
-  const highest = typeof estObj.highest === 'number' ? estObj.highest : 0;
-  const lowest  = typeof estObj.lowest  === 'number' ? estObj.lowest  : 0;
-  const annual  = highest > 0 ? highest : lowest;
+
+  // Explicit known-field reads (back-compat / fast path)
+  const namedHighest = typeof estObj.highest === 'number' ? estObj.highest : 0;
+  const namedLowest  = typeof estObj.lowest  === 'number' ? estObj.lowest  : 0;
+
+  // Fallback: scan every plausible premium-shaped numeric field
+  const candidates = collectPremiumCandidates(est);
+  candidates.sort((a, b) => b.value - a.value);
+  const scannedMax = candidates.length ? candidates[0].value : 0;
+  const scannedMin = candidates.length ? candidates[candidates.length - 1].value : 0;
+
+  // Pick the annual rate — prefer the highest value we can find anywhere.
+  // If `namedHighest` exists AND is the top candidate, use it (cleanest).
+  // Otherwise use the highest scanned value (covers unknown field names).
+  // Last resort: named lowest.
+  let annual = 0;
+  let rateTier = 'none';
+  if (scannedMax > 0 && scannedMax >= namedHighest) {
+    annual = scannedMax;
+    rateTier = (scannedMax === namedHighest) ? 'highest' : 'scanned-max';
+  } else if (namedHighest > 0) {
+    annual = namedHighest;
+    rateTier = 'highest';
+  } else if (namedLowest > 0) {
+    annual = namedLowest;
+    rateTier = 'lowest(fallback)';
+  }
+
   const monthly = annual > 0 ? Math.round(annual / 12) : 0;
   const startUrl = est.start_url || '';
-  const rateTier = highest > 0 ? 'highest' : (lowest > 0 ? 'lowest(fallback)' : 'none');
 
-  console.log('[insurance-quote] ' + city + ', ' + state + ' — $' + monthly + '/mo tier=' + rateTier + ' (high=$' + highest + ' low=$' + lowest + ') url=' + (startUrl ? 'yes' : 'no'));
+  console.log(
+    '[insurance-quote] ' + city + ', ' + state +
+    ' — $' + monthly + '/mo tier=' + rateTier +
+    ' (named high=$' + namedHighest + ' low=$' + namedLowest +
+    ' scannedMax=$' + scannedMax + ' scannedMin=$' + scannedMin +
+    ' candidates=' + candidates.length + ')' +
+    ' estimateKeys=[' + Object.keys(estObj).join(',') + ']' +
+    ' url=' + (startUrl ? 'yes' : 'no')
+  );
+  if (candidates.length) {
+    console.log('[insurance-quote] candidates: ' +
+      candidates.slice(0, 8).map(c => c.path + '=$' + c.value).join(', '));
+  }
 
   return {
     statusCode: 200,
@@ -144,11 +238,15 @@ exports.handler = async function (event) {
       available: monthly > 0,
       annual: annual,
       monthly: monthly,
-      annualHighest: highest,
-      annualLowest: lowest,
+      annualHighest: Math.max(namedHighest, scannedMax),
+      annualLowest:  namedLowest || scannedMin,
       rateTier: rateTier,
       startUrl: startUrl,
-      propertyId: est.property_id || ''
+      propertyId: est.property_id || '',
+      _debug: {
+        estimateKeys: Object.keys(estObj),
+        candidates: candidates.slice(0, 8)
+      }
     })
   };
 };
