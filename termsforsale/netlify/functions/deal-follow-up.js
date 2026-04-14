@@ -64,6 +64,13 @@ exports.handler = async function(event) {
       var tags = contact.tags || [];
       var msgsSentThisRun = 0;
 
+      // REQUIRED: skip any contact without the "opt in" tag (case-insensitive).
+      // We don't follow up on buyers who haven't actively opted in to messaging.
+      var hasOptIn = tags.some(function (t) {
+        return String(t || '').trim().toLowerCase() === 'opt in';
+      });
+      if (!hasOptIn) { stats.skipped++; continue; }
+
       // Find all alerted-* tags to know which deals they were sent
       var alertedTags = tags.filter(function(t) { return t.startsWith('alerted-'); });
       if (!alertedTags.length) continue;
@@ -115,7 +122,8 @@ exports.handler = async function(event) {
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
                 type: 'SMS', contactId: contact.id,
-                message: 'Quick check on ' + (dealCity || dealAddress) + ' I sent you:\n1 = very interested\n2 = maybe / want to talk\n3 = pass\nReply with just the number.\n' + dealUrl
+                message: 'Quick check on ' + (dealCity || dealAddress) + ' I sent you:\n1 = very interested\n2 = maybe / want to talk\n3 = pass\nReply with just the number.\n' + dealUrl,
+                fromNumber: '+14806373117'
               });
             }
             // Email 1
@@ -131,8 +139,8 @@ exports.handler = async function(event) {
                   + '<strong>PASS</strong> = not my box, keep sending others</p>'
                   + '<p>This helps me prioritize who gets first crack on this and similar deals.</p>'
                   + '<p><a href="' + dealUrl + '" style="color:#29ABE2;font-weight:700">View Deal Details →</a></p>'
-                  + '<p>— Brooke, Terms For Sale</p></div>',
-                emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+                  + '<p>— Terms For Sale</p></div>',
+                emailFrom: 'Terms For Sale <info@termsforsale.com>'
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d0Tag] });
@@ -147,7 +155,8 @@ exports.handler = async function(event) {
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
                 type: 'SMS', contactId: contact.id,
-                message: 'Are you still looking for ' + (dealType ? dealType.toLowerCase() + ' deals' : 'deals') + ' in ' + (dealCity || 'the area') + '? If yes, I\'ll prioritize those for you. If not, I can pause outreach.\n' + dealUrl
+                message: 'Are you still looking for ' + (dealType ? dealType.toLowerCase() + ' deals' : 'deals') + ' in ' + (dealCity || 'the area') + '? If yes, I\'ll prioritize those for you. If not, I can pause outreach.\n' + dealUrl,
+                fromNumber: '+14806373117'
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d1Tag] });
@@ -169,15 +178,16 @@ exports.handler = async function(event) {
                   + '<p>If not, hit reply with your exact buy box (price, city, strategy) so I only send you slam-dunks.</p>'
                   + '<p>If I don\'t hear back, I\'ll assume you\'re paused for now.</p>'
                   + '<p><a href="' + dealUrl + '" style="color:#29ABE2;font-weight:700">View Deal Details →</a></p>'
-                  + '<p>— Brooke, Terms For Sale</p></div>',
-                emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+                  + '<p>— Terms For Sale</p></div>',
+                emailFrom: 'Terms For Sale <info@termsforsale.com>'
               });
             }
             // SMS 3
             if (phone) {
               await ghlRequest(apiKey, 'POST', '/conversations/messages', {
                 type: 'SMS', contactId: contact.id,
-                message: 'Last ping on ' + (dealAddress || 'the deal') + '.\nWant me to:\nA) Keep sending you stuff like this\nB) Tighten to ' + (dealCity || 'your market') + ' only\nC) Pause alerts for now\nReply A/B/C.\n' + dealUrl
+                message: 'Last ping on ' + (dealAddress || 'the deal') + '.\nWant me to:\nA) Keep sending you stuff like this\nB) Tighten to ' + (dealCity || 'your market') + ' only\nC) Pause alerts for now\nReply A/B/C.\n' + dealUrl,
+                fromNumber: '+14806373117'
               });
             }
             await ghlRequest(apiKey, 'POST', '/contacts/' + contact.id + '/tags', { tags: [d2Tag] });
