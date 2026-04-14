@@ -177,15 +177,10 @@ exports.handler = async function (event) {
     return out;
   }
 
+  // Don't early-return on empty estimates — we may still be able to show a
+  // heuristic fallback from ARV. Treat absence as "no Steadily data" and
+  // let the fallback logic below decide what to display.
   const estimates = (result.body && result.body.estimates) || [];
-  if (!estimates.length) {
-    return {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify({ available: false, message: 'No estimate available for this property' })
-    };
-  }
-
   const est = estimates[0] || {};
   const estObj = est.estimate || {};
 
@@ -216,29 +211,56 @@ exports.handler = async function (event) {
     rateTier = 'lowest(fallback)';
   }
 
-  const monthly = annual > 0 ? Math.round(annual / 12) : 0;
+  const steadilyMonthly = annual > 0 ? Math.round(annual / 12) : 0;
   const startUrl = est.start_url || '';
 
-  // Plausibility floor. US landlord insurance for a standard SFR almost
-  // never comes in below ~$60/mo ($720/yr) — anything under that is almost
-  // certainly a liability-only or bare-bones rate that the buyer can't
-  // actually bind. Rather than display a misleading teaser, treat sub-floor
-  // quotes as "no usable estimate" so the deal page shows "Get Quote →"
-  // CTA (routing to the Steadily partner page) instead of a dollar number.
-  // Overridable via INSURANCE_MIN_MONTHLY env var if we want to tune later.
+  // Heuristic fallback. Steadily's /v1/quote/estimate often returns only a
+  // bare-bones liability-only number (e.g. $22/mo for a Tucson SFR) even
+  // when we send rich property_details. A bare-bones number is not useful
+  // as a teaser — it anchors the buyer to a price they cannot actually bind.
+  //
+  // Rather than suppress, fall back to an ARV-based heuristic when Steadily
+  // comes in below the plausibility floor. US landlord insurance on a
+  // standard SFR full-coverage runs ~0.35%-0.60% of property value per year.
+  // Using 0.50% as the middle of that band. Formula:
+  //   monthly = round((arv * 0.005) / 12)
+  //
+  // ARV comes from the request body (frontend passes it alongside
+  // property_details). Falls back to property_details.dwelling_coverage
+  // if that's populated. If neither is available, and Steadily gave us
+  // nothing usable, we can't estimate — return available=false so the
+  // deal page shows a generic "Get Quote →" CTA.
   const minMonthly = parseInt(process.env.INSURANCE_MIN_MONTHLY || '60', 10);
-  const belowFloor = monthly > 0 && monthly < minMonthly;
-  if (belowFloor) {
-    console.log('[insurance-quote] ' + city + ', ' + state +
-      ' — $' + monthly + '/mo is below floor $' + minMonthly + '/mo; suppressing estimate');
+  const annualRate = parseFloat(process.env.INSURANCE_HEURISTIC_RATE || '0.005'); // 0.5%
+  const arv = +body.arv ||
+              +(body.property_details && body.property_details.dwelling_coverage) ||
+              +(body.property_details && body.property_details.home_value) ||
+              0;
+  const heuristicMonthly = arv > 0 ? Math.round((arv * annualRate) / 12) : 0;
+
+  // Pick the displayed monthly:
+  //   1. Steadily monthly if >= floor (believable full-coverage)
+  //   2. Heuristic from ARV if available
+  //   3. Steadily monthly below-floor as last resort (better than nothing)
+  let monthly = 0;
+  let finalTier = 'none';
+  if (steadilyMonthly >= minMonthly) {
+    monthly = steadilyMonthly;
+    finalTier = rateTier; // 'highest' / 'scanned-max' / 'lowest(fallback)'
+  } else if (heuristicMonthly > 0) {
+    monthly = heuristicMonthly;
+    finalTier = 'heuristic-arv';
+  } else if (steadilyMonthly > 0) {
+    monthly = steadilyMonthly;
+    finalTier = rateTier + '(below-floor)';
   }
 
   console.log(
     '[insurance-quote] ' + city + ', ' + state +
-    ' — $' + monthly + '/mo tier=' + rateTier +
-    ' (named high=$' + namedHighest + ' low=$' + namedLowest +
-    ' scannedMax=$' + scannedMax + ' scannedMin=$' + scannedMin +
-    ' candidates=' + candidates.length + ')' +
+    ' — shown=$' + monthly + '/mo tier=' + finalTier +
+    ' (steadily=$' + steadilyMonthly + ' heuristic=$' + heuristicMonthly +
+    ' arv=$' + arv + ' namedHigh=$' + namedHighest + ' namedLow=$' + namedLowest +
+    ' scannedMax=$' + scannedMax + ')' +
     ' estimateKeys=[' + Object.keys(estObj).join(',') + ']' +
     ' url=' + (startUrl ? 'yes' : 'no')
   );
@@ -251,20 +273,22 @@ exports.handler = async function (event) {
     statusCode: 200,
     headers: headers,
     body: JSON.stringify({
-      available: monthly > 0 && !belowFloor,
-      annual: belowFloor ? 0 : annual,
-      monthly: belowFloor ? 0 : monthly,
+      available: monthly > 0,
+      annual: monthly * 12,
+      monthly: monthly,
+      rateTier: finalTier,
+      steadilyMonthly: steadilyMonthly,
+      heuristicMonthly: heuristicMonthly,
       annualHighest: Math.max(namedHighest, scannedMax),
       annualLowest:  namedLowest || scannedMin,
-      rateTier: belowFloor ? 'below-floor' : rateTier,
-      belowFloor: belowFloor,
-      rawMonthly: monthly,
       startUrl: startUrl,
       propertyId: est.property_id || '',
       _debug: {
         estimateKeys: Object.keys(estObj),
         candidates: candidates.slice(0, 8),
-        minMonthly: minMonthly
+        minMonthly: minMonthly,
+        annualRate: annualRate,
+        arv: arv
       }
     })
   };
