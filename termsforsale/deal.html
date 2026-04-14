@@ -1142,8 +1142,9 @@ function renderDeal(d,allDeals){
     if(baths)propertyDetails.bathrooms=baths;
     // Replacement-cost hint based on ARV (after-repair value). Steadily uses
     // dwelling coverage to size the policy — without it, quotes default low.
-    var arv=+d.compsArv||+d.arv||0;
-    if(arv>0)propertyDetails.dwelling_coverage=arv;
+    // (Can't reuse `arv` const from line 767 — it's the same function scope.)
+    var dwellCov=+d.compsArv||+d.aiArvBase||0;
+    if(dwellCov>0)propertyDetails.dwelling_coverage=dwellCov;
     fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||'',property_details:propertyDetails})})
       .then(function(r){return r.json();})
       .then(function(data){
