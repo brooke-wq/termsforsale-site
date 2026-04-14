@@ -30,9 +30,11 @@
 //     address) so repeat lookups for the same property get the same ID.
 //   - `properties[].property_details` / `property_metadata` / top-level
 //     `metadata` appear to be optional passthrough bags.
-//   - On 2xx, the body contains `estimates[]` with `estimate.lowest` (annual
-//     premium, USD), `start_url`, and `property_id` — this is what the
-//     insurance-quote.js caller currently projects.
+//   - On 2xx, the body contains `estimates[]`. Each estimate has an `estimate`
+//     object with TWO annual-premium numbers: `lowest` (bare-bones coverage)
+//     and `highest` (full coverage). Also `start_url` and `property_id`.
+//     `insurance-quote.js` projects `highest` (falling back to `lowest` if
+//     highest is missing) so the deal page never quotes bare-bones.
 
 const STAGING_BASE = 'https://api.staging.steadily.com';
 const PROD_BASE    = 'https://api.steadily.com';

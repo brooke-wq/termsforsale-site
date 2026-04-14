@@ -1051,6 +1051,57 @@ can still override via `body.property_id` if they want to pass their own.
 (property_id required, property_details/property_metadata/metadata
 optional) so future maintainers don't repeat the mistake.
 
+## Completed — April 13 2026 Insurance Quote — Use Highest Rate
+
+Branch: `claude/highest-insurance-rate-z5FG1`.
+
+Brooke noted that Steadily's `/v1/quote/estimate` response contains
+**two** annual-premium numbers inside `estimates[0].estimate`:
+`lowest` (bare-bones coverage) and `highest` (full coverage). The old
+code was always projecting `lowest`, which meant the deal page was
+quoting a stripped-down premium the buyer couldn't actually buy at.
+Switched the projection to always use `highest`.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/insurance-quote.js`** — response
+  projection now reads `est.estimate.highest` first, falls back to
+  `est.estimate.lowest` only if `highest` is missing (older API
+  versions / edge cases), and falls through to `available: false`
+  when neither is present. The JSON response now also exposes
+  `annualHighest`, `annualLowest`, and a `rateTier` field
+  (`'highest'` / `'lowest(fallback)'` / `'none'`) so any future
+  caller can see both numbers without a re-fetch. The log line now
+  prints both rates plus which tier was picked, so Netlify function
+  logs show the full picture at a glance.
+
+- **`termsforsale/netlify/functions/_steadily.js`** — header comment
+  updated to document the two-rate response shape (previously said
+  only `lowest` existed).
+
+### Backwards compatibility
+
+- The `annual`, `monthly`, `available`, `startUrl`, `propertyId`
+  response keys are unchanged in name — only the underlying value of
+  `annual` / `monthly` changes (now reflects the full-coverage quote
+  instead of bare-bones).
+- `deal.html:1130` caller continues to read `data.monthly` and
+  `data.startUrl` — no frontend changes required.
+
+### Verified locally
+
+Ran a four-case harness with mocked `_steadily.js`:
+
+| Mock response | Annual used | Monthly | rateTier |
+|---|---|---|---|
+| `{lowest:780, highest:1440}` | $1440 | $120 | `highest` |
+| `{highest:1440}` | $1440 | $120 | `highest` |
+| `{lowest:780}` | $780 | $65 | `lowest(fallback)` |
+| `{}` | $0 | — | `none` (available=false) |
+
+All cases behave as expected. No changes needed to the env vars,
+frontend, or `_steadily.js` request path.
+
 ## Completed — April 9 2026 Domain Migration to Apex termsforsale.com
 
 Brooke promoted `termsforsale.com` to the Netlify primary domain (with
