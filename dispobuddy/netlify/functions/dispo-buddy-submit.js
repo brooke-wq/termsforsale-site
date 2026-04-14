@@ -589,7 +589,7 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
   }
 
   const dealTypeMap = {
-    'Cash': 'Cash', 'Subto': 'SubTo', 'Seller Finance': 'Seller Finance',
+    'Cash': 'Cash', 'Subto': 'Subject To', 'Seller Finance': 'Seller Finance',
     'Hybrid': 'Hybrid', 'Morby/Stack Method': 'Morby Method',
     'Lease Option': 'Lease Option', 'Novation': 'Novation',
   };
