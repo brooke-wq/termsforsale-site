@@ -276,6 +276,102 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 14 2026 Solar Loan Details on Deal Terms Table
+
+Branch: `claude/add-solar-property-details-atxRM`.
+
+Brooke asked: for deals with solar, pull the existing "Solar" field
+from Notion into the deal page's terms section as an **additional
+loan** (alongside SubTo Existing Loan and Seller Finance Amount rows).
+Previously the Solar field was being fetched by `deals.js` (line 266)
+but never rendered on `deal.html` — buyers had no way to see that a
+property carried a solar lien / lease until they got the PA.
+
+### Files shipped
+
+- **`termsforsale/deal.html`** — inside `renderDeal()`, after the
+  Seller Finance termRows block and before the "Pad to even" line
+  (new block around line 818-852). The block:
+  - Reads `d.solar` (already populated by `deals.js` from the Notion
+    "Solar" text property).
+  - Skips display entirely when the field is empty or indicates no
+    solar / paid off: matches `/^(no|none|n\/a|0|false)\b/i` on the
+    start OR `/paid\s*off/i` anywhere in the string. A paid-off
+    solar system has no loan to assume, so there's nothing to add.
+  - For everything else, parses four pieces from the free-form text:
+    - **Monthly payment** — matches `$X/mo`, `$X per month`,
+      `X/month` patterns.
+    - **Rate** — `X.XX%` pattern.
+    - **Term** — `X yrs` / `X years` pattern.
+    - **Balance** — first `$X,XXX` amount that isn't the monthly
+      payment (the monthly payment is stripped from the string
+      before this match runs so it can't be double-matched). Also
+      handles `$18k` shorthand (multiplies by 1000 when the `k`
+      suffix is present).
+  - Detects lease vs. financed from keywords (`leas(e|ed|ing)` →
+    "Lease", `financ(e|ed|ing)|lien|loan` → "Loan") so row labels
+    read `Solar Lease Payment` vs `Solar Loan Balance` — matches
+    the existing Notion convention of describing solar as either
+    a lease or a lien.
+  - If nothing structured parses out, falls back to a single
+    `Solar: <raw text>` row so buyers still see whatever's on file
+    (e.g. "Yes — leased" with no dollar amount yet).
+
+### Parsing verified locally
+
+Exercised 16 realistic Notion values against the parser:
+
+| Input | Rendered rows |
+|---|---|
+| `""` / `"No"` / `"None"` / `"N/A"` / `"Paid off"` / `"Yes — paid off"` | (skipped — no loan shown) |
+| `"Yes"` | `Solar: Yes` |
+| `"Yes — leased"` | `Solar Lease: Yes — leased` |
+| `"Yes — leased $120/mo"` | `Solar Lease Payment: $120/mo` |
+| `"Yes — financed (lien)"` | `Solar Loan: Yes — financed (lien)` |
+| `"$15,000 @ 4.99% for 20 yrs, $85/mo"` | Balance $15,000 / Payment $85/mo / Rate 4.99% / Term 20 yrs |
+| `"Financed: $22,450 balance, $150/mo, 4.5%, 15 yrs"` | Solar Loan Balance $22,450 / Payment $150/mo / Rate 4.5% / Term 15 yrs |
+| `"Solar lien $18k remaining, $95/month"` | Solar Loan Balance $18,000 / Payment $95/mo |
+
+### Deliberately NOT changed
+
+- **`deals.js`** — already pulls `Solar` text correctly (line 266),
+  no backend changes needed.
+- **Notion schema** — no new properties. We're using the existing
+  "Solar" text field.
+- **Deal card / marketplace views** — solar details remain in the
+  per-deal "Terms" tab only. Not surfaced on the deal list or map
+  popup — the existing per-card tag strip already shows HOA but
+  adding solar to the tag strip would crowd the card. Could be
+  added later if the team wants a "solar lien" pill.
+- **Outbound alerts (notify-buyers.js, email templates, SMS)** — not
+  touched. The solar text lives on the deal page; no
+  marketing-copy changes needed since alerts point buyers to the
+  deal page for details.
+
+### Known caveats
+
+- Parser is regex-based on free-form text. If Brooke's operators
+  enter unusual formats (e.g. `"$15k, twenty years"` — word-form
+  numbers), the parser may miss fields. The fallback "show raw
+  text" branch ensures buyers always see *something*, so the
+  degraded case is still visible-not-hidden.
+- The regex for "paid off" is intentionally loose — matches anywhere
+  in the string, not just the start. A value like `"Solar loan, not
+  paid off yet"` would incorrectly skip display. Unlikely in
+  practice but worth noting. If this becomes a real case, tighten to
+  word-boundary matching like `\bpaid\s*off\b` excluding the "not
+  paid off" negation (regex gets hairy; easier fix is to let
+  operators use "Paid in full" or "Owned outright" for the skip
+  path).
+- Balance detection picks the *first* $ amount after stripping the
+  monthly payment. If Notion says `"$50,000 ARV, $15k solar lien,
+  $120/mo"`, we'd match $50,000 as the solar balance (wrong). The
+  Solar field should only describe the solar itself — if operators
+  start mixing deal figures into it, we'd need a stricter "balance"
+  keyword lookup instead.
+
+---
+
 ## Completed — April 14 2026 Dispo Buddy Landing Page Single-Page Rebuild
 
 Branch: `claude/improve-logo-favicon-Av2Gm`.
