@@ -815,38 +815,48 @@ function renderDeal(d,allDeals){
     if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
   }
 
-  // Solar section — solar lien / loan / lease shown as an additional loan.
-  // Notion "Solar" is a free-form text field. Common values: "", "No",
-  // "Yes — paid off", "Yes — leased $120/mo", "$15,000 balance @ 4.99%
-  // for 20 yrs, $85/mo", etc. Skip if empty / indicates no solar or
-  // paid off (nothing to assume for the buyer).
+  // Solar section — solar lien / loan / lease shown as a SEPARATE block
+  // below the main loan terms so the existing-loan and solar details don't
+  // visually blend. Notion "Solar" is a free-form text field. Common values:
+  // "", "No", "Yes — paid off", "Yes — leased $120/mo",
+  // "$15,000 balance @ 4.99% for 20 yrs, $85/mo, matures 04/2042", etc.
+  // Skip if empty / indicates no solar or paid off.
+  var solarRows=[];
+  var solarKind='';
   if(d.solar){
     var solarRaw=String(d.solar).trim();
     if(solarRaw && !/^(no|none|n\/a|0|false)\b/i.test(solarRaw) && !/paid\s*off/i.test(solarRaw)){
-      // Monthly payment: "$120/mo", "$120 per month", "120/month"
+      // Monthly payment: "$120/mo", "$120 per month", "120/month",
+      // "payment $120", "pmt $120", "monthly $120"
       var solarPmt=solarRaw.match(/\$?\s*([\d,]+(?:\.\d+)?)\s*(?:\/\s*mo\b|\s+per\s+month\b|\/\s*month\b)/i);
+      if(!solarPmt) solarPmt=solarRaw.match(/(?:payment|pmt|monthly)[:\s]*\$?\s*([\d,]+(?:\.\d+)?)/i);
       // Rate (%)
       var solarRate=solarRaw.match(/(\d+(?:\.\d+)?)\s*%/);
       // Term ("20 yrs", "15 years")
       var solarTerm=solarRaw.match(/(\d+)\s*(?:yrs?|years?)\b/i);
+      // Maturity date: MM/DD/YYYY, MM-DD-YYYY, MM/YYYY, MM-YYYY,
+      // optionally prefixed with "matures"/"maturity"/"until"/"thru"/"through"
+      var solarMaturity=solarRaw.match(/(?:matures?|maturity|until|thru|through)[:\s]*((?:\d{1,2}[\/\-])?\d{1,2}[\/\-]\d{2,4})/i);
+      if(!solarMaturity) solarMaturity=solarRaw.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/);
+      if(!solarMaturity) solarMaturity=solarRaw.match(/\b(\d{1,2}[\/\-]\d{4})\b/);
       // Balance: first $ amount that isn't the monthly payment
       var solarRemainder=solarPmt?solarRaw.replace(solarPmt[0],' '):solarRaw;
       var solarBal=solarRemainder.match(/\$\s*([\d,]+(?:\.\d+)?)\s*(k)?/i);
       // Lease vs. financed — labels show context to the buyer
-      var solarKind=/leas(e|ed|ing)/i.test(solarRaw)?'Lease':(/financ(e|ed|ing)|lien|loan/i.test(solarRaw)?'Loan':'');
-      var solarHead=solarKind?'Solar '+solarKind:'Solar';
-      var solarParsed=!!(solarPmt||solarBal||solarRate||solarTerm);
+      solarKind=/leas(e|ed|ing)/i.test(solarRaw)?'Lease':(/financ(e|ed|ing)|lien|loan/i.test(solarRaw)?'Lien':'');
+      var solarParsed=!!(solarPmt||solarBal||solarRate||solarTerm||solarMaturity);
       if(!solarParsed){
-        termRows.push({l:solarHead,v:solarRaw});
+        solarRows.push({l:'Details',v:solarRaw});
       } else {
         if(solarBal){
           var solarBalNum=parseFloat(solarBal[1].replace(/,/g,''));
           if(solarBal[2]) solarBalNum*=1000;
-          termRows.push({l:solarHead+' Balance',v:fc(solarBalNum)});
+          solarRows.push({l:'Balance',v:fc(solarBalNum)});
         }
-        if(solarPmt) termRows.push({l:solarHead+' Payment',v:'$'+parseFloat(solarPmt[1].replace(/,/g,'')).toLocaleString()+'/mo'});
-        if(solarRate) termRows.push({l:solarHead+' Rate',v:solarRate[1]+'%'});
-        if(solarTerm) termRows.push({l:solarHead+' Term',v:solarTerm[1]+' yrs'});
+        if(solarPmt) solarRows.push({l:'Payment',v:'$'+parseFloat(solarPmt[1].replace(/,/g,'')).toLocaleString()+'/mo'});
+        if(solarRate) solarRows.push({l:'Rate',v:solarRate[1]+'%'});
+        if(solarTerm) solarRows.push({l:'Term',v:solarTerm[1]+' yrs'});
+        if(solarMaturity) solarRows.push({l:'Maturity',v:solarMaturity[1]});
       }
     }
   }
@@ -855,6 +865,13 @@ function renderDeal(d,allDeals){
   if(termRows.length%2!==0) termRows.push({l:'',v:''});
 
   const termsTableHtml=`<div class="terms-grid">${termRows.filter(r=>r.l||r.v).map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}${termRows.length%2!==0?'<div class="term-item empty-cell"></div>':''}</div>`;
+
+  // Solar block — rendered as its own grid with a heading so it doesn't blend
+  // with the existing-loan rows above. Only appears when solarRows has entries.
+  var solarHeading=solarKind?'Solar '+solarKind:'Solar';
+  var solarPaddedRows=solarRows.slice();
+  if(solarPaddedRows.length%2!==0) solarPaddedRows.push({l:'',v:''});
+  const solarTableHtml=solarRows.length?`<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>${solarHeading}</div><div class="terms-grid">${solarPaddedRows.map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div></div>`:'';
 
   // HIGHLIGHTS
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
@@ -938,6 +955,7 @@ function renderDeal(d,allDeals){
       <div id="tab-terms" class="tab-panel on">
         <div class="terms-map-grid" style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
           <div>${termsTableHtml}
+            ${solarTableHtml}
             <div id="insurance-quote" style="margin-top:12px;background:linear-gradient(135deg,#EBF8FF,#E6F9F0);border:1px solid #bee3f8;border-radius:var(--r);padding:16px;display:none">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
