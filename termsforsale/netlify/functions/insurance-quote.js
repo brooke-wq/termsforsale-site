@@ -219,6 +219,20 @@ exports.handler = async function (event) {
   const monthly = annual > 0 ? Math.round(annual / 12) : 0;
   const startUrl = est.start_url || '';
 
+  // Plausibility floor. US landlord insurance for a standard SFR almost
+  // never comes in below ~$60/mo ($720/yr) — anything under that is almost
+  // certainly a liability-only or bare-bones rate that the buyer can't
+  // actually bind. Rather than display a misleading teaser, treat sub-floor
+  // quotes as "no usable estimate" so the deal page shows "Get Quote →"
+  // CTA (routing to the Steadily partner page) instead of a dollar number.
+  // Overridable via INSURANCE_MIN_MONTHLY env var if we want to tune later.
+  const minMonthly = parseInt(process.env.INSURANCE_MIN_MONTHLY || '60', 10);
+  const belowFloor = monthly > 0 && monthly < minMonthly;
+  if (belowFloor) {
+    console.log('[insurance-quote] ' + city + ', ' + state +
+      ' — $' + monthly + '/mo is below floor $' + minMonthly + '/mo; suppressing estimate');
+  }
+
   console.log(
     '[insurance-quote] ' + city + ', ' + state +
     ' — $' + monthly + '/mo tier=' + rateTier +
@@ -237,17 +251,20 @@ exports.handler = async function (event) {
     statusCode: 200,
     headers: headers,
     body: JSON.stringify({
-      available: monthly > 0,
-      annual: annual,
-      monthly: monthly,
+      available: monthly > 0 && !belowFloor,
+      annual: belowFloor ? 0 : annual,
+      monthly: belowFloor ? 0 : monthly,
       annualHighest: Math.max(namedHighest, scannedMax),
       annualLowest:  namedLowest || scannedMin,
-      rateTier: rateTier,
+      rateTier: belowFloor ? 'below-floor' : rateTier,
+      belowFloor: belowFloor,
+      rawMonthly: monthly,
       startUrl: startUrl,
       propertyId: est.property_id || '',
       _debug: {
         estimateKeys: Object.keys(estObj),
-        candidates: candidates.slice(0, 8)
+        candidates: candidates.slice(0, 8),
+        minMonthly: minMonthly
       }
     })
   };

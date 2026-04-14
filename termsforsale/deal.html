@@ -1153,8 +1153,11 @@ function renderDeal(d,allDeals){
           el.style.display='block';document.getElementById('ins-price').textContent='$'+data.monthly;document.getElementById('ins-cta').href=data.startUrl||'https://dealpros.steadilypartner.com/';
           var insInput=document.getElementById('ch-ins');if(insInput&&!insInput.value)insInput.value=data.monthly;
         } else {
-          // API failed but still show the partner link
-          el.style.display='block';document.getElementById('ins-price').textContent='Get Quote';document.getElementById('ins-cta').href='https://dealpros.steadilypartner.com/';
+          // No usable inline estimate (API failed, empty, or came back
+          // below the plausibility floor — i.e. bare-bones only). Show
+          // "Get Quote →" and route to the property-specific Steadily
+          // start URL if we got one, otherwise the generic partner link.
+          el.style.display='block';document.getElementById('ins-price').textContent='Get Quote';document.getElementById('ins-cta').href=data.startUrl||'https://dealpros.steadilypartner.com/';
         }
       }).catch(function(){});
   }
