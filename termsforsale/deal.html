@@ -1125,9 +1125,26 @@ function renderDeal(d,allDeals){
   </div>`;
   // Load photos async after DOM is ready
   loadDealPhotos(d);
-  // Fetch insurance quote (uses address server-side only, never displayed)
+  // Fetch insurance quote (uses address server-side only, never displayed).
+  // Pass every property detail we know so Steadily returns a full-coverage
+  // quote instead of the bare-bones default they'll fall back to when the
+  // request is just an address.
   if(d.streetAddress&&d.city&&d.state){
-    fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||''})})
+    var beds=parseInt(d.beds,10)||0;
+    var baths=parseFloat(d.baths)||0;
+    var sqft=parseInt((d.sqft||'').toString().replace(/[^0-9]/g,''),10)||0;
+    var yearBuilt=parseInt((d.yearBuilt||'').toString().replace(/[^0-9]/g,''),10)||0;
+    var propertyDetails={};
+    if(sqft)propertyDetails.size_sqft=sqft;
+    if(yearBuilt)propertyDetails.year_built=yearBuilt;
+    if(d.propertyType)propertyDetails.property_type=d.propertyType;
+    if(beds)propertyDetails.bedrooms=beds;
+    if(baths)propertyDetails.bathrooms=baths;
+    // Replacement-cost hint based on ARV (after-repair value). Steadily uses
+    // dwelling coverage to size the policy — without it, quotes default low.
+    var arv=+d.compsArv||+d.arv||0;
+    if(arv>0)propertyDetails.dwelling_coverage=arv;
+    fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||'',property_details:propertyDetails})})
       .then(function(r){return r.json();})
       .then(function(data){
         var el=document.getElementById('insurance-quote');

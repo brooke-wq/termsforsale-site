@@ -146,6 +146,8 @@ exports.handler = async function (event) {
     'age', 'property_age',
     'deductible', 'deductibles',
     'coverage_limit', 'limit',
+    'dwelling_coverage', 'other_structures_coverage', 'personal_property_coverage',
+    'loss_of_use_coverage', 'personal_liability', 'medical_payments',
     'home_value', 'property_value', 'market_value', 'purchase_price',
     'latitude', 'longitude', 'lat', 'lng', 'lon',
     'month', 'months', 'day', 'days', 'time', 'timestamp', 'created_at', 'updated_at'
