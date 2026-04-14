@@ -1492,9 +1492,13 @@ async function init(){
       let freshDeal=null;
       if(id)freshDeal=allDeals.find(d=>String(d.id)===String(id));
       if(!freshDeal && slug)freshDeal=findDealBySlug(allDeals,slug);
-      // Prefer fresh Notion data if it has a cover photo the cache is missing
-      if(cachedDeal&&freshDeal){deal=Object.assign({},cachedDeal,{coverPhoto:freshDeal.coverPhoto||cachedDeal.coverPhoto,photos:freshDeal.photos||cachedDeal.photos});}
-      else{deal=freshDeal||cachedDeal;}
+      // Always prefer fresh Notion data — fields like description, terms,
+      // and price update in real time when operators edit the deal in
+      // Notion. Fall back to the cached sessionStorage copy only when the
+      // Notion fetch turned up nothing (e.g. legacy share link). The
+      // previous merge layered cached fields on top of fresh ones, which
+      // meant edits to anything other than coverPhoto/photos never showed.
+      deal=freshDeal||cachedDeal;
       if(deal && !id)id=deal.id;
       console.log('Loaded '+allDeals.length+' deals from Notion');
     }catch(notionErr){
