@@ -815,6 +815,42 @@ function renderDeal(d,allDeals){
     if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
   }
 
+  // Solar section — solar lien / loan / lease shown as an additional loan.
+  // Notion "Solar" is a free-form text field. Common values: "", "No",
+  // "Yes — paid off", "Yes — leased $120/mo", "$15,000 balance @ 4.99%
+  // for 20 yrs, $85/mo", etc. Skip if empty / indicates no solar or
+  // paid off (nothing to assume for the buyer).
+  if(d.solar){
+    var solarRaw=String(d.solar).trim();
+    if(solarRaw && !/^(no|none|n\/a|0|false)\b/i.test(solarRaw) && !/paid\s*off/i.test(solarRaw)){
+      // Monthly payment: "$120/mo", "$120 per month", "120/month"
+      var solarPmt=solarRaw.match(/\$?\s*([\d,]+(?:\.\d+)?)\s*(?:\/\s*mo\b|\s+per\s+month\b|\/\s*month\b)/i);
+      // Rate (%)
+      var solarRate=solarRaw.match(/(\d+(?:\.\d+)?)\s*%/);
+      // Term ("20 yrs", "15 years")
+      var solarTerm=solarRaw.match(/(\d+)\s*(?:yrs?|years?)\b/i);
+      // Balance: first $ amount that isn't the monthly payment
+      var solarRemainder=solarPmt?solarRaw.replace(solarPmt[0],' '):solarRaw;
+      var solarBal=solarRemainder.match(/\$\s*([\d,]+(?:\.\d+)?)\s*(k)?/i);
+      // Lease vs. financed — labels show context to the buyer
+      var solarKind=/leas(e|ed|ing)/i.test(solarRaw)?'Lease':(/financ(e|ed|ing)|lien|loan/i.test(solarRaw)?'Loan':'');
+      var solarHead=solarKind?'Solar '+solarKind:'Solar';
+      var solarParsed=!!(solarPmt||solarBal||solarRate||solarTerm);
+      if(!solarParsed){
+        termRows.push({l:solarHead,v:solarRaw});
+      } else {
+        if(solarBal){
+          var solarBalNum=parseFloat(solarBal[1].replace(/,/g,''));
+          if(solarBal[2]) solarBalNum*=1000;
+          termRows.push({l:solarHead+' Balance',v:fc(solarBalNum)});
+        }
+        if(solarPmt) termRows.push({l:solarHead+' Payment',v:'$'+parseFloat(solarPmt[1].replace(/,/g,'')).toLocaleString()+'/mo'});
+        if(solarRate) termRows.push({l:solarHead+' Rate',v:solarRate[1]+'%'});
+        if(solarTerm) termRows.push({l:solarHead+' Term',v:solarTerm[1]+' yrs'});
+      }
+    }
+  }
+
   // Pad to even number for 2-column grid
   if(termRows.length%2!==0) termRows.push({l:'',v:''});
 
