@@ -143,7 +143,10 @@ exports.handler = async function(event) {
   var headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Cache-Control': 'public, max-age=60'
+    // Short cache + stale-while-revalidate so operator edits in Notion
+    // surface on the live deal pages within ~10s without hammering the
+    // Notion API on every pageview.
+    'Cache-Control': 'public, max-age=10, stale-while-revalidate=30'
   };
 
   if (event.httpMethod === 'OPTIONS') {
