@@ -70,7 +70,7 @@ exports.handler = async function(event) {
       email: body.email || undefined,
       phone: body.phone || undefined,
       source: body.source || 'TFS Buy Box',
-      tags: body.tags || ['tfs buyer', 'buy box complete', 'buyer-signup']
+      tags: body.tags || ['tfs buyer', 'buy box complete', 'buyer-signup', 'opt in']
     });
 
     var contactId = null;
@@ -131,7 +131,7 @@ exports.handler = async function(event) {
     console.log('[buy-box-save] Custom fields updated: ' + cfRes.status);
 
     // 3. Add tags
-    await addTags(ghlKey, contactId, body.tags || ['tfs buyer', 'buy box complete', 'buyer-signup']);
+    await addTags(ghlKey, contactId, body.tags || ['tfs buyer', 'buy box complete', 'buyer-signup', 'opt in']);
 
     // 4. Post buy box summary as note
     var noteLines = ['=== BUY BOX SAVED ==='];
