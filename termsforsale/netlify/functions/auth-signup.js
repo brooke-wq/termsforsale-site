@@ -188,7 +188,7 @@ exports.handler = async (event) => {
           type: 'Email', contactId,
           subject: 'Welcome to Terms For Sale, ' + firstName + '!',
           html: welcomeHtml,
-          emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+          emailFrom: 'Terms For Sale <info@termsforsale.com>'
         }, headers).then(function(r) { emailStatus = r.ok ? 'sent' : 'failed:' + r.status; return r; })
         .catch(function(e) { emailStatus = 'error:' + e.message; })
       );

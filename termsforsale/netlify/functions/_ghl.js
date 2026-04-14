@@ -20,6 +20,31 @@ const API_VERSION = '2021-07-28';
 
 const isTest = () => String(process.env.TEST_MODE || '').toLowerCase() === 'true';
 
+// ─── Campaign sender identity (REQUIRED for all outbound) ───────
+// Per company policy, EVERY outbound SMS/email — campaigns and
+// transactional alike — must originate from the company phone +
+// inbox so replies route correctly and recipients see a consistent
+// brand. Override via env vars only if you know what you're doing.
+const CAMPAIGN_FROM_PHONE = process.env.CAMPAIGN_FROM_PHONE || '+14806373117';
+const CAMPAIGN_FROM_EMAIL = process.env.CAMPAIGN_FROM_EMAIL || 'Terms For Sale <info@termsforsale.com>';
+
+// Required opt-in tag every buyer must have BEFORE we send any
+// campaign SMS/email. Set on the contact when they actively opt in
+// (signup, buy box, VIP) — never inferred. Case-insensitive match.
+const OPT_IN_TAG = 'opt in';
+
+// Returns true if the contact has the "opt in" tag (case-insensitive,
+// trimmed). Accepts either a contact object or a raw tags array.
+// Use this BEFORE sending any campaign SMS/email to a buyer.
+function hasOptInTag(contactOrTags) {
+  var tags = Array.isArray(contactOrTags)
+    ? contactOrTags
+    : (contactOrTags && contactOrTags.tags) || [];
+  return tags.some(function (t) {
+    return String(t || '').trim().toLowerCase() === OPT_IN_TAG;
+  });
+}
+
 // ─── Low-level HTTP helpers ─────────────────────────────────────
 
 function ghlHeaders(apiKey) {
@@ -171,6 +196,7 @@ async function updateCustomFields(apiKey, contactId, fields) {
 
 // Send SMS to a phone number via GHL conversations API.
 // Looks up the contact by phone first; falls back to sending by phone number directly.
+// Always sets fromNumber to CAMPAIGN_FROM_PHONE so replies route to the company line.
 async function sendSMS(apiKey, locationId, toPhone, message) {
   var phone = (toPhone || '').replace(/\s+/g, '');
 
@@ -189,18 +215,20 @@ async function sendSMS(apiKey, locationId, toPhone, message) {
   return ghlRequest(apiKey, 'POST', '/conversations/messages', {
     type: 'SMS',
     contactId: contactId,
-    message: message
+    message: message,
+    fromNumber: CAMPAIGN_FROM_PHONE
   });
 }
 
-// Send Email via GHL conversations API
+// Send Email via GHL conversations API.
+// Always sets emailFrom to CAMPAIGN_FROM_EMAIL so replies route to the company inbox.
 async function sendEmail(apiKey, contactId, subject, htmlBody) {
   return ghlRequest(apiKey, 'POST', '/conversations/messages', {
     type: 'Email',
     contactId: contactId,
     subject: subject,
     html: htmlBody,
-    emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+    emailFrom: CAMPAIGN_FROM_EMAIL
   });
 }
 
@@ -283,6 +311,7 @@ async function sendSmsToBrooke(message) {
       locationId: process.env.GHL_LOCATION_ID,
       contactId: process.env.BROOKE_CONTACT_ID,
       message,
+      fromNumber: CAMPAIGN_FROM_PHONE,
     }),
   });
 }
@@ -297,6 +326,7 @@ async function sendEmailToContact({ contactId, subject, html }) {
       contactId,
       subject,
       html,
+      emailFrom: CAMPAIGN_FROM_EMAIL,
     }),
   });
 }
@@ -368,6 +398,11 @@ async function sendTokenizedDataRoomEmail({ contactId, contactName, dealCode, to
 // ─── Exports ─────────────────────────────────────────────────────
 
 module.exports = {
+  // Campaign sender identity (April 14 — info@termsforsale.com / 480-637-3117)
+  CAMPAIGN_FROM_PHONE,
+  CAMPAIGN_FROM_EMAIL,
+  OPT_IN_TAG,
+  hasOptInTag,
   // Legacy exports (restored April 9 after April 7 regression)
   cfMap,
   CF_IDS,

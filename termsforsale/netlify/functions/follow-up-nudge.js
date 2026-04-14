@@ -76,6 +76,11 @@ exports.handler = async function(event) {
       try {
         var tags = (contact.tags || []).map(function(t) { return t.toLowerCase ? t.toLowerCase() : t; });
 
+        // REQUIRED: skip any contact without the "opt in" tag (case-insensitive).
+        // Campaign sends require explicit opt-in regardless of lead temperature.
+        // Stale tagging (Path A below) is data-only and still runs.
+        var hasOptIn = tags.indexOf('opt in') !== -1;
+
         // --- Path A: Already sent follow-up, check for stale ---
         if (tags.indexOf('follow-up-sent') !== -1) {
           // Check if already stale-tagged
@@ -115,6 +120,12 @@ exports.handler = async function(event) {
         var phone = contact.phone;
         if (!phone) {
           console.log('[follow-up-nudge] skipping ' + contact.id + ' — no phone');
+          continue;
+        }
+
+        // Gate the send on the "opt in" tag. Computed at the top of the loop.
+        if (!hasOptIn) {
+          console.log('[follow-up-nudge] skipping ' + contact.id + ' — no opt in tag');
           continue;
         }
 
