@@ -87,7 +87,7 @@ exports.handler = async (event) => {
       email,
       phone,
       source: source || 'TFS Website - Signup',
-      tags: ['TFS Buyer', 'Website Signup', 'buyer-signup'],
+      tags: ['TFS Buyer', 'Website Signup', 'buyer-signup', 'opt in'],
       customFields: [],
     };
 
@@ -145,7 +145,7 @@ exports.handler = async (event) => {
           source: source || 'TFS Website - Signup',
           pipeline_name: 'Buyer Inquiries',
           pipeline_stage: 'New Lead',
-          tags: ['TFS Buyer', 'Website Signup'],
+          tags: ['TFS Buyer', 'Website Signup', 'opt in'],
         }),
       });
     } catch (e) {

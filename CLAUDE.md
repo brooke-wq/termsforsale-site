@@ -452,6 +452,32 @@ Locked down two compliance requirements that span every outbound SMS/email path:
   - Run a one-time backfill to apply `opt in` to existing buyers who have a documented consent record (e.g. signed up via the website with the consent checkbox). Don't blanket-apply — that defeats the point of the gate.
 - Add the explicit consent checkbox to all signup forms if it isn't already there ("I agree to receive SMS and email about deals matching my buy box. Reply STOP to opt out."). Without that, applying `opt in` is not legally defensible.
 
+### Same-session follow-up — auto-tag signups + backfill (April 14 2026)
+
+Per Brooke: every Terms For Sale website signup IS the consent action, so all three signup paths now auto-apply the `opt in` tag and a one-shot backfill applies it retroactively to every existing TFS website-signup buyer.
+
+**Files updated:**
+
+- **`termsforsale/netlify/functions/auth-signup.js`** — both the contact-create tag list (line 90) and the downstream webhook tag list (line 148) now include `'opt in'`.
+- **`termsforsale/netlify/functions/vip-buyer-submit.js`** — both the upsert tag list (line 41) and the explicit `addTags()` follow-up (line 59) now include `'opt in'`.
+- **`termsforsale/netlify/functions/buy-box-save.js`** — both the upsert default tag list (line 73) and the `addTags()` reapplication (line 134) now include `'opt in'`.
+- **`scripts/backfill-buyer-opt-in.js`** (new) — paginates GHL by each of the website-signup tags (`buyer-signup`, `tfs buyer`, `TFS Buyer`, `Website Signup`, `VIP Buyer List`, `buy box complete`, `use:buyer`), dedups by contact id, and POSTs `tags: ['opt in']` to `/contacts/{id}/tags` on every contact missing the case-insensitive opt-in tag. Skips contacts already opted in. Supports `DRY_RUN=1` and `MAX_CONTACTS=N`. Modeled after `backfill-contact-role.js`.
+
+**Deliberately NOT auto-tagged:**
+- `buyer-import.js` — imports buyers from external sources (InvestorLift, InvestorBase). Those contacts have no consent record with us; the tag is left off so they stay silenced until manually opted in per source.
+- `commercial-buyer-submit.js` — commercial-lane buyers (the `Commercial / Multifamily` pipeline). Different lane entirely; opt-in is enforced on the residential buyer-alert pipeline only.
+
+**Run the backfill on the Droplet:**
+
+```
+cd /root/termsforsale-site
+git pull origin claude/campaign-sender-requirements-pd0jc
+DRY_RUN=1 node scripts/backfill-buyer-opt-in.js    # preview
+node scripts/backfill-buyer-opt-in.js              # apply
+```
+
+The backfill is idempotent — re-running it skips anyone already tagged.
+
 ### Env vars (no NEW ones required)
 
 - Optional overrides if needed: `CAMPAIGN_FROM_PHONE`, `CAMPAIGN_FROM_EMAIL`. Defaults are baked in.
