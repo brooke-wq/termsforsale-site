@@ -348,6 +348,37 @@ Exercised 16 realistic Notion values against the parser:
   marketing-copy changes needed since alerts point buyers to the
   deal page for details.
 
+### Follow-up tightening (same day)
+
+After Brooke saw a live deal where Solar Balance + Solar Rate were
+sandwiched between SubTo's `Loan Maturity` and pad-cell rows in the
+same grid (visually blending into the existing-loan section), made
+two adjustments to the same branch:
+
+- **Visual separation** — solar no longer pushes into `termRows`.
+  Instead it builds its own `solarRows` array and renders as a
+  separate `.terms-grid` block below the main terms table, with a
+  small uppercase heading row (e.g. "SOLAR LIEN" / "SOLAR LEASE")
+  and a sun icon. The main loan grid stays clean and the solar
+  block is unmistakably its own section. Heading text uses
+  `solarKind` ("Lien" for financed/loan/lien text, "Lease" for
+  leased text, plain "Solar" otherwise — note: changed "Loan" to
+  "Lien" since solar liens are the more common buyer concern).
+- **Maturity + monthly payment parsing** — added two new field
+  parsers so any solar field that already has those values shows
+  them on the deal page:
+  - **Maturity date** — matches `MM/DD/YYYY`, `MM-DD-YYYY`,
+    `MM/YYYY`, `MM-YYYY`. Also matches keyword-prefixed forms
+    `matures? <date>`, `maturity <date>`, `until <date>`,
+    `thru <date>`, `through <date>`. Same date format as the
+    existing SubTo `Loan Maturity` row so the two lines look
+    consistent on the page.
+  - **Payment fallback** — added `payment $X` / `pmt $X` /
+    `monthly $X` keyword-prefixed match in addition to the
+    existing `$X/mo` / `$X per month` / `$X/month` patterns. So
+    a Notion value like `"$47,161.88 at 3.49%, payment $215,
+    matures 4-2042"` now renders all four fields correctly.
+
 ### Known caveats
 
 - Parser is regex-based on free-form text. If Brooke's operators
