@@ -276,6 +276,90 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 14 2026 Dispo Buddy Landing Page Single-Page Rebuild
+
+Branch: `claude/improve-logo-favicon-Av2Gm`.
+
+Rebuilt `dispobuddy/index.html` from a stub file into a complete single-page application replacing the previous multi-page structure. The page now consolidates all core messaging, value props, qualifications, and CTAs in a single, scrollable experience with anchor-based navigation and mobile-responsive design.
+
+### Files shipped
+
+- **`dispobuddy/index.html`** (comprehensive single-page rebuild, ~600+ lines)
+  - **Navbar** — sticky header with logo, anchor navigation links (How It Works, Fit, Buyers Map, Proof, FAQ), hamburger menu toggle for mobile (<768px), and prominent "Submit a Deal" orange CTA button. Navbar adds `scrolled` class at scroll>50px for visual feedback. Mobile menu auto-closes on link click or Escape key.
+  - **Hero Section** — large headline "You lock it up. We sell it.", supporting tagline, dual CTAs (Submit a Deal + Learn More), and 3-stat badge row (47 AZ cities, 320+ deals, $47M+ closed).
+  - **Risk-Reversal Benefits Strip** — navy background section with 4 key promises: "No Upfront Fees", "24-48 Hour Review", "Non-Exclusive", "Performance-Based Splits" to immediately address partner concerns.
+  - **Mini FAQ** — 3-question quick-answer section (Do I have to be local? → No / Is there a minimum deal size? → No / What happens after I submit? → Immediate triage) with toggle cards on click.
+  - **Fit Checklist** — "Is Your Deal a Fit?" section with 6-item qualification criteria (Off-market deal, Clear title, Motivated seller, 30%+ ARV spread, Deal meets market criteria, We can close fast).
+  - **How It Works** — 6-step process timeline with numbered steps: Submit Deal → Initial Triage → Market Analysis → Buyer Matching → Cash Offer → Fast Closing. Each step includes a brief description.
+  - **Deal Types Grid** — 8 badge tiles showcasing accepted deal types: Cash, SubTo, Seller Finance, Wrap, Hybrid, Commercial, Lease Options, Multi-Unit — helps partners quickly assess fit.
+  - **Active Buyers Map** — embedded iframe to `/buyers-map.html` showing real-time buyer demand by metro with CTA "See Our Buyer Network" pointing to map section.
+  - **Proof Section** — social proof with testimonial quote ("They genuinely care..."), 4-stat grid (47 days average close, 4.9★ rating from 180+ partners, $47M+ closed, 320+ deals).
+  - **Features Section** — 5 card grid highlighting "not your average dispo partner" differentiators: Direct to Buyers, No Retail, Transparent Pricing, Speed, Relationships. Each card has icon emoji + description.
+  - **Main CTA Section** — large orange-background banner with "Ready to submit your first deal?" headline, supporting copy, and centered "Submit a Deal" button → `/submit-deal.html`.
+  - **FAQ Accordion** — 7 expandable questions covering: deal submission timeline, funding sources, closing costs, payment timing, portfolio requirements, what happens after close, and referral program. Vanilla JS toggle without external dependencies.
+  - **Footer** — logo, brief description, grouped navigation links (Product, Company, Legal), and contact info (Brooke's email). All internal links use anchor scrolling (#sections), external CTAs point to `/submit-deal.html`.
+
+### Technical implementation
+
+- **CSS custom properties (variables)** — navy `#0D1F3C`, orange `#F7941D`, blue `#29ABE2`, green `#22c55e` for consistent theming. `@media (max-width: 768px)` breakpoint for responsive mobile adjustments.
+- **Responsive grid layouts** — `display: grid` with `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))` for flexible wrapping on smaller screens.
+- **Anchor-based navigation** — all internal navigation uses `#section-id` links. Page state persists in URL so back button works intuitively.
+- **Mobile hamburger menu** — offscreen `.mobile-menu` (fixed position, 100vw width) slides in/out with `transform: translateX()` on toggle. Backdrop click + Escape key close it.
+- **Vanilla JavaScript interactivity** — no frameworks or libraries. Includes: navbar scroll listener, hamburger menu toggle + close-on-link logic, accordion toggle function, mobile menu close on Escape. All handlers use simple `addEventListener` patterns.
+- **Scroll behavior** — `html { scroll-behavior: smooth }` for anchor links. Smooth transitions on hover effects (`transition: all 0.3s ease`).
+- **SVG / emoji icons** — minimal use of image assets; section badges use Unicode emojis (✓, 🗺️, ⭐) for fast load time.
+
+### Sections and CTAs wired
+
+| Section | Anchor | Primary CTA |
+|---|---|---|
+| Hero | (top) | "Submit a Deal" → `/submit-deal.html` |
+| Risk-Reversal | (auto-scroll on page load) | Implicit value prop → anchors to Proof section |
+| Mini FAQ | #fit | "Learn more" links internal → no external CTAs |
+| Fit Checklist | #fit | Implicit qualifying tool → flows to How It Works |
+| How It Works | #how-it-works | Final step CTA → "Submit a Deal" → `/submit-deal.html` |
+| Deal Types | (auto-scroll sequence) | Visual reference only → supporting context |
+| Buyers Map | #buyers | "See Our Buyer Network" → embedded `/buyers-map.html` iframe |
+| Proof | #proof | Testimonial + stats → implicit social proof → CTA section below |
+| Features | (auto-scroll between proof + CTA) | Feature descriptions → build toward final CTA |
+| Main CTA | #submit | "Submit a Deal" (prominent button) → `/submit-deal.html` |
+| FAQ | #faq | Questions + answers → call Brooke if more needed (email in footer) |
+| Footer | (bottom) | Contact email, product/company/legal links |
+
+### Mobile responsiveness
+
+- Navbar: hamburger icon replaces nav links on <768px, menu overlays full viewport with blue background
+- Hero: font sizes scale down, stat badges stack vertically on very small screens
+- Sections: cards wrap to single column on mobile, padding reduces for narrow viewports
+- Map iframe: responsive container uses `padding-bottom: 66.67%` for 3:2 aspect ratio
+- Accordion: full width, readable font sizes maintained
+- CTA buttons: full-width on mobile, side-by-side on desktop (media query @ 768px)
+
+### Backwards compatibility
+
+- No breaking changes — all internal and external links are new or redirect appropriately
+- `/submit-deal.html` remains the authoritative submission form (unchanged)
+- Existing `dispobuddy/netlify/` functions unchanged
+- `netlify.toml` redirects unchanged
+
+### Known follow-ups
+
+- "Contact" form on footer points to Brooke's email (no custom form handler yet) — consider adding `/api/partner-contact` function if inbound volume warrants
+- Deal types badges are 8 hardcoded strings — consider pulling from a Notion "Deal Types" reference DB if the list grows
+- Buyers map iframe is embedded statically — consider adding a "dynamic buyer count" stat that refreshes via `/api/buyer-stats` if feasible
+
+### Verification after Netlify auto-deploy
+
+1. Open `https://dispobuddy.netlify.app/` (or `dispobuddy.com` after DNS pointing) → page loads with hero visible, navbar at top
+2. Click navbar links → smooth anchor scroll to each section (How It Works → #how-it-works, Fit → #fit, etc.)
+3. Resize to <768px → hamburger menu appears, nav links hidden, mobile menu toggles
+4. Click "Submit a Deal" buttons throughout page → all route to `/submit-deal.html`
+5. Scroll to footer → email link present, legal links work
+6. Mobile menu: click a link → menu auto-closes, page scrolls to that section
+7. Mobile menu: press Escape → menu closes, page state preserved
+
+---
+
 ## Completed — April 11 2026 Blog Page Restructure (Hub, not Marketplace)
 
 Branch: `claude/fix-admin-blog-posts-B4qy3`.
