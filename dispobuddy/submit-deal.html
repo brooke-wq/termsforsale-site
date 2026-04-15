@@ -1691,6 +1691,13 @@ img{max-width:100%;display:block}
     if (accLabel) { selectRadio(accLabel, 'propertyAccessGroup', 'propertyAccess'); }
     document.getElementById('photoLink').value = 'https://drive.google.com/test-photos';
     document.getElementById('docsLink').value = 'https://drive.google.com/test-docs';
+    // Property details — added so the Beds/Baths/Sqft/Year Built/Property Type fix can be verified
+    document.getElementById('propertyType').value = 'Single Family';
+    document.getElementById('propBeds').value = '3';
+    document.getElementById('propBaths').value = '2';
+    document.getElementById('propSqft').value = '1,450';
+    document.getElementById('propYearBuilt').value = '1985';
+    document.getElementById('propLotSize').value = '6,500 sqft';
     // Deal type = SubTo
     var dealCard = document.querySelector('.deal-card[data-val="Subto"]');
     if (dealCard) selectDealType(dealCard);
@@ -1698,10 +1705,15 @@ img{max-width:100%;display:block}
     document.getElementById('desiredAskingPrice').value = '175000';
     document.getElementById('arvEstimate').value = '220000';
     document.getElementById('buyerEntryFee').value = '20000';
+    document.getElementById('contractedEntryFee').value = '15000';
+    document.getElementById('estTaxesInsurance').value = '250';
     document.getElementById('subtoBalance').value = '140000';
     document.getElementById('subtoRate').value = '4.5';
     document.getElementById('subtoPayment').value = '1200';
+    document.getElementById('subtoMaturity').value = 'Jan 2052';
+    document.getElementById('subtoBalloon').value = '0';
     document.getElementById('importantDetails').value = 'TEST SUBMISSION — ignore';
+    document.getElementById('additionalNotes').value = 'Internal note: this is a test submission';
     document.getElementById('consentCheck').checked = true;
     // Jump to step 4
     currentStep = 4;

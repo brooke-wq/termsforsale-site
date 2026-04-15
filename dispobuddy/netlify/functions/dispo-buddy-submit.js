@@ -675,59 +675,82 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
     `First Deal: ${d.is_this_your_first_deal_with_dispo_buddy || 'N/A'}`,
   ];
   if (d.important_details) detailLines.push(`Notes: ${d.important_details}`);
-  text('Details', detailLines.join('\n'));
+  if (d.additional_notes) detailLines.push(`Internal Notes: ${d.additional_notes}`);
+  text('Details ', detailLines.join('\n'));  // Note: trailing space matches actual Notion property name
 
   // Create page — try full payload first, then minimal if it fails
-  const res = await fetch('https://api.notion.com/v1/pages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Notion-Version': '2022-06-28',
-    },
-    body: JSON.stringify({
-      parent: { database_id: dbId },
-      properties: props,
-    }),
-  });
+  // Smart-retry loop: try the full payload, parse Notion's error to identify
+  // which property names are bad, drop them, retry. Up to 5 attempts.
+  // This means a single bad property won't sink the whole page write — every
+  // other field still makes it into Notion.
+  let currentProps = { ...props };
+  const notionHeaders = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'Notion-Version': '2022-06-28',
+  };
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    console.error('Notion full create failed:', JSON.stringify(data).substring(0, 1000));
-
-    // Retry with minimal safe fields only (title + text fields are safest)
-    const safeProps = {};
-    if (props['Street Address']) safeProps['Street Address'] = props['Street Address'];
-    if (d.property_city) safeProps['City'] = { rich_text: [{ text: { content: d.property_city } }] };
-    if (d.property_state) safeProps['State'] = { rich_text: [{ text: { content: d.property_state } }] };
-    if (d.deal_type) safeProps['Deal Type'] = { select: { name: dealTypeMap[d.deal_type] || d.deal_type } };
-    if (d.desired_asking_price) safeProps['Asking Price'] = { number: parseFloat(d.desired_asking_price) };
-    if (d.jv_partner_name) safeProps['JV Partner'] = { rich_text: [{ text: { content: `${d.jv_partner_name} | ${d.jv_phone_number || ''}` } }] };
-
-    console.log('Retrying Notion with minimal fields:', Object.keys(safeProps).join(', '));
-    const retry = await fetch('https://api.notion.com/v1/pages', {
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const res = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Notion-Version': '2022-06-28',
-      },
-      body: JSON.stringify({
-        parent: { database_id: dbId },
-        properties: safeProps,
-      }),
+      headers: notionHeaders,
+      body: JSON.stringify({ parent: { database_id: dbId }, properties: currentProps }),
     });
-    const retryData = await retry.json();
-    if (!retry.ok) {
-      console.error('Notion minimal create also failed:', JSON.stringify(retryData).substring(0, 500));
-    } else {
-      console.log('Notion page created (minimal):', retryData.id);
+    const data = await res.json();
+
+    if (res.ok) {
+      if (attempt === 1) {
+        console.log('Notion page created (full):', data.id);
+      } else {
+        console.log(`Notion page created on attempt ${attempt} (${Object.keys(currentProps).length} props):`, data.id);
+      }
+      return data;
     }
-    return retryData;
+
+    const message = data.message || '';
+    console.warn(`Notion attempt ${attempt} failed:`, message.substring(0, 500));
+
+    // Parse property names from the error message and drop them.
+    // Notion errors look like: "Foo is not a property that exists. Bar is expected to be number."
+    const removed = [];
+    for (const propName of Object.keys(currentProps)) {
+      if (message.includes(propName)) {
+        delete currentProps[propName];
+        removed.push(propName);
+      }
+    }
+
+    if (removed.length === 0) {
+      console.error('No parseable property names in Notion error — giving up smart-retry');
+      break;
+    }
+    console.warn(`Removed ${removed.length} props [${removed.join(', ')}], retrying with ${Object.keys(currentProps).length}`);
   }
 
-  return data;
+  // Final fallback: minimal safe set so a page still gets created
+  const safeProps = {};
+  if (props['Street Address']) safeProps['Street Address'] = props['Street Address'];
+  if (d.property_city) safeProps['City'] = { rich_text: [{ text: { content: d.property_city } }] };
+  if (d.property_state) safeProps['State'] = { rich_text: [{ text: { content: d.property_state } }] };
+  if (d.deal_type) safeProps['Deal Type'] = { select: { name: dealTypeMap[d.deal_type] || d.deal_type } };
+  if (d.desired_asking_price) safeProps['Asking Price'] = { number: parseFloat(d.desired_asking_price) };
+  if (d.jv_partner_name) safeProps['JV Partner'] = { rich_text: [{ text: { content: `${d.jv_partner_name} | ${d.jv_phone_number || ''}` } }] };
+  // Preserve Deal ID even in the fallback so the auto-generated PHX-001 sticks
+  if (props['Deal ID']) safeProps['Deal ID'] = props['Deal ID'];
+
+  console.log('Falling back to minimal-fields create:', Object.keys(safeProps).join(', '));
+  const finalRes = await fetch('https://api.notion.com/v1/pages', {
+    method: 'POST',
+    headers: notionHeaders,
+    body: JSON.stringify({ parent: { database_id: dbId }, properties: safeProps }),
+  });
+  const finalData = await finalRes.json();
+  if (!finalRes.ok) {
+    console.error('Notion minimal-fields create also failed:', JSON.stringify(finalData).substring(0, 500));
+  } else {
+    console.log('Notion page created (minimal):', finalData.id);
+  }
+  return finalData;
 }
 
 // ─────────────────────────────────────────────────────────────
