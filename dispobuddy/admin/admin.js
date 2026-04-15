@@ -30,9 +30,10 @@
       {
         label: 'Operations',
         items: [
-          { key: 'deals',    href: '/admin/deals.html',    label: 'JV Deals',   icon: 'home' },
-          { key: 'partners', href: '/admin/partners.html', label: 'Partners',   icon: 'users' },
-          { key: 'messages', href: '/admin/messages.html', label: 'Messages',   icon: 'mailbox' }
+          { key: 'deals',        href: '/admin/deals.html',        label: 'JV Deals',     icon: 'home' },
+          { key: 'partners',     href: '/admin/partners.html',     label: 'Partners',     icon: 'users' },
+          { key: 'underwriting', href: '/admin/underwriting.html', label: 'Underwriting', icon: 'target' },
+          { key: 'messages',     href: '/admin/messages.html',     label: 'Messages',     icon: 'mailbox' }
         ]
       },
       {

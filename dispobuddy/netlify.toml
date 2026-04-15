@@ -94,6 +94,21 @@
   status = 200
 
 [[redirects]]
+  from = "/api/rentcast/property"
+  to = "/.netlify/functions/rentcast-property"
+  status = 200
+
+[[redirects]]
+  from = "/api/rentcast/rent"
+  to = "/.netlify/functions/rentcast-rent"
+  status = 200
+
+[[redirects]]
+  from = "/api/analysis/save"
+  to = "/.netlify/functions/analysis-save"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
