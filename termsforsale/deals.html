@@ -315,6 +315,10 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .deal-card-urgency-badge{font-size:10px;font-weight:700;background:rgba(247,148,29,.95);color:#fff;padding:3px 8px;border-radius:4px}
 .deal-badge-uc{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:5px;font-size:10px;font-weight:800;background:#F7941D;color:#fff;z-index:2}
 .deal-badge-sold{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:5px;font-size:10px;font-weight:800;background:rgba(100,116,139,.9);color:#fff;z-index:2}
+.deal-badge-pending{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:5px;font-size:10px;font-weight:800;background:#F59E0B;color:#fff;z-index:2;letter-spacing:.3px}
+.deal-badge-closed{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:5px;font-size:10px;font-weight:800;background:#10B981;color:#fff;z-index:2;letter-spacing:.3px}
+.deal-card.is-closed{opacity:.94}
+.deal-card.is-closed .deal-card-save{display:none}
 .deal-card-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
 .deal-card-price-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2px}
 .deal-card-price{font-size:24px;font-weight:900;color:#0D1F3C;line-height:1}
@@ -327,6 +331,26 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .deal-card-specs{display:flex;align-items:center;gap:16px;font-size:12px;color:#718096}
 .deal-card-spec{display:flex;align-items:center;gap:5px}
 .deal-card-spec strong{color:#0D1F3C;font-weight:700;font-size:13px}
+/* ── RECENTLY CLOSED (social proof track record) ───── */
+.closed-section{background:#fff;padding:64px 55px;border-top:1px solid var(--border)}
+.closed-inner{max-width:1330px;margin:0 auto}
+.closed-eyebrow{font-size:13px;font-weight:700;color:#10B981;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+.closed-title{font-size:38px;font-weight:900;color:var(--navy);line-height:1.1;letter-spacing:-.3px;margin-bottom:8px}
+.closed-sub{font-size:15px;color:var(--text-mid);margin-bottom:28px;max-width:720px}
+.closed-stats{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:34px}
+.closed-stat{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:14px 22px;min-width:160px}
+.closed-stat-num{font-size:26px;font-weight:900;color:#059669;line-height:1}
+.closed-stat-lbl{font-size:11px;color:#047857;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
+.closed-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.closed-empty{text-align:center;padding:28px 20px;color:var(--text-light);font-size:13px}
+@media (max-width:700px){
+  .closed-section{padding:48px 20px}
+  .closed-title{font-size:26px}
+  .closed-stats{gap:12px}
+  .closed-stat{min-width:130px;padding:12px 16px}
+  .closed-stat-num{font-size:20px}
+}
+
 /* ── TESTIMONIALS ───────────────────────── */
 .testi{background:var(--bg-section);padding:80px 55px}
 .testi-inner{max-width:1330px;margin:0 auto}
@@ -769,6 +793,26 @@ footer{background:var(--navy);padding:52px 55px 0}
 
 <!-- Map section removed — map is now integrated into split-screen homepage -->
 
+<!-- RECENTLY CLOSED (social proof / track record) -->
+<section class="closed-section" id="closed-section" style="display:none">
+  <div class="closed-inner">
+    <div class="closed-eyebrow">Recently Closed</div>
+    <div class="closed-title">Deals We've Already Closed On</div>
+    <p class="closed-sub">A snapshot of recent wins from our buyer network. These properties have funded and been handed off — shown here so new buyers can see our track record.</p>
+    <div class="closed-stats">
+      <div class="closed-stat">
+        <div class="closed-stat-num" id="closed-count">0</div>
+        <div class="closed-stat-lbl">Deals Closed</div>
+      </div>
+      <div class="closed-stat" id="closed-volume-wrap" style="display:none">
+        <div class="closed-stat-num" id="closed-volume">—</div>
+        <div class="closed-stat-lbl">Total Funded</div>
+      </div>
+    </div>
+    <div class="closed-grid" id="closed-grid"></div>
+  </div>
+</section>
+
 <!-- TESTIMONIALS -->
 <section class="testi">
   <div class="testi-inner">
@@ -1135,10 +1179,16 @@ function makeCard(d){
     photoHtml=`<div class="deal-card-photo-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
   }
 
-  // Status badge (Under Contract / Sold override the deal type badge)
+  // Status badge. Legacy: Under Contract / Sold. New (from Notion Deal Status):
+  //   "Assigned with EMD"  → orange PENDING badge (deal still visible, under EMD)
+  //   "Closed"             → green CLOSED badge (social-proof/track-record card)
+  //   "Assignment Sent"    → still shown as active (no override — shows deal type)
+  //   "Actively Marketing" → default (shows deal type)
   const dsLower = (d.dealStatus||'').toLowerCase().trim();
-  const isUC   = dsLower==='under contract';
-  const isSold = dsLower==='sold';
+  const isUC      = dsLower==='under contract';
+  const isSold    = dsLower==='sold';
+  const isPending = dsLower==='assigned with emd';
+  const isClosed  = dsLower==='closed';
 
   // Heart save button
   const isSaved = getSaved().indexOf(d.id)>-1;
@@ -1153,25 +1203,34 @@ function makeCard(d){
   // Entry vs asking
   const hasDiff = +d.entryFee && +d.entryFee !== +d.askingPrice;
 
-  return`<div class="deal-card" data-deal-id="${d.id}" onclick="clickDeal('${safeId}')" onmouseenter="highlightMarker('${safeId}')" onmouseleave="unhighlightMarker('${safeId}')">
+  // Status-aware "just listed" strip replacement
+  const statusStripHtml = isClosed
+    ? `<div class="deal-card-new" style="background:#D1FAE5;color:#047857">✓ Closed</div>`
+    : isPending
+      ? `<div class="deal-card-new" style="background:#FEF3C7;color:#92400E">⏳ Pending</div>`
+      : `<div class="deal-card-new">Just Listed</div>`;
+
+  return`<div class="deal-card${isClosed?' is-closed':''}" data-deal-id="${d.id}" data-deal-status="${d.dealStatus||''}" onclick="clickDeal('${safeId}')" onmouseenter="highlightMarker('${safeId}')" onmouseleave="unhighlightMarker('${safeId}')">
     <div class="deal-card-photo">
       ${photoHtml}
       ${isUC  ? `<div class="deal-badge-uc">🔒 Under Contract</div>`
               : isSold ? `<div class="deal-badge-sold">✓ Sold</div>`
+              : isClosed ? `<div class="deal-badge-closed">✓ Closed</div>`
+              : isPending ? `<div class="deal-badge-pending">⏳ Pending</div>`
               : `<div class="deal-card-type ${typeClass(d.dealType)}">${typeLabel(d.dealType)}</div>`}
-      ${dl!==null&&dl>0&&dl<=30&&!isUC&&!isSold?`<div style="position:absolute;bottom:8px;left:8px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;z-index:2;${dl<=7?'background:#FFF5F5;color:#E53E3E':dl<=14?'background:#FFFAF0;color:#DD6B20':'background:#EBF8FF;color:#1a8bbf'}">${dl===1?'Closes tomorrow':'Closes in '+dl+'d'}</div>`:''}
+      ${dl!==null&&dl>0&&dl<=30&&!isUC&&!isSold&&!isClosed&&!isPending?`<div style="position:absolute;bottom:8px;left:8px;padding:4px 10px;border-radius:50px;font-size:10px;font-weight:700;z-index:2;${dl<=7?'background:#FFF5F5;color:#E53E3E':dl<=14?'background:#FFFAF0;color:#DD6B20':'background:#EBF8FF;color:#1a8bbf'}">${dl===1?'Closes tomorrow':'Closes in '+dl+'d'}</div>`:''}
       ${(discount>=10||(dl!==null&&dl>0&&dl<=7)) ? `<div class="deal-card-discount">
         ${discount>=10 ? `<div class="deal-card-discount-pct">${discount}% below ARV</div>` : '<div></div>'}
-        ${dl!==null&&dl>0&&dl<=7&&!isUC&&!isSold ? `<div class="deal-card-urgency-badge">⏰ ${dl}d left</div>` : ''}
+        ${dl!==null&&dl>0&&dl<=7&&!isUC&&!isSold&&!isClosed&&!isPending ? `<div class="deal-card-urgency-badge">⏰ ${dl}d left</div>` : ''}
       </div>` : ''}
-      <div class="deal-card-save" onclick="toggleSave(event,'${safeId}',this)">
+      ${isClosed ? '' : `<div class="deal-card-save" onclick="toggleSave(event,'${safeId}',this)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="${saveFill}" stroke="${saveStroke}" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      </div>
+      </div>`}
     </div>
     <div class="deal-card-body">
       <div class="deal-card-price-row">
         <div class="deal-card-price">${money(entry)}</div>
-        <div class="deal-card-new">Just Listed</div>
+        ${statusStripHtml}
       </div>
       ${arv ? `<div class="deal-card-arv">(ARV — <strong>${money(arv)}</strong>)</div>` : hasDiff ? `<div class="deal-card-arv">Entry: <strong>${money(d.entryFee)}</strong></div>` : '<div style="margin-bottom:8px"></div>'}
       <div class="deal-card-loc">
@@ -1188,8 +1247,16 @@ function makeCard(d){
 }
 
 // ─── STATE ────────────────────────────────────────────────────
+// ALL_DEALS = deals visible in the main marketplace list + map
+//   (Actively Marketing + Assignment Sent + Assigned with EMD).
+// CLOSED_DEALS = deals that have closed — shown in the "Recently Closed"
+//   social-proof section below, never in the main list or map.
 let ALL_DEALS=[];
+let CLOSED_DEALS=[];
 let _tab='';
+
+function isClosedStatus(s){return(String(s||'').toLowerCase().trim())==='closed';}
+function isPendingStatus(s){return(String(s||'').toLowerCase().trim())==='assigned with emd';}
 
 function normType(t){
   if(!t)return'';
@@ -1531,6 +1598,35 @@ function updateNavAuth(user){
     </div>`;
 }
 
+// ─── RENDER RECENTLY CLOSED SECTION ──────────────────────────
+// Renders the social-proof track-record of deals we've closed on. Each card
+// reuses makeCard() so styling stays consistent, but gets marked with an
+// is-closed class (dims the card slightly and removes the Save heart).
+function renderClosedSection(){
+  const sec=document.getElementById('closed-section');
+  if(!sec)return;
+  if(!CLOSED_DEALS.length){sec.style.display='none';return;}
+  sec.style.display='';
+  const countEl=document.getElementById('closed-count');
+  if(countEl)countEl.textContent=CLOSED_DEALS.length;
+  // Total funded volume (only populated if Amount Funded is set in Notion)
+  var totalFunded=0;
+  CLOSED_DEALS.forEach(function(d){totalFunded+=(+d.amountFunded||0);});
+  const volEl=document.getElementById('closed-volume');
+  const volWrap=document.getElementById('closed-volume-wrap');
+  if(volEl){
+    if(totalFunded>0){volEl.textContent='$'+Math.round(totalFunded/1000).toLocaleString()+'K';if(volWrap)volWrap.style.display='';}
+    else if(volWrap){volWrap.style.display='none';}
+  }
+  const grid=document.getElementById('closed-grid');
+  if(!grid)return;
+  // Cap at 8 most recent on first paint — keeps the section tight.
+  const recent=CLOSED_DEALS.slice(0,8);
+  grid.innerHTML=recent.map(function(d){return makeCard(d);}).join('');
+  // Lazy-load Drive thumbnails for closed cards too
+  setTimeout(function(){loadCardThumbnails(recent);},100);
+}
+
 // ─── LOAD DEALS (Notion first, Google Sheets fallback) ───────
 async function loadDealsFromNotion(){
   const r=await fetch('/api/deals');
@@ -1552,8 +1648,18 @@ async function loadDealsFromSheet(){
 (async function(){
   const u=getUser();if(u)updateNavAuth(u);
   try{
-    ALL_DEALS=await loadDealsFromNotion();
-    console.log('Loaded '+ALL_DEALS.length+' deals from Notion');
+    var loaded=await loadDealsFromNotion();
+    // Split loaded deals into active+pending (main list) and closed (social-proof section).
+    ALL_DEALS=loaded.filter(function(d){return !isClosedStatus(d.dealStatus);});
+    CLOSED_DEALS=loaded.filter(function(d){return isClosedStatus(d.dealStatus);})
+      // Newest closed first — prefer dateFunded, fall back to lastEdited.
+      .sort(function(a,b){
+        var aKey=a.dateFunded||a.lastEdited||'';
+        var bKey=b.dateFunded||b.lastEdited||'';
+        return bKey.localeCompare(aKey);
+      });
+    console.log('Loaded '+ALL_DEALS.length+' active/pending deals and '+CLOSED_DEALS.length+' closed deals from Notion');
+    renderClosedSection();
     if(ALL_DEALS.length){
       updateStats();
       populateStates();
@@ -1701,9 +1807,11 @@ function makePopup(deal){
   var entry=deal.entryFee||deal.askingPrice;
   var dealUrl=DEAL_BASE+'/deal.html?id='+encodeURIComponent(deal.id);
   var loggedIn=!!getUser();
+  var dsLower=(deal.dealStatus||'').toLowerCase().trim();
+  var pendingChip=dsLower==='assigned with emd'?'<div style="display:inline-block;margin-left:6px;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800;background:#F59E0B;color:#fff;text-transform:uppercase;letter-spacing:.3px">Pending</div>':'';
   return'<div style="font-family:Poppins,sans-serif;min-width:200px;max-width:250px">'
     +'<div style="background:'+color+';padding:10px 14px 8px">'
-      +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+deal.dealType+'</div>'
+      +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+deal.dealType+pendingChip+'</div>'
       +'<div style="font-size:18px;font-weight:800;color:#fff;line-height:1">'+(entry?'$'+Number(entry).toLocaleString():'—')+'</div>'
     +'</div>'
     +'<div style="padding:12px 14px">'

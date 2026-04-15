@@ -521,10 +521,15 @@ function loadDeals(){
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
       var deals=data.deals||[];
-      ALL_DEALS=deals.map(function(d){
+      // Drop Closed deals from the live map — they belong in the social-proof
+      // "Recently Closed" section on /deals.html, not in the active marketplace map.
+      ALL_DEALS=deals.filter(function(d){
+        return (String(d.dealStatus||'').toLowerCase().trim())!=='closed';
+      }).map(function(d){
         return {
           id:d.id,
           dealType:d.dealType,
+          dealStatus:d.dealStatus||'',
           streetAddress:d.streetAddress||d.street_address||'',
           city:d.city||'',state:d.state||'',zip:d.zip||'',
           nearestMetro:d.nearestMetro||d.nearest_metro||(d.city+', '+d.state),

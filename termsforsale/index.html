@@ -1027,8 +1027,13 @@ async function loadDealsFromSheet(){
   const u=getUser();if(u)updateNavAuth(u);
   try{
     const deals=await loadDealsFromNotion();
-    console.log('Loaded '+deals.length+' deals from Notion');
-    if(deals.length) updateStats(deals.length);
+    // deals.js now returns active + pending + closed. Homepage stat card
+    // is only "active deals available" — exclude Closed from the count.
+    const activeCount=deals.filter(function(d){
+      return (String(d.dealStatus||'').toLowerCase().trim())!=='closed';
+    }).length;
+    console.log('Loaded '+deals.length+' deals from Notion ('+activeCount+' active/pending)');
+    if(activeCount) updateStats(activeCount);
   }catch(e){
     console.warn('Notion failed, trying sheets:', e.message);
     try{

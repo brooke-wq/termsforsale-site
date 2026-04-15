@@ -886,6 +886,30 @@ function renderDeal(d,allDeals){
   const descSafe=descText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const descHtml=descText?`<div class="deal-desc"><div class="deal-desc-label">About This Deal</div><div class="deal-desc-body">${descSafe}</div></div>`:'';
 
+  // STATUS BANNER — renders a top-of-page strip for deals that are no longer
+  // freely accepting offers. Actively Marketing + Assignment Sent show no
+  // banner (treated as "active"). Assigned with EMD shows an orange Pending
+  // banner (deal still visible but under EMD). Closed shows a green Closed
+  // banner with the funded date when available.
+  const dsRaw=(d.dealStatus||'').toLowerCase().trim();
+  const dsIsPending=dsRaw==='assigned with emd';
+  const dsIsClosed =dsRaw==='closed';
+  let statusBannerHtml='';
+  if(dsIsPending){
+    statusBannerHtml=`<div class="deal-status-banner pending" style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:22px">⏳</span>
+      <div><div style="font-size:14px;font-weight:800;color:#92400E">Pending — EMD Received</div>
+      <div style="font-size:12px;color:#78350F;margin-top:2px">This deal is under contract with earnest money down. We're leaving the page up so buyers can follow the track record. Backup offers aren't being accepted at this time.</div></div>
+    </div>`;
+  } else if(dsIsClosed){
+    const fundedLine=d.dateFunded?` on ${d.dateFunded}`:'';
+    statusBannerHtml=`<div class="deal-status-banner closed" style="background:#D1FAE5;border:1px solid #6EE7B7;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:22px">✓</span>
+      <div><div style="font-size:14px;font-weight:800;color:#065F46">Closed${fundedLine}</div>
+      <div style="font-size:12px;color:#065F46;margin-top:2px">This deal has funded and is kept here as part of our track record. Browse active deals to see what's currently available.</div></div>
+    </div>`;
+  }
+
   // RENTAL
   const rentHtml=d.rentFinal?`<div style="background:var(--blue-light);border-radius:var(--r);padding:16px;margin-top:0">
     <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Rental Analysis</div>
@@ -927,6 +951,8 @@ function renderDeal(d,allDeals){
   <div class="main">
     <div class="deal-main">
       <div class="photo-grid" id="photo-grid">${photoHtml}</div>
+
+      ${statusBannerHtml}
 
       <div class="deal-header">
         <div class="deal-price-row">
@@ -1088,14 +1114,20 @@ function renderDeal(d,allDeals){
     <div class="deal-sidebar" id="request-form">
       <div class="sidebar-card">
         <div class="sidebar-head">
-          <h3>Interested in This Deal?</h3>
-          <p>Take the next step — request info or submit an offer.</p>
+          <h3>${dsIsClosed?'Deal Closed':dsIsPending?'Under Contract / EMD':'Interested in This Deal?'}</h3>
+          <p>${dsIsClosed?'This deal has funded. Browse active deals below.':dsIsPending?'Earnest money is down. You can still ask a question — new offers aren\'t being taken.':'Take the next step — request info or submit an offer.'}</p>
         </div>
-        ${loggedIn?`
+        ${dsIsClosed?`
+        <div style="padding:18px 20px 20px;text-align:center">
+          <div style="font-size:40px;margin-bottom:8px">✓</div>
+          <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px">This property has already closed. It's kept on the site as part of our track record.</p>
+          <a href="/deals.html" class="btn btn-blue" style="width:100%;justify-content:center;text-decoration:none">See Active Deals →</a>
+        </div>
+        `:loggedIn?`
         <div style="padding:16px 20px 0">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
-            <button id="tab-inquiry" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('inquiry-section').style.display='block';document.getElementById('offer-section').style.display='none';this.style.background='var(--blue)';this.style.color='#fff';document.getElementById('tab-offer').style.background='var(--bg)';document.getElementById('tab-offer').style.color='var(--text-mid)'">Request Info</button>
-            <button id="tab-offer" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--bg);color:var(--text-mid);border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('offer-section').style.display='block';document.getElementById('inquiry-section').style.display='none';this.style.background='var(--navy)';this.style.color='#fff';document.getElementById('tab-inquiry').style.background='var(--bg)';document.getElementById('tab-inquiry').style.color='var(--text-mid)'">Submit Offer</button>
+          <div style="display:grid;grid-template-columns:${dsIsPending?'1fr':'1fr 1fr'};gap:8px;margin-bottom:20px">
+            <button id="tab-inquiry" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('inquiry-section').style.display='block';document.getElementById('offer-section').style.display='none';this.style.background='var(--blue)';this.style.color='#fff';var of=document.getElementById('tab-offer');if(of){of.style.background='var(--bg)';of.style.color='var(--text-mid)';}">Request Info</button>
+            ${dsIsPending?'':`<button id="tab-offer" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--bg);color:var(--text-mid);border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('offer-section').style.display='block';document.getElementById('inquiry-section').style.display='none';this.style.background='var(--navy)';this.style.color='#fff';document.getElementById('tab-inquiry').style.background='var(--bg)';document.getElementById('tab-inquiry').style.color='var(--text-mid)'">Submit Offer</button>`}
           </div>
         </div>
         <!-- INQUIRY FORM -->
@@ -1114,7 +1146,7 @@ function renderDeal(d,allDeals){
             </button>
           </div>
         </div>
-        <!-- OFFER FORM -->
+        ${dsIsPending?'':`<!-- OFFER FORM -->
         <div id="offer-section" style="display:none;padding:0 20px 20px">
           <div class="sidebar-form">
             <div class="sf-row">
@@ -1146,7 +1178,7 @@ function renderDeal(d,allDeals){
               Submit Offer
             </button>
           </div>
-        </div>
+        </div>`}
         `:`
         <div style="padding:16px 20px 20px">
           <p style="font-size:13px;color:var(--text-mid);text-align:center;margin-bottom:12px">Create a free account to request info or submit an offer.</p>
@@ -1154,7 +1186,7 @@ function renderDeal(d,allDeals){
           <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px;padding:10px" onclick="openAuth('login')">Already have an account? Log In</button>
         </div>
         `}
-        <div class="sf-note" style="padding:0 20px 16px;font-size:10px;color:var(--text-light)">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>
+        ${dsIsClosed?'':`<div class="sf-note" style="padding:0 20px 16px;font-size:10px;color:var(--text-light)">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>`}
         <div class="sidebar-contact">
           <div class="contact-row">
             <div class="contact-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>

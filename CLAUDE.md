@@ -302,6 +302,150 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 15 2026 Deal Status Display Lifecycle
+
+Branch: `claude/deal-status-display-Y0upg`.
+
+Brooke asked: widen what the public website shows so operators aren't
+forced to leave deals at "Actively Marketing" once the deal is under
+contract. Specifically:
+- **Assignment Sent** → keep showing as **Active** on the site.
+- **Assigned with EMD** → keep showing but mark as **Pending** so
+  buyers see the status change.
+- **Closed** → move into a **"Recently Closed"** social-proof section
+  so the track record is visible to new buyers.
+- **All other statuses** (Missing Information, Ready to Market, Not
+  Accepted, Lost, etc.) → continue to stay hidden.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/deals.js`** — filter widened from
+  `'Actively Marketing'` only to a `PUBLIC_STATUSES` list:
+  `['Actively Marketing', 'Assignment Sent', 'Assigned with EMD',
+   'Closed']`. Uses a Notion `or` filter with both `status` and
+  `select` shapes, falling back to client-side filtering if the
+  server-side shape is rejected. Also now surfaces three additional
+  Notion fields on every deal object: `dateFunded`, `dateAssigned`,
+  `amountFunded` — used by the closed-section stat cards and the
+  per-deal "Closed on <date>" banner.
+
+- **`termsforsale/deals.html`** — split loaded deals at init time
+  into `ALL_DEALS` (active + pending, main list + map) and
+  `CLOSED_DEALS` (sorted newest first, rendered into the new
+  "Recently Closed" section). `makeCard()` now reads `dealStatus`
+  and renders:
+  - **Pending badge** (orange `⏳ Pending`) on the photo top-left
+    for `Assigned with EMD` deals. Also swaps the "Just Listed"
+    price-row tag for a muted "⏳ Pending" chip.
+  - **Closed badge** (green `✓ Closed`) on the photo top-left for
+    `Closed` deals. Swaps "Just Listed" for a "✓ Closed" chip,
+    hides the Save heart, dims the card slightly (`is-closed`
+    class).
+  - COE countdown + urgency badges suppressed on pending/closed
+    cards so buyers aren't told to hurry on a deal that's already
+    under contract or funded.
+  - Map popup now renders a tiny inline `PENDING` chip next to the
+    deal type when `dealStatus === 'assigned with emd'` so the
+    status is visible from the map view too.
+  - New "Recently Closed" section renders between the map and the
+    testimonials block. Stat tiles for Deals Closed + Total Funded
+    (the Total Funded card auto-hides when no `Amount Funded`
+    values are populated in Notion, so partial data doesn't show
+    `$0K`). Grid caps at 8 most recent closed deals; each reuses
+    `makeCard()` for consistent styling.
+
+- **`termsforsale/deal.html`** — `renderDeal()` gained:
+  - Top-of-content status banner right under the photo grid.
+    Orange pending banner ("Pending — EMD Received") or green
+    closed banner ("Closed on <date>" when `dateFunded` is set).
+    Active/Assignment Sent deals show no banner (silent — the deal
+    just works).
+  - Sidebar body swaps for `Closed` deals: replaces the Request
+    Info / Submit Offer tabs with a centered "Deal Closed" card
+    that says the property has funded and links to `/deals.html`.
+    Consent/submit note also hidden.
+  - Sidebar for `Assigned with EMD` deals: hides the "Submit
+    Offer" tab entirely and expands Request Info to full width —
+    buyers can still ask a question, but new offers aren't being
+    taken. Header copy changes to "Under Contract / EMD".
+
+- **`termsforsale/map.html`** — standalone map filters out
+  `dealStatus === 'closed'` so the live map doesn't render
+  markers for funded deals. Pending deals still show (same color /
+  pin as active for now; could be dimmed later if needed).
+  `dealStatus` is now carried through the map's internal deal model
+  so future work can branch on it.
+
+- **`termsforsale/index.html`** — homepage "X active deals" stat now
+  excludes Closed from the count (the deals API returns them, but
+  the homepage banner is only meant for available inventory).
+
+- **`termsforsale/admin/deals.html`** — panel subtitle updated from
+  "Live from Notion — filter for 'Actively Marketing'" to reflect
+  the widened filter. Admins now see pipeline visibility across
+  all four public statuses in one list.
+
+### Deliberately NOT changed
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — still
+  queries Notion directly for `Deal Status = Actively Marketing` only.
+  We don't want new-deal SMS/email blasts firing on pending or
+  closed deals. Verified.
+- **`termsforsale/netlify/functions/sitemap.js`** — now includes
+  closed deals in the sitemap (intentional — closed listings are
+  real historical pages that add social-proof signal for Google).
+- **Existing `Under Contract` / `Sold` badge paths in `makeCard()`**
+  — kept intact. Those were legacy GHL opportunity statuses
+  (`dealStatus: 'under contract'`, `dealStatus: 'sold'`) not tied
+  to Notion. They still work exactly as before.
+- **`notify-buyers.js` dedup + tagging** — still uses `sent:[slug]`
+  on per-buyer blast. No impact from the filter widening.
+
+### Filter verification (local harness)
+
+Simulated Notion filter behavior against 9 status values:
+
+| Status | Result | Frontend bucket |
+|---|---|---|
+| Actively Marketing | SHOW | ALL_DEALS (active) |
+| Assignment Sent | SHOW | ALL_DEALS (active) |
+| Assigned with EMD | SHOW | ALL_DEALS (Pending badge) |
+| Closed | SHOW | CLOSED_DEALS |
+| Missing Information | HIDE | — |
+| Ready to Market | HIDE | — |
+| Not Accepted | HIDE | — |
+| Lost | HIDE | — |
+| (empty) | HIDE | — |
+
+Div/script tag balance checked on all 4 modified HTML files after
+edit — all balanced. `deals.js` loads cleanly as a Node module.
+
+### Known caveats / follow-ups
+
+- The Notion "Deal Status" property must include `Assignment Sent`,
+  `Assigned with EMD`, and `Closed` as select/status options. These
+  are already in the Notion schema (confirmed — `dispobuddy/deal-
+  detail.js` references them as stages in the Dispo Buddy JV
+  pipeline, and `paperclip-sop.html` documents the full lifecycle).
+  If those options ever get renamed in Notion, the matching strings
+  in `deals.js:PUBLIC_STATUSES` and the lowercase checks in
+  `deals.html` / `deal.html` must be updated to match.
+- Closed deals in the "Recently Closed" section are clickable —
+  they go to `/deal.html?id=...` which now renders the green
+  closed banner + "See Active Deals" sidebar CTA. Good for SEO and
+  track record, but means a legacy buyer with the old URL still
+  lands on a clean page instead of a 404.
+- Map markers for Pending deals use the same color as Active; only
+  a small chip in the popup indicates the status. Could be dimmed
+  or given a distinct badge if Brooke wants more visual separation
+  on the map later.
+- The "Total Funded" stat card on the closed section requires
+  `Amount Funded` to be populated on the Notion deal rows. If
+  that field is left blank across all closed deals, the tile
+  auto-hides (no $0K shown).
+
+---
+
 ## Completed — April 14 2026 Solar Loan Details on Deal Terms Table
 
 Branch: `claude/add-solar-property-details-atxRM`.
