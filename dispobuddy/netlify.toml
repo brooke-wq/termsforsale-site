@@ -69,6 +69,26 @@
   status = 200
 
 [[redirects]]
+  from = "/api/admin-auth"
+  to = "/.netlify/functions/admin-auth"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin-stats"
+  to = "/.netlify/functions/admin-stats"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin-deals"
+  to = "/.netlify/functions/admin-deals"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin-partners"
+  to = "/.netlify/functions/admin-partners"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200

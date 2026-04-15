@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — Dispo Buddy Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Operations</div>
+        <div class="topbar-h">Messages</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Partner Messages</div>
+            <div class="panel-sub">Deal-scoped conversations with JV partners</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="state">
+            <h3>Coming soon</h3>
+            <p>
+              This page will surface the <code>partner-messages</code> threads per deal so you can reply
+              inline without jumping into GHL. For now, partner messages land in the GHL contact's
+              conversation history and are visible on the partner dashboard.
+            </p>
+            <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+              <a href="https://app.gohighlevel.com/" target="_blank" rel="noopener" class="btn">Open GHL Conversations</a>
+              <a href="/admin/deals.html" class="btn secondary">View JV Deals</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('messages');
+AdminShell.requireAuth(function () {});
+</script>
+
+</body>
+</html>
