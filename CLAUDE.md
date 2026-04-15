@@ -13,6 +13,32 @@
 2. NEVER run notify-buyers, deal-follow-up, or any messaging function without confirming it won't send live messages
 3. When in doubt, ASK the user before running
 
+## Campaign Sender Identity (REQUIRED)
+
+**Every outbound SMS and email — campaigns and transactional alike — MUST originate from the company channels:**
+
+- **SMS from:** `+1 480-637-3117` (set via `fromNumber` on every `/conversations/messages` SMS POST)
+- **Email from:** `Terms For Sale <info@termsforsale.com>` (set via `emailFrom` on every `/conversations/messages` Email POST)
+
+These are exposed as `CAMPAIGN_FROM_PHONE` and `CAMPAIGN_FROM_EMAIL` in `_ghl.js`. The shared `sendSMS()` and `sendEmail()` helpers default to these values; functions that hit `/conversations/messages` directly (e.g. `notify-buyers.js`, `deal-follow-up.js`, `auth-signup.js`, `auth-reset.js`) include `fromNumber` / `emailFrom` explicitly.
+
+**Never use** `Brooke Froehlich <brooke@mydealpros.com>` or any personal sender — replies must route to the shared company inbox.
+
+## Buyer Opt-In Requirement (REQUIRED for ALL campaigns)
+
+**Every buyer-facing campaign send (deal alerts, follow-ups, nudges) MUST verify the recipient has the `opt in` tag (case-insensitive) BEFORE sending.**
+
+- Tag value: `opt in` (matched lower-cased and trimmed — `OPT IN`, `Opt In`, ` opt in ` all match)
+- Helper: `hasOptInTag(contactOrTags)` exported from `_ghl.js`
+- Constant: `OPT_IN_TAG` exported from `_ghl.js`
+
+**Where it's enforced:**
+- `notify-buyers.js` — `fetchAllBuyers()` filters out any contact without `opt in` (also still filters `alerts-paused` and `Contact Role !== Buyer`)
+- `deal-follow-up.js` — top of the contact loop skips any contact without `opt in`
+- `follow-up-nudge.js` — gates the SMS send on `opt in`; stale-tagging (data-only) still runs
+
+**Adding a new campaign function?** You MUST gate sends on `hasOptInTag(contact)`. Failing to do so violates company policy and may violate TCPA/CAN-SPAM.
+
 ## Project Overview
 
 Deal Pros LLC is a real estate wholesale company that operates two public-facing sites and an AI-powered back-office stack called **Paperclip**:
@@ -400,6 +426,97 @@ two adjustments to the same branch:
   Solar field should only describe the solar itself — if operators
   start mixing deal figures into it, we'd need a stricter "balance"
   keyword lookup instead.
+---
+
+## Completed — April 14 2026 Campaign Sender Identity + Opt-In Gate
+
+Branch: `claude/campaign-sender-requirements-pd0jc`.
+
+Locked down two compliance requirements that span every outbound SMS/email path:
+
+1. **All outbound must originate from company channels** — no more `Brooke Froehlich <brooke@mydealpros.com>` and no more carrier default phone. SMS now goes out from `+1 480-637-3117`; email from `Terms For Sale <info@termsforsale.com>`.
+2. **Buyer campaigns require an explicit `opt in` tag** — no opt-in tag on the contact, no campaign send. Hard gate, case-insensitive match.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/_ghl.js`**
+  - New constants: `CAMPAIGN_FROM_PHONE` (`+14806373117`), `CAMPAIGN_FROM_EMAIL` (`Terms For Sale <info@termsforsale.com>`), `OPT_IN_TAG` (`opt in`). All overridable via env vars (`CAMPAIGN_FROM_PHONE`, `CAMPAIGN_FROM_EMAIL`) for emergencies.
+  - New helper: `hasOptInTag(contactOrTags)` — accepts a contact object or raw tags array, returns true only if any tag (lower-cased, trimmed) equals `opt in`. Verified against 6 cases (`opt in`, `OPT IN`, `  Opt In  `, `buyer`, `{tags:['opt in','x']}`, `null`).
+  - `sendSMS()` now sets `fromNumber: CAMPAIGN_FROM_PHONE` on every send.
+  - `sendEmail()` now sets `emailFrom: CAMPAIGN_FROM_EMAIL` (was `Brooke Froehlich <brooke@mydealpros.com>`).
+  - Commercial-lane `sendSmsToBrooke()` and `sendEmailToContact()` also set `fromNumber` / `emailFrom` so internal alerts to Brooke still come from the company line.
+  - All four constants/helpers exported.
+
+- **`termsforsale/netlify/functions/notify-buyers.js`**
+  - `fetchAllBuyers()` adds an opt-in tag filter alongside the existing `Contact Role = Buyer` and `alerts-paused` filters. No opt-in → buyer is invisible to the matcher.
+  - SMS POST now includes `fromNumber: '+14806373117'`.
+  - Email POST `emailFrom` switched from `Brooke Froehlich <brooke@mydealpros.com>` to `Terms For Sale <info@termsforsale.com>`.
+
+- **`termsforsale/netlify/functions/deal-follow-up.js`**
+  - Top of the per-contact loop: if no `opt in` tag, skip + bump `stats.skipped`. Applies before any of the D0/D1/D2 send paths.
+  - All 3 SMS POSTs (D0/D1/D2) include `fromNumber: '+14806373117'`.
+  - Both email POSTs (D0/D2) switched to `Terms For Sale <info@termsforsale.com>`. Sign-off changed from `— Brooke, Terms For Sale` to `— Terms For Sale` so the body matches the from address.
+
+- **`termsforsale/netlify/functions/follow-up-nudge.js`**
+  - Computes `hasOptIn` from the lowercased tag list at the top of the contact loop.
+  - Stale-tagging (Path A, data-only) still runs regardless — that's not a send.
+  - Path B (the actual SMS nudge) gates on `hasOptIn` right after the no-phone check. SMS itself flows through `_ghl.sendSMS()`, which now bakes in `fromNumber` automatically.
+
+- **`termsforsale/netlify/functions/auth-signup.js`** — welcome email `emailFrom` switched to `Terms For Sale <info@termsforsale.com>`.
+
+- **`termsforsale/netlify/functions/auth-reset.js`** — password reset email `emailFrom` switched to `Terms For Sale <info@termsforsale.com>`.
+
+- **`termsforsale/netlify/functions/_lindy.js`** — tool description for `send_email` updated so the LLM knows the from address. (CEO contact reference further down the system prompt left alone — that's metadata about who Brooke IS, not a sender identity.)
+
+- **`CLAUDE.md`** — added two new MANDATORY rule sections at the top: "Campaign Sender Identity (REQUIRED)" and "Buyer Opt-In Requirement (REQUIRED for ALL campaigns)". Both flagged as policy gates that any future campaign function MUST honor.
+
+### Verified locally
+
+- `_ghl.js` exports all 4 new symbols; `hasOptInTag()` correctly handles case/whitespace/null.
+- All 6 modified function modules + `_lindy.js` load cleanly via `require()` (no syntax errors, no missing imports).
+- Simulated buyer filter: opt-in present → keep; missing → skip; case-variants → match; `alerts-paused` still hard-rejects even with opt-in; non-buyers still skipped.
+
+### Operational follow-up needed in GHL
+
+- Existing buyer contacts do NOT have the `opt in` tag yet. Once this branch ships, **every existing buyer is silenced** until the tag is added. To rectify:
+  - Decide which signup paths auto-apply `opt in` going forward (recommend: `auth-signup`, `vip-buyer-submit`, `buy-box-save` — all currently apply `tfs-buyer` / `buyer-signup`; should also apply `opt in` if the user checked an explicit consent box during signup).
+  - Run a one-time backfill to apply `opt in` to existing buyers who have a documented consent record (e.g. signed up via the website with the consent checkbox). Don't blanket-apply — that defeats the point of the gate.
+- Add the explicit consent checkbox to all signup forms if it isn't already there ("I agree to receive SMS and email about deals matching my buy box. Reply STOP to opt out."). Without that, applying `opt in` is not legally defensible.
+
+### Same-session follow-up — auto-tag signups + backfill (April 14 2026)
+
+Per Brooke: every Terms For Sale website signup IS the consent action, so all three signup paths now auto-apply the `opt in` tag and a one-shot backfill applies it retroactively to every existing TFS website-signup buyer.
+
+**Files updated:**
+
+- **`termsforsale/netlify/functions/auth-signup.js`** — both the contact-create tag list (line 90) and the downstream webhook tag list (line 148) now include `'opt in'`.
+- **`termsforsale/netlify/functions/vip-buyer-submit.js`** — both the upsert tag list (line 41) and the explicit `addTags()` follow-up (line 59) now include `'opt in'`.
+- **`termsforsale/netlify/functions/buy-box-save.js`** — both the upsert default tag list (line 73) and the `addTags()` reapplication (line 134) now include `'opt in'`.
+- **`scripts/backfill-buyer-opt-in.js`** (new) — paginates GHL by each of the website-signup tags (`buyer-signup`, `tfs buyer`, `TFS Buyer`, `Website Signup`, `VIP Buyer List`, `buy box complete`, `use:buyer`), dedups by contact id, and POSTs `tags: ['opt in']` to `/contacts/{id}/tags` on every contact missing the case-insensitive opt-in tag. Skips contacts already opted in. Supports `DRY_RUN=1` and `MAX_CONTACTS=N`. Modeled after `backfill-contact-role.js`.
+
+**Deliberately NOT auto-tagged:**
+- `buyer-import.js` — imports buyers from external sources (InvestorLift, InvestorBase). Those contacts have no consent record with us; the tag is left off so they stay silenced until manually opted in per source.
+- `commercial-buyer-submit.js` — commercial-lane buyers (the `Commercial / Multifamily` pipeline). Different lane entirely; opt-in is enforced on the residential buyer-alert pipeline only.
+
+**Run the backfill on the Droplet:**
+
+```
+cd /root/termsforsale-site
+git pull origin claude/campaign-sender-requirements-pd0jc
+DRY_RUN=1 node scripts/backfill-buyer-opt-in.js    # preview
+node scripts/backfill-buyer-opt-in.js              # apply
+```
+
+The backfill is idempotent — re-running it skips anyone already tagged.
+
+### Env vars (no NEW ones required)
+
+- Optional overrides if needed: `CAMPAIGN_FROM_PHONE`, `CAMPAIGN_FROM_EMAIL`. Defaults are baked in.
+
+### Known caveats
+
+- Transactional welcomes / password resets are also affected by the `emailFrom` change (same company inbox), but they intentionally do NOT require `opt in` since they're user-initiated. If we later want to require opt-in even for welcome emails, the gate has to move into `auth-signup` explicitly.
+- The opt-in gate filters at the buyer-fetch layer in `notify-buyers`, so deals will simply have fewer matched buyers in the per-deal stats once shipped. Not a regression — the dropped contacts were never legally messageable in the first place.
 
 ---
 

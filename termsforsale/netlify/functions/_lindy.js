@@ -365,7 +365,7 @@ var TOOL_CATALOG = {
   },
   send_email: {
     name: 'send_email',
-    description: 'Send an email to a GHL contact. Sent from Brooke Froehlich <brooke@mydealpros.com>.',
+    description: 'Send an email to a GHL contact. Sent from Terms For Sale <info@termsforsale.com>.',
     input_schema: {
       type: 'object',
       properties: {
