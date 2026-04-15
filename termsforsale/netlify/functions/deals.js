@@ -160,22 +160,28 @@ exports.handler = async function(event) {
     return { statusCode: 500, headers: headers, body: JSON.stringify({ error: 'NOTION_TOKEN not configured' }) };
   }
 
+  // Statuses the public site renders. Actively Marketing + Assignment Sent
+  // show as active; Assigned with EMD shows as "Pending"; Closed goes into the
+  // "Recently Closed" social-proof section. All other Notion statuses
+  // (Missing Information, Ready to Market, Not Accepted, etc.) are hidden
+  // from the public site. Frontend buckets these by `dealStatus`.
+  var PUBLIC_STATUSES = ['Actively Marketing', 'Assignment Sent', 'Assigned with EMD', 'Closed'];
+
   try {
-    // Query Notion database — filter for "Actively Marketing" status
-    // Try both "status" and "select" property types since Notion databases vary
-    var filterBody = {
-      filter: {
-        property: 'Deal Status',
-        status: { equals: 'Actively Marketing' }
-      },
-      page_size: 100,
-      sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }]
-    };
+    // Query Notion database — filter by PUBLIC_STATUSES
+    // Try both "status" and "select" property types since Notion databases vary.
+    // Notion filters support an `or` array of equality clauses.
+    var orStatus = PUBLIC_STATUSES.map(function(s){
+      return { property: 'Deal Status', status: { equals: s } };
+    });
+    var orSelect = PUBLIC_STATUSES.map(function(s){
+      return { property: 'Deal Status', select: { equals: s } };
+    });
 
     // Try status filter first, then select, then unfiltered (client-side filter)
     var filterTypes = [
-      { property: 'Deal Status', status: { equals: 'Actively Marketing' } },
-      { property: 'Deal Status', select: { equals: 'Actively Marketing' } },
+      { or: orStatus },
+      { or: orSelect },
       null // no filter — will filter client-side
     ];
 
@@ -224,9 +230,10 @@ exports.handler = async function(event) {
 
     // If we couldn't filter server-side, filter here
     if (!usedFilter) {
+      var publicLower = PUBLIC_STATUSES.map(function(s){ return s.toLowerCase(); });
       pages = pages.filter(function(p) {
-        var status = prop(p, 'Deal Status');
-        return status.toLowerCase().trim() === 'actively marketing';
+        var status = prop(p, 'Deal Status').toLowerCase().trim();
+        return publicLower.indexOf(status) !== -1;
       });
     }
 
@@ -282,6 +289,9 @@ exports.handler = async function(event) {
         description: prop(page, 'Description') || prop(page, 'Property Description') || prop(page, 'Deal Description') || prop(page, 'Summary') || '',
         entryBreakdown: prop(page, 'Entry Breakdown'),
         parking: prop(page, 'Parking'),
+        dateFunded: prop(page, 'Date Funded'),
+        dateAssigned: prop(page, 'Date Assigned'),
+        amountFunded: +prop(page, 'Amount Funded') || 0,
         lastEdited: page.last_edited_time
       };
     });
@@ -302,7 +312,7 @@ exports.handler = async function(event) {
       }
     }
 
-    console.log('Notion API success: ' + deals.length + ' active deals');
+    console.log('Notion API success: ' + deals.length + ' public deals (Actively Marketing / Assignment Sent / Assigned with EMD / Closed)');
 
     return {
       statusCode: 200,
