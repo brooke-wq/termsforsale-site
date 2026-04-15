@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Dispo Buddy</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Overview</div>
+        <div class="topbar-h">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/" class="topbar-btn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          <span>View site</span>
+        </a>
+        <button class="topbar-btn primary" onclick="refreshAll()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Hero -->
+      <div class="panel" style="background:linear-gradient(120deg,#0D1F3C 0%,#1a3163 55%,#F7941D 140%);border:none;color:#fff">
+        <div class="panel-body" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px" id="greeting-time">Good morning</div>
+            <div style="font-size:22px;font-weight:900;letter-spacing:-.3px">Dispo Buddy — JV Pipeline Command Center</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:6px;max-width:620px">Manage JV deals from submission through funding. Track partners, status, and activity across the full dispo pipeline.</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="/admin/deals.html" class="btn" style="background:#F7941D;color:#fff">
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              View JV Deals
+            </a>
+            <a href="/admin/partners.html" class="btn secondary" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)">
+              Partners
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Active JV Deals</div>
+          <div class="stat-value" id="stat-active">—</div>
+          <div class="stat-sub">Submitted / under review / marketing</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Under Contract</div>
+          <div class="stat-value" id="stat-contract">—</div>
+          <div class="stat-sub">Contracted / assignment sent</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Funded Deals</div>
+          <div class="stat-value" id="stat-funded">—</div>
+          <div class="stat-sub">Closed & paid</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Partners</div>
+          <div class="stat-value" id="stat-partners">—</div>
+          <div class="stat-sub"><span id="stat-active-partners">—</span> with deals</div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Quick Actions
+            </div>
+            <div class="panel-sub">Jump into the workflow</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="quick-grid">
+            <a href="/admin/deals.html" class="quick-card">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">JV Deals</div>
+                <div class="quick-card-desc">Every JV deal submitted — search, filter, and dive into deal details.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/admin/partners.html" class="quick-card orange">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Partners</div>
+                <div class="quick-card-desc">All JV partners, contact info, deal counts, and performance.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/admin/messages.html" class="quick-card green">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Messages</div>
+                <div class="quick-card-desc">Partner conversations and deal updates.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/admin/sop.html" class="quick-card purple">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Operations SOP</div>
+                <div class="quick-card-desc">Full JV workflow, tags, and pipeline reference.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="https://www.notion.so/a3c0a38fd9294d758dedabab2548ff29" class="quick-card red" target="_blank" rel="noopener">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Open Notion Deals DB</div>
+                <div class="quick-card-desc">Full Notion database — edit directly, add statuses.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="https://app.gohighlevel.com/" class="quick-card" target="_blank" rel="noopener">
+              <div class="quick-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <div class="quick-card-body">
+                <div class="quick-card-title">Open GoHighLevel</div>
+                <div class="quick-card-desc">Full CRM — contacts, opportunities, workflows.</div>
+              </div>
+              <svg class="quick-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent deals + breakdown -->
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Recent JV Deals
+              </div>
+              <div class="panel-sub">Latest submissions and updates</div>
+            </div>
+            <a href="/admin/deals.html" class="btn secondary" style="padding:7px 14px;font-size:12px">View all</a>
+          </div>
+          <div class="panel-body flush">
+            <div id="recent-deals" class="table-wrap">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Pipeline Mix
+              </div>
+              <div class="panel-sub">JV deals by status</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="status-breakdown"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deal type mix -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24"><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>
+              Deal Types
+            </div>
+            <div class="panel-sub">All JV deals by structure</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="type-breakdown"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('dashboard');
+
+(function () {
+  var h = new Date().getHours();
+  var t = h < 12 ? 'Good morning' : (h < 18 ? 'Good afternoon' : 'Good evening');
+  var el = document.getElementById('greeting-time');
+  if (el) el.textContent = t;
+})();
+
+async function loadStats() {
+  try {
+    var res = await AdminShell.fetch('/api/admin-stats');
+    if (!res.ok) {
+      document.getElementById('recent-deals').innerHTML = '<div class="err" style="margin:14px 18px">Failed to load stats</div>';
+      return;
+    }
+    var data = await res.json();
+    setStat('stat-active', AdminShell.fmtNum(data.activeDeals));
+    setStat('stat-contract', AdminShell.fmtNum(data.underContract));
+    setStat('stat-funded', AdminShell.fmtNum(data.fundedDeals));
+    setStat('stat-partners', AdminShell.fmtNum(data.totalPartners));
+    var ap = document.getElementById('stat-active-partners');
+    if (ap) ap.textContent = AdminShell.fmtNum(data.activePartnersWithDeals || 0);
+    renderRecent(data.recentDeals || []);
+    renderBreakdown('status-breakdown', data.dealsByStatus || {}, 'orange');
+    renderBreakdown('type-breakdown', data.dealsByType || {}, 'blue');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function setStat(id, v) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = v;
+}
+
+function renderRecent(deals) {
+  var host = document.getElementById('recent-deals');
+  if (!deals.length) {
+    host.innerHTML = '<div class="state"><h3>No JV deals yet</h3><p>Submissions from dispobuddy.com will appear here.</p></div>';
+    return;
+  }
+  var rows = deals.map(function (d) {
+    var price = d.price ? AdminShell.fmtMoney(d.price) : '—';
+    var loc = [d.city, d.state].filter(Boolean).join(', ');
+    var partnerName = (d.jvPartner || '').split('|')[0].trim();
+    return '<tr>'
+      + '<td class="cell-strong">' + AdminShell.esc(d.dealCode || '—') + '</td>'
+      + '<td>' + AdminShell.esc(loc) + '<div class="cell-muted">' + AdminShell.esc(partnerName) + '</div></td>'
+      + '<td><span class="pill blue">' + AdminShell.esc(d.dealType || '—') + '</span></td>'
+      + '<td><span class="pill orange">' + AdminShell.esc(d.status || '—') + '</span></td>'
+      + '<td class="cell-strong tr">' + price + '</td>'
+      + '</tr>';
+  }).join('');
+  host.innerHTML = '<table class="t"><thead><tr><th>ID</th><th>Location / Partner</th><th>Type</th><th>Status</th><th class="tr">Price</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function renderBreakdown(hostId, data, color) {
+  var keys = Object.keys(data);
+  if (!keys.length) {
+    document.getElementById(hostId).innerHTML = '<div class="state"><p class="muted">No deals yet.</p></div>';
+    return;
+  }
+  var total = keys.reduce(function (s, k) { return s + data[k]; }, 0);
+  keys.sort(function (a, b) { return data[b] - data[a]; });
+  var gradient = color === 'orange'
+    ? 'linear-gradient(90deg,var(--orange) 0%,#c05621 100%)'
+    : 'linear-gradient(90deg,var(--blue) 0%,var(--blue-dark) 100%)';
+  var html = keys.map(function (k) {
+    var pct = Math.round((data[k] / total) * 100);
+    return '<div style="margin-bottom:14px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'
+      +   '<span style="font-weight:700;color:var(--navy)">' + AdminShell.esc(k) + '</span>'
+      +   '<span class="muted">' + data[k] + ' · ' + pct + '%</span>'
+      + '</div>'
+      + '<div style="height:6px;background:var(--bg-2);border-radius:4px;overflow:hidden">'
+      +   '<div style="height:100%;width:' + pct + '%;background:' + gradient + ';border-radius:4px"></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById(hostId).innerHTML = html;
+}
+
+function refreshAll() {
+  AdminShell.toast('Refreshing...');
+  loadStats();
+}
+window.refreshAll = refreshAll;
+
+AdminShell.requireAuth(loadStats);
+</script>
+
+</body>
+</html>

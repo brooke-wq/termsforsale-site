@@ -302,6 +302,122 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 15 2026 Dispo Buddy Go-Live + Notion Field Sync Hotfixes
+
+Branch: `claude/improve-logo-favicon-Av2Gm`. Live walkthrough with Brooke
+to ship `dispobuddy.com` to production end-to-end, then iterate on Notion
+sync bugs that surfaced during real submissions.
+
+### What went live
+
+- **Domain**: `dispobuddy.com` DNS pointed off Squarespace (registrar
+  unchanged) onto Netlify via `A 75.2.60.5` for apex + `CNAME` for www.
+  Let's Encrypt SSL auto-provisioned.
+- **Netlify env vars set**: `GHL_API_KEY`, `GHL_LOCATION_ID` =
+  `7IyUgu1zpi38MDYpSDTs`, `NOTION_TOKEN`, `NOTION_DATABASE_ID` =
+  `a3c0a38fd9294d758dedabab2548ff29`, `INTERNAL_ALERT_PHONE` =
+  `+15167120113`, `INTERNAL_ALERT_EMAIL`, and finally `NOTIFICATIONS_LIVE`
+  = `true` after silent-mode tests passed.
+- **GHL workflow live**: Partner Stage Change Notifications — fires on
+  opportunity stage change in `3. JV Deals` pipeline, POSTs to
+  `/api/partner-stage-notify` with `{contactId, opportunityId, stageName,
+  pipelineName}`.
+- **End-to-end verified live**: form submission writes contact +
+  opportunity + Notion deal with auto-generated Deal ID, sends partner
+  confirmation SMS + email + internal alert SMS + email. OTP login flow
+  works (SMS arrives, code verifies, dashboard loads).
+
+### Hotfixes shipped during go-live
+
+Four commits on the branch — each one shipped because the previous
+attempt surfaced a new Notion validation error in the live function
+log:
+
+1. **`4efe71f` — Subject To dealTypeMap** — `dispo-buddy-submit.js:589`
+   was mapping `Subto` → `SubTo` but Notion's actual select option is
+   `Subject To` (with space). Rejected payload was falling back to a
+   minimal-fields retry that dropped Deal ID + 13 other fields.
+2. **`92dfa97` — 6 Notion property validation errors** — from real
+   error log:
+   - `Contracted Entry is not a property` → removed write (property
+     genuinely doesn't exist in the DB)
+   - `Beds expected to be number` → `text()` → `num()`
+   - `Baths expected to be number` → `text()` → `num()`
+   - `Living Area expected to be number` → `text()` → `num()`
+   - `SF Rate expected to be number` → `text()` → `num()`
+   - `Details  is not a property` → temporarily removed trailing space
+     (later reverted in `f71ee4c`)
+
+   Also upgraded `num()` helper to strip commas + non-numeric chars
+   before `parseFloat()` so user input like `"1,450"` parses as `1450`
+   instead of `1`.
+3. **`4dd39cd` — Expanded `?test` autofill** — added `propertyType`,
+   `propBeds`, `propBaths`, `propSqft`, `propYearBuilt`, `propLotSize`,
+   `contractedEntryFee`, `estTaxesInsurance`, `subtoMaturity`,
+   `subtoBalloon`, `additionalNotes` to the test-mode prefill so the
+   field-type fixes could be validated end-to-end without manually
+   filling 30 fields each test.
+4. **`f71ee4c` — Smart-retry + restore Details trailing space** —
+   restored `'Details '` (with trailing space) since that IS the actual
+   Notion property name (the previous interpretation of the error
+   message was wrong — the double-space in `"Details  is not a
+   property"` was because the property is literally named `"Details "`).
+
+   More importantly, replaced the all-or-nothing minimal-fields fallback
+   with a **smart-retry loop**: parses Notion's error message, identifies
+   any property names mentioned, drops them from the payload, retries.
+   Up to 5 attempts. This means any single schema mismatch in the
+   future only drops that one property — every other field still
+   makes it into Notion. No more 14-field cliff.
+
+   Also wired the form's `additional_notes` textarea into the Details
+   block (was previously dropped entirely).
+
+   The minimal-fields fallback (last-resort path after 5 smart-retry
+   attempts give up) now also preserves the auto-generated Deal ID so
+   `PHX-XXX` sticks even in worst case.
+
+### Files touched
+
+- `dispobuddy/netlify/functions/dispo-buddy-submit.js` — all 4 commits
+- `dispobuddy/submit-deal.html` — `?test` autofill expansion only
+- `CLAUDE.md` — session log
+
+### Backwards compatibility
+
+- All form field names unchanged — no breaking changes to existing
+  submissions in flight.
+- All GHL custom field IDs unchanged — contact + opportunity creation
+  still works identically.
+- The `Subto` → `Subject To` mapping change means new deals get the
+  correct Notion option going forward; existing deals already in Notion
+  with the auto-created `SubTo` option are unaffected. Brooke can
+  manually merge / delete the duplicate `SubTo` option from the Notion
+  Deal Type select if desired.
+
+### Open issues for next session
+
+Three Notion fields don't sync from Dispo Buddy submissions and were
+deferred:
+
+1. **Occupancy** — code writes as `multi_select`. Need to confirm
+   Notion's property type (likely single `select` or `rich_text`).
+2. **Access** — code writes to property name `Access`. Property may
+   actually be named `Property Access` or similar. Need exact name.
+3. **Internal Notes** — currently the `additional_notes` form input
+   gets pushed into the combined `Details ` block rather than its own
+   field. If a separate `Internal Notes` property exists in Notion,
+   need exact name to write directly.
+
+Smart-retry is silently dropping these; the Netlify function log line
+`Removed N props [Occupancy, Access, ...]` confirms which ones are
+being rejected. Just need to confirm the real Notion schema.
+
+Also still pending: County + HOA fields (Brooke confirmed the Notion
+properties exist but the form doesn't collect them yet).
+
+---
+
 ## Completed — April 15 2026 Dispo Buddy Proof Stat Refresh
 
 Branch: `claude/update-deal-metrics-uUFC4` (merged via PR #88).
@@ -2712,7 +2828,31 @@ blog page).
 
 ## TODO — Next Session
 
-1. **Dispo Buddy Go-Live** — After end-to-end testing on `dispobuddy.com` (which should now be pointed at the Netlify site): verify the OTP login flow works end to end (Brooke's phone → SMS → enter code → dashboard), confirm `NOTIFICATIONS_LIVE=true` is set in Netlify env vars, test one real submission (should produce a Deal ID like `PHX-001` in Notion), re-enable `dispo-buddy-triage` cron on Droplet.
+1. **Test 3 Terms For Sale GHL workflows are firing live** (Brooke's request — PRIORITY for tomorrow):
+   - **Customer Reply workflow** → POSTs to `/api/buyer-response-tag`
+     - Test: text `1` (or `IN`/`INTERESTED`) to the TFS GHL number from a buyer contact → confirm the contact gets `buyer-interested` + `deal-hot` tags + a "BUYER RESPONSE" note appears in GHL
+     - Test: text `A`/`B`/`C` → confirm `pref-keep-all` / `pref-market-only` / `alerts-paused` tags applied, plus an "ALERT PREF" note
+   - **Calendar Booking workflow** → POSTs to `/api/booking-notify`
+     - Test: book a fake appointment on Brooke's TFS calendar from a buyer contact → confirm Brooke's phone gets the SMS alert
+   - **Buyer Interest workflow** (engagement-tag system) → POSTs to `/api/buyer-alert`
+     - Test: from a contact who already has a `sent-PHX-001` (or any `sent-XXX`) tag, text `INTERESTED` → confirm tag gets promoted to `alert-PHX-001`, GHL note appears, Brooke's phone gets SMS with deal list
+   - For each: if the workflow doesn't fire, check Automation → Workflows in GHL, find the workflow, confirm status pill is **Published** (green) not Draft, and confirm the webhook URL points at `https://termsforsale.com/.netlify/functions/<name>`
+
+2. **Dispo Buddy — fix 3 Notion fields not syncing** (carried over from go-live):
+   - **Occupancy** — code currently writes as `multi_select`; need to confirm exact Notion property type and adjust helper call (`msel` vs `sel` vs `text`)
+   - **Access** — code writes to property name `Access`; confirm exact Notion property name (might be `Property Access`)
+   - **Internal Notes** — `additional_notes` form input currently gets pushed into the combined `Details ` block. If a separate Notion property exists, need exact name to write directly
+   - Quickest path: have Brooke send a Netlify function log line containing `Removed N props [...]` from a recent submission — that lists exactly which property names smart-retry is dropping
+
+3. **Dispo Buddy — add County + HOA to the form** (Brooke confirmed both Notion properties exist):
+   - Add 2 input fields to `dispobuddy/submit-deal.html` (text inputs near ZIP / lot size)
+   - Add to `gatherData()` payload + `SAVEABLE_FIELDS` array
+   - Wire to Notion in `dispo-buddy-submit.js` — likely `text('County', d.county)` + `text('HOA', d.hoa)` (or `num` for HOA if Notion column is number)
+   - Also extend `?test` autofill to populate them
+
+4. **Dispo Buddy — re-enable AI triage** (optional, currently DEFERRED):
+   - Re-enable `dispo-buddy-triage` PM2 cron on the Droplet: `pm2 restart dispo-buddy-triage`
+   - Build GHL workflow: Trigger = Tag Added `jv-submitted`, Action = Webhook POST to `https://dispobuddy.com/.netlify/functions/dispo-buddy-triage` with body `{contactId}`. Don't enable until the cron is back on first.
 
 2. **Deal Tracking Tag System — All wire-up complete as of April 9, 2026** ✅
    - ✅ Branch merged to main (PRs #30–#37)

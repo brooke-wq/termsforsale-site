@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partners — Dispo Buddy Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<style>
+  .filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .filter-bar input{flex:1;min-width:220px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;background:#fff;outline:none}
+  .filter-bar input:focus{border-color:var(--blue)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange) 0%,#c05621 100%);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <div class="topbar-crumb">Operations</div>
+        <div class="topbar-h">Partners</div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn primary" onclick="reload()">
+          <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-label">Total Partners</div><div class="stat-value" id="s-total">—</div><div class="stat-sub">All-time signups</div></div>
+        <div class="stat green"><div class="stat-label">With Active Deals</div><div class="stat-value" id="s-active">—</div><div class="stat-sub">In pipeline right now</div></div>
+        <div class="stat orange"><div class="stat-label">With Closed Deals</div><div class="stat-value" id="s-closed">—</div><div class="stat-sub">Have funded at least 1</div></div>
+        <div class="stat purple"><div class="stat-label">Showing</div><div class="stat-value" id="s-shown">—</div><div class="stat-sub">After filter</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>All JV Partners</div>
+            <div class="panel-sub">Contacts tagged <code>dispo-buddy</code> in GHL</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="filter-bar">
+            <input type="search" id="q" placeholder="Search name / email / phone...">
+          </div>
+          <div id="table-wrap" class="table-wrap"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script src="/admin/admin.js"></script>
+<script>
+AdminShell.renderShell('partners');
+
+var ALL = [];
+
+async function load() {
+  document.getElementById('table-wrap').innerHTML = '<div class="spinner"></div>';
+  try {
+    var res = await AdminShell.fetch('/api/admin-partners');
+    if (!res.ok) {
+      document.getElementById('table-wrap').innerHTML = '<div class="err">Failed to load: ' + res.status + '</div>';
+      return;
+    }
+    var data = await res.json();
+    ALL = data.partners || [];
+    document.getElementById('s-total').textContent = AdminShell.fmtNum((data.stats || {}).totalPartners || 0);
+    document.getElementById('s-active').textContent = AdminShell.fmtNum((data.stats || {}).withActiveDeals || 0);
+    document.getElementById('s-closed').textContent = AdminShell.fmtNum((data.stats || {}).withClosedDeals || 0);
+    render();
+  } catch (err) {
+    document.getElementById('table-wrap').innerHTML = '<div class="err">' + err.message + '</div>';
+  }
+}
+
+function render() {
+  var q = (document.getElementById('q').value || '').toLowerCase();
+  var rows = ALL.filter(function (p) {
+    if (!q) return true;
+    return (p.name || '').toLowerCase().indexOf(q) >= 0
+        || (p.email || '').toLowerCase().indexOf(q) >= 0
+        || (p.phone || '').indexOf(q) >= 0;
+  });
+  document.getElementById('s-shown').textContent = AdminShell.fmtNum(rows.length);
+  if (!rows.length) {
+    document.getElementById('table-wrap').innerHTML = '<div class="state"><h3>No partners match</h3><p>Try clearing the search.</p></div>';
+    return;
+  }
+  var html = '<table class="t"><thead><tr>'
+    + '<th>Partner</th><th>Contact</th><th class="tr">Total</th><th class="tr">Active</th><th class="tr">Closed</th><th>Last Submission</th>'
+    + '</tr></thead><tbody>'
+    + rows.map(function (p) {
+        var initials = (p.name || '?').split(' ').map(function (x) { return x[0]; }).slice(0,2).join('').toUpperCase();
+        return '<tr>'
+          + '<td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">' + AdminShell.esc(initials) + '</div><div class="cell-strong">' + AdminShell.esc(p.name) + '</div></div></td>'
+          + '<td>'
+          +   (p.phone ? '<div><a href="tel:' + AdminShell.esc(p.phone) + '">' + AdminShell.esc(p.phone) + '</a></div>' : '')
+          +   (p.email ? '<div class="cell-muted"><a href="mailto:' + AdminShell.esc(p.email) + '">' + AdminShell.esc(p.email) + '</a></div>' : '')
+          + '</td>'
+          + '<td class="cell-strong tr">' + AdminShell.fmtNum(p.dealsSubmitted) + '</td>'
+          + '<td class="tr">' + (p.dealsActive ? '<span class="pill blue">' + p.dealsActive + '</span>' : '—') + '</td>'
+          + '<td class="tr">' + (p.dealsClosed ? '<span class="pill green">' + p.dealsClosed + '</span>' : '—') + '</td>'
+          + '<td class="cell-muted">' + (p.lastSubmission ? AdminShell.fmtDate(p.lastSubmission) : '—') + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table>';
+  document.getElementById('table-wrap').innerHTML = html;
+}
+
+document.getElementById('q').addEventListener('input', render);
+
+function reload() { AdminShell.toast('Refreshing...'); load(); }
+window.reload = reload;
+
+AdminShell.requireAuth(load);
+</script>
+
+</body>
+</html>
