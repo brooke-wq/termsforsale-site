@@ -89,12 +89,47 @@ exports.handler = async function (event) {
     return { statusCode: 400, headers: headers, body: JSON.stringify({ error: e.message }) };
   }
 
+  // Compute ARV-based heuristic up front so we can use it as a fallback
+  // whether Steadily errors, returns empty, or returns only bare-bones.
+  // Formula: monthly = round((arv * 0.005) / 12) — 0.5% of property value
+  // per year is the mid-band for full-coverage US landlord insurance.
+  const minMonthly = parseInt(process.env.INSURANCE_MIN_MONTHLY || '60', 10);
+  const annualRate = parseFloat(process.env.INSURANCE_HEURISTIC_RATE || '0.005');
+  const arv = +body.arv ||
+              +(body.property_details && body.property_details.dwelling_coverage) ||
+              +(body.property_details && body.property_details.home_value) ||
+              0;
+  const heuristicMonthly = arv > 0 ? Math.round((arv * annualRate) / 12) : 0;
+
   let result;
   try {
     result = await quoteEstimate(payload);
   } catch (err) {
+    // Steadily error — fall back to ARV heuristic if we have one so the
+    // deal page still shows a useful number instead of nothing.
+    const msg = err && err.status ? 'Steadily error ' + err.status : (err && err.message || 'Steadily request failed');
+    console.error('[insurance-quote] ' + msg, err && err.body);
+    if (heuristicMonthly > 0) {
+      console.log('[insurance-quote] ' + city + ', ' + state +
+        ' — Steadily failed, falling back to heuristic $' + heuristicMonthly + '/mo (arv=$' + arv + ')');
+      return {
+        statusCode: 200,
+        headers: headers,
+        body: JSON.stringify({
+          available: true,
+          annual: heuristicMonthly * 12,
+          monthly: heuristicMonthly,
+          rateTier: 'heuristic-arv(steadily-error)',
+          steadilyMonthly: 0,
+          heuristicMonthly: heuristicMonthly,
+          startUrl: '',
+          propertyId: '',
+          _debug: { steadilyError: msg, arv: arv, annualRate: annualRate }
+        })
+      };
+    }
+    // No heuristic either — return the error so frontend shows "Get Quote"
     if (err && typeof err.status === 'number' && err.status > 0) {
-      console.error('[insurance-quote] Steadily error ' + err.status, err.body);
       return {
         statusCode: 502,
         headers: headers,
@@ -105,7 +140,6 @@ exports.handler = async function (event) {
         })
       };
     }
-    console.error('[insurance-quote] Error:', err.message);
     return { statusCode: 500, headers: headers, body: JSON.stringify({ error: err.message }) };
   }
 
@@ -214,29 +248,8 @@ exports.handler = async function (event) {
   const steadilyMonthly = annual > 0 ? Math.round(annual / 12) : 0;
   const startUrl = est.start_url || '';
 
-  // Heuristic fallback. Steadily's /v1/quote/estimate often returns only a
-  // bare-bones liability-only number (e.g. $22/mo for a Tucson SFR) even
-  // when we send rich property_details. A bare-bones number is not useful
-  // as a teaser — it anchors the buyer to a price they cannot actually bind.
-  //
-  // Rather than suppress, fall back to an ARV-based heuristic when Steadily
-  // comes in below the plausibility floor. US landlord insurance on a
-  // standard SFR full-coverage runs ~0.35%-0.60% of property value per year.
-  // Using 0.50% as the middle of that band. Formula:
-  //   monthly = round((arv * 0.005) / 12)
-  //
-  // ARV comes from the request body (frontend passes it alongside
-  // property_details). Falls back to property_details.dwelling_coverage
-  // if that's populated. If neither is available, and Steadily gave us
-  // nothing usable, we can't estimate — return available=false so the
-  // deal page shows a generic "Get Quote →" CTA.
-  const minMonthly = parseInt(process.env.INSURANCE_MIN_MONTHLY || '60', 10);
-  const annualRate = parseFloat(process.env.INSURANCE_HEURISTIC_RATE || '0.005'); // 0.5%
-  const arv = +body.arv ||
-              +(body.property_details && body.property_details.dwelling_coverage) ||
-              +(body.property_details && body.property_details.home_value) ||
-              0;
-  const heuristicMonthly = arv > 0 ? Math.round((arv * annualRate) / 12) : 0;
+  // minMonthly, annualRate, arv, heuristicMonthly were all computed at the
+  // top of the handler so the Steadily-error path could use them too.
 
   // Pick the displayed monthly:
   //   1. Steadily monthly if >= floor (believable full-coverage)
