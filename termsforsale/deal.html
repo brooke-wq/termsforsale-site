@@ -826,10 +826,14 @@ function renderDeal(d,allDeals){
   if(d.solar){
     var solarRaw=String(d.solar).trim();
     if(solarRaw && !/^(no|none|n\/a|0|false)\b/i.test(solarRaw) && !/paid\s*off/i.test(solarRaw)){
-      // Monthly payment: "$120/mo", "$120 per month", "120/month",
-      // "payment $120", "pmt $120", "monthly $120"
-      var solarPmt=solarRaw.match(/\$?\s*([\d,]+(?:\.\d+)?)\s*(?:\/\s*mo\b|\s+per\s+month\b|\/\s*month\b)/i);
-      if(!solarPmt) solarPmt=solarRaw.match(/(?:payment|pmt|monthly)[:\s]*\$?\s*([\d,]+(?:\.\d+)?)/i);
+      // Monthly payment — two passes:
+      //   1) amount-then-keyword: "$120/mo", "$120/m", "$120 per month",
+      //      "$120/month", "$120 monthly", "$120 a month"
+      //   2) keyword-then-amount: "payment $120", "payment of $120",
+      //      "monthly payment $120", "pmt $120", "monthly $120",
+      //      "pays $120", "pay $120"
+      var solarPmt=solarRaw.match(/\$?\s*(\d[\d,]*(?:\.\d+)?)\s*(?:\/\s*mo\b|\/\s*m\b|\s+per\s+month\b|\/\s*month\b|\s+monthly\b|\s+a\s+month\b)/i);
+      if(!solarPmt) solarPmt=solarRaw.match(/(?:monthly\s+(?:payment|pmt)|payment(?:\s+of)?|pmt|monthly|pays?)[:\s]+\$?\s*(\d[\d,]*(?:\.\d+)?)/i);
       // Rate (%)
       var solarRate=solarRaw.match(/(\d+(?:\.\d+)?)\s*%/);
       // Term ("20 yrs", "15 years")
@@ -841,7 +845,7 @@ function renderDeal(d,allDeals){
       if(!solarMaturity) solarMaturity=solarRaw.match(/\b(\d{1,2}[\/\-]\d{4})\b/);
       // Balance: first $ amount that isn't the monthly payment
       var solarRemainder=solarPmt?solarRaw.replace(solarPmt[0],' '):solarRaw;
-      var solarBal=solarRemainder.match(/\$\s*([\d,]+(?:\.\d+)?)\s*(k)?/i);
+      var solarBal=solarRemainder.match(/\$\s*(\d[\d,]*(?:\.\d+)?)\s*(k)?/i);
       // Lease vs. financed — labels show context to the buyer
       solarKind=/leas(e|ed|ing)/i.test(solarRaw)?'Lease':(/financ(e|ed|ing)|lien|loan/i.test(solarRaw)?'Lien':'');
       var solarParsed=!!(solarPmt||solarBal||solarRate||solarTerm||solarMaturity);
