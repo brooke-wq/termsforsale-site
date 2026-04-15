@@ -567,7 +567,7 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
   // Helpers — matched to ACTUAL Notion property types from database schema
   function title(name, val)    { if (val) props[name] = { title: [{ text: { content: String(val) } }] }; }
   function text(name, val)     { if (val) props[name] = { rich_text: [{ text: { content: String(val).substring(0, 2000) } }] }; }
-  function num(name, val)      { const n = parseFloat(val); if (!isNaN(n)) props[name] = { number: n }; }
+  function num(name, val)      { if (val === null || val === undefined || val === '') return; const cleaned = String(val).replace(/[^0-9.\-]/g, ''); const n = parseFloat(cleaned); if (!isNaN(n)) props[name] = { number: n }; }
   function sel(name, val)      { if (val) props[name] = { select: { name: String(val) } }; }
   function msel(name, val)     { if (val) props[name] = { multi_select: [{ name: String(val) }] }; }
   function stat(name, val)     { if (val) props[name] = { status: { name: String(val) } }; }
@@ -607,11 +607,10 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
   // Deal Type = select
   sel('Deal Type', dealTypeMap[d.deal_type] || d.deal_type);
 
-  // Asking Price = number, Entry Fee = number, Contracted Entry = number, T&I = number
+  // Asking Price = number, Entry Fee = number, T&I = number
   num('Asking Price', d.desired_asking_price);
   num('Entry Fee', d.what_is_the_buyer_entry_fee);
   num('Contracted Price', d.contracted_price);
-  num('Contracted Entry', d.contracted_entry_fee);
   num('Est T&I', d.est_taxes__insurance);
 
   // ARV = rich_text (NOT number)
@@ -628,9 +627,9 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
 
   // Property details
   sel('Property Type', d.property_type);
-  text('Beds', d.beds);
-  text('Baths', d.baths);
-  text('Living Area', d.sqft);
+  num('Beds', d.beds);
+  num('Baths', d.baths);
+  num('Living Area', d.sqft);
   num('Year Built', d.year_built);
   text('Lot Size', d.lot_size);
 
@@ -649,10 +648,10 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
   text('SubTo Loan Maturity', d.loan_maturity);
   text('SubTo Balloon', d.subto_balloon);
 
-  // SF fields — SF Loan Amount = number, SF Payment = number, SF Rate/Term/Balloon = rich_text
+  // SF fields — SF Loan Amount = number, SF Payment = number, SF Rate = number, SF Term/Balloon = rich_text
   num('SF Loan Amount', d.seller_finance_loan_amount);
   num('SF Payment', d.sf_loan_payment);
-  text('SF Rate', d.interest_rate_seller_finance);
+  num('SF Rate', d.interest_rate_seller_finance);
   text('SF Term', d.loan_term);
   text('SF Balloon', d.sf_balloon);
 
@@ -673,7 +672,7 @@ async function createNotionDeal(token, dbId, d, ghlContactId) {
     `First Deal: ${d.is_this_your_first_deal_with_dispo_buddy || 'N/A'}`,
   ];
   if (d.important_details) detailLines.push(`Notes: ${d.important_details}`);
-  text('Details ', detailLines.join('\n'));  // Note: trailing space in Notion property name
+  text('Details', detailLines.join('\n'));
 
   // Create page — try full payload first, then minimal if it fails
   const res = await fetch('https://api.notion.com/v1/pages', {
