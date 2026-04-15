@@ -832,6 +832,10 @@ function renderDeal(d,allDeals){
       //   2) keyword-then-amount: "payment $120", "payment of $120",
       //      "monthly payment $120", "pmt $120", "monthly $120",
       //      "pays $120", "pay $120"
+      // Bare " monthly" is included in pass 1, but it's also the most
+      // common false-positive trigger when a balance happens to be
+      // followed by "monthly" — the swap-detection block below catches
+      // and corrects that case.
       var solarPmt=solarRaw.match(/\$?\s*(\d[\d,]*(?:\.\d+)?)\s*(?:\/\s*mo\b|\/\s*m\b|\s+per\s+month\b|\/\s*month\b|\s+monthly\b|\s+a\s+month\b)/i);
       if(!solarPmt) solarPmt=solarRaw.match(/(?:monthly\s+(?:payment|pmt)|payment(?:\s+of)?|pmt|monthly|pays?)[:\s]+\$?\s*(\d[\d,]*(?:\.\d+)?)/i);
       // Rate (%)
@@ -846,6 +850,19 @@ function renderDeal(d,allDeals){
       // Balance: first $ amount that isn't the monthly payment
       var solarRemainder=solarPmt?solarRaw.replace(solarPmt[0],' '):solarRaw;
       var solarBal=solarRemainder.match(/\$\s*(\d[\d,]*(?:\.\d+)?)\s*(k)?/i);
+      // Sanity check: a solar payment is always small ($50-$500 typical)
+      // and a balance is in the thousands. If the parser pulled a payment
+      // that is GREATER than the balance, the regex grabbed the wrong $
+      // amount (e.g. matched the balance via a stray "monthly" keyword)
+      // — swap them back.
+      if(solarPmt && solarBal){
+        var pmtNum=parseFloat(solarPmt[1].replace(/,/g,''));
+        var balNum=parseFloat(solarBal[1].replace(/,/g,''));
+        if(solarBal[2]) balNum*=1000;
+        if(pmtNum > balNum){
+          var tmp=solarPmt; solarPmt=solarBal; solarBal=tmp;
+        }
+      }
       // Lease vs. financed — labels show context to the buyer
       solarKind=/leas(e|ed|ing)/i.test(solarRaw)?'Lease':(/financ(e|ed|ing)|lien|loan/i.test(solarRaw)?'Lien':'');
       var solarParsed=!!(solarPmt||solarBal||solarRate||solarTerm||solarMaturity);
