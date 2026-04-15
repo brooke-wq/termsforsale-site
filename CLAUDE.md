@@ -302,6 +302,48 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 15 2026 Dispo Buddy Proof Stat Refresh
+
+Branch: `claude/update-deal-metrics-uUFC4` (merged via PR #88).
+
+Brooke asked to swap the outdated stats on the Dispo Buddy landing page
+"Partners Who've Done It" proof section for current real numbers.
+
+### Files shipped
+
+- **`dispobuddy/index.html:474-486`** — reduced the four-stat grid to
+  three accurate figures:
+  - `$47M+ in deals closed` → removed
+  - `320+ deals assigned` → **`200+ deals assigned`**
+  - `47 days avg time to close` → **`<16 days avg time to close`**
+    (encoded as `&lt;16 days` so the `<` renders safely)
+  - `4.9★ from 200+ partners` → removed from this grid
+  - Added **`$1.7M+ in funded assignment fees`**
+- **`dispobuddy/index.html:266-267`** — aligned the two hero badges
+  so they don't contradict the proof grid below:
+  - `4.9★ from 200+ partners` → **`4.9★ partner rating`** (dropped
+    "200+ partners" to avoid colliding with the new "200+ deals
+    assigned" stat)
+  - `$47M+ in deals closed` → **`$1.7M+ in funded assignment fees`**
+    (matches the proof grid)
+
+### Deliberately NOT touched
+
+- Jeremy R. testimonial (still `$18k` easiest deal) — left alone.
+- `dispobuddy/proof.html`, `dispobuddy/index.html` "Social Proof"
+  narrative copy — not in scope for this request. If those also carry
+  the old `$47M` / `320+` / `47-day` numbers, a follow-up sweep can
+  retarget them.
+
+### Verified
+
+- Both commits (`3e56879`, `f619206`) landed on the feature branch,
+  Netlify preview built clean, PR merged to main (`85e0af9`).
+- Post-merge grep confirms `$47M+` / `320+` / `47 days` no longer
+  appear anywhere under `dispobuddy/`.
+
+---
+
 ## Completed — April 15 2026 Mobile Nav Collapsible Hamburger
 
 Branch: `claude/mobile-nav-collapse-O6uig`.
