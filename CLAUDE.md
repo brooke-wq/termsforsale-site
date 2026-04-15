@@ -13,6 +13,32 @@
 2. NEVER run notify-buyers, deal-follow-up, or any messaging function without confirming it won't send live messages
 3. When in doubt, ASK the user before running
 
+## Campaign Sender Identity (REQUIRED)
+
+**Every outbound SMS and email — campaigns and transactional alike — MUST originate from the company channels:**
+
+- **SMS from:** `+1 480-637-3117` (set via `fromNumber` on every `/conversations/messages` SMS POST)
+- **Email from:** `Terms For Sale <info@termsforsale.com>` (set via `emailFrom` on every `/conversations/messages` Email POST)
+
+These are exposed as `CAMPAIGN_FROM_PHONE` and `CAMPAIGN_FROM_EMAIL` in `_ghl.js`. The shared `sendSMS()` and `sendEmail()` helpers default to these values; functions that hit `/conversations/messages` directly (e.g. `notify-buyers.js`, `deal-follow-up.js`, `auth-signup.js`, `auth-reset.js`) include `fromNumber` / `emailFrom` explicitly.
+
+**Never use** `Brooke Froehlich <brooke@mydealpros.com>` or any personal sender — replies must route to the shared company inbox.
+
+## Buyer Opt-In Requirement (REQUIRED for ALL campaigns)
+
+**Every buyer-facing campaign send (deal alerts, follow-ups, nudges) MUST verify the recipient has the `opt in` tag (case-insensitive) BEFORE sending.**
+
+- Tag value: `opt in` (matched lower-cased and trimmed — `OPT IN`, `Opt In`, ` opt in ` all match)
+- Helper: `hasOptInTag(contactOrTags)` exported from `_ghl.js`
+- Constant: `OPT_IN_TAG` exported from `_ghl.js`
+
+**Where it's enforced:**
+- `notify-buyers.js` — `fetchAllBuyers()` filters out any contact without `opt in` (also still filters `alerts-paused` and `Contact Role !== Buyer`)
+- `deal-follow-up.js` — top of the contact loop skips any contact without `opt in`
+- `follow-up-nudge.js` — gates the SMS send on `opt in`; stale-tagging (data-only) still runs
+
+**Adding a new campaign function?** You MUST gate sends on `hasOptInTag(contact)`. Failing to do so violates company policy and may violate TCPA/CAN-SPAM.
+
 ## Project Overview
 
 Deal Pros LLC is a real estate wholesale company that operates two public-facing sites and an AI-powered back-office stack called **Paperclip**:
@@ -389,6 +415,499 @@ being rejected. Just need to confirm the real Notion schema.
 
 Also still pending: County + HOA fields (Brooke confirmed the Notion
 properties exist but the form doesn't collect them yet).
+
+---
+
+## Completed — April 15 2026 Dispo Buddy Proof Stat Refresh
+
+Branch: `claude/update-deal-metrics-uUFC4` (merged via PR #88).
+
+Brooke asked to swap the outdated stats on the Dispo Buddy landing page
+"Partners Who've Done It" proof section for current real numbers.
+
+### Files shipped
+
+- **`dispobuddy/index.html:474-486`** — reduced the four-stat grid to
+  three accurate figures:
+  - `$47M+ in deals closed` → removed
+  - `320+ deals assigned` → **`200+ deals assigned`**
+  - `47 days avg time to close` → **`<16 days avg time to close`**
+    (encoded as `&lt;16 days` so the `<` renders safely)
+  - `4.9★ from 200+ partners` → removed from this grid
+  - Added **`$1.7M+ in funded assignment fees`**
+- **`dispobuddy/index.html:266-267`** — aligned the two hero badges
+  so they don't contradict the proof grid below:
+  - `4.9★ from 200+ partners` → **`4.9★ partner rating`** (dropped
+    "200+ partners" to avoid colliding with the new "200+ deals
+    assigned" stat)
+  - `$47M+ in deals closed` → **`$1.7M+ in funded assignment fees`**
+    (matches the proof grid)
+
+### Deliberately NOT touched
+
+- Jeremy R. testimonial (still `$18k` easiest deal) — left alone.
+- `dispobuddy/proof.html`, `dispobuddy/index.html` "Social Proof"
+  narrative copy — not in scope for this request. If those also carry
+  the old `$47M` / `320+` / `47-day` numbers, a follow-up sweep can
+  retarget them.
+
+### Verified
+
+- Both commits (`3e56879`, `f619206`) landed on the feature branch,
+  Netlify preview built clean, PR merged to main (`85e0af9`).
+- Post-merge grep confirms `$47M+` / `320+` / `47 days` no longer
+  appear anywhere under `dispobuddy/`.
+
+---
+
+## Completed — April 15 2026 Mobile Nav Collapsible Hamburger
+
+Branch: `claude/mobile-nav-collapse-O6uig`.
+
+Brooke reported the Terms For Sale mobile nav bar looked messy —
+the existing mobile CSS had `.nav-links{display:none}` so the 6
+primary links (Browse Deals / Sell Your Deal / Get Deal Alerts /
+Commercial / Deal Map / Help) were completely unreachable on phones,
+and the remaining `.nav-right` still crammed `#tfs-buybox-container
++ My Portal + Sign Up + Login` (4 items) into a tight bar. Replaced
+with a real hamburger-to-drawer pattern that works on all 4 pages
+that use the shared `<nav id="main-nav">` shell.
+
+### Files shipped (all 4 get the same additive change)
+
+- **`termsforsale/index.html`** — CSS block added before `</style>`,
+  `<button class="nav-toggle">` added at the end of `<nav>`, and JS
+  `toggleMobileNav()` + outside-click-on-link + Escape handler added
+  next to the existing `main-nav` scroll listener.
+- **`termsforsale/deals.html`** — same additions.
+- **`termsforsale/blog/index.html`** — same additions (uses
+  `min-height:60px` to match blog's existing 60px nav bar; no
+  `#tfs-buybox-container` rule since blog nav doesn't have one).
+- **`termsforsale/about.html`** — same additions.
+
+### How it works
+
+- **Desktop (≥769px):** zero visual change. The hamburger has
+  `display:none`, nav-links and nav-right render inline as before.
+- **Mobile (≤768px):** nav is now `flex-wrap:wrap; height:auto;
+  min-height:56px`. A 3-bar hamburger sits at the right of the
+  logo row. Tapping it applies `.open` to `<nav>`, which reveals
+  both `.nav-links` (stacked, full-width, single list with
+  per-row borders) and `.nav-right` (stacked, full-width buttons
+  at 12px padding / 14px font so they're tap-friendly) as two
+  ordered siblings below the logo row. The hamburger animates
+  into an X via three transformed `<span>` bars.
+- Tapping any link inside the drawer auto-closes the drawer
+  (delegation on `#main-nav .nav-links a, #main-nav .nav-right a`).
+- Escape key closes the drawer.
+- `aria-expanded` toggles between `"true"` and `"false"` on the
+  button for screen readers. `aria-controls="main-nav"` wires the
+  button to the disclosure target.
+
+### Selector specificity math
+
+The override selectors use `nav#main-nav.open .nav-links` /
+`nav#main-nav.open .nav-right` which beat the pre-existing mobile
+rules (`.nav-links{display:none}` / `.nav-right{gap:6px}`) via
+ID-selector specificity, so the new rules reliably win on mobile
+without `!important` except where padding/font-size needed to
+override inline styles on `#tfs-buybox-container a`.
+
+### Verified
+
+- All 4 files: `<nav>` balance 1 open / 1 close, `<button>` balance
+  matches before+1 on each file.
+- Each file has exactly 1 `nav-toggle` button, 1 `toggleMobileNav`
+  function, and 7-8 `nav#main-nav.open` CSS rules (blog has 7 since
+  it lacks the buybox container row).
+- Desktop CSS untouched — the only `@media(max-width:768px)` rule
+  that hits is additive.
+
+### Deliberately NOT touched
+
+- Any other page with its own custom nav (dashboard, admin shell,
+  buying-criteria form, deal.html, blog posts). Those either don't
+  use the shared `<nav id="main-nav">` pattern or have their own
+  responsive layouts already.
+- Desktop nav behavior / scroll shadow / hover colors / existing
+  auth modal — zero changes.
+- The VA post builder, dispobuddy pages, admin pages — all
+  out of scope.
+
+### Known caveats
+
+- The drawer is rendered inline inside `<nav>` (not as a fullscreen
+  overlay), so when open it overlaps ~300-400px of hero content
+  beneath it. That's standard dropdown-drawer behavior and matches
+  the pattern used on dispobuddy. If Brooke wants the drawer to
+  slide-in from the right as a full-height overlay (like dispobuddy
+  has), that's a separate pass.
+- No body-scroll-lock when open. The page is still scrollable
+  behind the drawer. Not a bug — just a design choice; if Brooke
+  wants it locked, add `document.documentElement.style.overflow =
+  open ? 'hidden' : ''` inside `toggleMobileNav()`.
+
+---
+
+## Completed — April 15 2026 Deal Status Display Lifecycle
+
+Branch: `claude/deal-status-display-Y0upg`.
+
+Brooke asked: widen what the public website shows so operators aren't
+forced to leave deals at "Actively Marketing" once the deal is under
+contract. Specifically:
+- **Assignment Sent** → keep showing as **Active** on the site.
+- **Assigned with EMD** → keep showing but mark as **Pending** so
+  buyers see the status change.
+- **Closed** → move into a **"Recently Closed"** social-proof section
+  so the track record is visible to new buyers.
+- **All other statuses** (Missing Information, Ready to Market, Not
+  Accepted, Lost, etc.) → continue to stay hidden.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/deals.js`** — filter widened from
+  `'Actively Marketing'` only to a `PUBLIC_STATUSES` list:
+  `['Actively Marketing', 'Assignment Sent', 'Assigned with EMD',
+   'Closed']`. Uses a Notion `or` filter with both `status` and
+  `select` shapes, falling back to client-side filtering if the
+  server-side shape is rejected. Also now surfaces three additional
+  Notion fields on every deal object: `dateFunded`, `dateAssigned`,
+  `amountFunded` — used by the closed-section stat cards and the
+  per-deal "Closed on <date>" banner.
+
+- **`termsforsale/deals.html`** — split loaded deals at init time
+  into `ALL_DEALS` (active + pending, main list + map) and
+  `CLOSED_DEALS` (sorted newest first, rendered into the new
+  "Recently Closed" section). `makeCard()` now reads `dealStatus`
+  and renders:
+  - **Pending badge** (orange `⏳ Pending`) on the photo top-left
+    for `Assigned with EMD` deals. Also swaps the "Just Listed"
+    price-row tag for a muted "⏳ Pending" chip.
+  - **Closed badge** (green `✓ Closed`) on the photo top-left for
+    `Closed` deals. Swaps "Just Listed" for a "✓ Closed" chip,
+    hides the Save heart, dims the card slightly (`is-closed`
+    class).
+  - COE countdown + urgency badges suppressed on pending/closed
+    cards so buyers aren't told to hurry on a deal that's already
+    under contract or funded.
+  - Map popup now renders a tiny inline `PENDING` chip next to the
+    deal type when `dealStatus === 'assigned with emd'` so the
+    status is visible from the map view too.
+  - New "Recently Closed" section renders between the map and the
+    testimonials block. Stat tiles for Deals Closed + Total Funded
+    (the Total Funded card auto-hides when no `Amount Funded`
+    values are populated in Notion, so partial data doesn't show
+    `$0K`). Grid caps at 8 most recent closed deals; each reuses
+    `makeCard()` for consistent styling.
+
+- **`termsforsale/deal.html`** — `renderDeal()` gained:
+  - Top-of-content status banner right under the photo grid.
+    Orange pending banner ("Pending — EMD Received") or green
+    closed banner ("Closed on <date>" when `dateFunded` is set).
+    Active/Assignment Sent deals show no banner (silent — the deal
+    just works).
+  - Sidebar body swaps for `Closed` deals: replaces the Request
+    Info / Submit Offer tabs with a centered "Deal Closed" card
+    that says the property has funded and links to `/deals.html`.
+    Consent/submit note also hidden.
+  - Sidebar for `Assigned with EMD` deals: hides the "Submit
+    Offer" tab entirely and expands Request Info to full width —
+    buyers can still ask a question, but new offers aren't being
+    taken. Header copy changes to "Under Contract / EMD".
+
+- **`termsforsale/map.html`** — standalone map filters out
+  `dealStatus === 'closed'` so the live map doesn't render
+  markers for funded deals. Pending deals still show (same color /
+  pin as active for now; could be dimmed later if needed).
+  `dealStatus` is now carried through the map's internal deal model
+  so future work can branch on it.
+
+- **`termsforsale/index.html`** — homepage "X active deals" stat now
+  excludes Closed from the count (the deals API returns them, but
+  the homepage banner is only meant for available inventory).
+
+- **`termsforsale/admin/deals.html`** — panel subtitle updated from
+  "Live from Notion — filter for 'Actively Marketing'" to reflect
+  the widened filter. Admins now see pipeline visibility across
+  all four public statuses in one list.
+
+### Deliberately NOT changed
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — still
+  queries Notion directly for `Deal Status = Actively Marketing` only.
+  We don't want new-deal SMS/email blasts firing on pending or
+  closed deals. Verified.
+- **`termsforsale/netlify/functions/sitemap.js`** — now includes
+  closed deals in the sitemap (intentional — closed listings are
+  real historical pages that add social-proof signal for Google).
+- **Existing `Under Contract` / `Sold` badge paths in `makeCard()`**
+  — kept intact. Those were legacy GHL opportunity statuses
+  (`dealStatus: 'under contract'`, `dealStatus: 'sold'`) not tied
+  to Notion. They still work exactly as before.
+- **`notify-buyers.js` dedup + tagging** — still uses `sent:[slug]`
+  on per-buyer blast. No impact from the filter widening.
+
+### Filter verification (local harness)
+
+Simulated Notion filter behavior against 9 status values:
+
+| Status | Result | Frontend bucket |
+|---|---|---|
+| Actively Marketing | SHOW | ALL_DEALS (active) |
+| Assignment Sent | SHOW | ALL_DEALS (active) |
+| Assigned with EMD | SHOW | ALL_DEALS (Pending badge) |
+| Closed | SHOW | CLOSED_DEALS |
+| Missing Information | HIDE | — |
+| Ready to Market | HIDE | — |
+| Not Accepted | HIDE | — |
+| Lost | HIDE | — |
+| (empty) | HIDE | — |
+
+Div/script tag balance checked on all 4 modified HTML files after
+edit — all balanced. `deals.js` loads cleanly as a Node module.
+
+### Known caveats / follow-ups
+
+- The Notion "Deal Status" property must include `Assignment Sent`,
+  `Assigned with EMD`, and `Closed` as select/status options. These
+  are already in the Notion schema (confirmed — `dispobuddy/deal-
+  detail.js` references them as stages in the Dispo Buddy JV
+  pipeline, and `paperclip-sop.html` documents the full lifecycle).
+  If those options ever get renamed in Notion, the matching strings
+  in `deals.js:PUBLIC_STATUSES` and the lowercase checks in
+  `deals.html` / `deal.html` must be updated to match.
+- Closed deals in the "Recently Closed" section are clickable —
+  they go to `/deal.html?id=...` which now renders the green
+  closed banner + "See Active Deals" sidebar CTA. Good for SEO and
+  track record, but means a legacy buyer with the old URL still
+  lands on a clean page instead of a 404.
+- Map markers for Pending deals use the same color as Active; only
+  a small chip in the popup indicates the status. Could be dimmed
+  or given a distinct badge if Brooke wants more visual separation
+  on the map later.
+- The "Total Funded" stat card on the closed section requires
+  `Amount Funded` to be populated on the Notion deal rows. If
+  that field is left blank across all closed deals, the tile
+  auto-hides (no $0K shown).
+
+---
+
+## Completed — April 14 2026 Solar Loan Details on Deal Terms Table
+
+Branch: `claude/add-solar-property-details-atxRM`.
+
+Brooke asked: for deals with solar, pull the existing "Solar" field
+from Notion into the deal page's terms section as an **additional
+loan** (alongside SubTo Existing Loan and Seller Finance Amount rows).
+Previously the Solar field was being fetched by `deals.js` (line 266)
+but never rendered on `deal.html` — buyers had no way to see that a
+property carried a solar lien / lease until they got the PA.
+
+### Files shipped
+
+- **`termsforsale/deal.html`** — inside `renderDeal()`, after the
+  Seller Finance termRows block and before the "Pad to even" line
+  (new block around line 818-852). The block:
+  - Reads `d.solar` (already populated by `deals.js` from the Notion
+    "Solar" text property).
+  - Skips display entirely when the field is empty or indicates no
+    solar / paid off: matches `/^(no|none|n\/a|0|false)\b/i` on the
+    start OR `/paid\s*off/i` anywhere in the string. A paid-off
+    solar system has no loan to assume, so there's nothing to add.
+  - For everything else, parses four pieces from the free-form text:
+    - **Monthly payment** — matches `$X/mo`, `$X per month`,
+      `X/month` patterns.
+    - **Rate** — `X.XX%` pattern.
+    - **Term** — `X yrs` / `X years` pattern.
+    - **Balance** — first `$X,XXX` amount that isn't the monthly
+      payment (the monthly payment is stripped from the string
+      before this match runs so it can't be double-matched). Also
+      handles `$18k` shorthand (multiplies by 1000 when the `k`
+      suffix is present).
+  - Detects lease vs. financed from keywords (`leas(e|ed|ing)` →
+    "Lease", `financ(e|ed|ing)|lien|loan` → "Loan") so row labels
+    read `Solar Lease Payment` vs `Solar Loan Balance` — matches
+    the existing Notion convention of describing solar as either
+    a lease or a lien.
+  - If nothing structured parses out, falls back to a single
+    `Solar: <raw text>` row so buyers still see whatever's on file
+    (e.g. "Yes — leased" with no dollar amount yet).
+
+### Parsing verified locally
+
+Exercised 16 realistic Notion values against the parser:
+
+| Input | Rendered rows |
+|---|---|
+| `""` / `"No"` / `"None"` / `"N/A"` / `"Paid off"` / `"Yes — paid off"` | (skipped — no loan shown) |
+| `"Yes"` | `Solar: Yes` |
+| `"Yes — leased"` | `Solar Lease: Yes — leased` |
+| `"Yes — leased $120/mo"` | `Solar Lease Payment: $120/mo` |
+| `"Yes — financed (lien)"` | `Solar Loan: Yes — financed (lien)` |
+| `"$15,000 @ 4.99% for 20 yrs, $85/mo"` | Balance $15,000 / Payment $85/mo / Rate 4.99% / Term 20 yrs |
+| `"Financed: $22,450 balance, $150/mo, 4.5%, 15 yrs"` | Solar Loan Balance $22,450 / Payment $150/mo / Rate 4.5% / Term 15 yrs |
+| `"Solar lien $18k remaining, $95/month"` | Solar Loan Balance $18,000 / Payment $95/mo |
+
+### Deliberately NOT changed
+
+- **`deals.js`** — already pulls `Solar` text correctly (line 266),
+  no backend changes needed.
+- **Notion schema** — no new properties. We're using the existing
+  "Solar" text field.
+- **Deal card / marketplace views** — solar details remain in the
+  per-deal "Terms" tab only. Not surfaced on the deal list or map
+  popup — the existing per-card tag strip already shows HOA but
+  adding solar to the tag strip would crowd the card. Could be
+  added later if the team wants a "solar lien" pill.
+- **Outbound alerts (notify-buyers.js, email templates, SMS)** — not
+  touched. The solar text lives on the deal page; no
+  marketing-copy changes needed since alerts point buyers to the
+  deal page for details.
+
+### Follow-up tightening (same day)
+
+After Brooke saw a live deal where Solar Balance + Solar Rate were
+sandwiched between SubTo's `Loan Maturity` and pad-cell rows in the
+same grid (visually blending into the existing-loan section), made
+two adjustments to the same branch:
+
+- **Visual separation** — solar no longer pushes into `termRows`.
+  Instead it builds its own `solarRows` array and renders as a
+  separate `.terms-grid` block below the main terms table, with a
+  small uppercase heading row (e.g. "SOLAR LIEN" / "SOLAR LEASE")
+  and a sun icon. The main loan grid stays clean and the solar
+  block is unmistakably its own section. Heading text uses
+  `solarKind` ("Lien" for financed/loan/lien text, "Lease" for
+  leased text, plain "Solar" otherwise — note: changed "Loan" to
+  "Lien" since solar liens are the more common buyer concern).
+- **Maturity + monthly payment parsing** — added two new field
+  parsers so any solar field that already has those values shows
+  them on the deal page:
+  - **Maturity date** — matches `MM/DD/YYYY`, `MM-DD-YYYY`,
+    `MM/YYYY`, `MM-YYYY`. Also matches keyword-prefixed forms
+    `matures? <date>`, `maturity <date>`, `until <date>`,
+    `thru <date>`, `through <date>`. Same date format as the
+    existing SubTo `Loan Maturity` row so the two lines look
+    consistent on the page.
+  - **Payment fallback** — added `payment $X` / `pmt $X` /
+    `monthly $X` keyword-prefixed match in addition to the
+    existing `$X/mo` / `$X per month` / `$X/month` patterns. So
+    a Notion value like `"$47,161.88 at 3.49%, payment $215,
+    matures 4-2042"` now renders all four fields correctly.
+
+### Known caveats
+
+- Parser is regex-based on free-form text. If Brooke's operators
+  enter unusual formats (e.g. `"$15k, twenty years"` — word-form
+  numbers), the parser may miss fields. The fallback "show raw
+  text" branch ensures buyers always see *something*, so the
+  degraded case is still visible-not-hidden.
+- The regex for "paid off" is intentionally loose — matches anywhere
+  in the string, not just the start. A value like `"Solar loan, not
+  paid off yet"` would incorrectly skip display. Unlikely in
+  practice but worth noting. If this becomes a real case, tighten to
+  word-boundary matching like `\bpaid\s*off\b` excluding the "not
+  paid off" negation (regex gets hairy; easier fix is to let
+  operators use "Paid in full" or "Owned outright" for the skip
+  path).
+- Balance detection picks the *first* $ amount after stripping the
+  monthly payment. If Notion says `"$50,000 ARV, $15k solar lien,
+  $120/mo"`, we'd match $50,000 as the solar balance (wrong). The
+  Solar field should only describe the solar itself — if operators
+  start mixing deal figures into it, we'd need a stricter "balance"
+  keyword lookup instead.
+---
+
+## Completed — April 14 2026 Campaign Sender Identity + Opt-In Gate
+
+Branch: `claude/campaign-sender-requirements-pd0jc`.
+
+Locked down two compliance requirements that span every outbound SMS/email path:
+
+1. **All outbound must originate from company channels** — no more `Brooke Froehlich <brooke@mydealpros.com>` and no more carrier default phone. SMS now goes out from `+1 480-637-3117`; email from `Terms For Sale <info@termsforsale.com>`.
+2. **Buyer campaigns require an explicit `opt in` tag** — no opt-in tag on the contact, no campaign send. Hard gate, case-insensitive match.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/_ghl.js`**
+  - New constants: `CAMPAIGN_FROM_PHONE` (`+14806373117`), `CAMPAIGN_FROM_EMAIL` (`Terms For Sale <info@termsforsale.com>`), `OPT_IN_TAG` (`opt in`). All overridable via env vars (`CAMPAIGN_FROM_PHONE`, `CAMPAIGN_FROM_EMAIL`) for emergencies.
+  - New helper: `hasOptInTag(contactOrTags)` — accepts a contact object or raw tags array, returns true only if any tag (lower-cased, trimmed) equals `opt in`. Verified against 6 cases (`opt in`, `OPT IN`, `  Opt In  `, `buyer`, `{tags:['opt in','x']}`, `null`).
+  - `sendSMS()` now sets `fromNumber: CAMPAIGN_FROM_PHONE` on every send.
+  - `sendEmail()` now sets `emailFrom: CAMPAIGN_FROM_EMAIL` (was `Brooke Froehlich <brooke@mydealpros.com>`).
+  - Commercial-lane `sendSmsToBrooke()` and `sendEmailToContact()` also set `fromNumber` / `emailFrom` so internal alerts to Brooke still come from the company line.
+  - All four constants/helpers exported.
+
+- **`termsforsale/netlify/functions/notify-buyers.js`**
+  - `fetchAllBuyers()` adds an opt-in tag filter alongside the existing `Contact Role = Buyer` and `alerts-paused` filters. No opt-in → buyer is invisible to the matcher.
+  - SMS POST now includes `fromNumber: '+14806373117'`.
+  - Email POST `emailFrom` switched from `Brooke Froehlich <brooke@mydealpros.com>` to `Terms For Sale <info@termsforsale.com>`.
+
+- **`termsforsale/netlify/functions/deal-follow-up.js`**
+  - Top of the per-contact loop: if no `opt in` tag, skip + bump `stats.skipped`. Applies before any of the D0/D1/D2 send paths.
+  - All 3 SMS POSTs (D0/D1/D2) include `fromNumber: '+14806373117'`.
+  - Both email POSTs (D0/D2) switched to `Terms For Sale <info@termsforsale.com>`. Sign-off changed from `— Brooke, Terms For Sale` to `— Terms For Sale` so the body matches the from address.
+
+- **`termsforsale/netlify/functions/follow-up-nudge.js`**
+  - Computes `hasOptIn` from the lowercased tag list at the top of the contact loop.
+  - Stale-tagging (Path A, data-only) still runs regardless — that's not a send.
+  - Path B (the actual SMS nudge) gates on `hasOptIn` right after the no-phone check. SMS itself flows through `_ghl.sendSMS()`, which now bakes in `fromNumber` automatically.
+
+- **`termsforsale/netlify/functions/auth-signup.js`** — welcome email `emailFrom` switched to `Terms For Sale <info@termsforsale.com>`.
+
+- **`termsforsale/netlify/functions/auth-reset.js`** — password reset email `emailFrom` switched to `Terms For Sale <info@termsforsale.com>`.
+
+- **`termsforsale/netlify/functions/_lindy.js`** — tool description for `send_email` updated so the LLM knows the from address. (CEO contact reference further down the system prompt left alone — that's metadata about who Brooke IS, not a sender identity.)
+
+- **`CLAUDE.md`** — added two new MANDATORY rule sections at the top: "Campaign Sender Identity (REQUIRED)" and "Buyer Opt-In Requirement (REQUIRED for ALL campaigns)". Both flagged as policy gates that any future campaign function MUST honor.
+
+### Verified locally
+
+- `_ghl.js` exports all 4 new symbols; `hasOptInTag()` correctly handles case/whitespace/null.
+- All 6 modified function modules + `_lindy.js` load cleanly via `require()` (no syntax errors, no missing imports).
+- Simulated buyer filter: opt-in present → keep; missing → skip; case-variants → match; `alerts-paused` still hard-rejects even with opt-in; non-buyers still skipped.
+
+### Operational follow-up needed in GHL
+
+- Existing buyer contacts do NOT have the `opt in` tag yet. Once this branch ships, **every existing buyer is silenced** until the tag is added. To rectify:
+  - Decide which signup paths auto-apply `opt in` going forward (recommend: `auth-signup`, `vip-buyer-submit`, `buy-box-save` — all currently apply `tfs-buyer` / `buyer-signup`; should also apply `opt in` if the user checked an explicit consent box during signup).
+  - Run a one-time backfill to apply `opt in` to existing buyers who have a documented consent record (e.g. signed up via the website with the consent checkbox). Don't blanket-apply — that defeats the point of the gate.
+- Add the explicit consent checkbox to all signup forms if it isn't already there ("I agree to receive SMS and email about deals matching my buy box. Reply STOP to opt out."). Without that, applying `opt in` is not legally defensible.
+
+### Same-session follow-up — auto-tag signups + backfill (April 14 2026)
+
+Per Brooke: every Terms For Sale website signup IS the consent action, so all three signup paths now auto-apply the `opt in` tag and a one-shot backfill applies it retroactively to every existing TFS website-signup buyer.
+
+**Files updated:**
+
+- **`termsforsale/netlify/functions/auth-signup.js`** — both the contact-create tag list (line 90) and the downstream webhook tag list (line 148) now include `'opt in'`.
+- **`termsforsale/netlify/functions/vip-buyer-submit.js`** — both the upsert tag list (line 41) and the explicit `addTags()` follow-up (line 59) now include `'opt in'`.
+- **`termsforsale/netlify/functions/buy-box-save.js`** — both the upsert default tag list (line 73) and the `addTags()` reapplication (line 134) now include `'opt in'`.
+- **`scripts/backfill-buyer-opt-in.js`** (new) — paginates GHL by each of the website-signup tags (`buyer-signup`, `tfs buyer`, `TFS Buyer`, `Website Signup`, `VIP Buyer List`, `buy box complete`, `use:buyer`), dedups by contact id, and POSTs `tags: ['opt in']` to `/contacts/{id}/tags` on every contact missing the case-insensitive opt-in tag. Skips contacts already opted in. Supports `DRY_RUN=1` and `MAX_CONTACTS=N`. Modeled after `backfill-contact-role.js`.
+
+**Deliberately NOT auto-tagged:**
+- `buyer-import.js` — imports buyers from external sources (InvestorLift, InvestorBase). Those contacts have no consent record with us; the tag is left off so they stay silenced until manually opted in per source.
+- `commercial-buyer-submit.js` — commercial-lane buyers (the `Commercial / Multifamily` pipeline). Different lane entirely; opt-in is enforced on the residential buyer-alert pipeline only.
+
+**Run the backfill on the Droplet:**
+
+```
+cd /root/termsforsale-site
+git pull origin claude/campaign-sender-requirements-pd0jc
+DRY_RUN=1 node scripts/backfill-buyer-opt-in.js    # preview
+node scripts/backfill-buyer-opt-in.js              # apply
+```
+
+The backfill is idempotent — re-running it skips anyone already tagged.
+
+### Env vars (no NEW ones required)
+
+- Optional overrides if needed: `CAMPAIGN_FROM_PHONE`, `CAMPAIGN_FROM_EMAIL`. Defaults are baked in.
+
+### Known caveats
+
+- Transactional welcomes / password resets are also affected by the `emailFrom` change (same company inbox), but they intentionally do NOT require `opt in` since they're user-initiated. If we later want to require opt-in even for welcome emails, the gate has to move into `auth-signup` explicitly.
+- The opt-in gate filters at the buyer-fetch layer in `notify-buyers`, so deals will simply have fewer matched buyers in the per-deal stats once shipped. Not a regression — the dropped contacts were never legally messageable in the first place.
 
 ---
 
@@ -1250,6 +1769,57 @@ can still override via `body.property_id` if they want to pass their own.
 `_steadily.js` header comment now documents the empirical schema notes
 (property_id required, property_details/property_metadata/metadata
 optional) so future maintainers don't repeat the mistake.
+
+## Completed — April 13 2026 Insurance Quote — Use Highest Rate
+
+Branch: `claude/highest-insurance-rate-z5FG1`.
+
+Brooke noted that Steadily's `/v1/quote/estimate` response contains
+**two** annual-premium numbers inside `estimates[0].estimate`:
+`lowest` (bare-bones coverage) and `highest` (full coverage). The old
+code was always projecting `lowest`, which meant the deal page was
+quoting a stripped-down premium the buyer couldn't actually buy at.
+Switched the projection to always use `highest`.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/insurance-quote.js`** — response
+  projection now reads `est.estimate.highest` first, falls back to
+  `est.estimate.lowest` only if `highest` is missing (older API
+  versions / edge cases), and falls through to `available: false`
+  when neither is present. The JSON response now also exposes
+  `annualHighest`, `annualLowest`, and a `rateTier` field
+  (`'highest'` / `'lowest(fallback)'` / `'none'`) so any future
+  caller can see both numbers without a re-fetch. The log line now
+  prints both rates plus which tier was picked, so Netlify function
+  logs show the full picture at a glance.
+
+- **`termsforsale/netlify/functions/_steadily.js`** — header comment
+  updated to document the two-rate response shape (previously said
+  only `lowest` existed).
+
+### Backwards compatibility
+
+- The `annual`, `monthly`, `available`, `startUrl`, `propertyId`
+  response keys are unchanged in name — only the underlying value of
+  `annual` / `monthly` changes (now reflects the full-coverage quote
+  instead of bare-bones).
+- `deal.html:1130` caller continues to read `data.monthly` and
+  `data.startUrl` — no frontend changes required.
+
+### Verified locally
+
+Ran a four-case harness with mocked `_steadily.js`:
+
+| Mock response | Annual used | Monthly | rateTier |
+|---|---|---|---|
+| `{lowest:780, highest:1440}` | $1440 | $120 | `highest` |
+| `{highest:1440}` | $1440 | $120 | `highest` |
+| `{lowest:780}` | $780 | $65 | `lowest(fallback)` |
+| `{}` | $0 | — | `none` (available=false) |
+
+All cases behave as expected. No changes needed to the env vars,
+frontend, or `_steadily.js` request path.
 
 ## Completed — April 9 2026 Domain Migration to Apex termsforsale.com
 

@@ -815,10 +815,84 @@ function renderDeal(d,allDeals){
     if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
   }
 
+  // Solar section — solar lien / loan / lease shown as a SEPARATE block
+  // below the main loan terms so the existing-loan and solar details don't
+  // visually blend. Notion "Solar" is a free-form text field. Common values:
+  // "", "No", "Yes — paid off", "Yes — leased $120/mo",
+  // "$15,000 balance @ 4.99% for 20 yrs, $85/mo, matures 04/2042", etc.
+  // Skip if empty / indicates no solar or paid off.
+  var solarRows=[];
+  var solarKind='';
+  if(d.solar){
+    var solarRaw=String(d.solar).trim();
+    if(solarRaw && !/^(no|none|n\/a|0|false)\b/i.test(solarRaw) && !/paid\s*off/i.test(solarRaw)){
+      // Monthly payment — two passes:
+      //   1) amount-then-keyword: "$120/mo", "$120/m", "$120 per month",
+      //      "$120/month", "$120 monthly", "$120 a month"
+      //   2) keyword-then-amount: "payment $120", "payment of $120",
+      //      "monthly payment $120", "pmt $120", "monthly $120",
+      //      "pays $120", "pay $120"
+      // Bare " monthly" is included in pass 1, but it's also the most
+      // common false-positive trigger when a balance happens to be
+      // followed by "monthly" — the swap-detection block below catches
+      // and corrects that case.
+      var solarPmt=solarRaw.match(/\$?\s*(\d[\d,]*(?:\.\d+)?)\s*(?:\/\s*mo\b|\/\s*m\b|\s+per\s+month\b|\/\s*month\b|\s+monthly\b|\s+a\s+month\b)/i);
+      if(!solarPmt) solarPmt=solarRaw.match(/(?:monthly\s+(?:payment|pmt)|payment(?:\s+of)?|pmt|monthly|pays?)[:\s]+\$?\s*(\d[\d,]*(?:\.\d+)?)/i);
+      // Rate (%)
+      var solarRate=solarRaw.match(/(\d+(?:\.\d+)?)\s*%/);
+      // Term ("20 yrs", "15 years")
+      var solarTerm=solarRaw.match(/(\d+)\s*(?:yrs?|years?)\b/i);
+      // Maturity date: MM/DD/YYYY, MM-DD-YYYY, MM/YYYY, MM-YYYY,
+      // optionally prefixed with "matures"/"maturity"/"until"/"thru"/"through"
+      var solarMaturity=solarRaw.match(/(?:matures?|maturity|until|thru|through)[:\s]*((?:\d{1,2}[\/\-])?\d{1,2}[\/\-]\d{2,4})/i);
+      if(!solarMaturity) solarMaturity=solarRaw.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/);
+      if(!solarMaturity) solarMaturity=solarRaw.match(/\b(\d{1,2}[\/\-]\d{4})\b/);
+      // Balance: first $ amount that isn't the monthly payment
+      var solarRemainder=solarPmt?solarRaw.replace(solarPmt[0],' '):solarRaw;
+      var solarBal=solarRemainder.match(/\$\s*(\d[\d,]*(?:\.\d+)?)\s*(k)?/i);
+      // Sanity check: a solar payment is always small ($50-$500 typical)
+      // and a balance is in the thousands. If the parser pulled a payment
+      // that is GREATER than the balance, the regex grabbed the wrong $
+      // amount (e.g. matched the balance via a stray "monthly" keyword)
+      // — swap them back.
+      if(solarPmt && solarBal){
+        var pmtNum=parseFloat(solarPmt[1].replace(/,/g,''));
+        var balNum=parseFloat(solarBal[1].replace(/,/g,''));
+        if(solarBal[2]) balNum*=1000;
+        if(pmtNum > balNum){
+          var tmp=solarPmt; solarPmt=solarBal; solarBal=tmp;
+        }
+      }
+      // Lease vs. financed — labels show context to the buyer
+      solarKind=/leas(e|ed|ing)/i.test(solarRaw)?'Lease':(/financ(e|ed|ing)|lien|loan/i.test(solarRaw)?'Lien':'');
+      var solarParsed=!!(solarPmt||solarBal||solarRate||solarTerm||solarMaturity);
+      if(!solarParsed){
+        solarRows.push({l:'Details',v:solarRaw});
+      } else {
+        if(solarBal){
+          var solarBalNum=parseFloat(solarBal[1].replace(/,/g,''));
+          if(solarBal[2]) solarBalNum*=1000;
+          solarRows.push({l:'Balance',v:fc(solarBalNum)});
+        }
+        if(solarPmt) solarRows.push({l:'Payment',v:'$'+parseFloat(solarPmt[1].replace(/,/g,'')).toLocaleString()+'/mo'});
+        if(solarRate) solarRows.push({l:'Rate',v:solarRate[1]+'%'});
+        if(solarTerm) solarRows.push({l:'Term',v:solarTerm[1]+' yrs'});
+        if(solarMaturity) solarRows.push({l:'Maturity',v:solarMaturity[1]});
+      }
+    }
+  }
+
   // Pad to even number for 2-column grid
   if(termRows.length%2!==0) termRows.push({l:'',v:''});
 
   const termsTableHtml=`<div class="terms-grid">${termRows.filter(r=>r.l||r.v).map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}${termRows.length%2!==0?'<div class="term-item empty-cell"></div>':''}</div>`;
+
+  // Solar block — rendered as its own grid with a heading so it doesn't blend
+  // with the existing-loan rows above. Only appears when solarRows has entries.
+  var solarHeading=solarKind?'Solar '+solarKind:'Solar';
+  var solarPaddedRows=solarRows.slice();
+  if(solarPaddedRows.length%2!==0) solarPaddedRows.push({l:'',v:''});
+  const solarTableHtml=solarRows.length?`<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>${solarHeading}</div><div class="terms-grid">${solarPaddedRows.map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div></div>`:'';
 
   // HIGHLIGHTS
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
@@ -828,6 +902,30 @@ function renderDeal(d,allDeals){
   const descText=(d.description||d.details||'').trim();
   const descSafe=descText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const descHtml=descText?`<div class="deal-desc"><div class="deal-desc-label">About This Deal</div><div class="deal-desc-body">${descSafe}</div></div>`:'';
+
+  // STATUS BANNER — renders a top-of-page strip for deals that are no longer
+  // freely accepting offers. Actively Marketing + Assignment Sent show no
+  // banner (treated as "active"). Assigned with EMD shows an orange Pending
+  // banner (deal still visible but under EMD). Closed shows a green Closed
+  // banner with the funded date when available.
+  const dsRaw=(d.dealStatus||'').toLowerCase().trim();
+  const dsIsPending=dsRaw==='assigned with emd';
+  const dsIsClosed =dsRaw==='closed';
+  let statusBannerHtml='';
+  if(dsIsPending){
+    statusBannerHtml=`<div class="deal-status-banner pending" style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:22px">⏳</span>
+      <div><div style="font-size:14px;font-weight:800;color:#92400E">Pending — EMD Received</div>
+      <div style="font-size:12px;color:#78350F;margin-top:2px">This deal is under contract with earnest money down. We're leaving the page up so buyers can follow the track record. Backup offers aren't being accepted at this time.</div></div>
+    </div>`;
+  } else if(dsIsClosed){
+    const fundedLine=d.dateFunded?` on ${d.dateFunded}`:'';
+    statusBannerHtml=`<div class="deal-status-banner closed" style="background:#D1FAE5;border:1px solid #6EE7B7;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:22px">✓</span>
+      <div><div style="font-size:14px;font-weight:800;color:#065F46">Closed${fundedLine}</div>
+      <div style="font-size:12px;color:#065F46;margin-top:2px">This deal has funded and is kept here as part of our track record. Browse active deals to see what's currently available.</div></div>
+    </div>`;
+  }
 
   // RENTAL
   const rentHtml=d.rentFinal?`<div style="background:var(--blue-light);border-radius:var(--r);padding:16px;margin-top:0">
@@ -871,6 +969,8 @@ function renderDeal(d,allDeals){
     <div class="deal-main">
       <div class="photo-grid" id="photo-grid">${photoHtml}</div>
 
+      ${statusBannerHtml}
+
       <div class="deal-header">
         <div class="deal-price-row">
           <span class="deal-price">${fc(entry||+d.askingPrice)}</span>
@@ -902,6 +1002,7 @@ function renderDeal(d,allDeals){
       <div id="tab-terms" class="tab-panel on">
         <div class="terms-map-grid" style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
           <div>${termsTableHtml}
+            ${solarTableHtml}
             <div id="insurance-quote" style="margin-top:12px;background:linear-gradient(135deg,#EBF8FF,#E6F9F0);border:1px solid #bee3f8;border-radius:var(--r);padding:16px;display:none">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -1030,14 +1131,20 @@ function renderDeal(d,allDeals){
     <div class="deal-sidebar" id="request-form">
       <div class="sidebar-card">
         <div class="sidebar-head">
-          <h3>Interested in This Deal?</h3>
-          <p>Take the next step — request info or submit an offer.</p>
+          <h3>${dsIsClosed?'Deal Closed':dsIsPending?'Under Contract / EMD':'Interested in This Deal?'}</h3>
+          <p>${dsIsClosed?'This deal has funded. Browse active deals below.':dsIsPending?'Earnest money is down. You can still ask a question — new offers aren\'t being taken.':'Take the next step — request info or submit an offer.'}</p>
         </div>
-        ${loggedIn?`
+        ${dsIsClosed?`
+        <div style="padding:18px 20px 20px;text-align:center">
+          <div style="font-size:40px;margin-bottom:8px">✓</div>
+          <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px">This property has already closed. It's kept on the site as part of our track record.</p>
+          <a href="/deals.html" class="btn btn-blue" style="width:100%;justify-content:center;text-decoration:none">See Active Deals →</a>
+        </div>
+        `:loggedIn?`
         <div style="padding:16px 20px 0">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
-            <button id="tab-inquiry" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('inquiry-section').style.display='block';document.getElementById('offer-section').style.display='none';this.style.background='var(--blue)';this.style.color='#fff';document.getElementById('tab-offer').style.background='var(--bg)';document.getElementById('tab-offer').style.color='var(--text-mid)'">Request Info</button>
-            <button id="tab-offer" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--bg);color:var(--text-mid);border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('offer-section').style.display='block';document.getElementById('inquiry-section').style.display='none';this.style.background='var(--navy)';this.style.color='#fff';document.getElementById('tab-inquiry').style.background='var(--bg)';document.getElementById('tab-inquiry').style.color='var(--text-mid)'">Submit Offer</button>
+          <div style="display:grid;grid-template-columns:${dsIsPending?'1fr':'1fr 1fr'};gap:8px;margin-bottom:20px">
+            <button id="tab-inquiry" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('inquiry-section').style.display='block';document.getElementById('offer-section').style.display='none';this.style.background='var(--blue)';this.style.color='#fff';var of=document.getElementById('tab-offer');if(of){of.style.background='var(--bg)';of.style.color='var(--text-mid)';}">Request Info</button>
+            ${dsIsPending?'':`<button id="tab-offer" class="btn" style="justify-content:center;font-size:13px;padding:10px;background:var(--bg);color:var(--text-mid);border:none;border-radius:8px;cursor:pointer;transition:all .15s" onclick="document.getElementById('offer-section').style.display='block';document.getElementById('inquiry-section').style.display='none';this.style.background='var(--navy)';this.style.color='#fff';document.getElementById('tab-inquiry').style.background='var(--bg)';document.getElementById('tab-inquiry').style.color='var(--text-mid)'">Submit Offer</button>`}
           </div>
         </div>
         <!-- INQUIRY FORM -->
@@ -1056,7 +1163,7 @@ function renderDeal(d,allDeals){
             </button>
           </div>
         </div>
-        <!-- OFFER FORM -->
+        ${dsIsPending?'':`<!-- OFFER FORM -->
         <div id="offer-section" style="display:none;padding:0 20px 20px">
           <div class="sidebar-form">
             <div class="sf-row">
@@ -1088,7 +1195,7 @@ function renderDeal(d,allDeals){
               Submit Offer
             </button>
           </div>
-        </div>
+        </div>`}
         `:`
         <div style="padding:16px 20px 20px">
           <p style="font-size:13px;color:var(--text-mid);text-align:center;margin-bottom:12px">Create a free account to request info or submit an offer.</p>
@@ -1096,7 +1203,7 @@ function renderDeal(d,allDeals){
           <button class="btn" style="width:100%;justify-content:center;background:var(--white);border:1.5px solid var(--border);color:var(--text-mid);font-size:13px;padding:10px" onclick="openAuth('login')">Already have an account? Log In</button>
         </div>
         `}
-        <div class="sf-note" style="padding:0 20px 16px;font-size:10px;color:var(--text-light)">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>
+        ${dsIsClosed?'':`<div class="sf-note" style="padding:0 20px 16px;font-size:10px;color:var(--text-light)">By submitting, you consent to receive SMS and email from Deal Pros LLC. Reply STOP to opt out.</div>`}
         <div class="sidebar-contact">
           <div class="contact-row">
             <div class="contact-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
@@ -1125,9 +1232,27 @@ function renderDeal(d,allDeals){
   </div>`;
   // Load photos async after DOM is ready
   loadDealPhotos(d);
-  // Fetch insurance quote (uses address server-side only, never displayed)
+  // Fetch insurance quote (uses address server-side only, never displayed).
+  // Pass every property detail we know so Steadily returns a full-coverage
+  // quote instead of the bare-bones default they'll fall back to when the
+  // request is just an address.
   if(d.streetAddress&&d.city&&d.state){
-    fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||''})})
+    var beds=parseInt(d.beds,10)||0;
+    var baths=parseFloat(d.baths)||0;
+    var sqft=parseInt((d.sqft||'').toString().replace(/[^0-9]/g,''),10)||0;
+    var yearBuilt=parseInt((d.yearBuilt||'').toString().replace(/[^0-9]/g,''),10)||0;
+    var propertyDetails={};
+    if(sqft)propertyDetails.size_sqft=sqft;
+    if(yearBuilt)propertyDetails.year_built=yearBuilt;
+    if(d.propertyType)propertyDetails.property_type=d.propertyType;
+    if(beds)propertyDetails.bedrooms=beds;
+    if(baths)propertyDetails.bathrooms=baths;
+    // Replacement-cost hint based on ARV (after-repair value). Steadily uses
+    // dwelling coverage to size the policy — without it, quotes default low.
+    // (Can't reuse `arv` const from line 767 — it's the same function scope.)
+    var dwellCov=+d.compsArv||+d.aiArvBase||+d.askingPrice||0;
+    if(dwellCov>0)propertyDetails.dwelling_coverage=dwellCov;
+    fetch('/api/insurance-quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({street_address:d.streetAddress,city:d.city,state:d.state,zip:d.zip||'',property_details:propertyDetails,arv:dwellCov})})
       .then(function(r){return r.json();})
       .then(function(data){
         var el=document.getElementById('insurance-quote');
@@ -1136,8 +1261,11 @@ function renderDeal(d,allDeals){
           el.style.display='block';document.getElementById('ins-price').textContent='$'+data.monthly;document.getElementById('ins-cta').href=data.startUrl||'https://dealpros.steadilypartner.com/';
           var insInput=document.getElementById('ch-ins');if(insInput&&!insInput.value)insInput.value=data.monthly;
         } else {
-          // API failed but still show the partner link
-          el.style.display='block';document.getElementById('ins-price').textContent='Get Quote';document.getElementById('ins-cta').href='https://dealpros.steadilypartner.com/';
+          // No usable inline estimate (API failed, empty, or came back
+          // below the plausibility floor — i.e. bare-bones only). Show
+          // "Get Quote →" and route to the property-specific Steadily
+          // start URL if we got one, otherwise the generic partner link.
+          el.style.display='block';document.getElementById('ins-price').textContent='Get Quote';document.getElementById('ins-cta').href=data.startUrl||'https://dealpros.steadilypartner.com/';
         }
       }).catch(function(){});
   }
@@ -1417,9 +1545,13 @@ async function init(){
       let freshDeal=null;
       if(id)freshDeal=allDeals.find(d=>String(d.id)===String(id));
       if(!freshDeal && slug)freshDeal=findDealBySlug(allDeals,slug);
-      // Prefer fresh Notion data if it has a cover photo the cache is missing
-      if(cachedDeal&&freshDeal){deal=Object.assign({},cachedDeal,{coverPhoto:freshDeal.coverPhoto||cachedDeal.coverPhoto,photos:freshDeal.photos||cachedDeal.photos});}
-      else{deal=freshDeal||cachedDeal;}
+      // Always prefer fresh Notion data — fields like description, terms,
+      // and price update in real time when operators edit the deal in
+      // Notion. Fall back to the cached sessionStorage copy only when the
+      // Notion fetch turned up nothing (e.g. legacy share link). The
+      // previous merge layered cached fields on top of fresh ones, which
+      // meant edits to anything other than coverPhoto/photos never showed.
+      deal=freshDeal||cachedDeal;
       if(deal && !id)id=deal.id;
       console.log('Loaded '+allDeals.length+' deals from Notion');
     }catch(notionErr){

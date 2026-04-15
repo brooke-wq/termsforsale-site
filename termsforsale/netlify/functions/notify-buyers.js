@@ -594,6 +594,13 @@ async function fetchAllBuyers(apiKey, locationId) {
       // Tag is set by buyer-response-tag.js and must be manually removed to re-enable.
       var tags = contact.tags || [];
       if (tags.indexOf('alerts-paused') > -1) return;
+      // REQUIRED: every buyer must have the "opt in" tag (case-insensitive)
+      // before we send any campaign SMS/email. Set when they actively opt in
+      // via signup/buy-box/VIP. Without it, we don't message them — full stop.
+      var hasOptIn = tags.some(function (t) {
+        return String(t || '').trim().toLowerCase() === 'opt in';
+      });
+      if (!hasOptIn) return;
       allBuyers.push(contact);
     });
 
@@ -916,7 +923,8 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
       }, {
         type: 'SMS',
         contactId: contact.id,
-        message: smsMsg
+        message: smsMsg,
+        fromNumber: '+14806373117'
       });
       console.log('notify-buyers: SMS sent to ' + contact.name);
     } catch (smsErr) {
@@ -990,7 +998,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
         contactId: contact.id,
         subject: 'New ' + (deal.dealType || 'Deal') + ' in ' + deal.city + ', ' + deal.state + (price ? ' — ' + price : ''),
         html: emailHtml,
-        emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+        emailFrom: 'Terms For Sale <info@termsforsale.com>'
       });
       console.log('notify-buyers: Email sent to ' + contact.name);
     } catch (emailErr) {

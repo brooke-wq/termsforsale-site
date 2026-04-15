@@ -739,7 +739,7 @@ img{max-width:100%;display:block}
           </div>
         </div>
 
-        <div class="sub-divider" style="margin-top:6px;margin-bottom:14px">Property Details</div>
+        <div class="sub-divider" style="margin-top:6px;margin-bottom:14px">Property Details <span id="propLookupStatus" style="font-size:11px;font-weight:500;color:var(--text-light);margin-left:8px;display:none"></span></div>
         <div class="field-grid cols-3" style="margin-bottom:14px">
           <div class="field-group">
             <label class="field-label">Property Type</label>
@@ -1401,6 +1401,11 @@ img{max-width:100%;display:block}
       additional_notes: v('additionalNotes'),
     };
 
+    // Attach logged-in partner ID if available
+    if (_loggedInPartner && _loggedInPartner.id) {
+      data.partner_contact_id = _loggedInPartner.id;
+    }
+
     // Merge UTM data
     var utmData = getUTMData();
     Object.keys(utmData).forEach(function(k) {
@@ -1572,6 +1577,94 @@ img{max-width:100%;display:block}
 
   /* -- INIT --------------------------------------------------- */
   restoreProgress();
+
+  // Auto-fill Step 1 from logged-in partner session
+  var _loggedInPartner = null;
+  try {
+    var _raw = sessionStorage.getItem('db_partner');
+    if (_raw) {
+      _loggedInPartner = JSON.parse(_raw);
+      if (_loggedInPartner && _loggedInPartner.name) {
+        document.getElementById('jvName').value = _loggedInPartner.name;
+        document.getElementById('jvPhone').value = _loggedInPartner.phone || '';
+        document.getElementById('jvEmail').value = _loggedInPartner.email || '';
+        // Returning partner — set firstDeal to No
+        document.getElementById('firstDeal').value = 'No';
+        var retLabel = document.querySelector('#firstDealGroup .radio-opt[data-val="No"]');
+        if (retLabel) {
+          retLabel.classList.add('checked');
+          retLabel.querySelector('input').checked = true;
+          // Hide "how did you hear" since they're returning
+          document.getElementById('hearAboutUsGroup').style.display = 'none';
+        }
+      }
+    }
+  } catch(e) {}
+
+  /* -- PROPERTY LOOKUP (Rentcast) ------------------------------ */
+  var _propLookupDone = false;
+
+  function tryPropertyLookup() {
+    if (_propLookupDone) return;
+    var addr = document.getElementById('propAddress').value.trim();
+    var city = document.getElementById('propCity').value.trim();
+    var state = document.getElementById('propState').value.trim();
+    var zip = document.getElementById('propZip').value.trim();
+    if (!addr || !city || !state || !zip) return;
+
+    _propLookupDone = true;
+    var status = document.getElementById('propLookupStatus');
+    status.textContent = 'Looking up property details...';
+    status.style.display = 'inline';
+    status.style.color = 'var(--blue)';
+
+    var params = new URLSearchParams({
+      address: addr, city: city, state: state, zip: zip
+    });
+    fetch('/api/property-lookup?' + params.toString())
+      .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function(d) {
+        var filled = [];
+        function setIf(id, val) {
+          if (!val) return;
+          var el = document.getElementById(id);
+          if (el && !el.value) { el.value = String(val); filled.push(id); }
+        }
+        setIf('propBeds', d.bedrooms);
+        setIf('propBaths', d.bathrooms);
+        setIf('propSqft', d.squareFootage ? d.squareFootage.toLocaleString() : '');
+        setIf('propYearBuilt', d.yearBuilt);
+        setIf('propLotSize', d.lotSize);
+        if (d.propertyType) {
+          var sel = document.getElementById('propertyType');
+          if (sel && !sel.value) {
+            for (var i = 0; i < sel.options.length; i++) {
+              if (sel.options[i].value === d.propertyType) { sel.value = d.propertyType; filled.push('propertyType'); break; }
+            }
+          }
+        }
+        if (filled.length > 0) {
+          status.textContent = 'Auto-filled from public records';
+          status.style.color = 'var(--green)';
+          scheduleSave();
+        } else {
+          status.textContent = 'No additional details found';
+          status.style.color = 'var(--text-light)';
+        }
+      })
+      .catch(function() {
+        status.textContent = '';
+        status.style.display = 'none';
+        _propLookupDone = false; // allow retry
+      });
+  }
+
+  // Trigger lookup when ZIP is filled (last address field) or on blur of any address field
+  ['propAddress', 'propCity', 'propState', 'propZip'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('blur', function() { setTimeout(tryPropertyLookup, 200); });
+  });
+
   setupAutoSave();
 
   // ── TEST MODE: add ?test to URL to auto-fill and submit ──

@@ -347,6 +347,27 @@ footer{background:var(--navy);padding:52px 55px 0}
   .sticky-bar-text{font-size:12px;text-align:center;width:100%}
   .sticky-bar a{padding:9px 16px;font-size:12px;flex:1;text-align:center}
 }
+
+/* ── MOBILE NAV DRAWER ──────────────────── */
+.nav-toggle{display:none;background:none;border:0;cursor:pointer;width:40px;height:40px;padding:0;margin-left:auto;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.nav-toggle span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s ease,opacity .2s ease}
+.nav-toggle.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-toggle.open span:nth-child(2){opacity:0}
+.nav-toggle.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media(max-width:768px){
+  nav#main-nav{flex-wrap:wrap;height:auto;min-height:56px;align-items:center}
+  nav#main-nav .nav-toggle{display:flex}
+  nav#main-nav .nav-links,
+  nav#main-nav .nav-right{display:none}
+  nav#main-nav.open .nav-links{display:flex;flex-basis:100%;width:100%;flex-direction:column;align-items:stretch;margin:0;padding:4px 0 0;gap:0;border-top:1px solid var(--border);order:3}
+  nav#main-nav.open .nav-links a{padding:14px 4px;font-size:15px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border)}
+  nav#main-nav.open .nav-links a:last-child{border-bottom:none}
+  nav#main-nav.open .nav-right{display:flex;flex-basis:100%;width:100%;flex-direction:column;align-items:stretch;gap:8px;margin:0;padding:12px 0 14px;border-top:1px solid var(--border);order:4}
+  nav#main-nav.open .nav-right>*{width:100%}
+  nav#main-nav.open .nav-right .btn-signup,
+  nav#main-nav.open .nav-right .btn-login{width:100%;padding:12px;font-size:14px;justify-content:center;text-align:center}
+  nav#main-nav.open .nav-right #tfs-buybox-container a{width:100%;padding:12px !important;font-size:14px !important;justify-content:center;text-align:center}
+}
 </style>
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <!-- Google Analytics GA4 -->
@@ -400,6 +421,7 @@ footer{background:var(--navy);padding:52px 55px 0}
     <a href="#" onclick="openAuth('signup');return false" class="btn-signup">Sign Up</a>
     <a href="#" onclick="openAuth('login');return false" class="btn-login">Login</a>
   </div>
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="main-nav" onclick="toggleMobileNav()"><span></span><span></span><span></span></button>
 </nav>
 
 <!-- AUTH MODAL -->
@@ -755,6 +777,29 @@ window.addEventListener('scroll', () => {
   document.getElementById('main-nav').classList.toggle('scrolled', scrollY > 60);
 }, {passive:true});
 
+// ─── MOBILE NAV DRAWER ─────────────────────────────────────────
+function toggleMobileNav(force){
+  const nav = document.getElementById('main-nav');
+  const btn = document.getElementById('nav-toggle');
+  if(!nav||!btn) return;
+  const open = typeof force === 'boolean' ? force : !nav.classList.contains('open');
+  nav.classList.toggle('open', open);
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.addEventListener('click', function(e){
+  const nav = document.getElementById('main-nav');
+  if(!nav || !nav.classList.contains('open')) return;
+  const link = e.target.closest('#main-nav .nav-links a, #main-nav .nav-right a');
+  if(link) toggleMobileNav(false);
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    const nav = document.getElementById('main-nav');
+    if(nav && nav.classList.contains('open')) toggleMobileNav(false);
+  }
+});
+
 // ─── HERO SEARCH → redirect to homepage ───────────────────────
 let _heroTab = '';
 function setHeroTab(btn, tab) {
@@ -1027,8 +1072,13 @@ async function loadDealsFromSheet(){
   const u=getUser();if(u)updateNavAuth(u);
   try{
     const deals=await loadDealsFromNotion();
-    console.log('Loaded '+deals.length+' deals from Notion');
-    if(deals.length) updateStats(deals.length);
+    // deals.js now returns active + pending + closed. Homepage stat card
+    // is only "active deals available" — exclude Closed from the count.
+    const activeCount=deals.filter(function(d){
+      return (String(d.dealStatus||'').toLowerCase().trim())!=='closed';
+    }).length;
+    console.log('Loaded '+deals.length+' deals from Notion ('+activeCount+' active/pending)');
+    if(activeCount) updateStats(activeCount);
   }catch(e){
     console.warn('Notion failed, trying sheets:', e.message);
     try{

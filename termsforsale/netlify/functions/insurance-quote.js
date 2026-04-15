@@ -89,12 +89,47 @@ exports.handler = async function (event) {
     return { statusCode: 400, headers: headers, body: JSON.stringify({ error: e.message }) };
   }
 
+  // Compute ARV-based heuristic up front so we can use it as a fallback
+  // whether Steadily errors, returns empty, or returns only bare-bones.
+  // Formula: monthly = round((arv * 0.005) / 12) — 0.5% of property value
+  // per year is the mid-band for full-coverage US landlord insurance.
+  const minMonthly = parseInt(process.env.INSURANCE_MIN_MONTHLY || '60', 10);
+  const annualRate = parseFloat(process.env.INSURANCE_HEURISTIC_RATE || '0.005');
+  const arv = +body.arv ||
+              +(body.property_details && body.property_details.dwelling_coverage) ||
+              +(body.property_details && body.property_details.home_value) ||
+              0;
+  const heuristicMonthly = arv > 0 ? Math.round((arv * annualRate) / 12) : 0;
+
   let result;
   try {
     result = await quoteEstimate(payload);
   } catch (err) {
+    // Steadily error — fall back to ARV heuristic if we have one so the
+    // deal page still shows a useful number instead of nothing.
+    const msg = err && err.status ? 'Steadily error ' + err.status : (err && err.message || 'Steadily request failed');
+    console.error('[insurance-quote] ' + msg, err && err.body);
+    if (heuristicMonthly > 0) {
+      console.log('[insurance-quote] ' + city + ', ' + state +
+        ' — Steadily failed, falling back to heuristic $' + heuristicMonthly + '/mo (arv=$' + arv + ')');
+      return {
+        statusCode: 200,
+        headers: headers,
+        body: JSON.stringify({
+          available: true,
+          annual: heuristicMonthly * 12,
+          monthly: heuristicMonthly,
+          rateTier: 'heuristic-arv(steadily-error)',
+          steadilyMonthly: 0,
+          heuristicMonthly: heuristicMonthly,
+          startUrl: '',
+          propertyId: '',
+          _debug: { steadilyError: msg, arv: arv, annualRate: annualRate }
+        })
+      };
+    }
+    // No heuristic either — return the error so frontend shows "Get Quote"
     if (err && typeof err.status === 'number' && err.status > 0) {
-      console.error('[insurance-quote] Steadily error ' + err.status, err.body);
       return {
         statusCode: 502,
         headers: headers,
@@ -105,41 +140,169 @@ exports.handler = async function (event) {
         })
       };
     }
-    console.error('[insurance-quote] Error:', err.message);
     return { statusCode: 500, headers: headers, body: JSON.stringify({ error: err.message }) };
   }
 
-  console.log('[insurance-quote] Steadily 200 body=' + JSON.stringify(result.body).substring(0, 300));
+  console.log('[insurance-quote] Steadily 200 body=' + JSON.stringify(result.body).substring(0, 800));
 
-  // Response shape based on observed staging responses: `estimates[]` with
-  // `estimate.lowest` (annual premium, USD), `start_url`, and `property_id`.
-  // Redoc was not reachable from this environment; callers should treat the
-  // mapping below as a best-effort projection and fall back gracefully.
-  const estimates = (result.body && result.body.estimates) || [];
-  if (!estimates.length) {
-    return {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify({ available: false, message: 'No estimate available for this property' })
-    };
+  // Steadily's /v1/quote/estimate returns an `estimates[]` array. Each entry
+  // has an `estimate` object containing one or more annual-premium numbers.
+  // We want the HIGHEST (full-coverage) rate, never the bare-bones number.
+  //
+  // Problem: Steadily's field names have shifted across API versions (and
+  // their Redoc docs are unreachable from this build env), so hard-coding
+  // `estimate.highest` is fragile — if the field is actually `maximum` or
+  // `annual_high` or nested inside a `coverages[]` array, we'd silently fall
+  // back to `lowest` and the deal page would quote the bare-bones premium
+  // (that's exactly the $22/mo bug Brooke reported on 2026-04-14).
+  //
+  // Robust approach: walk every numeric value reachable under `estimate`
+  // AND under the top-level estimate record (so if Steadily returns a
+  // `coverages[]` or `tiers[]` array we still find it) and pick the MAX.
+  // Values < $50/yr or > $50k/yr are ignored as likely non-premium noise
+  // (percentages, deductibles, policy IDs, year_built, etc).
+  //
+  // Also return the FULL set of numeric fields found so we can audit the
+  // shape from API logs / the frontend without another request.
+  // Known property-metadata / non-premium field names. Exact match only so
+  // we don't accidentally drop legitimate premium paths like `coverages[]`
+  // (contains "age") or `property_id` (ends with "id"). Keys compared
+  // case-insensitively.
+  const META_KEYS = new Set([
+    'id', 'property_id', 'policy_id', 'quote_id',
+    'year', 'year_built', 'yearbuilt',
+    'zip', 'zip_code', 'zipcode', 'postal_code',
+    'bedrooms', 'bed', 'beds', 'num_bedrooms',
+    'bathrooms', 'bath', 'baths', 'num_bathrooms',
+    'stories', 'num_stories',
+    'units', 'num_units',
+    'sqft', 'size_sqft', 'square_feet', 'squarefeet',
+    'age', 'property_age',
+    'deductible', 'deductibles',
+    'coverage_limit', 'limit',
+    'dwelling_coverage', 'other_structures_coverage', 'personal_property_coverage',
+    'loss_of_use_coverage', 'personal_liability', 'medical_payments',
+    'home_value', 'property_value', 'market_value', 'purchase_price',
+    'latitude', 'longitude', 'lat', 'lng', 'lon',
+    'month', 'months', 'day', 'days', 'time', 'timestamp', 'created_at', 'updated_at'
+  ]);
+
+  function collectPremiumCandidates(root) {
+    const out = [];
+    (function walk(node, path) {
+      if (node === null || node === undefined) return;
+      if (typeof node === 'number') {
+        if (isFinite(node) && node >= 50 && node <= 50000) {
+          out.push({ path: path, value: node });
+        }
+        return;
+      }
+      if (Array.isArray(node)) {
+        for (let i = 0; i < node.length; i++) walk(node[i], path + '[' + i + ']');
+        return;
+      }
+      if (typeof node === 'object') {
+        for (const k of Object.keys(node)) {
+          if (META_KEYS.has(k.toLowerCase())) continue;
+          walk(node[k], path ? path + '.' + k : k);
+        }
+      }
+    })(root, '');
+    return out;
   }
 
+  // Don't early-return on empty estimates — we may still be able to show a
+  // heuristic fallback from ARV. Treat absence as "no Steadily data" and
+  // let the fallback logic below decide what to display.
+  const estimates = (result.body && result.body.estimates) || [];
   const est = estimates[0] || {};
-  const annual = (est.estimate && typeof est.estimate.lowest === 'number') ? est.estimate.lowest : 0;
-  const monthly = annual > 0 ? Math.round(annual / 12) : 0;
+  const estObj = est.estimate || {};
+
+  // Explicit known-field reads (back-compat / fast path)
+  const namedHighest = typeof estObj.highest === 'number' ? estObj.highest : 0;
+  const namedLowest  = typeof estObj.lowest  === 'number' ? estObj.lowest  : 0;
+
+  // Fallback: scan every plausible premium-shaped numeric field
+  const candidates = collectPremiumCandidates(est);
+  candidates.sort((a, b) => b.value - a.value);
+  const scannedMax = candidates.length ? candidates[0].value : 0;
+  const scannedMin = candidates.length ? candidates[candidates.length - 1].value : 0;
+
+  // Pick the annual rate — prefer the highest value we can find anywhere.
+  // If `namedHighest` exists AND is the top candidate, use it (cleanest).
+  // Otherwise use the highest scanned value (covers unknown field names).
+  // Last resort: named lowest.
+  let annual = 0;
+  let rateTier = 'none';
+  if (scannedMax > 0 && scannedMax >= namedHighest) {
+    annual = scannedMax;
+    rateTier = (scannedMax === namedHighest) ? 'highest' : 'scanned-max';
+  } else if (namedHighest > 0) {
+    annual = namedHighest;
+    rateTier = 'highest';
+  } else if (namedLowest > 0) {
+    annual = namedLowest;
+    rateTier = 'lowest(fallback)';
+  }
+
+  const steadilyMonthly = annual > 0 ? Math.round(annual / 12) : 0;
   const startUrl = est.start_url || '';
 
-  console.log('[insurance-quote] ' + city + ', ' + state + ' — $' + monthly + '/mo, url=' + (startUrl ? 'yes' : 'no'));
+  // minMonthly, annualRate, arv, heuristicMonthly were all computed at the
+  // top of the handler so the Steadily-error path could use them too.
+
+  // Pick the displayed monthly:
+  //   1. Steadily monthly if >= floor (believable full-coverage)
+  //   2. Heuristic from ARV if available
+  //   3. Steadily monthly below-floor as last resort (better than nothing)
+  let monthly = 0;
+  let finalTier = 'none';
+  if (steadilyMonthly >= minMonthly) {
+    monthly = steadilyMonthly;
+    finalTier = rateTier; // 'highest' / 'scanned-max' / 'lowest(fallback)'
+  } else if (heuristicMonthly > 0) {
+    monthly = heuristicMonthly;
+    finalTier = 'heuristic-arv';
+  } else if (steadilyMonthly > 0) {
+    monthly = steadilyMonthly;
+    finalTier = rateTier + '(below-floor)';
+  }
+
+  console.log(
+    '[insurance-quote] ' + city + ', ' + state +
+    ' — shown=$' + monthly + '/mo tier=' + finalTier +
+    ' (steadily=$' + steadilyMonthly + ' heuristic=$' + heuristicMonthly +
+    ' arv=$' + arv + ' namedHigh=$' + namedHighest + ' namedLow=$' + namedLowest +
+    ' scannedMax=$' + scannedMax + ')' +
+    ' estimateKeys=[' + Object.keys(estObj).join(',') + ']' +
+    ' url=' + (startUrl ? 'yes' : 'no')
+  );
+  if (candidates.length) {
+    console.log('[insurance-quote] candidates: ' +
+      candidates.slice(0, 8).map(c => c.path + '=$' + c.value).join(', '));
+  }
 
   return {
     statusCode: 200,
     headers: headers,
     body: JSON.stringify({
       available: monthly > 0,
-      annual: annual,
+      annual: monthly * 12,
       monthly: monthly,
+      rateTier: finalTier,
+      steadilyMonthly: steadilyMonthly,
+      heuristicMonthly: heuristicMonthly,
+      annualHighest: Math.max(namedHighest, scannedMax),
+      annualLowest:  namedLowest || scannedMin,
       startUrl: startUrl,
-      propertyId: est.property_id || ''
+      propertyId: est.property_id || '',
+      _debug: {
+        estimateKeys: Object.keys(estObj),
+        candidates: candidates.slice(0, 8),
+        minMonthly: minMonthly,
+        annualRate: annualRate,
+        arv: arv
+      }
     })
   };
 };

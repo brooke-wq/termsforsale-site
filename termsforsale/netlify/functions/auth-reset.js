@@ -77,7 +77,7 @@ exports.handler = async (event) => {
         + '</div>'
         + '<p style="color:#718096;font-size:13px">This code expires in 15 minutes. If you didn\'t request this, ignore this email.</p>'
         + '</div></div>',
-      emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+      emailFrom: 'Terms For Sale <info@termsforsale.com>'
     }, headers);
 
     // Also send via SMS if they have a phone

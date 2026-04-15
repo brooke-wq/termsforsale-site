@@ -538,7 +538,10 @@ function buildOpportunityPayload(d, contactId, locationId) {
   const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
   const dealType = d.deal_type || 'Deal';
 
-  const name = `${dealType} — ${city}${state ? ' ' + state : ''} — ${lastName}`;
+  const address  = d.property_address  || '';
+  const zip      = d.property_zip      || '';
+  const fullAddr = [address, city, state, zip].filter(Boolean).join(', ');
+  const name = fullAddr || `${dealType} — ${city}${state ? ' ' + state : ''} — ${lastName}`;
   const value = parseFloat(d.desired_asking_price || d.contracted_price || 0) || 0;
 
   return {

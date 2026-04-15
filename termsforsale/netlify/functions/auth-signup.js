@@ -87,7 +87,7 @@ exports.handler = async (event) => {
       email,
       phone,
       source: source || 'TFS Website - Signup',
-      tags: ['TFS Buyer', 'Website Signup', 'buyer-signup'],
+      tags: ['TFS Buyer', 'Website Signup', 'buyer-signup', 'opt in'],
       customFields: [],
     };
 
@@ -145,7 +145,7 @@ exports.handler = async (event) => {
           source: source || 'TFS Website - Signup',
           pipeline_name: 'Buyer Inquiries',
           pipeline_stage: 'New Lead',
-          tags: ['TFS Buyer', 'Website Signup'],
+          tags: ['TFS Buyer', 'Website Signup', 'opt in'],
         }),
       });
     } catch (e) {
@@ -188,7 +188,7 @@ exports.handler = async (event) => {
           type: 'Email', contactId,
           subject: 'Welcome to Terms For Sale, ' + firstName + '!',
           html: welcomeHtml,
-          emailFrom: 'Brooke Froehlich <brooke@mydealpros.com>'
+          emailFrom: 'Terms For Sale <info@termsforsale.com>'
         }, headers).then(function(r) { emailStatus = r.ok ? 'sent' : 'failed:' + r.status; return r; })
         .catch(function(e) { emailStatus = 'error:' + e.message; })
       );
