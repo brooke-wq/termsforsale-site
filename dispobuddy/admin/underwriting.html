@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Underwriting Workspace — Dispo Buddy Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg:#f7f6f2; --surface:#fbfaf7; --surface-2:#f1eee8; --border:#d8d2c8; --text:#23211d; --muted:#6f6b63; --primary:#01696f;
+    --green:#1a7a4a; --green-bg:#edfaf3; --yellow:#8a6500; --yellow-bg:#fffbea; --red:#b52222; --red-bg:#fff0f0;
+    --radius:16px; --radius-sm:10px;
+  }
+  body { margin:0; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); }
+  .app { max-width: 1440px; margin: 0 auto; padding: 20px; }
+  .topbar { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:20px; }
+  h1 { margin:0 0 6px; font-size: 28px; line-height:1.1; }
+  .sub { color:var(--muted); font-size:14px; }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; }
+  button, .btn, a.btn-back { min-height:44px; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:12px; padding:10px 14px; cursor:pointer; font:inherit; text-decoration:none; display:inline-flex; align-items:center; }
+  a.btn-back:hover { text-decoration:none; color:var(--text); }
+  .btn-primary { background:#111; color:#fff; border-color:#111; }
+  .layout { display:grid; grid-template-columns: 1.2fr 0.8fr; gap:16px; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .topbar { flex-direction:column; } }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.04); }
+  .section-title { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:700; margin:0 0 12px; }
+  .grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; }
+  .grid-2 { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
+  .grid-4 { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }
+  @media (max-width: 900px) { .grid,.grid-2,.grid-4 { grid-template-columns:1fr; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:600; color:var(--muted); }
+  .field input, .field select, .field textarea { width:100%; min-height:44px; border:1px solid var(--border); border-radius:12px; padding:0 12px; background:var(--surface); color:var(--text); font:inherit; }
+  .field textarea { padding:12px; min-height:96px; resize:vertical; }
+  .results { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-top:12px; }
+  @media (max-width: 1200px) { .results { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 650px) { .results { grid-template-columns:1fr; } }
+  .metric { border:1px solid var(--border); border-radius:14px; padding:14px; background:var(--surface-2); }
+  .metric .k { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+  .metric .v { font-size:22px; font-weight:800; }
+  .metric .s { font-size:13px; color:var(--muted); margin-top:4px; }
+  .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .pill { font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:var(--surface-2); color:var(--muted); }
+  .pill.green { background:#d0f5e2; color:var(--green); border-color:#d0f5e2; }
+  .pill.yellow { background:#fff0c0; color:var(--yellow); border-color:#fff0c0; }
+  .pill.red { background:#ffe0e0; color:var(--red); border-color:#ffe0e0; }
+  .history { display:grid; gap:10px; margin-top:12px; }
+  .history-item { border:1px solid var(--border); border-radius:14px; padding:12px; background:var(--surface-2); }
+  .history-item h3 { font-size:14px; margin:0 0 4px; }
+  .history-item p { margin:0; font-size:12px; color:var(--muted); }
+  .note { font-size:12px; color:var(--muted); margin-top:10px; }
+  code { background:var(--surface-2); padding:2px 6px; border-radius:6px; }
+  .gate-hint { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:9999; }
+  .gate-hint.show { display:flex; }
+  .gate-hint-card { background:#fff; border-radius:14px; padding:28px 34px; max-width:360px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.4); }
+  .gate-hint-card a { color:var(--primary); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <h1>Deal Pros Underwriting Workspace</h1>
+      <div class="sub">Address lookup, RentCast autofill, saved deal analyses, and CRM/Notion-ready payloads</div>
+    </div>
+    <div class="toolbar">
+      <a href="/admin/" class="btn-back">← Back to Dashboard</a>
+      <button id="themeBtn">Toggle theme</button>
+      <button id="copySummaryBtn">Copy summary</button>
+      <button id="copyJsonBtn">Copy JSON</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <div class="section-title">Property lookup</div>
+        <div class="grid-4">
+          <div class="field" style="grid-column: span 2;"><label>Property address</label><input id="address" value="5500 Grand Lake Dr, San Antonio, TX, 78244" /></div>
+          <div class="field"><label>Deal type</label><select id="dealType"><option value="cash">Cash</option><option value="subto">Sub-to</option><option value="sellerfin">Seller finance</option><option value="novation">Novation</option><option value="hybrid">Hybrid</option></select></div>
+          <div class="field"><label>Save destination</label><select id="saveTarget"><option value="ghl">GHL</option><option value="notion">Notion</option><option value="both">GHL + Notion</option></select></div>
+        </div>
+        <div class="toolbar" style="margin-top:12px;">
+          <button class="btn-primary" id="pullDataBtn">Pull RentCast data</button>
+          <button id="calcBtn">Run analysis</button>
+          <button id="saveBtn">Save analysis</button>
+        </div>
+        <div class="note">This version is built to work with a secure backend proxy. Do not place your RentCast API key directly in browser code.</div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">Deal inputs</div>
+        <div class="grid-4">
+          <div class="field"><label>ARV</label><input id="arv" type="number" value="300000" /></div>
+          <div class="field"><label>Contract price</label><input id="contract" type="number" value="240000" /></div>
+          <div class="field"><label>Repairs</label><input id="repairs" type="number" value="15000" /></div>
+          <div class="field"><label>Comps count</label><input id="comps" type="number" value="3" /></div>
+          <div class="field"><label>Market rent</label><input id="marketRent" type="number" value="2400" /></div>
+          <div class="field"><label>All-in monthly payment</label><input id="allin" type="number" value="1800" /></div>
+          <div class="field"><label>Loan balance</label><input id="loanBal" type="number" value="180000" /></div>
+          <div class="field"><label>Extra costs / seller cash</label><input id="extra" type="number" value="5000" /></div>
+          <div class="field"><label>Down payment</label><input id="down" type="number" value="25000" /></div>
+          <div class="field"><label>Term remaining (years)</label><input id="termYears" type="number" value="7" /></div>
+          <div class="field"><label>Balloon remaining (years)</label><input id="balloonYears" type="number" value="5" /></div>
+          <div class="field"><label>Notes</label><textarea id="notes" placeholder="VA notes, reason codes, seller details, comp notes..."></textarea></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">Analysis</div>
+        <div class="results" id="results"></div>
+        <div class="pill-row" id="decisionPills"></div>
+        <div class="note" id="statusText">Ready.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="section-title">Saved analyses</div>
+        <div class="toolbar">
+          <button id="refreshHistoryBtn">Refresh history</button>
+          <button id="clearLocalBtn">Clear local demo history</button>
+        </div>
+        <div id="history" class="history"></div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">Webhook payload preview</div>
+        <textarea id="payload" style="width:100%; min-height:260px; border:1px solid var(--border); border-radius:12px; padding:12px; background:var(--surface-2); color:var(--text);"></textarea>
+        <div class="note">Send this payload to a Netlify function, Replit backend, or DigitalOcean app, then route it to GHL and/or Notion.</div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">Backend setup</div>
+        <div class="note">Recommended endpoints (not yet built — see CLAUDE.md TODO):</div>
+        <div class="note"><code>POST /api/rentcast/property</code> → gets property record by full address</div>
+        <div class="note"><code>POST /api/rentcast/rent</code> → gets rent estimate by full address</div>
+        <div class="note"><code>POST /api/analysis/save</code> → stores analysis and forwards to GHL or Notion</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Password gate — uses admin auth so the workspace is restricted -->
+<div class="gate-hint" id="gate-hint">
+  <div class="gate-hint-card">
+    <h2 style="margin:0 0 10px;font-size:18px">Admin access required</h2>
+    <p style="margin:0 0 14px;color:var(--muted);font-size:13px">Sign in through the Dispo Buddy admin console first.</p>
+    <a href="/admin/">Go to Admin Console →</a>
+  </div>
+</div>
+
+<script>
+// Gate: if no admin session, show the hint overlay.
+(function(){
+  try {
+    var pw = sessionStorage.getItem('db_admin_pw');
+    if (!pw) { document.getElementById('gate-hint').classList.add('show'); }
+  } catch (e) {
+    document.getElementById('gate-hint').classList.add('show');
+  }
+})();
+
+const $ = id => document.getElementById(id);
+const state = { analyses: [] };
+function fmt(n){ return '$' + Math.round(Number(n || 0)).toLocaleString(); }
+function pill(status, text){ return `<span class="pill ${status||''}">${text}</span>`; }
+function showStatus(msg){ $('statusText').textContent = msg; }
+function gradeCash(eq, spread, comps){ if(comps < 2) return 'red'; if(eq >= 18 && spread >= 25000 && comps >= 3) return 'green'; if((eq >= 12 && eq < 18) || (spread >= 15000 && spread < 25000) || comps === 2) return 'yellow'; return 'red'; }
+function gradeSubto(cfm, entryEq, termYears, balloonYears){ if(cfm < 10 || entryEq < 5 || balloonYears < 3) return 'red'; if(cfm >= 15 && entryEq >= 10 && termYears >= 5) return 'green'; return 'yellow'; }
+function gradeSeller(pricePctArv, downPct, cfm){ if(pricePctArv > 105 && downPct < 5) return 'red'; if(cfm < 10) return 'red'; if(pricePctArv <= 100 && downPct >= 10 && cfm >= 15) return 'green'; return 'yellow'; }
+function gradeNovation(netMargin, spread){ if(netMargin < 10 || spread < 20000) return 'red'; if(netMargin >= 15 && spread >= 30000) return 'green'; return 'yellow'; }
+function routeFromStatus(status){ return status === 'green' ? 'Accepted – Package' : status === 'yellow' ? 'Underwriting – Brooke review' : 'Declined – Send Reason'; }
+function currentAnalysis(){
+  const dealType = $('dealType').value;
+  const arv = +$('arv').value || 0, contract = +$('contract').value || 0, repairs = +$('repairs').value || 0, comps = +$('comps').value || 0;
+  const marketRent = +$('marketRent').value || 0, allin = +$('allin').value || 0, loanBal = +$('loanBal').value || 0, extra = +$('extra').value || 0, down = +$('down').value || 0;
+  const termYears = +$('termYears').value || 0, balloonYears = +$('balloonYears').value || 0;
+  const trueCost = contract + repairs;
+  const spread = arv - trueCost;
+  const eq = arv ? spread / arv * 100 : 0;
+  const cfm = marketRent ? (marketRent - allin) / marketRent * 100 : 0;
+  const entryEq = arv ? (arv - loanBal - extra - down) / arv * 100 : 0;
+  const pricePctArv = arv ? contract / arv * 100 : 0;
+  const netMargin = arv ? (arv - trueCost - extra) / arv * 100 : 0;
+  let status = 'yellow';
+  if (dealType === 'cash') status = gradeCash(eq, spread, comps);
+  if (dealType === 'subto') status = gradeSubto(cfm, entryEq, termYears, balloonYears);
+  if (dealType === 'sellerfin') status = gradeSeller(pricePctArv, down / Math.max(contract, 1) * 100, cfm);
+  if (dealType === 'novation') status = gradeNovation(netMargin, spread);
+  if (dealType === 'hybrid') {
+    const cash = gradeCash(eq, spread, comps);
+    const creative = gradeSubto(cfm, entryEq, termYears, balloonYears);
+    status = (cash === 'red' || creative === 'red') ? 'red' : (cash === 'green' && creative === 'green') ? 'green' : 'yellow';
+  }
+  return {
+    id: 'deal_' + Date.now(),
+    savedAt: new Date().toISOString(),
+    address: $('address').value,
+    dealType,
+    saveTarget: $('saveTarget').value,
+    arv, contract, repairs, comps, marketRent, allin, loanBal, extra, down, termYears, balloonYears,
+    trueCost, spread, equityPct: eq, cashflowMarginPct: cfm, entryEquityPct: entryEq, pricePctArv, netMarginPct: netMargin,
+    status, crmRoute: routeFromStatus(status), notes: $('notes').value
+  };
+}
+function renderAnalysis(){
+  const a = currentAnalysis();
+  $('results').innerHTML = [
+    ['ARV', fmt(a.arv), 'Autofill or manual'],
+    ['True cost', fmt(a.trueCost), 'Contract + repairs'],
+    ['Spread', fmt(a.spread), 'ARV minus true cost'],
+    ['Equity %', a.equityPct.toFixed(1) + '%', 'Cash metric'],
+    ['Cashflow margin', a.cashflowMarginPct.toFixed(1) + '%', 'Creative metric'],
+    ['Entry equity %', a.entryEquityPct.toFixed(1) + '%', 'Sub-to metric'],
+    ['Price / ARV', a.pricePctArv.toFixed(1) + '%', 'Seller finance metric'],
+    ['Net margin', a.netMarginPct.toFixed(1) + '%', 'Novation metric']
+  ].map(([k,v,s]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+  $('decisionPills').innerHTML = [
+    pill(a.status, 'Final: ' + a.status.toUpperCase()),
+    pill('', 'CRM: ' + a.crmRoute),
+    pill('', 'Save to: ' + a.saveTarget.toUpperCase()),
+    pill('', 'Type: ' + a.dealType)
+  ].join('');
+  $('payload').value = JSON.stringify(a, null, 2);
+  showStatus(`${a.dealType} | ${a.status.toUpperCase()} → ${a.crmRoute}`);
+}
+function saveLocal(a){
+  const existing = JSON.parse(localStorage.getItem('dealProsAnalyses') || '[]');
+  existing.unshift(a);
+  localStorage.setItem('dealProsAnalyses', JSON.stringify(existing.slice(0, 20)));
+}
+function loadHistory(){
+  const items = JSON.parse(localStorage.getItem('dealProsAnalyses') || '[]');
+  $('history').innerHTML = items.length ? items.map(item => `
+    <div class="history-item">
+      <h3>${item.address || 'Untitled deal'}</h3>
+      <p>${item.dealType} · ${item.status.toUpperCase()} · ${item.crmRoute}</p>
+      <p>${new Date(item.savedAt).toLocaleString()}</p>
+    </div>
+  `).join('') : '<div class="note">No saved analyses yet. In production, replace this local demo history with your GHL or Notion save endpoint.</div>';
+}
+async function pullRentCastData(){
+  const address = $('address').value.trim();
+  if(!address){ showStatus('Enter an address first.'); return; }
+  showStatus('Pulling property data...');
+  try {
+    const pw = sessionStorage.getItem('db_admin_pw') || '';
+    const res = await fetch('/api/rentcast/property', { method:'POST', headers:{'Content-Type':'application/json', 'X-Admin-Password': pw}, body: JSON.stringify({ address }) });
+    if(!res.ok) throw new Error('Property lookup failed');
+    const data = await res.json();
+    if(data.arv) $('arv').value = Math.round(data.arv);
+    if(data.rentEstimate) $('marketRent').value = Math.round(data.rentEstimate);
+    if(data.beds && !$('notes').value.includes('beds')) $('notes').value = `Beds: ${data.beds}, Baths: ${data.baths}, Sqft: ${data.squareFootage}, Year: ${data.yearBuilt}`;
+    renderAnalysis();
+    showStatus('RentCast data loaded.');
+  } catch (err) {
+    showStatus('Backend not connected yet. This demo shows the UI and payload structure.');
+  }
+}
+async function saveAnalysis(){
+  const a = currentAnalysis();
+  saveLocal(a);
+  loadHistory();
+  try {
+    const pw = sessionStorage.getItem('db_admin_pw') || '';
+    const res = await fetch('/api/analysis/save', { method:'POST', headers:{'Content-Type':'application/json', 'X-Admin-Password': pw}, body: JSON.stringify(a) });
+    if(!res.ok) throw new Error('Save failed');
+    showStatus('Analysis saved to backend.');
+  } catch (err) {
+    showStatus('Saved locally for demo. Connect /api/analysis/save for GHL or Notion.');
+  }
+}
+function copySummary(){ navigator.clipboard.writeText($('payload').value); showStatus('JSON copied.'); }
+function copyJson(){ navigator.clipboard.writeText($('payload').value); showStatus('Payload copied.'); }
+function toggleTheme(){
+  const dark = document.body.dataset.theme !== 'dark';
+  document.body.dataset.theme = dark ? 'dark' : 'light';
+  Object.assign(document.documentElement.style, dark ? {
+    '--bg':'#171614','--surface':'#1c1b19','--surface-2':'#201f1d','--border':'#393836','--text':'#cdccca','--muted':'#8a8884'
+  } : {
+    '--bg':'#f7f6f2','--surface':'#fbfaf7','--surface-2':'#f1eee8','--border':'#d8d2c8','--text':'#23211d','--muted':'#6f6b63'
+  });
+}
+$('pullDataBtn').addEventListener('click', pullRentCastData);
+$('calcBtn').addEventListener('click', renderAnalysis);
+$('saveBtn').addEventListener('click', saveAnalysis);
+$('refreshHistoryBtn').addEventListener('click', loadHistory);
+$('clearLocalBtn').addEventListener('click', ()=>{ localStorage.removeItem('dealProsAnalyses'); loadHistory(); showStatus('Local demo history cleared.'); });
+$('themeBtn').addEventListener('click', toggleTheme);
+$('copySummaryBtn').addEventListener('click', copySummary);
+$('copyJsonBtn').addEventListener('click', copyJson);
+renderAnalysis();
+loadHistory();
+</script>
+</body>
+</html>
