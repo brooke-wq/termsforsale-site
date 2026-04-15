@@ -302,6 +302,164 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 15 2026 Dispo Buddy Admin Portal + Underwriting Workspace
+
+Branch: `claude/improve-logo-favicon-Av2Gm`. Built out the Dispo Buddy
+admin portal from scratch (mirror of the TFS pattern) plus a standalone
+Underwriting Workspace with RentCast autofill and analysis save-back.
+
+### Admin portal (Phase 1) — commits `f735f87`, `56500c5`
+
+New at `https://dispobuddy.com/admin/*` (gated by `ADMIN_PASSWORD`):
+
+- **`admin.css` + `admin.js`** — shared shell ported from TFS. Sidebar
+  with Dispo Buddy branding (navy + orange), "Live · Production" env
+  indicator, session stored in `sessionStorage.db_admin_pw`. Nav groups:
+  Overview / Operations / System / External.
+- **`/admin/` (dashboard)** — hero gradient, 4 stat tiles (Active JV
+  Deals / Under Contract / Funded / Partners), 6 quick-action cards
+  (JV Deals, Partners, Messages, Underwriting, SOP, Notion/GHL links),
+  recent-deals table, pipeline mix by status + deal type progress bars.
+- **`/admin/deals.html`** — all JV deals from Notion. Search by
+  address/city/Deal ID/partner. Status filter. Clickable rows open a
+  slide-in right-side drawer (720px / 94vw max) with full deal detail:
+  status + deal type + COE, partner contact (name/phone/email with
+  tel: and mailto: links), pricing (asking/contracted/entry fee/ARV),
+  property details (type/beds/baths/sqft/year/lot/county/HOA), and
+  direct buttons to Photos, Documents, and Notion page.
+- **`/admin/partners.html`** — GHL contacts tagged `dispo-buddy`,
+  aggregate stats from Notion (total / active / closed deals per
+  partner), search, click-to-call / click-to-email.
+- **`/admin/messages.html`** — Phase 2 placeholder (link to GHL
+  Conversations for now).
+
+Backend functions (all require `X-Admin-Password` header):
+- **`admin-auth.js`** — constant-time password check via
+  `crypto.timingSafeEqual`. Copied from TFS (same logic).
+- **`admin-stats.js`** — paginates Notion filtered by
+  `JV Partner is_not_empty`, buckets by Deal Status (active / under
+  contract / funded), computes dealsByType + dealsByState + recent-5.
+  Also hits GHL tag count for `dispo-buddy` partner total.
+- **`admin-deals.js`** — returns all JV deals with full field set
+  including the new County + HOA columns (ready for when those fields
+  get added to the form). Supports `?status=` + `?q=` query params.
+- **`admin-partners.js`** — paginates GHL contacts tagged `dispo-buddy`
+  (up to 20 pages / 2000 contacts), joins with Notion deal stats by
+  matching on "JV Partner" first-part-of-name, returns aggregate stats.
+
+netlify.toml: 4 new `/api/admin-*` redirects.
+
+### Underwriting Workspace — commits `2f809ee`, `85c7ff3`
+
+User asked for a paste-in underwriting tool. Shipped as a standalone
+admin-gated page at `/admin/underwriting.html` plus 3 backend endpoints.
+
+**Frontend** (`dispobuddy/admin/underwriting.html`): Warm-neutral
+design system (own CSS, not the admin shell). Sidebar-less standalone
+page with "← Back to Dashboard" link. Features:
+- Property lookup (address input + deal type + save destination)
+- 12 deal input fields (ARV, contract, repairs, comps, market rent,
+  all-in payment, loan balance, extra costs, down payment, term years,
+  balloon years, notes)
+- Live analysis: 8 metrics (ARV, true cost, spread, equity %, cashflow
+  margin %, entry equity %, price / ARV %, net margin %)
+- Per-deal-type grading (cash / sub-to / seller finance / novation /
+  hybrid) → green / yellow / red status + CRM route
+- Local history via localStorage (20 most recent)
+- Webhook payload preview (raw JSON)
+- Theme toggle (light / dark via CSS var swap)
+- Copy summary / Copy JSON buttons
+- Session-gate overlay: if no `db_admin_pw` in sessionStorage, shows a
+  modal directing user to `/admin/` first
+
+Admin shell nav updated to include "Underwriting" in Operations group.
+Dashboard quick-card links to it.
+
+**Backend endpoints** (all gated by `X-Admin-Password`):
+
+- **`rentcast-property.js`** — one-shot autofill. Parallel-fires
+  RentCast `/properties` + `/avm/value` + `/avm/rent/long-term` in a
+  single `Promise.all`, consolidates into
+  `{arv, rentEstimate, beds, baths, squareFootage, yearBuilt,
+  propertyType, county, city, state, zip, valueRangeLow/High,
+  rentRangeLow/High, errors{}}`. Any upstream call failure is captured
+  in `errors` but doesn't break the rest. Cost: 3 RentCast credits per
+  click.
+- **`rentcast-rent.js`** — cheaper standalone rent-only fetch. Only
+  the rent endpoint. Kept for callers that don't need ARV or property.
+- **`analysis-save.js`** — persists the workspace payload. Routes by
+  `saveTarget`:
+    - `ghl` → posts a formatted 30-line note on `BROOKE_CONTACT_ID`
+      summarizing status + pricing + metrics + terms + notes. Uses
+      GHL `/contacts/{id}/notes` POST.
+    - `notion` → creates a page in `NOTION_UNDERWRITING_DB_ID` (if
+      set). Writes Name/Address/Deal Type/Status/ARV/Contract/Repairs/
+      Spread/Equity %/Cashflow %/Notes/CRM Route. Silently skips if
+      the DB ID isn't set (doesn't 500, just warns in response).
+    - `both` → both.
+  Response shape: `{saved:[], skipped:[], errors:[]}`. Returns 200 if
+  at least one save succeeded, 502 if all errors, 200 if all skipped.
+
+netlify.toml: 3 new `/api/rentcast/*` + `/api/analysis/save` redirects.
+
+### Env vars required for full functionality (set in Netlify)
+
+| Variable | Required for | Source |
+|---|---|---|
+| `ADMIN_PASSWORD` | All admin portal pages + Underwriting Workspace | Pick any strong password (same as TFS admin if desired) |
+| `RENTCAST_API_KEY` | Underwriting autofill | Paid plan at rentcast.io |
+| `BROOKE_CONTACT_ID` | Analysis save → GHL note | Already set for TFS — `qO4YuZHrhGTTBaFKPDYD` |
+| `NOTION_UNDERWRITING_DB_ID` | Analysis save → Notion page | Optional; create a dedicated Underwriting DB in Notion first |
+
+`GHL_API_KEY`, `GHL_LOCATION_ID`, `NOTION_TOKEN`, `NOTION_DATABASE_ID`
+already set from the go-live earlier in the day.
+
+### Files touched (this session cluster)
+
+- `dispobuddy/admin/admin.css` — new (copied from TFS)
+- `dispobuddy/admin/admin.js` — new (Dispo Buddy branding + 5-item
+  nav including Underwriting)
+- `dispobuddy/admin/index.html` — new (dashboard)
+- `dispobuddy/admin/deals.html` — new (JV deals + drawer)
+- `dispobuddy/admin/partners.html` — new (partner list)
+- `dispobuddy/admin/messages.html` — new (Phase 2 stub)
+- `dispobuddy/admin/underwriting.html` — new (standalone workspace)
+- `dispobuddy/netlify/functions/admin-auth.js` — new (copied from TFS)
+- `dispobuddy/netlify/functions/admin-stats.js` — new
+- `dispobuddy/netlify/functions/admin-deals.js` — new
+- `dispobuddy/netlify/functions/admin-partners.js` — new
+- `dispobuddy/netlify/functions/rentcast-property.js` — new
+- `dispobuddy/netlify/functions/rentcast-rent.js` — new
+- `dispobuddy/netlify/functions/analysis-save.js` — new
+- `dispobuddy/netlify.toml` — 7 new `/api/*` redirects added
+- `CLAUDE.md` — this session log
+
+### Known follow-ups for future sessions
+
+- **`sop.html` not wrapped in new shell** — existing file still works
+  standalone; sidebar won't render from it. Low priority; quick port.
+- **`messages.html` is a stub** — needs to be wired to `partner-messages`
+  backend with inline reply UI (Phase 2 scope from earlier discussion).
+- **Contracts page not built** — was in the Phase 2 scope list. E-sign
+  integration, contract template generation, signed-status tracking.
+- **No rate limiting on RentCast endpoint** — 3 calls per click × lots
+  of partners × lots of properties = real $$. If abuse becomes a
+  concern, wrap with a daily per-admin-session counter.
+- **Analysis save to Notion requires a dedicated DB** — the main Deals
+  DB's schema doesn't fit underwriting output well. Brooke can either
+  create an "Underwriting" DB and set `NOTION_UNDERWRITING_DB_ID`, or
+  skip Notion and lean on the GHL note.
+
+### Merge conflict note
+
+When merging this branch to main, CLAUDE.md had a conflict with PR #88
+(Dispo Buddy proof stat refresh from `claude/update-deal-metrics-uUFC4`)
+because both branches added new "Completed — April 15" sections. Resolved
+in commit `56500c5` by keeping both entries in chronological order:
+Go-Live + Hotfixes first, then Proof Stat Refresh. No content lost.
+
+---
+
 ## Completed — April 15 2026 Dispo Buddy Go-Live + Notion Field Sync Hotfixes
 
 Branch: `claude/improve-logo-favicon-Av2Gm`. Live walkthrough with Brooke
@@ -2850,7 +3008,19 @@ blog page).
    - Wire to Notion in `dispo-buddy-submit.js` — likely `text('County', d.county)` + `text('HOA', d.hoa)` (or `num` for HOA if Notion column is number)
    - Also extend `?test` autofill to populate them
 
-4. **Dispo Buddy — re-enable AI triage** (optional, currently DEFERRED):
+4. **Dispo Buddy admin portal — Phase 2 enhancements** (Phase 1 shipped today):
+   - Wrap existing `dispobuddy/admin/sop.html` in the new admin shell so the sidebar renders on it (low priority; quick port)
+   - Wire `dispobuddy/admin/messages.html` to `partner-messages.js` backend with inline reply UI (currently just a link to GHL Conversations)
+   - Build a Contracts page — generate assignment contracts from a template, send via DocuSign/Dropbox Sign/GHL Documents, track signed status per deal
+   - Stage-change action buttons on deal drawer — move a deal through the pipeline inline instead of going into GHL
+
+5. **Underwriting Workspace — polish** (Phase 1 shipped today):
+   - Create a dedicated Notion "Underwriting" DB and set `NOTION_UNDERWRITING_DB_ID` so analyses save back to Notion (currently Notion save silently skips if the var isn't set)
+   - Add rate limiting to `/api/rentcast/property` (3 RentCast credits per click; could get expensive)
+   - RentCast plan signup — the endpoint returns 500 until `RENTCAST_API_KEY` is set in Netlify env vars
+   - Consider a "Quick Rent Only" button that hits the cheaper `/api/rentcast/rent` endpoint instead of the 3-call combo
+
+6. **Dispo Buddy — re-enable AI triage** (optional, currently DEFERRED):
    - Re-enable `dispo-buddy-triage` PM2 cron on the Droplet: `pm2 restart dispo-buddy-triage`
    - Build GHL workflow: Trigger = Tag Added `jv-submitted`, Action = Webhook POST to `https://dispobuddy.com/.netlify/functions/dispo-buddy-triage` with body `{contactId}`. Don't enable until the cron is back on first.
 
