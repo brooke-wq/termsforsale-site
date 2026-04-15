@@ -302,6 +302,95 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 15 2026 Mobile Nav Collapsible Hamburger
+
+Branch: `claude/mobile-nav-collapse-O6uig`.
+
+Brooke reported the Terms For Sale mobile nav bar looked messy —
+the existing mobile CSS had `.nav-links{display:none}` so the 6
+primary links (Browse Deals / Sell Your Deal / Get Deal Alerts /
+Commercial / Deal Map / Help) were completely unreachable on phones,
+and the remaining `.nav-right` still crammed `#tfs-buybox-container
++ My Portal + Sign Up + Login` (4 items) into a tight bar. Replaced
+with a real hamburger-to-drawer pattern that works on all 4 pages
+that use the shared `<nav id="main-nav">` shell.
+
+### Files shipped (all 4 get the same additive change)
+
+- **`termsforsale/index.html`** — CSS block added before `</style>`,
+  `<button class="nav-toggle">` added at the end of `<nav>`, and JS
+  `toggleMobileNav()` + outside-click-on-link + Escape handler added
+  next to the existing `main-nav` scroll listener.
+- **`termsforsale/deals.html`** — same additions.
+- **`termsforsale/blog/index.html`** — same additions (uses
+  `min-height:60px` to match blog's existing 60px nav bar; no
+  `#tfs-buybox-container` rule since blog nav doesn't have one).
+- **`termsforsale/about.html`** — same additions.
+
+### How it works
+
+- **Desktop (≥769px):** zero visual change. The hamburger has
+  `display:none`, nav-links and nav-right render inline as before.
+- **Mobile (≤768px):** nav is now `flex-wrap:wrap; height:auto;
+  min-height:56px`. A 3-bar hamburger sits at the right of the
+  logo row. Tapping it applies `.open` to `<nav>`, which reveals
+  both `.nav-links` (stacked, full-width, single list with
+  per-row borders) and `.nav-right` (stacked, full-width buttons
+  at 12px padding / 14px font so they're tap-friendly) as two
+  ordered siblings below the logo row. The hamburger animates
+  into an X via three transformed `<span>` bars.
+- Tapping any link inside the drawer auto-closes the drawer
+  (delegation on `#main-nav .nav-links a, #main-nav .nav-right a`).
+- Escape key closes the drawer.
+- `aria-expanded` toggles between `"true"` and `"false"` on the
+  button for screen readers. `aria-controls="main-nav"` wires the
+  button to the disclosure target.
+
+### Selector specificity math
+
+The override selectors use `nav#main-nav.open .nav-links` /
+`nav#main-nav.open .nav-right` which beat the pre-existing mobile
+rules (`.nav-links{display:none}` / `.nav-right{gap:6px}`) via
+ID-selector specificity, so the new rules reliably win on mobile
+without `!important` except where padding/font-size needed to
+override inline styles on `#tfs-buybox-container a`.
+
+### Verified
+
+- All 4 files: `<nav>` balance 1 open / 1 close, `<button>` balance
+  matches before+1 on each file.
+- Each file has exactly 1 `nav-toggle` button, 1 `toggleMobileNav`
+  function, and 7-8 `nav#main-nav.open` CSS rules (blog has 7 since
+  it lacks the buybox container row).
+- Desktop CSS untouched — the only `@media(max-width:768px)` rule
+  that hits is additive.
+
+### Deliberately NOT touched
+
+- Any other page with its own custom nav (dashboard, admin shell,
+  buying-criteria form, deal.html, blog posts). Those either don't
+  use the shared `<nav id="main-nav">` pattern or have their own
+  responsive layouts already.
+- Desktop nav behavior / scroll shadow / hover colors / existing
+  auth modal — zero changes.
+- The VA post builder, dispobuddy pages, admin pages — all
+  out of scope.
+
+### Known caveats
+
+- The drawer is rendered inline inside `<nav>` (not as a fullscreen
+  overlay), so when open it overlaps ~300-400px of hero content
+  beneath it. That's standard dropdown-drawer behavior and matches
+  the pattern used on dispobuddy. If Brooke wants the drawer to
+  slide-in from the right as a full-height overlay (like dispobuddy
+  has), that's a separate pass.
+- No body-scroll-lock when open. The page is still scrollable
+  behind the drawer. Not a bug — just a design choice; if Brooke
+  wants it locked, add `document.documentElement.style.overflow =
+  open ? 'hidden' : ''` inside `toggleMobileNav()`.
+
+---
+
 ## Completed — April 15 2026 Deal Status Display Lifecycle
 
 Branch: `claude/deal-status-display-Y0upg`.
