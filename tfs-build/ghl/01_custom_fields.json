@@ -1,0 +1,136 @@
+{
+  "sub_account": "Terms For Sale",
+  "folder_name": "Buyer Profile",
+  "object": "Contact",
+  "notes": "Create these under Settings → Custom Fields → Contacts. Group them into a folder called 'Buyer Profile'. Field keys below are what n8n and webhooks will reference — match them exactly.",
+  "fields": [
+    {
+      "name": "Lead Source",
+      "field_key": "contact.lead_source",
+      "type": "Dropdown (single)",
+      "options": ["PPC", "Referral", "Event", "Form", "Manual", "JV Partner"],
+      "required": false
+    },
+    {
+      "name": "Buyer Asset Class",
+      "field_key": "contact.buyer_asset_class",
+      "type": "Multi-select",
+      "options": ["SFR", "MFR 2-4", "MFR 5+", "Commercial", "Land", "Mixed-Use", "NNN", "Mobile Home Park"],
+      "required": false
+    },
+    {
+      "name": "Buyer Market",
+      "field_key": "contact.buyer_market",
+      "type": "Text (long)",
+      "notes": "Comma-separated list of cities/states/MSAs. n8n will parse on comma.",
+      "required": false
+    },
+    {
+      "name": "Buyer Price Min",
+      "field_key": "contact.buyer_price_min",
+      "type": "Monetary",
+      "required": false
+    },
+    {
+      "name": "Buyer Price Max",
+      "field_key": "contact.buyer_price_max",
+      "type": "Monetary",
+      "required": false
+    },
+    {
+      "name": "Capital / POF Amount",
+      "field_key": "contact.capital_pof_amount",
+      "type": "Monetary",
+      "required": false
+    },
+    {
+      "name": "PoF on File",
+      "field_key": "contact.pof_on_file",
+      "type": "Dropdown (single)",
+      "options": ["Yes", "No", "Pending"],
+      "default": "No"
+    },
+    {
+      "name": "Deals Last 12 Months",
+      "field_key": "contact.deals_last_12_months",
+      "type": "Number",
+      "default": 0
+    },
+    {
+      "name": "Decision Maker",
+      "field_key": "contact.decision_maker",
+      "type": "Dropdown (single)",
+      "options": ["Yes", "No"],
+      "default": "No"
+    },
+    {
+      "name": "Buyer Tier",
+      "field_key": "contact.buyer_tier",
+      "type": "Dropdown (single)",
+      "options": ["A", "B", "C"]
+    },
+    {
+      "name": "Last Touch Date",
+      "field_key": "contact.last_touch_date",
+      "type": "Date",
+      "notes": "CRITICAL: Every workflow that sends a message must update this field to today. The 90-day maintenance rule reads from here."
+    },
+    {
+      "name": "Preferred Contact Method",
+      "field_key": "contact.preferred_contact_method",
+      "type": "Dropdown (single)",
+      "options": ["SMS", "Email", "Call"],
+      "default": "SMS"
+    },
+    {
+      "name": "Re-verify Due Date",
+      "field_key": "contact.reverify_due_date",
+      "type": "Date",
+      "notes": "Set to today + 90 on buyer:active tag. Quarterly re-verify workflow reads from here."
+    },
+    {
+      "name": "Entity Name",
+      "field_key": "contact.entity_name",
+      "type": "Text"
+    },
+    {
+      "name": "EMD Amount",
+      "field_key": "contact.emd_amount",
+      "type": "Monetary"
+    },
+    {
+      "name": "Offer Price",
+      "field_key": "contact.offer_price",
+      "type": "Monetary"
+    },
+    {
+      "name": "Close Date Target",
+      "field_key": "contact.close_date_target",
+      "type": "Date"
+    },
+    {
+      "name": "Contingencies",
+      "field_key": "contact.contingencies",
+      "type": "Text (long)"
+    },
+    {
+      "name": "Assignment Fee Paid",
+      "field_key": "contact.assignment_fee_paid",
+      "type": "Dropdown (single)",
+      "options": ["Yes", "No", "Partial"],
+      "default": "No"
+    },
+    {
+      "name": "Last Deal Sent ID",
+      "field_key": "contact.last_deal_sent_id",
+      "type": "Text",
+      "notes": "n8n writes the deal_id of the most recent match here. Used for dedup and attribution."
+    },
+    {
+      "name": "Last Deal Sent Date",
+      "field_key": "contact.last_deal_sent_date",
+      "type": "Date",
+      "notes": "Prevents spam — n8n checks this before sending, skips if within cooldown window (default 24h)."
+    }
+  ]
+}

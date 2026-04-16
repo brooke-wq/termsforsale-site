@@ -1,0 +1,383 @@
+{
+  "name": "TFS — Buyer Match Engine (GHL + Notion)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-deal-inventory",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook: New Deal",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "tfs-new-deal-inventory",
+      "notes": "Triggered by: (1) GHL workflow when an opportunity hits 'Inventory - Ready to Blast' stage, OR (2) Notion button automation on a deal page. Expected payload fields: deal_id, source (ghl|notion), asset_class, market, price, deal_type, summary_url, address (internal only)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize incoming payload from either GHL or Notion source\nconst input = $input.first().json;\nconst body = input.body || input;\n\n// Extract and normalize\nconst deal = {\n  deal_id: body.deal_id || body.id || `deal_${Date.now()}`,\n  source: body.source || 'unknown',\n  asset_class: (body.asset_class || body.assetClass || '').trim(),\n  market: (body.market || body.deal_market || '').trim(),\n  price: parseFloat(body.price || body.deal_price || 0),\n  deal_type: body.deal_type || body.dealType || 'Wholesale',\n  summary_url: body.summary_url || body.summaryUrl || '',\n  address: body.address || '', // internal only, never sent to buyers pre-gate\n  blast_at: new Date().toISOString()\n};\n\n// Validation gate\nif (!deal.asset_class || !deal.market || !deal.price) {\n  throw new Error(`Deal missing required fields: asset_class=${deal.asset_class}, market=${deal.market}, price=${deal.price}`);\n}\n\nreturn [{ json: deal }];"
+      },
+      "id": "normalize-deal",
+      "name": "Normalize Deal Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/contacts/?locationId={{$env.GHL_LOCATION_ID}}&query=buyer:active&limit=100",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "fullResponse": false } }
+        }
+      },
+      "id": "fetch-active-buyers",
+      "name": "GHL: Fetch Active Buyers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": { "id": "ghl_private_integration", "name": "GHL Private Integration Token" }
+      },
+      "notes": "Uses GHL Private Integration Token (create under Settings → Private Integrations). Env var GHL_LOCATION_ID should be set to the TFS sub-account location ID. For paginated results beyond 100, add a Loop node — skipping that optimization until buyer list exceeds 100 active contacts."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Match logic — filter buyers against deal criteria\nconst deal = $('Normalize Deal Payload').first().json;\nconst buyers = $input.first().json.contacts || [];\n\nconst matches = [];\n\nfor (const buyer of buyers) {\n  // Extract custom fields — GHL returns these as an array\n  const cf = {};\n  (buyer.customFields || []).forEach(f => { cf[f.id] = f.value; });\n  \n  // Map by field key (you'll replace these IDs with your actual GHL custom field IDs after first run)\n  // Field keys from 01_custom_fields.json — the code below uses the field NAME match as a fallback\n  const getField = (name) => {\n    const match = (buyer.customFields || []).find(f => f.name === name || f.fieldKey === name);\n    return match ? match.value : null;\n  };\n  \n  const buyerAssetClasses = (getField('Buyer Asset Class') || '').split(',').map(s => s.trim()).filter(Boolean);\n  const buyerMarkets = (getField('Buyer Market') || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);\n  const priceMin = parseFloat(getField('Buyer Price Min') || 0);\n  const priceMax = parseFloat(getField('Buyer Price Max') || Infinity);\n  const buyerTier = (getField('Buyer Tier') || 'C').toUpperCase();\n  const lastDealSentDate = getField('Last Deal Sent Date');\n  \n  // Cooldown check — skip buyers who got a deal blast in last 24h (spam prevention)\n  if (lastDealSentDate) {\n    const hoursSince = (Date.now() - new Date(lastDealSentDate).getTime()) / (1000 * 60 * 60);\n    if (hoursSince < 24) continue;\n  }\n  \n  // Asset class match (any overlap)\n  const assetMatch = buyerAssetClasses.some(ac => \n    ac.toLowerCase() === deal.asset_class.toLowerCase() ||\n    deal.asset_class.toLowerCase().includes(ac.toLowerCase())\n  );\n  if (!assetMatch) continue;\n  \n  // Market match (any substring overlap on buyer market list)\n  const dealMarketLower = deal.market.toLowerCase();\n  const marketMatch = buyerMarkets.some(bm => \n    dealMarketLower.includes(bm) || bm.includes(dealMarketLower)\n  );\n  if (!marketMatch) continue;\n  \n  // Price band match\n  if (deal.price < priceMin || deal.price > priceMax) continue;\n  \n  // All checks passed\n  matches.push({\n    contact_id: buyer.id,\n    first_name: buyer.firstName,\n    last_name: buyer.lastName,\n    email: buyer.email,\n    phone: buyer.phone,\n    tier: buyerTier,\n    tier_priority: buyerTier === 'A' ? 1 : buyerTier === 'B' ? 2 : 3\n  });\n}\n\n// Sort by tier (A first)\nmatches.sort((a, b) => a.tier_priority - b.tier_priority);\n\n// Return one item per match so downstream nodes loop naturally\nreturn matches.map(m => ({ json: { ...m, deal } }));"
+      },
+      "id": "filter-match",
+      "name": "Filter & Match Buyers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.tier}}",
+                    "rightValue": "A",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier A"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.tier}}",
+                    "rightValue": "B",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier B"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.tier}}",
+                    "rightValue": "C",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier C"
+            }
+          ]
+        }
+      },
+      "id": "switch-tier",
+      "name": "Switch by Tier",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customFields",
+              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
+            }
+          ]
+        }
+      },
+      "id": "write-deal-fields-a",
+      "name": "A: Write Deal Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "tags", "value": "=[\"deal:new-inventory\"]" }
+          ]
+        }
+      },
+      "id": "apply-tag-a",
+      "name": "A: Apply deal:new-inventory Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 180],
+      "notes": "This is what fires GHL WF02 (Deal Match & Send). The tag MUST be applied AFTER the custom fields are written, otherwise WF02 reads stale/empty fields."
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "hours"
+      },
+      "id": "wait-tier-b",
+      "name": "Wait 1h (Tier B)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1340, 320],
+      "webhookId": "wait-tier-b"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customFields",
+              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
+            }
+          ]
+        }
+      },
+      "id": "write-deal-fields-b",
+      "name": "B: Write Deal Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "tags", "value": "=[\"deal:new-inventory\"]" }
+          ]
+        }
+      },
+      "id": "apply-tag-b",
+      "name": "B: Apply deal:new-inventory Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 320]
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "hours"
+      },
+      "id": "wait-tier-c",
+      "name": "Wait 4h (Tier C)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1340, 460],
+      "webhookId": "wait-tier-c"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customFields",
+              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
+            }
+          ]
+        }
+      },
+      "id": "write-deal-fields-c",
+      "name": "C: Write Deal Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "tags", "value": "=[\"deal:new-inventory\"]" }
+          ]
+        }
+      },
+      "id": "apply-tag-c",
+      "name": "C: Apply deal:new-inventory Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 460]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, deal_id: $('Normalize Deal Payload').first().json.deal_id, matched_count: $('Filter & Match Buyers').all().length } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 500]
+    }
+  ],
+  "connections": {
+    "Webhook: New Deal": {
+      "main": [[{ "node": "Normalize Deal Payload", "type": "main", "index": 0 }]]
+    },
+    "Normalize Deal Payload": {
+      "main": [[
+        { "node": "GHL: Fetch Active Buyers", "type": "main", "index": 0 },
+        { "node": "Respond to Webhook", "type": "main", "index": 0 }
+      ]]
+    },
+    "GHL: Fetch Active Buyers": {
+      "main": [[{ "node": "Filter & Match Buyers", "type": "main", "index": 0 }]]
+    },
+    "Filter & Match Buyers": {
+      "main": [[{ "node": "Switch by Tier", "type": "main", "index": 0 }]]
+    },
+    "Switch by Tier": {
+      "main": [
+        [{ "node": "A: Write Deal Fields", "type": "main", "index": 0 }],
+        [{ "node": "Wait 1h (Tier B)", "type": "main", "index": 0 }],
+        [{ "node": "Wait 4h (Tier C)", "type": "main", "index": 0 }]
+      ]
+    },
+    "A: Write Deal Fields": {
+      "main": [[{ "node": "A: Apply deal:new-inventory Tag", "type": "main", "index": 0 }]]
+    },
+    "Wait 1h (Tier B)": {
+      "main": [[{ "node": "B: Write Deal Fields", "type": "main", "index": 0 }]]
+    },
+    "B: Write Deal Fields": {
+      "main": [[{ "node": "B: Apply deal:new-inventory Tag", "type": "main", "index": 0 }]]
+    },
+    "Wait 4h (Tier C)": {
+      "main": [[{ "node": "C: Write Deal Fields", "type": "main", "index": 0 }]]
+    },
+    "C: Write Deal Fields": {
+      "main": [[{ "node": "C: Apply deal:new-inventory Tag", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "timezone": "America/Phoenix"
+  },
+  "staticData": null,
+  "meta": {
+    "description": "TFS Buyer Matching Engine — fires on new deal, pulls active buyers from GHL, matches on asset class / market / price, applies deal tag staggered by tier (A immediate, B +1h, C +4h). GHL WF02 handles the actual SMS/email send from the tag trigger.",
+    "env_vars_required": [
+      "GHL_LOCATION_ID — TFS sub-account location ID",
+      "GHL_PRIVATE_INTEGRATION_TOKEN — set in credentials (not env)"
+    ],
+    "trigger_sources": [
+      "GHL workflow on Inventory opportunity stage change → webhook POST",
+      "Notion button automation on deal page → webhook POST"
+    ],
+    "cost_note": "Self-hosted n8n = $0 per execution. GHL API calls are free within the sub-account. Zero per-deal cost at this layer. SMS/email send costs live in GHL LC Phone / Mailgun at standard rates."
+  }
+}

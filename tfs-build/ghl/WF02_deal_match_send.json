@@ -1,0 +1,27 @@
+{
+  "workflow_name": "WF02 — Deal Match & Send",
+  "sub_account": "Terms For Sale",
+  "build_method": "Paste ai_builder_prompt into Workflows → + New Workflow → Start with AI. This workflow fires AFTER n8n applies the tag deal:new-inventory on matched contacts. n8n also writes the deal details into custom fields (deal_summary_url, last_deal_sent_id) before applying the tag.",
+  "ai_builder_prompt": "Create a workflow called 'WF02 — Deal Match & Send' triggered when the tag deal:new-inventory is applied to a contact. Step 1: Add an if/else condition based on the contact's custom field Buyer Tier. Branch A (Tier = A): Send SMS 'WF02_SMS_DealAlert_A' immediately, send email 'WF02_Email_DealAlert' immediately, update Last Touch Date = today, update Last Deal Sent Date = today. Branch B (Tier = B): Wait 1 hour. Send SMS 'WF02_SMS_DealAlert_B', send email 'WF02_Email_DealAlert', update Last Touch Date = today, update Last Deal Sent Date = today. Branch C (Tier = C): Wait 4 hours. Send SMS 'WF02_SMS_DealAlert_C', send email 'WF02_Email_DealAlert', update Last Touch Date = today, update Last Deal Sent Date = today. Step 2: Wait 24 hours. Step 3: Add an if/else condition — Did the contact reply to SMS OR click the deal link in the email? YES path: Move pipeline stage to 'Under Negotiation', create internal task assigned to Eddie with title 'Buyer replied on deal — call within 2 hours' due today, send internal Slack notification via webhook. NO path: No action (Last Touch Date was already updated in Step 1). Step 4: Remove tag deal:new-inventory from contact. End workflow.",
+  "messages": {
+    "WF02_SMS_DealAlert_A": "🏠 VIP ALERT {{contact.first_name}} — new deal fits your box. {{custom_field.deal_asset_class}}, {{custom_field.deal_market}}, asking {{custom_field.deal_price}}. Full breakdown: {{custom_field.deal_summary_url}}. Reply YES and I'll send the address + underwriting.",
+    "WF02_SMS_DealAlert_B": "New deal matched your criteria {{contact.first_name}}: {{custom_field.deal_asset_class}} in {{custom_field.deal_market}}, {{custom_field.deal_price}}. Details: {{custom_field.deal_summary_url}}. Reply YES for address + numbers.",
+    "WF02_SMS_DealAlert_C": "Deal available {{contact.first_name}}: {{custom_field.deal_asset_class}}, {{custom_field.deal_market}}, {{custom_field.deal_price}}. Breakdown here: {{custom_field.deal_summary_url}}. Reply YES if you want the address.",
+    "WF02_Email_DealAlert": {
+      "subject": "New {{custom_field.deal_asset_class}} deal in {{custom_field.deal_market}} — fits your box",
+      "body": "{{contact.first_name}},\n\nNew deal hit the desk that matches your criteria:\n\nAsset Class: {{custom_field.deal_asset_class}}\nMarket: {{custom_field.deal_market}}\nAsking: {{custom_field.deal_price}}\nDeal Type: {{custom_field.deal_type}}\n\nFull summary, photos, and underwriting here:\n{{custom_field.deal_summary_url}}\n\nThe summary page is address-gated — you'll get the full address after you confirm interest. Keeps the deal clean for everyone.\n\nReply to this email or text me if you want to move on it.\n\n— Brooke\nTerms For Sale\ntermsforsale.com"
+    }
+  },
+  "critical_notes": [
+    "The custom fields deal_asset_class, deal_market, deal_price, deal_type, deal_summary_url, deal_type are WRITTEN BY n8n onto each matched contact BEFORE the tag is applied. Create these as Custom Fields on Contacts before building WF02.",
+    "Contact-level deal fields: contact.deal_asset_class, contact.deal_market, contact.deal_price, contact.deal_type, contact.deal_summary_url — these are overwritten per deal (latest match).",
+    "The tag removal at Step 4 is CRITICAL. Without it, subsequent tag applications won't re-fire the workflow."
+  ],
+  "additional_custom_fields_required_for_wf02": [
+    { "name": "Deal Asset Class (latest)", "field_key": "contact.deal_asset_class", "type": "Text" },
+    { "name": "Deal Market (latest)", "field_key": "contact.deal_market", "type": "Text" },
+    { "name": "Deal Price (latest)", "field_key": "contact.deal_price", "type": "Text" },
+    { "name": "Deal Type (latest)", "field_key": "contact.deal_type", "type": "Text" },
+    { "name": "Deal Summary URL (latest)", "field_key": "contact.deal_summary_url", "type": "Text" }
+  ]
+}

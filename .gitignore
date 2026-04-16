@@ -1,0 +1,13 @@
+# Environment / secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Node / tooling
+node_modules/
+.DS_Store
+*.log
+
+# Build outputs (keep repo clean)
+dist/
+build/

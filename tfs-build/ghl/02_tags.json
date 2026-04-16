@@ -1,0 +1,21 @@
+{
+  "sub_account": "Terms For Sale",
+  "notes": "Create these in Settings → Tags. Tag names are lowercase with colon separators — match exactly, GHL tags are case-sensitive in workflows.",
+  "tags": [
+    { "name": "buyer:new", "purpose": "Triggers intake workflow. Applied on form submit or manual add.", "auto_remove_after": "Workflow 1 completes scoring" },
+    { "name": "buyer:active", "purpose": "Live in the matching pool. n8n ONLY pulls contacts with this tag.", "auto_remove_after": "90-day no-touch OR manual removal" },
+    { "name": "buyer:cold", "purpose": "No response by day 14 of intake sequence. Removed from active sends.", "auto_remove_after": "Manual re-engagement" },
+    { "name": "buyer:dormant", "purpose": "Hit 90-day rule without touch. Flagged for quarterly re-verify.", "auto_remove_after": "Buyer replies to re-verify" },
+    { "name": "buyer:vip", "purpose": "Closed at least one deal. Permanent status — never auto-removed.", "auto_remove_after": "Never" },
+    { "name": "engage:a-tier", "purpose": "Scoring passed all 3 criteria. Controls deal send priority.", "auto_remove_after": "Tier downgrade on re-score" },
+    { "name": "engage:b-tier", "purpose": "Scoring passed 2 of 3 criteria.", "auto_remove_after": "Tier change on re-score" },
+    { "name": "engage:c-tier", "purpose": "Scoring passed 0–1 criteria.", "auto_remove_after": "Tier change on re-score" },
+    { "name": "deal:new-inventory", "purpose": "Applied by n8n on each matched contact. Fires Workflow 2.", "auto_remove_after": "End of Workflow 2 (critical — else re-fires)" }
+  ],
+  "rules": [
+    "Only one tier tag at a time. When upgrading (B→A), remove old tier tag in the SAME workflow step before applying new one.",
+    "buyer:active is the gate — n8n ignores anything without it.",
+    "buyer:vip stacks with tier tags. A VIP can also be engage:a-tier.",
+    "deal:new-inventory MUST be removed at end of Workflow 2 to prevent re-fire."
+  ]
+}
