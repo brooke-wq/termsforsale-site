@@ -135,11 +135,9 @@ function buildFieldPayload(fieldSpec, folderId) {
   };
   if (folderId) payload.parentId = folderId;
   if (fieldSpec.options && fieldSpec.options.length) {
-    payload.options = fieldSpec.options.map((o, i) => ({
-      key: String(o).toLowerCase().replace(/\s+/g, '_'),
-      label: String(o),
-      position: i
-    }));
+    // GHL v2 expects plain string labels (it calls .trim() on each item);
+    // passing {key, label} objects throws "v.trim is not a function"
+    payload.options = fieldSpec.options.map(o => String(o));
   }
   return payload;
 }
@@ -272,6 +270,11 @@ async function provisionPipeline() {
       console.log(`  + created pipeline id=${pipelineObj.id || '(dry)'}`);
     } catch (e) {
       console.log(`  ✗ pipeline create FAILED ${e.status}: ${JSON.stringify(e.body).slice(0, 240)}`);
+      if (e.status === 401) {
+        console.log(`  → this is a scope problem. Fix one of:`);
+        console.log(`    A) GHL → Settings → Private Integrations → add opportunities.readonly + opportunities.write`);
+        console.log(`    B) Build the pipeline manually in GHL UI — see BUILD_STATUS.md for the 12-stage checklist`);
+      }
       pipelineObj = { error: String(e.body && e.body.message || e.message) };
     }
   }
