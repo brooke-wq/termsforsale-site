@@ -70,11 +70,11 @@
       "trigger_event_in_spec": "Rep moves stage after offer sent"
     },
     {
-      "name": "PSA Executed",
+      "name": "Assigned",
       "id": null,
       "position": 10,
       "color_in_spec": "#0D9488",
-      "trigger_event_in_spec": "DocuSign/PandaDoc webhook on completion"
+      "trigger_event_in_spec": "DocuSign/PandaDoc webhook on completion (deal assigned to end buyer)"
     },
     {
       "name": "Closed",

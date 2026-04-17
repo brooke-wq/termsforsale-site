@@ -68,9 +68,9 @@
     },
     {
       "order": 10,
-      "name": "PSA Executed",
+      "name": "Assigned",
       "color": "#0D9488",
-      "trigger_event": "DocuSign/PandaDoc webhook on completion",
+      "trigger_event": "DocuSign/PandaDoc webhook on completion (deal assigned to end buyer)",
       "fires_workflow": "Confirm EMD deposit + title open; notify rep"
     },
     {
