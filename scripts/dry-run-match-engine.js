@@ -80,15 +80,27 @@ const DEAL = {
     process.exit(1);
   }
 
-  // 3) Fetch recent execution
+  // 3) Fetch recent execution (requires n8n Starter+ plan — skip gracefully on Free)
   console.log(`\n[2] GET /api/v1/executions?limit=5`);
   await new Promise(r => setTimeout(r, 1500)); // let n8n persist
-  const execRes = await fetch(`${N8N_BASE}/api/v1/executions?limit=5`, { headers: HEADERS });
-  const execJson = await execRes.json();
-  if (!execRes.ok) {
-    console.log(`  (execution list API returned ${execRes.status} — check n8n UI manually)`);
+  let execRes, execText;
+  try {
+    execRes = await fetch(`${N8N_BASE}/api/v1/executions?limit=5`, { headers: HEADERS });
+    execText = await execRes.text();
+  } catch (e) {
+    console.log(`  network error: ${e.message} — skipping execution detail check`);
+    console.log(`\n✓ webhook fired OK. Check n8n UI → your workflow → "Executions" tab.`);
     process.exit(0);
   }
+  if (!execRes.ok || execText.trim().startsWith('<')) {
+    console.log(`  (${execRes.status} — n8n free trial doesn't expose /api/v1/; check UI manually)`);
+    console.log(`\n✓ webhook returned 200 — match engine is accepting deals.`);
+    console.log(`  Verify the execution succeeded by opening the workflow in n8n and clicking the "Executions" tab.`);
+    console.log(`  Expected: 1 successful execution, "Filter & Match Buyers" returns 0 items (no active buyers yet).`);
+    process.exit(0);
+  }
+  let execJson;
+  try { execJson = JSON.parse(execText); } catch { console.log(`  (non-JSON response — skipping)`); process.exit(0); }
   const executions = execJson.data || execJson.executions || [];
   const recent = executions[0];
   if (!recent) {
