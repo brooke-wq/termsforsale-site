@@ -125,10 +125,10 @@ async function listExistingFields() {
 }
 
 function buildFieldPayload(fieldSpec, folderId) {
+  // Note: locationId goes in the URL path, NOT the body (422 otherwise)
   const payload = {
     name: fieldSpec.name,
     dataType: mapType(fieldSpec.type),
-    locationId: LOCATION_ID,
     model: 'contact',
     position: 0,
     placeholder: ''
@@ -215,7 +215,8 @@ async function provisionTags() {
       continue;
     }
     try {
-      const r = await api('POST', `/locations/${LOCATION_ID}/tags`, { name: t.name, locationId: LOCATION_ID });
+      // locationId is in the URL path — body must NOT include it (422 otherwise)
+      const r = await api('POST', `/locations/${LOCATION_ID}/tags`, { name: t.name });
       const id = r.id || (r.tag && r.tag.id);
       console.log(`  + ${t.name.padEnd(22)} created id=${id || '(dry)'}`);
       results.push({ name: t.name, id, created: true });
