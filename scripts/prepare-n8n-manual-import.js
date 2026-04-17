@@ -76,6 +76,20 @@ function scrub(wf) {
   delete wf.pinData;
   delete wf.meta;
   wf.settings = wf.settings || { executionOrder: 'v1', timezone: 'America/Phoenix' };
+
+  // Strip placeholder credential IDs — keep only the name.
+  // n8n will resolve the credential by name at first execution, which
+  // prevents "Credential with ID X does not exist" errors when the
+  // credential is recreated.
+  for (const node of wf.nodes || []) {
+    if (!node.credentials) continue;
+    for (const credType of Object.keys(node.credentials)) {
+      const ref = node.credentials[credType];
+      if (ref && ref.name) {
+        node.credentials[credType] = { name: ref.name };
+      }
+    }
+  }
   return wf;
 }
 
