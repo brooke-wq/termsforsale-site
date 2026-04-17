@@ -107,31 +107,15 @@ function mapType(t) {
 }
 
 // ---------- STEP 1: field folder ----------
+// GHL v2 public API doesn't support folder creation — folders are UI-only.
+// Fields land at the root of the Custom Fields list. User can drag them into
+// a "Buyer Profile" group in GHL UI after provisioning for visual tidiness.
 async function ensureFieldFolder(name) {
-  console.log(`\n[1/5] Field folder: "${name}"`);
-  // GHL: GET /locations/{id}/customFields/folder ... but folder listing
-  // comes embedded in the customFields list under `folderId`+`folderName`.
-  // Try the dedicated listing endpoint first; fall back to scanning fields.
-  let folders = [];
-  try {
-    const r = await api('GET', `/locations/${LOCATION_ID}/customFields/folder?model=contact`);
-    folders = r.folders || r.data || [];
-  } catch (e) {
-    if (e.status !== 404) console.log(`  (folder GET not available: ${e.status}) falling back to field scan`);
-  }
-  const existing = folders.find(f => (f.name || '').toLowerCase() === name.toLowerCase());
-  if (existing) {
-    console.log(`  ✓ folder exists id=${existing.id}`);
-    return existing.id;
-  }
-  const created = await api('POST', `/locations/${LOCATION_ID}/customFields/folder`, {
-    name,
-    objectKey: 'contact',
-    locationId: LOCATION_ID
-  });
-  const id = created.id || (created.folder && created.folder.id);
-  console.log(`  + created folder id=${id || '(dry)'}`);
-  return id;
+  console.log(`\n[1/5] Field folder: "${name}"  — SKIPPED (GHL API does not support folder creation)`);
+  console.log(`       Fields will be created at the root level.`);
+  console.log(`       After provisioning, manually group them in GHL UI if desired:`);
+  console.log(`         Settings → Custom Fields → Contacts → drag fields into a new "Buyer Profile" folder`);
+  return null;
 }
 
 // ---------- STEP 2/3: custom fields ----------

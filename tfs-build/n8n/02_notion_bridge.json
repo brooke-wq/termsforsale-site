@@ -26,9 +26,9 @@
         "filters": {
           "conditions": [
             {
-              "key": "Status|select",
+              "key": "Deal Status|status",
               "condition": "equals",
-              "selectValue": "Ready to Blast"
+              "statusValue": "Actively Marketing"
             },
             {
               "key": "Blasted|checkbox",

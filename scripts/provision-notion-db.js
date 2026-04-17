@@ -234,31 +234,19 @@ const TARGET_PROPS = {
       'Address':           existingNames.has('Street Address') ? 'Street Address (existing — patch bridge to read this)' :
                            existingNames.has('Address') ? 'Address (existing)' : '(ADD MANUALLY — rich_text property)'
     },
-    bridge_patches_needed: []
+    bridge_notes: [
+      'Bridge transform is schema-tolerant — reads Asking Price/Price, Street Address/Address, Website Link/Summary URL.',
+      'Bridge filter uses "Deal Status = Actively Marketing" (your existing status option).',
+      'To trigger a blast: set Deal Status = Actively Marketing AND leave Blasted unchecked. After the bridge fires, Blasted flips to true.'
+    ]
   };
-
-  // Flag bridge JSON changes needed
-  if (existingNames.has('Asking Price') && !existingNames.has('Price')) {
-    recs.bridge_patches_needed.push(`Rename "Price" → "Asking Price" in n8n/02_notion_bridge.json transform code`);
-  }
-  if (existingNames.has('Website Link') && !existingNames.has('Summary URL')) {
-    // Summary URL was just added so it DOES exist now; this branch won't usually hit
-    recs.bridge_patches_needed.push(`Bridge can read either — no patch needed since Summary URL was just created`);
-  }
-  if (existingNames.has('Street Address') && !existingNames.has('Address')) {
-    recs.bridge_patches_needed.push(`Rename "Address" → "Street Address" in n8n/02_notion_bridge.json transform code`);
-  }
 
   const outPath = path.join(__dirname, '..', 'tfs-build', 'n8n', 'NOTION_DB_MAPPING.json');
   fs.writeFileSync(outPath, JSON.stringify(recs, null, 2) + '\n');
   console.log(`\n  wrote tfs-build/n8n/NOTION_DB_MAPPING.json`);
-
-  if (recs.bridge_patches_needed.length) {
-    console.log(`\n  NEXT: the n8n bridge JSON needs these edits before import:`);
-    for (const p of recs.bridge_patches_needed) console.log(`    - ${p}`);
-  } else {
-    console.log(`\n✓ Phase 3-prep (Notion schema) complete.`);
-  }
+  console.log(`\n✓ Phase 3-prep (Notion schema) complete.`);
+  console.log(`  Bridge filter: Deal Status = "Actively Marketing" AND Blasted = false`);
+  console.log(`  To fire a test: set a deal's status to Actively Marketing + leave Blasted unchecked.`);
 })().catch(e => {
   console.error('\nFATAL:', e.message);
   if (e.body) console.error('body:', JSON.stringify(e.body).slice(0, 500));
