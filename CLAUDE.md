@@ -302,6 +302,156 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 18 2026 Auto-Underwrite PDF Render Service on Paperclip
+
+Branch: `claude/setup-nodejs-oauth-service-fpTNc`.
+
+Built and deployed a small Node.js service on the paperclip Droplet
+that takes a deal JSON payload and renders it into a `.docx` file
+in the `/Deal Analyses/` Google Drive folder. This is the
+"infrastructure half" of the auto-underwriting pipeline — the n8n
+workflow that calls it (with Claude-underwritten content) is the
+next piece, planned for a separate session.
+
+### What's running
+
+- **Service:** `pdf-render-service` under pm2 on paperclip
+  (`/home/brooke/pdf-render-service/`), pm2 id 4, cluster mode,
+  auto-restart enabled, persisted via `pm2 save` so it survives
+  reboots alongside the existing 4 paperclip jobs (deploy-hook,
+  deal-cleanup, ops-audit, deal-buddy-scheduler).
+- **Endpoint:** `POST http://64.23.204.220:3001/render`
+  - Header: `X-Auth-Token: <shared secret>` (32 random bytes hex)
+  - Body: `{ "dealId": "TEST-001", "deal": { ... freeform fields ... } }`
+  - Returns: `{ ok, dealId, filename, driveFileId, driveWebViewLink, driveWebContentLink }`
+- **Health:** `GET http://64.23.204.220:3001/health` (no auth) returns
+  `{ ok, service, uptime, driveFolderConfigured, oauthConfigured, authTokenConfigured }`.
+  Smoke test on April 18: all four flags `true`, sample render
+  succeeded — file `1VOACezYrqK6FDLgStzVGdxgMm1N9Czt-` landed in
+  `/Deal Analyses/` and opened cleanly in Google Docs.
+
+### Files shipped (all under `/auto-underwrite/` in the repo)
+
+- **`server.js`** — Express app. Two routes: `/health` (open),
+  `POST /render` (gated by `X-Auth-Token`). Calls
+  `generateDealDoc()` then `uploadToDrive()`. JSON body limit 2 MB.
+  Returns 401 on bad token, 500 with `error` + (in non-prod) `stack`
+  on failure.
+- **`generate_pdf.js`** — Builds the `.docx` using the `docx`
+  package. Renders a centered title, deal-ID/city header,
+  Property table (address, type, beds/baths, sqft, year built, lot),
+  Economics table (deal type, asking, entry fee, ARV, est rent, PITI,
+  loan balance, rate, SF terms), and optional Summary / Why This
+  Exists / Strategies / Ideal Buyer / Underwriting Notes sections
+  for whatever the caller passes. Money values normalized via a
+  `money()` helper that strips `$` / `,` and re-formats. Filename
+  is `<slug>-<timestamp>.docx` so collisions are impossible.
+  Despite the historical filename, the output is `.docx` not PDF —
+  the `pdf-render-service` name is preserved for continuity with
+  the existing paperclip directory structure.
+- **`google_drive.js`** — googleapis OAuth2 client. Creates a
+  client from `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` /
+  `GOOGLE_REFRESH_TOKEN`, sets the refresh token on the credentials,
+  and uploads the buffer via `drive.files.create()` into the
+  configured `DRIVE_FOLDER_ID`. Uses `supportsAllDrives: true` so
+  shared drives work too. Returns `{ id, name, webViewLink,
+  webContentLink }`.
+- **`get-refresh-token.js`** — One-shot CLI helper that mints the
+  refresh token. Spins up an HTTP server on `localhost:8765`,
+  prints the OAuth consent URL to the terminal, and after the user
+  approves in the browser, exchanges the code for tokens and prints
+  `GOOGLE_REFRESH_TOKEN=...`. Scope: `drive.file` only (least
+  privilege — can only touch files the app creates).
+- **`ecosystem.config.js`** — pm2 config. Service name
+  `pdf-render-service`, cwd `/home/brooke/pdf-render-service`,
+  env `NODE_ENV=production` `PORT=3001`,
+  `max_memory_restart: 400M`, logs to
+  `/var/log/pdf-render-service.{error,out}.log`.
+- **`deploy.sh`** — rsync-based deploy from laptop to paperclip.
+  Excludes `.env`, `node_modules/`, `.git/`, `*.log`. Honors
+  `INSTALL_DEPS=1` env var to also run `npm install --omit=dev`
+  on remote. Uses `pm2 reload` if the app already exists, `pm2
+  start ecosystem.config.js` otherwise, then `pm2 save` and a
+  `curl /health` check.
+- **`.env.example`** + **`.gitignore`** + **`README.md`** with the
+  full Google Cloud Console walkthrough (consent screen, scope,
+  client ID, redirect URI, refresh token mint, folder ID, AUTH_TOKEN
+  generation, paperclip prep, deploy, smoke test, troubleshooting).
+- **`package.json`** — pinned deps: `express ^4.19.2`,
+  `docx ^8.5.0`, `googleapis ^133.0.0`, `dotenv ^16.4.5`. Node 18+.
+
+### Google Cloud setup (one-time, done April 18)
+
+- Project: `deal-pros-automation`
+- Drive API: enabled
+- OAuth consent screen: published to "In production" (External user
+  type, app name `Deal Pros Auto-Underwrite`). Refresh tokens are
+  now permanent — they would have expired after 7 days if left in
+  Testing mode.
+- OAuth scope granted: `https://www.googleapis.com/auth/drive.file`
+  (least privilege — only touches files the app creates, cannot
+  read or modify pre-existing Drive content).
+- OAuth Client ID: type **Web application**, name
+  `pdf-render-service`. Authorized redirect URI:
+  `http://localhost:8765/oauth2callback` (only used when re-minting
+  the refresh token; never hit in production).
+- Refresh token: tied to Brooke's Google account (the owner of
+  `/Deal Analyses/`).
+
+### Env vars on paperclip (`/home/brooke/pdf-render-service/.env`)
+
+| Var | Purpose |
+|---|---|
+| `PORT=3001` | Express bind port |
+| `AUTH_TOKEN=<64 hex>` | Shared secret for `X-Auth-Token` header |
+| `GOOGLE_CLIENT_ID` | from Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | from Cloud Console |
+| `GOOGLE_REFRESH_TOKEN` | minted via `get-refresh-token.js` |
+| `DRIVE_FOLDER_ID` | last URL segment of `/Deal Analyses/` folder |
+
+### Operational notes
+
+- **Firewall:** `ufw` is currently `Status: inactive` on paperclip,
+  so port 3001 is open to the internet by default. The `AUTH_TOKEN`
+  is the only thing protecting `/render` from anonymous calls.
+  `ufw allow 3001/tcp` was applied for when the firewall is later
+  turned on. **TODO:** decide whether to enable ufw and lock down
+  to a known caller IP (n8n Cloud egress range, or a Cloudflare
+  tunnel) — see TODO list below.
+- **Service-account JSON keys are blocked by GCP org policy** for
+  this project, which is why we went the OAuth refresh-token route.
+  Don't try to switch back to a service account without first
+  changing the org policy.
+- **Refresh token compromise:** the token Brooke minted on April 18
+  was visible in chat during setup. Per the security follow-up
+  in TODO, it should be revoked at
+  https://myaccount.google.com/permissions and re-minted before
+  the n8n workflow goes live.
+
+### How to call from anywhere
+
+```
+curl -sS -X POST http://64.23.204.220:3001/render \
+  -H "Content-Type: application/json" \
+  -H "X-Auth-Token: $AUTH_TOKEN" \
+  -d '{"dealId":"PHX-007","deal":{"streetAddress":"...","city":"Phoenix","state":"AZ","dealType":"Subject To","askingPrice":385000,"arv":450000,"hook":"...","analysis":"..."}}'
+```
+
+The `deal` object is freeform — any of `streetAddress`, `city`,
+`state`, `zip`, `propertyType`, `beds`, `baths`, `sqft`, `lotSize`,
+`yearBuilt`, `dealType`, `askingPrice`/`price`, `entryFee`, `arv`,
+`estRent`, `piti`, `loanBalance`, `interestRate`, `sfTerms`,
+`headline`/`title`, `hook`/`summary`/`dealStory`, `whyExists`,
+`strategies`, `buyerFitYes`, `analysis` will be rendered if
+present. Missing fields render as `—`. Unknown fields are
+silently ignored.
+
+### Backwards compatibility
+
+No existing functions or pm2 jobs touched. The new service runs
+alongside `deploy-hook` (the GitHub auto-deploy listener on port
+9000) and the four cron-driven jobs without conflict.
+
 ## Completed — April 15 2026 Dispo Buddy Go-Live + Notion Field Sync Hotfixes
 
 Branch: `claude/improve-logo-favicon-Av2Gm`. Live walkthrough with Brooke
@@ -2827,6 +2977,24 @@ blog page).
 ---
 
 ## TODO — Next Session
+
+0. **Auto-Underwrite — security follow-ups + n8n wiring** (carry-over from April 18):
+   - **Rotate the OAuth refresh token** (it was visible in chat during setup):
+     1. Go to https://myaccount.google.com/permissions
+     2. Find "Deal Pros Auto-Underwrite" → Remove access
+     3. On Mac: `cd ~/termsforsale-site/auto-underwrite && node get-refresh-token.js`
+     4. Approve in browser, copy new `GOOGLE_REFRESH_TOKEN=...` line
+     5. `open -e ~/termsforsale-site/auto-underwrite/.env` → replace the old token, save
+     6. `scp ~/termsforsale-site/auto-underwrite/.env root@64.23.204.220:/home/brooke/pdf-render-service/.env`
+     7. `ssh root@64.23.204.220 "pm2 reload pdf-render-service"`
+     8. Smoke test: `curl http://64.23.204.220:3001/health` — should still return `oauthConfigured: true`
+   - **Decide on firewall posture.** ufw is currently inactive on paperclip, so port 3001 is open to the internet. The `AUTH_TOKEN` is the gate. Options:
+     - (a) Leave as-is — AUTH_TOKEN is 32 random bytes, brute-force isn't realistic.
+     - (b) Enable ufw and lock 3001 to known caller IPs (n8n Cloud's egress range, or a Cloudflare tunnel).
+     - (b) is more secure but breaks ad-hoc testing from your laptop. Pick when n8n is wired up.
+   - **Build the n8n Cloud workflow** that calls `/render`. The chat session that designed the underwriting prompt + workflow JSON has the source-of-truth doc — port that into n8n Cloud and point its HTTP Request node at `http://64.23.204.220:3001/render` with `X-Auth-Token` header and the deal JSON in the body.
+   - **Test the round-trip** with a real Notion deal once n8n is live: trigger the workflow, confirm the `.docx` lands in `/Deal Analyses/`, eyeball the formatting, iterate on `generate_pdf.js` if section ordering or labels need tweaking.
+   - **Optional polish:** add a `puppeteer`-based "real PDF" output mode behind a `?format=pdf` flag if the team wants true PDFs instead of `.docx`. Not needed right now — Drive renders `.docx` natively.
 
 1. **Test 3 Terms For Sale GHL workflows are firing live** (Brooke's request — PRIORITY for tomorrow):
    - **Customer Reply workflow** → POSTs to `/api/buyer-response-tag`

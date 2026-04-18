@@ -1,0 +1,19 @@
+{
+  "name": "pdf-render-service",
+  "version": "1.0.0",
+  "description": "Renders deal underwriting docs and uploads to Google Drive",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "get-token": "node get-refresh-token.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "docx": "^8.5.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "googleapis": "^133.0.0"
+  }
+}
