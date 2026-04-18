@@ -124,7 +124,7 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -153,7 +153,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -192,7 +192,7 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -221,7 +221,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -259,7 +259,7 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -288,7 +288,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
