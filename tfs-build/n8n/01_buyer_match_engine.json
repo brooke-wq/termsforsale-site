@@ -12,7 +12,10 @@
       "name": "Webhook: New Deal",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "tfs-new-deal-inventory",
       "notes": "Triggered by: (1) GHL workflow when an opportunity hits 'Inventory - Ready to Blast' stage, OR (2) Notion button automation on a deal page. Expected payload fields: deal_id, source (ghl|notion), asset_class, market, price, deal_type, summary_url, address (internal only)"
     },
@@ -24,7 +27,10 @@
       "name": "Normalize Deal Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -35,21 +41,37 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Version", "value": "2021-07-28" },
-            { "name": "Accept", "value": "application/json" }
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
           ]
         },
         "options": {
-          "response": { "response": { "fullResponse": false } }
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
         }
       },
       "id": "fetch-active-buyers",
       "name": "GHL: Fetch Active Buyers",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300],
+      "position": [
+        680,
+        300
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "ghl_private_integration", "name": "GHL Private Integration Token" }
+        "httpHeaderAuth": {
+          "id": "ghl_private_integration",
+          "name": "GHL Private Integration Token"
+        }
       },
       "notes": "Uses GHL Private Integration Token (create under Settings → Private Integrations). Env var GHL_LOCATION_ID should be set to the TFS sub-account location ID. For paginated results beyond 100, add a Loop node — skipping that optimization until buyer list exceeds 100 active contacts."
     },
@@ -61,7 +83,10 @@
       "name": "Filter & Match Buyers",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
@@ -69,12 +94,18 @@
           "values": [
             {
               "conditions": {
-                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
                 "conditions": [
                   {
                     "leftValue": "={{$json.tier}}",
                     "rightValue": "A",
-                    "operator": { "type": "string", "operation": "equals" }
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   }
                 ],
                 "combinator": "and"
@@ -84,12 +115,18 @@
             },
             {
               "conditions": {
-                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
                 "conditions": [
                   {
                     "leftValue": "={{$json.tier}}",
                     "rightValue": "B",
-                    "operator": { "type": "string", "operation": "equals" }
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   }
                 ],
                 "combinator": "and"
@@ -99,12 +136,18 @@
             },
             {
               "conditions": {
-                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
                 "conditions": [
                   {
                     "leftValue": "={{$json.tier}}",
                     "rightValue": "C",
-                    "operator": { "type": "string", "operation": "equals" }
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   }
                 ],
                 "combinator": "and"
@@ -119,7 +162,10 @@
       "name": "Switch by Tier",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     },
     {
       "parameters": {
@@ -130,25 +176,29 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Version", "value": "2021-07-28" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "customFields",
-              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
-            }
-          ]
-        }
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\"customFields\":[{\"id\":\"JzmuiUCvNJtHiHOeEz90\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.asset_class}}\"},{\"id\":\"tAFA5xs5ZS7AG7AgheZw\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.market}}\"},{\"id\":\"h1PdpPrgYHfk7WKdEBjp\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.price}}\"},{\"id\":\"TENFLNR411SHBOBRzEQX\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_type}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.summary_url}}\"},{\"id\":\"RiSmLK8l97DKzrK3VQaZ\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_id}}\"}]}"
       },
       "id": "write-deal-fields-a",
       "name": "A: Write Deal Fields",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1340, 180]
+      "position": [
+        1340,
+        180
+      ]
     },
     {
       "parameters": {
@@ -159,22 +209,29 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Version", "value": "2021-07-28" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            { "name": "tags", "value": "=[\"deal:new-inventory\"]" }
-          ]
-        }
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\"tags\":[\"deal:new-inventory\"]}"
       },
       "id": "apply-tag-a",
       "name": "A: Apply deal:new-inventory Tag",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1560, 180],
+      "position": [
+        1560,
+        180
+      ],
       "notes": "This is what fires GHL WF02 (Deal Match & Send). The tag MUST be applied AFTER the custom fields are written, otherwise WF02 reads stale/empty fields."
     },
     {
@@ -186,7 +243,10 @@
       "name": "Wait 1h (Tier B)",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [1340, 320],
+      "position": [
+        1340,
+        320
+      ],
       "webhookId": "wait-tier-b"
     },
     {
@@ -198,25 +258,29 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Version", "value": "2021-07-28" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "customFields",
-              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
-            }
-          ]
-        }
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\"customFields\":[{\"id\":\"JzmuiUCvNJtHiHOeEz90\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.asset_class}}\"},{\"id\":\"tAFA5xs5ZS7AG7AgheZw\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.market}}\"},{\"id\":\"h1PdpPrgYHfk7WKdEBjp\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.price}}\"},{\"id\":\"TENFLNR411SHBOBRzEQX\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_type}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.summary_url}}\"},{\"id\":\"RiSmLK8l97DKzrK3VQaZ\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_id}}\"}]}"
       },
       "id": "write-deal-fields-b",
       "name": "B: Write Deal Fields",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1560, 320]
+      "position": [
+        1560,
+        320
+      ]
     },
     {
       "parameters": {
@@ -227,22 +291,29 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Version", "value": "2021-07-28" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            { "name": "tags", "value": "=[\"deal:new-inventory\"]" }
-          ]
-        }
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\"tags\":[\"deal:new-inventory\"]}"
       },
       "id": "apply-tag-b",
       "name": "B: Apply deal:new-inventory Tag",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1780, 320]
+      "position": [
+        1780,
+        320
+      ]
     },
     {
       "parameters": {
@@ -253,7 +324,10 @@
       "name": "Wait 4h (Tier C)",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [1340, 460],
+      "position": [
+        1340,
+        460
+      ],
       "webhookId": "wait-tier-c"
     },
     {
@@ -265,25 +339,29 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Version", "value": "2021-07-28" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "customFields",
-              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
-            }
-          ]
-        }
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\"customFields\":[{\"id\":\"JzmuiUCvNJtHiHOeEz90\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.asset_class}}\"},{\"id\":\"tAFA5xs5ZS7AG7AgheZw\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.market}}\"},{\"id\":\"h1PdpPrgYHfk7WKdEBjp\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.price}}\"},{\"id\":\"TENFLNR411SHBOBRzEQX\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_type}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.summary_url}}\"},{\"id\":\"RiSmLK8l97DKzrK3VQaZ\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_id}}\"}]}"
       },
       "id": "write-deal-fields-c",
       "name": "C: Write Deal Fields",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1560, 460]
+      "position": [
+        1560,
+        460
+      ]
     },
     {
       "parameters": {
@@ -294,22 +372,29 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Version", "value": "2021-07-28" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            { "name": "tags", "value": "=[\"deal:new-inventory\"]" }
-          ]
-        }
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\"tags\":[\"deal:new-inventory\"]}"
       },
       "id": "apply-tag-c",
       "name": "C: Apply deal:new-inventory Tag",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1780, 460]
+      "position": [
+        1780,
+        460
+      ]
     },
     {
       "parameters": {
@@ -320,46 +405,141 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [900, 500]
+      "position": [
+        900,
+        500
+      ]
     }
   ],
   "connections": {
     "Webhook: New Deal": {
-      "main": [[{ "node": "Normalize Deal Payload", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize Deal Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalize Deal Payload": {
-      "main": [[
-        { "node": "GHL: Fetch Active Buyers", "type": "main", "index": 0 },
-        { "node": "Respond to Webhook", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "GHL: Fetch Active Buyers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "GHL: Fetch Active Buyers": {
-      "main": [[{ "node": "Filter & Match Buyers", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Filter & Match Buyers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Filter & Match Buyers": {
-      "main": [[{ "node": "Switch by Tier", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Switch by Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Switch by Tier": {
       "main": [
-        [{ "node": "A: Write Deal Fields", "type": "main", "index": 0 }],
-        [{ "node": "Wait 1h (Tier B)", "type": "main", "index": 0 }],
-        [{ "node": "Wait 4h (Tier C)", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "A: Write Deal Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 1h (Tier B)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 4h (Tier C)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "A: Write Deal Fields": {
-      "main": [[{ "node": "A: Apply deal:new-inventory Tag", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "A: Apply deal:new-inventory Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Wait 1h (Tier B)": {
-      "main": [[{ "node": "B: Write Deal Fields", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "B: Write Deal Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "B: Write Deal Fields": {
-      "main": [[{ "node": "B: Apply deal:new-inventory Tag", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "B: Apply deal:new-inventory Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Wait 4h (Tier C)": {
-      "main": [[{ "node": "C: Write Deal Fields", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "C: Write Deal Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "C: Write Deal Fields": {
-      "main": [[{ "node": "C: Apply deal:new-inventory Tag", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "C: Apply deal:new-inventory Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
