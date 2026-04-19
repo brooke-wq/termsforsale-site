@@ -1,0 +1,17 @@
+{
+  "workflow_name": "WF04 — Buyer Maintenance (90-Day + Re-Verify)",
+  "sub_account": "Terms For Sale",
+  "build_method": "Paste ai_builder_prompt into Workflows → + New Workflow → Start with AI. This is TWO workflows technically — build them separately for easier debugging.",
+  "workflow_4a": {
+    "name": "WF04a — 90-Day Dormant Check",
+    "ai_builder_prompt": "Create a workflow called 'WF04a — 90-Day Dormant Check' with a time-based trigger (Scheduled) that runs daily at 8:00 AM. Filter the contacts the workflow runs against: only contacts that have tag buyer:active AND whose custom field Last Touch Date is more than 90 days ago. For each matching contact: remove tag buyer:active, apply tag buyer:dormant, move Buyer Lifecycle opportunity to stage 'Dormant', update Last Touch Date = today (to prevent re-fire), send internal Slack notification via webhook with message '{{contact.first_name}} {{contact.last_name}} moved to dormant — 90 days no touch'. End workflow."
+  },
+  "workflow_4b": {
+    "name": "WF04b — Quarterly POF Re-Verify",
+    "ai_builder_prompt": "Create a workflow called 'WF04b — Quarterly POF Re-Verify' with a time-based trigger (Scheduled) that runs daily at 9:00 AM. Filter the contacts: only contacts that have tag buyer:active AND whose custom field Re-verify Due Date is today or earlier. For each matching contact: Step 1: send SMS 'WF04b_SMS_Reverify'. Step 2: update custom field PoF on File = Pending. Step 3: update Last Touch Date = today. Step 4: wait 5 days. Step 5: add if/else condition — has the contact replied to SMS in last 5 days? YES path: create internal task for Brooke titled 'Update POF for {{contact.first_name}} {{contact.last_name}}' due today. NO path: remove tag buyer:active, apply tag buyer:dormant, move pipeline stage to 'Dormant'. End workflow.",
+    "messages": {
+      "WF04b_SMS_Reverify": "Quarterly check-in {{contact.first_name}} — need to refresh your POF on file so we keep sending you deals. Reply with updated POF amount + any market/buy box changes. Takes 30 seconds."
+    }
+  },
+  "critical_note": "Every workflow in this build (WF01, WF02, WF03) updates Last Touch Date on every send. If you add new workflows later, make sure they do the same — otherwise WF04a will falsely dormant-flag active buyers."
+}

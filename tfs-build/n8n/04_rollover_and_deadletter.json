@@ -1,0 +1,39 @@
+{
+  "name": "TFS — Monthly 12-Month Rollover + Dead Letter Log",
+  "description_for_humans": "Two small but important hygiene workflows bundled in one file. Build as separate n8n workflows using the node groups below.",
+  "workflow_a_rollover": {
+    "name": "TFS — Monthly Deals Rollover",
+    "purpose": "Decrement Deals Last 12 Months for buyers whose most recent close was over 12 months ago. Keeps tier scoring accurate.",
+    "cron": "0 9 1 * *",
+    "cron_human": "Runs at 9 AM on the 1st of every month (Phoenix time)",
+    "logic": [
+      "1. GET all contacts with tag buyer:active AND Deals Last 12 Months > 0",
+      "2. For each contact, GET opportunity history in Buyer Lifecycle pipeline — filter to 'Closed' stage",
+      "3. Count opportunities closed in the last 365 days → that's the true deals_last_12_months",
+      "4. If count differs from the stored field value, PUT update to correct it",
+      "5. If count drops below the tier threshold (3), also trigger a re-scoring webhook to WF01 Step 5 logic"
+    ],
+    "cost_note": "Runs once a month. Self-hosted n8n = $0. Negligible API load on GHL — expected ~200 contacts checked, well under rate limit."
+  },
+  "workflow_b_dead_letter": {
+    "name": "TFS — Match Engine Dead Letter Log",
+    "purpose": "Catches any match engine execution that errors or produces zero matches. Logs to a Notion database for manual review. Without this you have no visibility when a deal quietly doesn't go out.",
+    "trigger": "Add an Error Trigger node to the main match engine workflow (01_buyer_match_engine.json). Route all errors here. Also add a conditional branch in the main workflow — if matched_count === 0, also send to this logger.",
+    "action": "Write a row to Notion database 'TFS — Match Engine Log' with fields: deal_id, source, asset_class, market, price, matched_count, error_message, timestamp, reviewed (checkbox default false)",
+    "notion_db_spec": {
+      "db_name": "TFS — Match Engine Log",
+      "properties": [
+        { "name": "Deal ID", "type": "title" },
+        { "name": "Source", "type": "select", "options": ["ghl", "notion"] },
+        { "name": "Asset Class", "type": "rich_text" },
+        { "name": "Market", "type": "rich_text" },
+        { "name": "Price", "type": "number" },
+        { "name": "Matched Count", "type": "number" },
+        { "name": "Error", "type": "rich_text" },
+        { "name": "Timestamp", "type": "date" },
+        { "name": "Reviewed", "type": "checkbox" }
+      ]
+    },
+    "weekly_review_sop": "Every Monday morning, open the 'TFS — Match Engine Log' Notion view filtered to Reviewed=false. Any deal with 0 matches means either (a) the buyer list doesn't have coverage for that market/asset combo — use as a signal to recruit buyers, or (b) the deal's fields are misconfigured and the deal needs fixing. Check off Reviewed when addressed."
+  }
+}

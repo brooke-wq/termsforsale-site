@@ -1,0 +1,91 @@
+{
+  "sub_account": "Terms For Sale",
+  "pipeline_name": "Buyer Lifecycle",
+  "notes": "Build under Opportunities → Pipelines → Create New. Each stage below fires its own lightweight workflow triggered on 'Opportunity Stage Changed' with stage filter.",
+  "stages": [
+    {
+      "order": 1,
+      "name": "New Buyer — Intake",
+      "color": "#2563EB",
+      "trigger_event": "Contact created with tag buyer:new OR form submission",
+      "fires_workflow": "WF01 — Intake & Scoring"
+    },
+    {
+      "order": 2,
+      "name": "Intake Call Scheduled",
+      "color": "#7C3AED",
+      "trigger_event": "Buyer replies to qualifier SMS",
+      "fires_workflow": "Send calendar booking link (inline in WF01)"
+    },
+    {
+      "order": 3,
+      "name": "Intake Call Complete",
+      "color": "#0891B2",
+      "trigger_event": "Rep manually moves stage after call",
+      "fires_workflow": "WF01 scoring branch (Steps 4–5)"
+    },
+    {
+      "order": 4,
+      "name": "Active Buyer — A Tier",
+      "color": "#16A34A",
+      "trigger_event": "Scoring = A",
+      "fires_workflow": "Send tier-A confirmation SMS"
+    },
+    {
+      "order": 5,
+      "name": "Active Buyer — B Tier",
+      "color": "#CA8A04",
+      "trigger_event": "Scoring = B",
+      "fires_workflow": "Send tier-B confirmation SMS"
+    },
+    {
+      "order": 6,
+      "name": "Active Buyer — C Tier",
+      "color": "#A16207",
+      "trigger_event": "Scoring = C",
+      "fires_workflow": "Send tier-C confirmation SMS"
+    },
+    {
+      "order": 7,
+      "name": "Deal Sent",
+      "color": "#DC2626",
+      "trigger_event": "Tag deal:new-inventory applied by n8n",
+      "fires_workflow": "WF02 — Deal Match & Send"
+    },
+    {
+      "order": 8,
+      "name": "Under Negotiation",
+      "color": "#EA580C",
+      "trigger_event": "Buyer replies interested or clicks deal link",
+      "fires_workflow": "Notify acquisitions rep, start underwriting checklist"
+    },
+    {
+      "order": 9,
+      "name": "Offer Submitted",
+      "color": "#9333EA",
+      "trigger_event": "Rep moves stage after offer sent",
+      "fires_workflow": "Send offer confirmation email to buyer"
+    },
+    {
+      "order": 10,
+      "name": "Assigned",
+      "color": "#0D9488",
+      "trigger_event": "DocuSign/PandaDoc webhook on completion (deal assigned to end buyer)",
+      "fires_workflow": "Confirm EMD deposit + title open; notify rep"
+    },
+    {
+      "order": 11,
+      "name": "Closed",
+      "color": "#10B981",
+      "trigger_event": "Rep moves stage after funding",
+      "fires_workflow": "WF03 — Close & Recycle"
+    },
+    {
+      "order": 12,
+      "name": "Dormant",
+      "color": "#6B7280",
+      "trigger_event": "90-day maintenance rule fires (WF04)",
+      "fires_workflow": "None — parking stage; manual re-engagement moves back to Active"
+    }
+  ]
+}

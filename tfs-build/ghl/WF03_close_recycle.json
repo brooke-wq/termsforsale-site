@@ -1,0 +1,13 @@
+{
+  "workflow_name": "WF03 — Close & Recycle",
+  "sub_account": "Terms For Sale",
+  "build_method": "Paste ai_builder_prompt into Workflows → + New Workflow → Start with AI.",
+  "ai_builder_prompt": "Create a workflow called 'WF03 — Close & Recycle' triggered when an opportunity in the Buyer Lifecycle pipeline is moved to stage 'Closed'. Step 1: Apply tag buyer:vip. Update custom field Buyer Tier = A. Apply tag engage:a-tier. Remove tags engage:b-tier and engage:c-tier. Step 2: Increment custom field Deals Last 12 Months by 1 using the math action (or webhook to n8n if GHL math is not available — n8n endpoint: https://n8n.dealpros.io/webhook/increment-deals). Step 3: Update Last Touch Date = today, Re-verify Due Date = today + 90 days. Step 4: Create internal task assigned to Brooke titled 'Confirm assignment fee distributed for {{contact.first_name}} {{contact.last_name}}' due in 2 days. Step 5: Send internal Slack notification via webhook with message 'Deal closed with {{contact.first_name}} {{contact.last_name}} — assignment fee to confirm'. Step 6: Wait 7 days. Send SMS 'WF03_SMS_NextDeal' to buyer. Step 7: Ensure tag buyer:active is applied (it should still be there from WF01, but apply defensively). End workflow.",
+  "messages": {
+    "WF03_SMS_NextDeal": "{{contact.first_name}} — closing went smooth on your end right? Good. You're now VIP on our list — first look on everything moving forward. What's next on your acquisition wishlist? Hit me back with asset class + market and I'll prioritize it."
+  },
+  "critical_notes": [
+    "GHL doesn't natively support math on custom fields. Use the 'Webhook' action to POST to n8n endpoint /webhook/increment-deals which handles the +1 increment and writes back to the contact. n8n workflow spec included in n8n/03_helper_increment.json.",
+    "The 12-month rolling counter requires a separate monthly cleanup n8n cron that decrements deals older than 12 months — included in n8n/04_rollover_and_deadletter.json."
+  ]
+}

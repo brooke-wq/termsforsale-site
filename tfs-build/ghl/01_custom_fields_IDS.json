@@ -1,0 +1,192 @@
+{
+  "generated_at": "2026-04-17T01:04:57.351Z",
+  "location_id": "7IyUgu1zpi38MDYpSDTs",
+  "folder": {
+    "name": "Buyer Profile",
+    "id": null
+  },
+  "fields": [
+    {
+      "name": "Lead Source",
+      "id": "Ov2LMG8TipkI4jlNAFRR",
+      "type": "Dropdown (single)",
+      "fieldKey": "contact.lead_source",
+      "created": true
+    },
+    {
+      "name": "Buyer Asset Class",
+      "id": "NT3w93SU9mkNugSZjHLB",
+      "type": "Multi-select",
+      "fieldKey": "contact.buyer_asset_class",
+      "created": true
+    },
+    {
+      "name": "Buyer Market",
+      "id": "Rt1ETvZZSh3pFlFZkhro",
+      "type": "Text (long)",
+      "fieldKey": "contact.buyer_market",
+      "existed": true
+    },
+    {
+      "name": "Buyer Price Min",
+      "id": "pM3aeMZALD2tmf2cFSmG",
+      "type": "Monetary",
+      "fieldKey": "contact.buyer_price_min",
+      "existed": true
+    },
+    {
+      "name": "Buyer Price Max",
+      "id": "LcsBYM6iUurqTu8SsfTz",
+      "type": "Monetary",
+      "fieldKey": "contact.buyer_price_max",
+      "existed": true
+    },
+    {
+      "name": "Capital / POF Amount",
+      "id": "pkNBpd4VwNblSMrB20I5",
+      "type": "Monetary",
+      "fieldKey": "contact.capital__pof_amount",
+      "existed": true
+    },
+    {
+      "name": "PoF on File",
+      "id": "zKyplmyTeBFlUFdYMfUD",
+      "type": "Dropdown (single)",
+      "fieldKey": "contact.pof_on_file",
+      "existed": true
+    },
+    {
+      "name": "Deals Last 12 Months",
+      "id": "ToK46ItNIDFiEcEFNN5m",
+      "type": "Number",
+      "fieldKey": "contact.deals_last_12_months",
+      "existed": true
+    },
+    {
+      "name": "Decision Maker",
+      "id": "06k53PRZ8o9hs2Zy5F4h",
+      "type": "Dropdown (single)",
+      "fieldKey": "contact.decision_maker",
+      "created": true
+    },
+    {
+      "name": "Buyer Tier",
+      "id": "GzB9iQ9Mb9IsAKuMS93X",
+      "type": "Dropdown (single)",
+      "fieldKey": "contact.buyer_tier",
+      "existed": true
+    },
+    {
+      "name": "Last Touch Date",
+      "id": "SwUKaml8kRpCrrLzunlh",
+      "type": "Date",
+      "fieldKey": "contact.last_touch_date",
+      "existed": true
+    },
+    {
+      "name": "Preferred Contact Method",
+      "id": "qoFIBxIWRow8HQy3GOw1",
+      "type": "Dropdown (single)",
+      "fieldKey": "contact.preferred_contact_method",
+      "created": true
+    },
+    {
+      "name": "Re-verify Due Date",
+      "id": "1cgpp0vcBSWSKptqoORU",
+      "type": "Date",
+      "fieldKey": "contact.reverify_due_date",
+      "existed": true
+    },
+    {
+      "name": "Entity Name",
+      "id": "05jevWkhMiY8bFoe9TWc",
+      "type": "Text",
+      "fieldKey": "contact.entity_name",
+      "existed": true
+    },
+    {
+      "name": "EMD Amount",
+      "id": "pEf6ih4rpT7oOMLlK9wN",
+      "type": "Monetary",
+      "fieldKey": "contact.emd_amount",
+      "existed": true
+    },
+    {
+      "name": "Offer Price",
+      "id": "6c52JUALKfX7Apv4RpR4",
+      "type": "Monetary",
+      "fieldKey": "contact.offer_price",
+      "existed": true
+    },
+    {
+      "name": "Close Date Target",
+      "id": "wuXiUAbgKqaYGlmqqE0e",
+      "type": "Date",
+      "fieldKey": "contact.close_date_target",
+      "existed": true
+    },
+    {
+      "name": "Contingencies",
+      "id": "cTtqBoUEGXEk7gUdtl9u",
+      "type": "Text (long)",
+      "fieldKey": "contact.contingencies",
+      "existed": true
+    },
+    {
+      "name": "Assignment Fee Paid",
+      "id": "LkrfGd6ziGJNwlxugcVV",
+      "type": "Dropdown (single)",
+      "fieldKey": "contact.assignment_fee_paid",
+      "created": true
+    },
+    {
+      "name": "Last Deal Sent ID",
+      "id": "RiSmLK8l97DKzrK3VQaZ",
+      "type": "Text",
+      "fieldKey": "contact.last_deal_sent_id",
+      "existed": true
+    },
+    {
+      "name": "Last Deal Sent Date",
+      "id": "CAJQUQSjrkcdygsCGDdK",
+      "type": "Date",
+      "fieldKey": "contact.last_deal_sent_date",
+      "existed": true
+    },
+    {
+      "name": "Deal Asset Class (latest)",
+      "id": "JzmuiUCvNJtHiHOeEz90",
+      "type": "Text",
+      "fieldKey": "contact.deal_asset_class_latest",
+      "existed": true
+    },
+    {
+      "name": "Deal Market (latest)",
+      "id": "tAFA5xs5ZS7AG7AgheZw",
+      "type": "Text",
+      "fieldKey": "contact.deal_market_latest",
+      "existed": true
+    },
+    {
+      "name": "Deal Price (latest)",
+      "id": "h1PdpPrgYHfk7WKdEBjp",
+      "type": "Text",
+      "fieldKey": "contact.deal_price_latest",
+      "existed": true
+    },
+    {
+      "name": "Deal Type (latest)",
+      "id": "TENFLNR411SHBOBRzEQX",
+      "type": "Text",
+      "fieldKey": "contact.deal_type_latest",
+      "existed": true
+    },
+    {
+      "name": "Deal Summary URL (latest)",
+      "id": "hGftrRzv5pt24KrNd1sO",
+      "type": "Text",
+      "fieldKey": "contact.deal_summary_url_latest",
+      "existed": true
+    }
+  ]
+}

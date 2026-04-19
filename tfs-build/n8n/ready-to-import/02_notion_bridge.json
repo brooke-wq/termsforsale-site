@@ -1,0 +1,222 @@
+{
+  "name": "TFS — Notion Deal Inventory Bridge",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "cron-poll",
+      "name": "Poll every 10 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "Polling chosen over Notion webhooks because Notion's native webhooks are limited. 10-min poll = 144 executions/day = well within n8n self-hosted free tier."
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "=a3c0a38fd9294d758dedabab2548ff29",
+        "returnAll": false,
+        "limit": 50,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Deal Status|status",
+              "condition": "equals",
+              "statusValue": "Actively Marketing"
+            },
+            {
+              "key": "Blasted|checkbox",
+              "condition": "equals",
+              "checkboxValue": false
+            }
+          ]
+        }
+      },
+      "id": "notion-query",
+      "name": "Notion: Get Ready Deals",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "notion_tfs",
+          "name": "Notion TFS Integration"
+        }
+      },
+      "notes": "Notion deal database must have: Status (select) with 'Ready to Blast' option, Blasted (checkbox), Asset Class (select/multi-select), Market (text), Price (number), Deal Type (select), Summary URL (url), Address (text — internal only)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.length || $input.all().length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-has-deals",
+      "name": "IF deals found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform Notion page into the normalized deal payload the match engine expects\n// Field names try the bridge-spec name first, then fall back to TFS deals DB names.\nconst page = $json;\nconst props = page.properties || {};\n\nconst getSelect = (p) => p && p.select ? p.select.name : '';\nconst getMultiSelect = (p) => p && p.multi_select ? p.multi_select.map(s => s.name).join(', ') : '';\nconst getText = (p) => {\n  if (!p) return '';\n  if (p.title) return (p.title[0] && p.title[0].plain_text) || '';\n  if (p.rich_text) return (p.rich_text[0] && p.rich_text[0].plain_text) || '';\n  return '';\n};\nconst getNumber = (p) => p && typeof p.number === 'number' ? p.number : 0;\nconst getUrl = (p) => p && p.url ? p.url : '';\n\nconst pick = (...keys) => {\n  for (const k of keys) if (props[k]) return props[k];\n  return null;\n};\n\nconst marketText = getText(pick('Market')) || [getText(pick('City')), getText(pick('State'))].filter(Boolean).join(' ');\n\nconst deal = {\n  deal_id: page.id,\n  source: 'notion',\n  asset_class: getMultiSelect(pick('Asset Class')) || getSelect(pick('Asset Class', 'Property Type')),\n  market: marketText,\n  price: getNumber(pick('Price', 'Asking Price')),\n  deal_type: getSelect(pick('Deal Type')) || 'Wholesale',\n  summary_url: getUrl(pick('Summary URL', 'Website Link')),\n  address: getText(pick('Address', 'Street Address')),\n  notion_page_id: page.id\n};\n\nreturn [{ json: deal }];"
+      },
+      "id": "transform-notion",
+      "name": "Transform Notion → Deal Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dealpros.app.n8n.cloud/webhook/new-deal-inventory",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{JSON.stringify($json)}}",
+        "options": {}
+      },
+      "id": "fire-engine",
+      "name": "POST to Match Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": "={{$json.notion_page_id}}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Blasted|checkbox",
+              "checkboxValue": true
+            },
+            {
+              "key": "Blasted At|date",
+              "date": "={{new Date().toISOString()}}"
+            }
+          ]
+        }
+      },
+      "id": "notion-mark-blasted",
+      "name": "Notion: Mark Blasted",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        300
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "notion_tfs",
+          "name": "Notion TFS Integration"
+        }
+      },
+      "notes": "Prevents re-firing on next 10-min poll. Deal page now shows Blasted=true with timestamp."
+    }
+  ],
+  "connections": {
+    "Poll every 10 min": {
+      "main": [
+        [
+          {
+            "node": "Notion: Get Ready Deals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion: Get Ready Deals": {
+      "main": [
+        [
+          {
+            "node": "IF deals found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF deals found": {
+      "main": [
+        [
+          {
+            "node": "Transform Notion → Deal Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Transform Notion → Deal Payload": {
+      "main": [
+        [
+          {
+            "node": "POST to Match Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST to Match Engine": {
+      "main": [
+        [
+          {
+            "node": "Notion: Mark Blasted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Phoenix"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "sub_account": "Terms For Sale",
+  "notes": "Build under Sites → Forms → Builder. Map each field to the corresponding Custom Field from 01_custom_fields.json. Embed URLs below into the SMS/email sends in WF01.",
+  "forms": [
+    {
+      "form_name": "TFS — Light Qualifier (Pre-Intake)",
+      "purpose": "Sent immediately after opt-in via SMS link. Captures asset class + market to start filtering.",
+      "slug": "/buyer-qualifier",
+      "redirect_url": "https://termsforsale.com/thanks-qualifier",
+      "on_submit_actions": [
+        "Apply tag buyer:new (if not present)",
+        "Trigger WF01 — Intake & Scoring (Step 2 branch)",
+        "Update Last Touch Date = today"
+      ],
+      "fields": [
+        {
+          "label": "First Name",
+          "maps_to": "contact.first_name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "label": "Phone",
+          "maps_to": "contact.phone",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "label": "What type of deals are you looking for?",
+          "maps_to": "contact.buyer_asset_class",
+          "type": "multi-select",
+          "options": ["SFR", "MFR 2-4", "MFR 5+", "Commercial", "Land", "Mixed-Use", "NNN", "Mobile Home Park"],
+          "required": true
+        },
+        {
+          "label": "What markets are you buying in? (cities, states, or MSAs)",
+          "maps_to": "contact.buyer_market",
+          "type": "text-long",
+          "placeholder": "Ex: Phoenix AZ, Dallas TX, Tampa FL",
+          "required": true
+        }
+      ]
+    },
+    {
+      "form_name": "TFS — Full Buyer Intake",
+      "purpose": "Sent after intake call is booked. Full profile for scoring.",
+      "slug": "/buyer-intake",
+      "redirect_url": "https://termsforsale.com/thanks-intake",
+      "on_submit_actions": [
+        "Move pipeline stage to 'Intake Call Scheduled'",
+        "Send calendar booking link SMS",
+        "Update Last Touch Date = today"
+      ],
+      "fields": [
+        { "label": "First Name", "maps_to": "contact.first_name", "type": "text", "required": true },
+        { "label": "Last Name", "maps_to": "contact.last_name", "type": "text", "required": true },
+        { "label": "Email", "maps_to": "contact.email", "type": "email", "required": true },
+        { "label": "Phone", "maps_to": "contact.phone", "type": "phone", "required": true },
+        { "label": "Company / Entity Name", "maps_to": "contact.entity_name", "type": "text", "required": false },
+        {
+          "label": "How did you hear about us?",
+          "maps_to": "contact.lead_source",
+          "type": "dropdown",
+          "options": ["PPC", "Referral", "Event", "Form", "Manual", "JV Partner"],
+          "required": true
+        },
+        {
+          "label": "Asset Class (select all that apply)",
+          "maps_to": "contact.buyer_asset_class",
+          "type": "multi-select",
+          "options": ["SFR", "MFR 2-4", "MFR 5+", "Commercial", "Land", "Mixed-Use", "NNN", "Mobile Home Park"],
+          "required": true
+        },
+        { "label": "Target Markets", "maps_to": "contact.buyer_market", "type": "text-long", "required": true },
+        { "label": "Min Purchase Price", "maps_to": "contact.buyer_price_min", "type": "number", "required": true },
+        { "label": "Max Purchase Price", "maps_to": "contact.buyer_price_max", "type": "number", "required": true },
+        { "label": "Proof of Funds Amount", "maps_to": "contact.capital_pof_amount", "type": "number", "required": true },
+        {
+          "label": "Do you have POF documentation on file?",
+          "maps_to": "contact.pof_on_file",
+          "type": "dropdown",
+          "options": ["Yes", "No", "Pending"],
+          "required": true
+        },
+        { "label": "How many deals have you closed in the last 12 months?", "maps_to": "contact.deals_last_12_months", "type": "number", "required": true },
+        {
+          "label": "Are you the final decision maker?",
+          "maps_to": "contact.decision_maker",
+          "type": "dropdown",
+          "options": ["Yes", "No"],
+          "required": true
+        },
+        {
+          "label": "Preferred contact method",
+          "maps_to": "contact.preferred_contact_method",
+          "type": "dropdown",
+          "options": ["SMS", "Email", "Call"],
+          "required": true
+        },
+        { "label": "Anything else we should know?", "maps_to": "contact.notes", "type": "text-long", "required": false }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-04-17T01:02:25.970Z",
+  "db_id": "a3c0a38fd9294d758dedabab2548ff29",
+  "title_property": "Street Address",
+  "status_property": "Deal Status",
+  "status_property_type": "status",
+  "mapped": {
+    "Deal ID / title": "Street Address",
+    "Status": "Deal Status",
+    "Blasted": "Blasted",
+    "Blasted At": "Blasted At",
+    "Asset Class": "Asset Class",
+    "Market": "Market",
+    "Price": "Asking Price (existing)",
+    "Deal Type": "Deal Type (existing)",
+    "Summary URL": "Summary URL (just created)",
+    "Address": "Street Address (existing — patch bridge to read this)"
+  },
+  "bridge_notes": [
+    "Bridge transform is schema-tolerant — reads Asking Price/Price, Street Address/Address, Website Link/Summary URL.",
+    "Bridge filter uses \"Deal Status = Actively Marketing\" (your existing status option).",
+    "To trigger a blast: set Deal Status = Actively Marketing AND leave Blasted unchecked. After the bridge fires, Blasted flips to true."
+  ]
+}

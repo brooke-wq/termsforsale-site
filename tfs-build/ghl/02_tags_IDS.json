@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-04-17T01:04:57.490Z",
+  "location_id": "7IyUgu1zpi38MDYpSDTs",
+  "tags": [
+    {
+      "name": "buyer:new",
+      "id": "1HVa1eaXKbwzOHmRHyDI",
+      "existed": true
+    },
+    {
+      "name": "buyer:active",
+      "id": "wot0LuBteIzwdaE0Y4kL",
+      "existed": true
+    },
+    {
+      "name": "buyer:cold",
+      "id": "6oxa7kHgI4eQDpyChj3f",
+      "existed": true
+    },
+    {
+      "name": "buyer:dormant",
+      "id": "NdHCLtezmSr6W5vOHKHk",
+      "existed": true
+    },
+    {
+      "name": "buyer:vip",
+      "id": "FQZdVpZBYMUAvhDVmHFy",
+      "existed": true
+    },
+    {
+      "name": "engage:a-tier",
+      "id": "o0ErxlVbbbfiVRj8jlT8",
+      "existed": true
+    },
+    {
+      "name": "engage:b-tier",
+      "id": "XqxERr9qR4XFcGHqVyrh",
+      "existed": true
+    },
+    {
+      "name": "engage:c-tier",
+      "id": "fC5JbQsT91xhV8SzWrxU",
+      "existed": true
+    },
+    {
+      "name": "deal:new-inventory",
+      "id": "NvK2b8AQswC6v6XHGv9U",
+      "existed": true
+    }
+  ]
+}

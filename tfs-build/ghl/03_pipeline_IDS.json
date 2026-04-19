@@ -1,0 +1,94 @@
+{
+  "generated_at": "2026-04-17T01:04:57.768Z",
+  "location_id": "7IyUgu1zpi38MDYpSDTs",
+  "pipeline": {
+    "name": "Buyer Lifecycle",
+    "id": null
+  },
+  "stages": [
+    {
+      "name": "New Buyer — Intake",
+      "id": null,
+      "position": 1,
+      "color_in_spec": "#2563EB",
+      "trigger_event_in_spec": "Contact created with tag buyer:new OR form submission"
+    },
+    {
+      "name": "Intake Call Scheduled",
+      "id": null,
+      "position": 2,
+      "color_in_spec": "#7C3AED",
+      "trigger_event_in_spec": "Buyer replies to qualifier SMS"
+    },
+    {
+      "name": "Intake Call Complete",
+      "id": null,
+      "position": 3,
+      "color_in_spec": "#0891B2",
+      "trigger_event_in_spec": "Rep manually moves stage after call"
+    },
+    {
+      "name": "Active Buyer — A Tier",
+      "id": null,
+      "position": 4,
+      "color_in_spec": "#16A34A",
+      "trigger_event_in_spec": "Scoring = A"
+    },
+    {
+      "name": "Active Buyer — B Tier",
+      "id": null,
+      "position": 5,
+      "color_in_spec": "#CA8A04",
+      "trigger_event_in_spec": "Scoring = B"
+    },
+    {
+      "name": "Active Buyer — C Tier",
+      "id": null,
+      "position": 6,
+      "color_in_spec": "#A16207",
+      "trigger_event_in_spec": "Scoring = C"
+    },
+    {
+      "name": "Deal Sent",
+      "id": null,
+      "position": 7,
+      "color_in_spec": "#DC2626",
+      "trigger_event_in_spec": "Tag deal:new-inventory applied by n8n"
+    },
+    {
+      "name": "Under Negotiation",
+      "id": null,
+      "position": 8,
+      "color_in_spec": "#EA580C",
+      "trigger_event_in_spec": "Buyer replies interested or clicks deal link"
+    },
+    {
+      "name": "Offer Submitted",
+      "id": null,
+      "position": 9,
+      "color_in_spec": "#9333EA",
+      "trigger_event_in_spec": "Rep moves stage after offer sent"
+    },
+    {
+      "name": "Assigned",
+      "id": null,
+      "position": 10,
+      "color_in_spec": "#0D9488",
+      "trigger_event_in_spec": "DocuSign/PandaDoc webhook on completion (deal assigned to end buyer)"
+    },
+    {
+      "name": "Closed",
+      "id": null,
+      "position": 11,
+      "color_in_spec": "#10B981",
+      "trigger_event_in_spec": "Rep moves stage after funding"
+    },
+    {
+      "name": "Dormant",
+      "id": null,
+      "position": 12,
+      "color_in_spec": "#6B7280",
+      "trigger_event_in_spec": "90-day maintenance rule fires (WF04)"
+    }
+  ]
+}
