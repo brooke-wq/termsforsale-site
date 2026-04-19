@@ -42,6 +42,17 @@
   to = "/deals.html"
   status = 200
 
+# Buyer Lifecycle — intake form hosted at /buyer-qualifier (GHL form embed)
+[[redirects]]
+  from = "/buyer-qualifier"
+  to = "/buyer-qualifier.html"
+  status = 200
+
+[[redirects]]
+  from = "/buyer-qualifier/*"
+  to = "/buyer-qualifier.html"
+  status = 200
+
 # Short deal links: /d/phoenix-85016-phx001 → deal.html
 # The page JS parses the slug out of window.location.pathname and
 # resolves it against the dealCode (or UUID prefix) returned from Notion.
