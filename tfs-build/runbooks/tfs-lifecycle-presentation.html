@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+<html lang="en"><head><meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TFS Buyer Lifecycle — Team Overview</title>
 <style>
@@ -61,11 +60,12 @@ html,body{background:var(--bg);color:var(--white);font-family:-apple-system,Blin
 
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px}
 
-.role-card{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:12px;padding:24px}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:20px}
+.role-card{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:12px;padding:22px}
 .role-card .role{font-size:11px;letter-spacing:.1em;color:var(--orange);text-transform:uppercase;font-weight:700;margin-bottom:6px}
-.role-card h3{font-size:22px;margin-bottom:14px}
+.role-card h3{font-size:20px;margin-bottom:12px}
 .role-card ul{margin:0}
-.role-card li{font-size:15px;line-height:1.65}
+.role-card li{font-size:14px;line-height:1.55;margin-bottom:8px}
 
 .tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:24px 0}
 .tier{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center}
@@ -78,6 +78,7 @@ html,body{background:var(--bg);color:var(--white);font-family:-apple-system,Blin
 
 .callout{background:rgba(247,148,29,.15);border-left:4px solid var(--orange);padding:18px 22px;border-radius:6px;margin:24px 0;font-size:16px}
 .callout.green{background:rgba(16,185,129,.15);border-left-color:var(--green)}
+.callout.red{background:rgba(239,68,68,.15);border-left-color:var(--red)}
 .callout strong{color:var(--white);font-weight:700}
 
 .progress{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08);z-index:200}
@@ -91,6 +92,20 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
 
 .kbd{background:rgba(255,255,255,.1);border:1px solid var(--border);padding:2px 8px;border-radius:4px;font-family:'SF Mono',monospace;font-size:12px;color:var(--blue)}
 
+.break-diagram{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:24px;margin:20px 0;font-family:'SF Mono',Menlo,monospace;font-size:14px;line-height:1.9;color:rgba(255,255,255,.9)}
+.break-diagram .success{color:var(--green)}
+.break-diagram .fail{color:var(--red);font-weight:700}
+.break-diagram .flow-text{color:var(--blue)}
+
+.escalation-tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.esc-tier{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:20px}
+.esc-tier .label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:8px}
+.esc-tier.t1 .label{color:var(--green)}
+.esc-tier.t2 .label{color:var(--orange)}
+.esc-tier.t3 .label{color:var(--red)}
+.esc-tier h3{font-size:16px;margin-bottom:10px}
+.esc-tier p{font-size:13px;line-height:1.55;margin:0;color:rgba(255,255,255,.75)}
+
 @media(max-width:960px){
   .slide{padding:40px 28px}
   .slide h1{font-size:40px}
@@ -99,23 +114,22 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
   .flow-arrow{transform:rotate(90deg);font-size:20px}
   .two-col{grid-template-columns:1fr;gap:20px}
   .tier-grid{grid-template-columns:1fr}
+  .escalation-tiers{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div class="progress"><div class="progress-bar" id="progressBar" style="width: 8.33%;"></div></div>
 
 <div class="deck" id="deck">
 
-  <!-- Slide 1: Title -->
-  <section class="slide active hero">
+  <section class="slide hero active">
     <div class="eyebrow">Terms For Sale · Deal Pros LLC</div>
     <h1>The Buyer Lifecycle is automated.</h1>
     <p class="tagline">A single text from a seller now becomes first-look SMS/email to the right buyer — without a human touching it.</p>
     <div class="subtle" style="margin-top:60px">April 2026 · Press → to advance</div>
   </section>
 
-  <!-- Slide 2: Why -->
   <section class="slide">
     <h2>Why we built this</h2>
     <p>Eddie was manually matching deals to buyers. Brooke was texting tier-A buyers first. The list was getting stale because nobody had time for 90-day check-ins.</p>
@@ -128,7 +142,6 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
     </div>
   </section>
 
-  <!-- Slide 3: The three systems -->
   <section class="slide">
     <h2>The three systems</h2>
     <p>We use best-of-breed tools and let them each do what they're good at. No single giant platform.</p>
@@ -136,7 +149,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
       <div class="flow-box">
         <div class="system">Notion</div>
         <div class="title">Deal Inventory</div>
-        <div class="sub">Source of truth for deals. Operators mark deals "Actively Marketing" here.</div>
+        <div class="sub">Source of truth for deals. Brooke marks deals "Actively Marketing" here.</div>
       </div>
       <div class="flow-arrow">▶</div>
       <div class="flow-box">
@@ -151,29 +164,28 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
         <div class="sub">Contacts, tags, SMS/email send, pipeline, scoring workflows.</div>
       </div>
     </div>
-    <div class="callout"><strong>Key design:</strong> Matching logic lives in n8n (Java­Script), not GHL. GHL can't efficiently filter 100+ buyers against a deal's 3 criteria. n8n does it in one code node.</div>
+    <div class="callout"><strong>Key design:</strong> Matching logic lives in n8n (JavaScript), not GHL. GHL can't efficiently filter 100+ buyers against a deal's 3 criteria. n8n does it in one code node.</div>
   </section>
 
-  <!-- Slide 4: The automations (workflows) -->
   <section class="slide">
     <h2>Five GHL workflows · Three n8n workflows</h2>
     <p>Each is single-purpose and triggered by a specific event. You can trace any buyer's path through the system using their contact history.</p>
     <div class="wf-grid">
       <div class="wf-card">
         <div class="tag">WF01</div>
-        <h3>Buyer Intake & Scoring</h3>
+        <h3>Buyer Intake &amp; Scoring</h3>
         <div class="trigger">Trigger: buyer:new tag OR form submit</div>
         <p>Welcome SMS + email, qualifier nudge, 14-day re-engage, then A/B/C tier scoring after intake call.</p>
       </div>
       <div class="wf-card">
         <div class="tag">WF02</div>
-        <h3>Deal Match & Send</h3>
+        <h3>Deal Match &amp; Send</h3>
         <div class="trigger">Trigger: deal:new-inventory tag</div>
         <p>Tier A → now. Tier B → +1h. Tier C → +4h. SMS + email. 24h later: if buyer engaged → task to Eddie.</p>
       </div>
       <div class="wf-card">
         <div class="tag">WF03</div>
-        <h3>Close & Recycle</h3>
+        <h3>Close &amp; Recycle</h3>
         <div class="trigger">Trigger: stage = Closed</div>
         <p>Upgrades buyer to VIP + Tier A. Increments 12-month deal count. Creates assignment-fee confirmation task.</p>
       </div>
@@ -181,7 +193,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
         <div class="tag">WF04a</div>
         <h3>90-Day Dormant Check</h3>
         <div class="trigger">Trigger: daily at 8am AZ</div>
-        <p>Sweeps buyer:active contacts with Last Touch > 90d. Moves them to dormant.</p>
+        <p>Sweeps buyer:active contacts with Last Touch &gt; 90d. Moves them to dormant.</p>
       </div>
       <div class="wf-card">
         <div class="tag">WF04b</div>
@@ -198,16 +210,15 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
     </div>
   </section>
 
-  <!-- Slide 5: The flow end-to-end -->
   <section class="slide">
     <h2>End-to-end: one deal's journey</h2>
     <div class="two-col" style="margin-top:16px;gap:32px">
       <div>
         <h3 style="color:var(--blue)">Inbound</h3>
         <ul>
-          <li><strong>Minute 0</strong> — Operator marks deal <em>Actively Marketing</em> in Notion</li>
+          <li><strong>Minute 0</strong> — Brooke marks deal <em>Actively Marketing</em> in Notion</li>
           <li><strong>~10 min</strong> — Notion bridge picks it up, POSTs to match engine</li>
-          <li><strong>&lt;1s</strong> — Match engine fetches active buyers (200+), filters on asset class ∩ market ∩ price</li>
+          <li><strong>&lt;1s</strong> — Match engine fetches active buyers, filters on asset class ∩ market ∩ price</li>
           <li><strong>&lt;1s</strong> — Writes "latest deal" custom fields onto each matched buyer, applies <em>deal:new-inventory</em> tag</li>
         </ul>
       </div>
@@ -225,7 +236,6 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
     <div class="callout green" style="margin-top:28px"><strong>No operator touch in the middle.</strong> From "Actively Marketing" to buyer SMS is fully automated.</div>
   </section>
 
-  <!-- Slide 6: Tier scoring -->
   <section class="slide">
     <h2>Tier scoring — 3 criteria, binary</h2>
     <p>During intake call, rep fills 3 custom fields. System auto-assigns tier.</p>
@@ -252,71 +262,71 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
     <p class="subtle">Target distribution: ~10% A · 30% B · 60% C. If actuals skew, we adjust the criteria in WF01.</p>
   </section>
 
-  <!-- Slide 7: Who does what -->
   <section class="slide">
     <h2>Who does what now</h2>
-    <div class="two-col">
+    <p>Everyone has full GHL access. Ownership is about who runs the lane, not who <em>can</em> click.</p>
+    <div class="role-grid">
       <div class="role-card">
         <div class="role">Brooke</div>
         <h3>Owner · calls · closings</h3>
         <ul>
+          <li>Drops new deals in Notion + marks Actively Marketing</li>
           <li>Takes intake calls with new buyers</li>
-          <li>Responds to inbound SMS replies personally</li>
-          <li>Moves closed deals to <span class="kbd">Closed</span> stage</li>
-          <li>Confirms assignment fee distribution (2-day task)</li>
-          <li>Weekly: scans GHL pipeline for stuck deals</li>
+          <li>Confirms assignment fee after each close</li>
+          <li>Final review + escalation point</li>
         </ul>
       </div>
       <div class="role-card">
         <div class="role">Eddie</div>
         <h3>Acquisitions · hot replies</h3>
         <ul>
-          <li>Gets auto-task when a buyer replies on a deal</li>
+          <li>Auto-task when a buyer replies on a deal</li>
           <li>Calls within 2 hours</li>
-          <li>Moves opportunity through Negotiation → Offer → Assigned</li>
+          <li>Offer Submitted → Under Contract stages</li>
+          <li>Seller-facing comms on active offers</li>
         </ul>
       </div>
       <div class="role-card">
-        <div class="role">VAs</div>
-        <h3>Data entry · monitoring</h3>
+        <div class="role">Junabelle</div>
+        <h3>Admin · Ops · CRM</h3>
         <ul>
-          <li>Set <span class="kbd">Deal Status = Actively Marketing</span> on new deals in Notion</li>
-          <li>Leave <span class="kbd">Blasted</span> unchecked so bridge picks up</li>
-          <li>Fill required fields: Asset Class, Market, Price, Summary URL</li>
-          <li>Watch GHL inbox for inbound replies</li>
+          <li>GHL inbox monitoring + inbound replies</li>
+          <li>Buy-box field updates + CRM hygiene</li>
+          <li>Assigned → Closed pipeline stages</li>
+          <li>Contracts · EMD · TC coordination</li>
+          <li>First-line troubleshooting</li>
         </ul>
       </div>
       <div class="role-card">
-        <div class="role">Automation</div>
-        <h3>Everything else</h3>
+        <div class="role">Darise</div>
+        <h3>Marketing · Listings · Growth</h3>
         <ul>
-          <li>Buyer tier assignment (after intake stage change)</li>
-          <li>Deal-to-buyer matching</li>
-          <li>SMS + email send with tier staggering</li>
-          <li>VIP upgrade on close</li>
-          <li>90-day dormant sweep</li>
-          <li>Quarterly POF re-verify</li>
+          <li>Facebook + group distribution</li>
+          <li>InvestorLift postings</li>
+          <li>Listing copy beyond auto-gen</li>
+          <li>New buyer onboarding + initial intake</li>
+          <li>Social hooks from deal-package output</li>
         </ul>
       </div>
     </div>
   </section>
 
-  <!-- Slide 8: Daily playbook -->
   <section class="slide">
     <h2>Daily playbook</h2>
-    <h3 style="margin-top:18px">Morning (10 min)</h3>
+    <h3 style="margin-top:18px">Morning (10 min · Brooke)</h3>
     <ul>
       <li>Scan Notion deals DB for overnight seller leads</li>
       <li>Mark anything ready as <span class="kbd">Actively Marketing</span> + uncheck <span class="kbd">Blasted</span></li>
       <li>Confirm Asset Class, Market, Price, Summary URL are populated</li>
       <li>10 minutes later the bridge fires — buyers start receiving alerts</li>
     </ul>
-    <h3 style="margin-top:24px">Throughout the day</h3>
+    <h3 style="margin-top:24px">Throughout the day (Junabelle)</h3>
     <ul>
       <li>Watch GHL Conversations for buyer replies</li>
-      <li>Hot replies auto-create Eddie tasks — no action needed</li>
+      <li>Verify buy-box matches the deal before escalating</li>
+      <li>Hot replies auto-create Eddie tasks — confirm + Slack-ping</li>
     </ul>
-    <h3 style="margin-top:24px">Evening (5 min)</h3>
+    <h3 style="margin-top:24px">Evening (5 min · Junabelle)</h3>
     <ul>
       <li>Review GHL Opportunities board</li>
       <li>Move stages as deals progress: Offer Submitted → Assigned → Closed</li>
@@ -324,7 +334,6 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
     </ul>
   </section>
 
-  <!-- Slide 9: The cheat sheet -->
   <section class="slide">
     <h2>Tag cheat sheet</h2>
     <p>Every tag has a specific meaning. Don't apply manually unless you understand the downstream effect.</p>
@@ -333,7 +342,7 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
         <tr><th>Tag</th><th>Meaning</th><th>Applied by</th></tr>
       </thead>
       <tbody>
-        <tr><td class="mono">buyer:new</td><td>Just signed up</td><td>Form OR manual</td></tr>
+        <tr><td class="mono">buyer:new</td><td>Just signed up</td><td>Form OR manual (Darise)</td></tr>
         <tr><td class="mono">buyer:active</td><td>Live, receiving deal alerts</td><td>WF01 scoring</td></tr>
         <tr><td class="mono">buyer:cold</td><td>No response in 14-day intake</td><td>WF01 day-14 branch</td></tr>
         <tr><td class="mono">buyer:dormant</td><td>90+ days no touch</td><td>WF04a/b</td></tr>
@@ -344,46 +353,83 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
     </table>
   </section>
 
-  <!-- Slide 10: What's next -->
+  <section class="slide">
+    <h2>When it breaks</h2>
+    <p>One known issue worth memorizing — plus how to route anything else.</p>
+
+    <h3 style="margin-top:18px;color:var(--red)">The WF02 SMS gap</h3>
+    <p style="margin-top:6px">n8n successfully applies <span class="kbd">deal:new-inventory</span> to a buyer. GHL shows the tag on the contact. But WF02 doesn't fire — no SMS, no email. Tags applied via GHL UI work fine. Tags applied via API sometimes don't.</p>
+
+    <div class="break-diagram">
+      <div><span class="success">n8n tag-apply ✓ SUCCESS</span>  →→→  <span class="flow-text">GHL tag state: APPLIED</span></div>
+      <div style="margin-left:240px">│</div>
+      <div style="margin-left:240px" class="fail">×  trigger misses</div>
+      <div style="margin-left:240px">│</div>
+      <div style="margin-left:200px" class="fail">WF02 never fires — no send</div>
+    </div>
+
+    <div class="callout"><strong>Workaround (Junabelle):</strong> Open the contact in GHL. Remove the tag. Wait 10 seconds. Re-apply the tag via the UI. WF02 fires within 1 minute.</div>
+
+    <h3 style="margin-top:22px">Escalation tiers</h3>
+    <div class="escalation-tiers">
+      <div class="esc-tier t1">
+        <div class="label">Tier 1 · CRM / data</div>
+        <h3>Junabelle owns</h3>
+        <p>Wrong deals, tag mixups, opt-in/out, stuck stages, EMD coordination.</p>
+      </div>
+      <div class="esc-tier t2">
+        <div class="label">Tier 2 · Workflow</div>
+        <h3>Junabelle diagnoses → Brooke</h3>
+        <p>Workflow didn't fire, tag applied but no send, unexpected match results.</p>
+      </div>
+      <div class="esc-tier t3">
+        <div class="label">Tier 3 · System down</div>
+        <h3>Brooke owns</h3>
+        <p>n8n unreachable, GHL outage, Notion API broken, Mailgun/LC Phone bouncing.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="slide">
     <h2>What's next</h2>
     <h3 style="color:var(--green);margin-top:12px">Now live</h3>
     <ul>
       <li>All 5 GHL workflows published and tested</li>
-      <li>Match engine + Notion bridge + helper increment running in n8n</li>
+      <li>Match engine + Notion bridge + helper increment running on n8n.dealpros.io</li>
       <li>26 custom fields + 9 tags + 12-stage pipeline in GHL</li>
       <li>Buyer qualifier form embedded on termsforsale.com/buyer-qualifier</li>
+      <li>Team SOP published — Junabelle + Darise can onboard off the doc</li>
     </ul>
     <h3 style="color:var(--orange);margin-top:22px">This week</h3>
     <ul>
-      <li>Migrate n8n off the Cloud trial onto the Paperclip Droplet ($0 vs $20/mo)</li>
-      <li>Smoke test with 3 tiered contacts end-to-end</li>
-      <li>Train Eddie + VAs on this deck</li>
+      <li>Monitor Match Engine Log for zero-match deals — expand buyer coverage where needed</li>
+      <li>Run first 90-day dormant sweep and verify no active buyers get false-flagged</li>
+      <li>Permanent fix for WF02 SMS gap — swap trigger from tag to direct webhook</li>
     </ul>
     <h3 style="color:var(--blue);margin-top:22px">This quarter</h3>
     <ul>
       <li>Full buyer intake form (16 fields) — when we need richer profile data</li>
       <li>Asset-type-specific matching criteria (SFR beds/sqft, MFR units/cap rate, etc.)</li>
-      <li>Dead-letter log to catch zero-match deals</li>
+      <li>Dead-letter log to catch zero-match deals + execution errors</li>
+      <li>Tier distribution review — adjust WF01 criteria if skew is off target</li>
     </ul>
   </section>
 
-  <!-- Slide 11: Closing -->
   <section class="slide hero">
     <div class="eyebrow">One last thing</div>
     <h1>The system does the work.</h1>
     <p class="tagline">If you're manually doing something the system is supposed to do, tell Brooke. Something's off.</p>
     <div style="margin-top:48px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
-      <a href="./team-sop.md" style="background:var(--blue);color:var(--white);padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700">Read the full Team SOP</a>
-      <a href="../ghl/WF_MANUAL_BUILD_GUIDE.md" style="background:rgba(255,255,255,.12);color:var(--white);padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;border:1px solid var(--border)">Workflow reference</a>
+      <a href="../sop/TEAM_SOP.md" style="background:var(--blue);color:var(--white);padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700">Read the full Team SOP</a>
+      <a href="../sop/flow-diagram.html" style="background:rgba(255,255,255,.12);color:var(--white);padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;border:1px solid var(--border)">View flow diagrams</a>
     </div>
   </section>
 
 </div>
 
 <div class="nav">
-  <button id="prev" onclick="nav(-1)">← Prev</button>
-  <div class="counter"><span id="cur">1</span> / <span id="total">11</span></div>
+  <button id="prev" onclick="nav(-1)" disabled="">← Prev</button>
+  <div class="counter"><span id="cur">1</span> / <span id="total">12</span></div>
   <button id="next" onclick="nav(1)">Next →</button>
 </div>
 
@@ -411,5 +457,5 @@ document.addEventListener('keydown', e => {
 });
 show(0);
 </script>
-</body>
-</html>
+
+</body></html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TFS Buyer Lifecycle — Flow Diagrams</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0D1F3C;
+    color: #fff;
+    padding: 40px 24px;
+    line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: #29ABE2;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 32px;
+  }
+  h2 {
+    font-size: 24px;
+    color: #29ABE2;
+    margin-top: 48px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    padding-bottom: 8px;
+  }
+  p { margin-bottom: 14px; color: rgba(255,255,255,0.9); font-size: 16px; }
+  .mermaid {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 18px;
+    margin: 16px 0 24px 0;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 2px solid #0D1F3C;
+    flex-shrink: 0;
+  }
+  .s-operator  { background: #F7941D; }
+  .s-automated { background: #29ABE2; }
+  .s-decision  { background: #FCD34D; }
+  .s-buyer     { background: #A78BFA; }
+  .s-outcome   { background: #10B981; }
+  .note {
+    background: rgba(247,148,29,0.1);
+    border-left: 4px solid #F7941D;
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin: 20px 0;
+    font-size: 15px;
+  }
+  .footer {
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#29ABE2',
+      primaryTextColor: '#0D1F3C',
+      primaryBorderColor: '#0D1F3C',
+      lineColor: '#4A5568',
+      fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
+    }
+  });
+</script>
+</head>
+<body>
+<div class="container">
+
+  <div class="subtitle">Terms For Sale · Deal Pros LLC</div>
+  <h1>Buyer Lifecycle — Flow Diagrams</h1>
+  <p>Two views of the same system: the 30-second version and the whole map.</p>
+
+  <h2>Happy path</h2>
+  <p>What a healthy deal looks like from seller lead to closed assignment.</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="swatch s-operator"></div>Operator action (human)</div>
+    <div class="legend-item"><div class="swatch s-automated"></div>Automated</div>
+    <div class="legend-item"><div class="swatch s-outcome"></div>Outcome</div>
+  </div>
+
+  <div class="mermaid">
+flowchart LR
+    A[Brooke marks deal<br/>Actively Marketing in Notion] --> B[n8n bridge polls<br/>every 10 min]
+    B --> C[Match engine filters<br/>active buyers on<br/>asset class + market + price]
+    C --> D[GHL WF02 sends SMS + email<br/>A now · B +1h · C +4h]
+    D --> E[Buyer replies<br/>Eddie gets task]
+    E --> F[Deal closes<br/>WF03 upgrades buyer to VIP]
+
+    classDef operator fill:#F7941D,stroke:#0D1F3C,color:#fff,stroke-width:2px
+    classDef automated fill:#29ABE2,stroke:#0D1F3C,color:#fff,stroke-width:2px
+    classDef outcome fill:#10B981,stroke:#0D1F3C,color:#fff,stroke-width:2px
+
+    class A,E operator
+    class B,C,D automated
+    class F outcome
+  </div>
+
+  <p>A full cycle takes between 10 minutes (Tier A buyer ready to close) and 30 days (slow-moving deal with closing delays). The operator touches it twice: once to mark the deal Actively Marketing, once when the deal closes and the paperwork needs review.</p>
+
+  <h2>Full swim-lane — the whole map</h2>
+  <p>Four lanes: Notion | n8n | GHL | Buyer. Every node on the happy path expanded out, plus the decision points where things can go sideways.</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="swatch s-operator"></div>Operator action</div>
+    <div class="legend-item"><div class="swatch s-automated"></div>Automated</div>
+    <div class="legend-item"><div class="swatch s-decision"></div>Decision point</div>
+    <div class="legend-item"><div class="swatch s-buyer"></div>Buyer-side</div>
+    <div class="legend-item"><div class="swatch s-outcome"></div>Outcome</div>
+  </div>
+
+  <div class="mermaid">
+flowchart TB
+    subgraph NOTION["NOTION — Deal Inventory"]
+        N1[Brooke drops new deal] --> N2[Fills Asset Class,<br/>Market, Price, Summary URL]
+        N2 --> N3[Marks Status:<br/>Actively Marketing]
+        N3 --> N4[Blasted checkbox<br/>stays unchecked]
+    end
+
+    subgraph N8N["n8n — n8n.dealpros.io"]
+        X1[Notion Bridge<br/>polls every 10 min] --> X2{Status = Ready to Blast<br/>AND Blasted = false?}
+        X2 -->|yes| X3[POST to Match Engine<br/>webhook]
+        X3 --> X4[Pull all buyer:active<br/>contacts from GHL]
+        X4 --> X5[Filter on asset class<br/>+ market + price band]
+        X5 --> X6{24h cooldown<br/>check per buyer}
+        X6 -->|pass| X7[Write deal fields<br/>to matched contacts]
+        X7 --> X8[Apply deal:new-inventory<br/>tag · staggered by tier]
+        X8 --> X9[Mark Notion deal<br/>Blasted = true]
+    end
+
+    subgraph GHL["GHL — Terms For Sale"]
+        G1[Tag triggers WF02] --> G2{Buyer Tier?}
+        G2 -->|A| G3[Send immediately]
+        G2 -->|B| G4[Wait 1h · then send]
+        G2 -->|C| G5[Wait 4h · then send]
+        G3 --> G6[Update Last Touch Date<br/>and Last Deal Sent Date]
+        G4 --> G6
+        G5 --> G6
+        G6 --> G7[Wait 24h]
+        G7 --> G8{Buyer replied<br/>or clicked link?}
+        G8 -->|yes| G9[Move to Under Negotiation<br/>task to Eddie: 2h callback]
+        G8 -->|no| G10[Remove tag · end]
+    end
+
+    subgraph BUYER["BUYER"]
+        B1[Receives SMS + email] --> B2{Interested?}
+        B2 -->|yes| B3[Replies YES<br/>or clicks link]
+        B2 -->|no| B4[No action<br/>next deal next time]
+    end
+
+    N4 -.-> X1
+    X8 -.-> G1
+    G3 -.-> B1
+    G4 -.-> B1
+    G5 -.-> B1
+    B3 -.-> G8
+
+    classDef operator fill:#F7941D,stroke:#0D1F3C,color:#fff,stroke-width:2px
+    classDef automated fill:#29ABE2,stroke:#0D1F3C,color:#fff,stroke-width:1px
+    classDef decision fill:#FCD34D,stroke:#0D1F3C,color:#0D1F3C,stroke-width:1px
+    classDef buyer fill:#A78BFA,stroke:#0D1F3C,color:#fff,stroke-width:2px
+    classDef outcome fill:#10B981,stroke:#0D1F3C,color:#fff,stroke-width:2px
+
+    class N1,N2,N3,N4 operator
+    class X1,X3,X4,X5,X7,X8,X9,G1,G3,G4,G5,G6,G7,G10 automated
+    class X2,X6,G2,G8,B2 decision
+    class B1,B3,B4 buyer
+    class G9 outcome
+  </div>
+
+  <div class="note">
+    <strong>How to read it.</strong> Solid arrows = handoffs inside a system. Dotted arrows = cross system boundaries. Dotted arrows are the break points to watch — that's where things most often fail.
+  </div>
+
+  <h2>The three break points</h2>
+  <ol style="padding-left: 22px;">
+    <li style="margin-bottom: 10px;"><strong>Notion → n8n.</strong> If Notion isn't showing Blasted=true within ~15 minutes of marking Actively Marketing, the bridge didn't fire. Check n8n.dealpros.io execution log first.</li>
+    <li style="margin-bottom: 10px;"><strong>n8n → GHL tag application.</strong> If n8n execution log shows success but no SMS went out, the tag was applied but WF02 didn't trigger. This is the WF02 SMS gap — see Troubleshooting in TEAM_SOP.</li>
+    <li><strong>GHL WF02 → buyer.</strong> If WF02 history shows the step fired but the buyer never got it, it's an LC Phone or Mailgun delivery issue. Check the GHL conversation for the contact.</li>
+  </ol>
+
+  <div class="footer">
+    Terms For Sale · Buyer Lifecycle System · For full operational detail see TEAM_SOP.md
+  </div>
+
+</div>
+</body>
+</html>
