@@ -1,5 +1,5 @@
 {
-  "name": "TFS \u2014 Helper: Deal Counter Math",
+  "name": "TFS — Helper: Deal Counter Math",
   "nodes": [
     {
       "parameters": {
@@ -8,20 +8,19 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "webhook-increment",
+      "id": "e89ea580-3497-43c7-bce9-d334da331fa9",
       "name": "Webhook: Increment Deals",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        240,
-        300
+        608,
+        0
       ],
       "webhookId": "tfs-increment-deals",
       "notes": "Called by GHL WF03 (Close & Recycle) when a deal closes. Payload: { contact_id: 'xxx' }"
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "=https://services.leadconnectorhq.com/contacts/{{$json.body.contact_id}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -33,20 +32,21 @@
               "value": "2021-07-28"
             }
           ]
-        }
+        },
+        "options": {}
       },
-      "id": "get-contact",
+      "id": "7f82b401-bde4-435e-8f41-df73948d6686",
       "name": "GHL: Get Contact",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        460,
-        300
+        832,
+        0
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "DR2T0oJKfFcj1GFD",
-          "name": "GHL Private Integration Token"
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
         }
       }
     },
@@ -54,13 +54,13 @@
       "parameters": {
         "jsCode": "const contact = $json.contact || $json;\nconst cf = contact.customFields || [];\nconst dealsField = cf.find(f => f.fieldKey === 'contact.deals_last_12_months' || f.name === 'Deals Last 12 Months');\nconst current = dealsField ? parseInt(dealsField.value || 0) : 0;\nconst newValue = current + 1;\nreturn [{ json: { contact_id: contact.id, current, newValue } }];"
       },
-      "id": "calc-new-value",
+      "id": "f2215ccd-01ac-49f1-82e1-4d2f584bd57d",
       "name": "Calc +1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        680,
-        300
+        1056,
+        0
       ]
     },
     {
@@ -83,40 +83,48 @@
           ]
         },
         "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ customFields: [{ id: 'ToK46ItNIDFiEcEFNN5m', field_value: String($json.newValue) }] }) }}"
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customFields",
+              "value": "={{ [{ fieldKey: 'contact.deals_last_12_months', value: $json.newValue.toString() }] }}"
+            }
+          ]
+        },
+        "options": {}
       },
-      "id": "write-back",
+      "id": "9463ae36-4102-454f-b468-13923ff09a9c",
       "name": "GHL: Write Back",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        900,
-        300
+        1280,
+        0
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "DR2T0oJKfFcj1GFD",
-          "name": "GHL Private Integration Token"
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
         }
       }
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { success: true, contact_id: $json.contact_id, newValue: $json.newValue } }}"
+        "responseBody": "={{ { success: true, contact_id: $json.contact_id, newValue: $json.newValue } }}",
+        "options": {}
       },
-      "id": "respond",
+      "id": "3787aad7-0a77-418e-af42-d381e06a913a",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1120,
-        300
+        1488,
+        0
       ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook: Increment Deals": {
       "main": [
@@ -163,8 +171,15 @@
       ]
     }
   },
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "timezone": "America/Phoenix"
-  }
+    "binaryMode": "separate"
+  },
+  "versionId": "eac29dde-5539-497c-9eae-5f59e0ef89c2",
+  "meta": {
+    "instanceId": "8d9aeaa0e746bf46774713f3f3e460e77bf8dc9eed2f5d93f5f7c01518cc6602"
+  },
+  "id": "qokxg5pPwWFCjeLm",
+  "tags": []
 }

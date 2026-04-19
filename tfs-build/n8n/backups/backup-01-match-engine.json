@@ -1,0 +1,644 @@
+{
+  "name": "TFS - Buyer Match Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-deal-inventory",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5203f2e0-4679-4bab-a897-48840c89a559",
+      "name": "Webhook: New Deal",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        -32
+      ],
+      "webhookId": "tfs-new-deal-inventory",
+      "notes": "Triggered by: (1) GHL workflow when an opportunity hits 'Inventory - Ready to Blast' stage, OR (2) Notion button automation on a deal page. Expected payload fields: deal_id, source (ghl|notion), asset_class, market, price, deal_type, summary_url, address (internal only)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize incoming payload from either GHL or Notion source\nconst input = $input.first().json;\nconst body = input.body || input;\n\n// Extract and normalize\nconst deal = {\n  deal_id: body.deal_id || body.id || `deal_${Date.now()}`,\n  source: body.source || 'unknown',\n  asset_class: (body.asset_class || body.assetClass || '').trim(),\n  market: (body.market || body.deal_market || '').trim(),\n  price: parseFloat(body.price || body.deal_price || 0),\n  deal_type: body.deal_type || body.dealType || 'Wholesale',\n  summary_url: body.summary_url || body.summaryUrl || '',\n  address: body.address || '', // internal only, never sent to buyers pre-gate\n  blast_at: new Date().toISOString()\n};\n\n// Graceful gate — incomplete deals return an empty match set instead of erroring\nif (!deal.asset_class || !deal.market || !deal.price) {\n  deal._incomplete = true;\n  deal._reason = `missing: ${[!deal.asset_class && 'asset_class', !deal.market && 'market', !deal.price && 'price'].filter(Boolean).join(', ')}`;\n}\n\nreturn [{ json: deal }];"
+      },
+      "id": "cac966cd-b918-4072-962f-f1951bfb5c07",
+      "name": "Normalize Deal Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/?locationId=7IyUgu1zpi38MDYpSDTs&query=buyer:active&limit=100",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "\tBearer pit-90ea9624-e782-47b0-b727-0c13382732c8"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "id": "d361215c-0654-4593-9721-dd661e26fc17",
+      "name": "GHL: Fetch Active Buyers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        -32
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "Uses GHL Private Integration Token (create under Settings → Private Integrations). Env var GHL_LOCATION_ID should be set to the TFS sub-account location ID. For paginated results beyond 100, add a Loop node — skipping that optimization until buyer list exceeds 100 active contacts."
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- auto-generated field ID preamble ---\nconst FIELD_IDS = {\n  \"Lead Source\": \"Ov2LMG8TipkI4jlNAFRR\",\n  \"Buyer Asset Class\": \"NT3w93SU9mkNugSZjHLB\",\n  \"Buyer Market\": \"Rt1ETvZZSh3pFlFZkhro\",\n  \"Buyer Price Min\": \"pM3aeMZALD2tmf2cFSmG\",\n  \"Buyer Price Max\": \"LcsBYM6iUurqTu8SsfTz\",\n  \"Capital / POF Amount\": \"pkNBpd4VwNblSMrB20I5\",\n  \"PoF on File\": \"zKyplmyTeBFlUFdYMfUD\",\n  \"Deals Last 12 Months\": \"ToK46ItNIDFiEcEFNN5m\",\n  \"Decision Maker\": \"06k53PRZ8o9hs2Zy5F4h\",\n  \"Buyer Tier\": \"GzB9iQ9Mb9IsAKuMS93X\",\n  \"Last Touch Date\": \"SwUKaml8kRpCrrLzunlh\",\n  \"Preferred Contact Method\": \"qoFIBxIWRow8HQy3GOw1\",\n  \"Re-verify Due Date\": \"1cgpp0vcBSWSKptqoORU\",\n  \"Last Deal Sent Date\": \"CAJQUQSjrkcdygsCGDdK\"\n};\n\nconst getFieldById = (buyer, nameKey) => {\n  const id = FIELD_IDS[nameKey];\n  if (!id) return null;\n  const m = (buyer.customFields || []).find(f => f.id === id);\n  return m ? m.value : null;\n};\n\n// Coerce GHL field values (array OR comma-string) to a clean string array\nconst toArr = (v) => {\n  if (v === null || v === undefined || v === '') return [];\n  if (Array.isArray(v)) return v.map(String);\n  return String(v).split(',');\n};\n\n// Match logic — filter buyers against deal criteria\nconst deal = $('Normalize Deal Payload').first().json;\nconst buyers = $input.first().json.contacts || [];\n\n// Skip filtering if the deal is flagged incomplete\nif (deal._incomplete) return [];\n\nconst matches = [];\n\nfor (const buyer of buyers) {\n  const getField = (name) => {\n    const byId = getFieldById(buyer, name);\n    if (byId !== null && byId !== undefined) return byId;\n    const match = (buyer.customFields || []).find(f => f.name === name || f.fieldKey === name);\n    return match ? match.value : null;\n  };\n\n  const buyerAssetClasses = toArr(getField('Buyer Asset Class')).map(s => s.trim()).filter(Boolean);\n  const buyerMarkets = toArr(getField('Buyer Market')).map(s => s.trim().toLowerCase()).filter(Boolean);\n  const priceMin = parseFloat(getField('Buyer Price Min') || 0) || 0;\n  const priceMax = parseFloat(getField('Buyer Price Max') || Infinity) || Infinity;\n  const buyerTier = String(getField('Buyer Tier') || 'C').toUpperCase();\n  const lastDealSentDate = getField('Last Deal Sent Date');\n\n  // Cooldown — skip buyers blasted in last 24h\n  if (lastDealSentDate) {\n    const hoursSince = (Date.now() - new Date(lastDealSentDate).getTime()) / (1000 * 60 * 60);\n    if (hoursSince < 24) continue;\n  }\n\n  // Asset class match (any overlap)\n  const dealAsset = String(deal.asset_class || '').toLowerCase();\n  const assetMatch = buyerAssetClasses.some(ac =>\n    ac.toLowerCase() === dealAsset ||\n    dealAsset.includes(ac.toLowerCase())\n  );\n  if (!assetMatch) continue;\n\n  // Market match (any substring overlap)\n  const dealMarketLower = String(deal.market || '').toLowerCase();\n  const marketMatch = buyerMarkets.some(bm =>\n    dealMarketLower.includes(bm) || bm.includes(dealMarketLower)\n  );\n  if (!marketMatch) continue;\n\n  // Price band\n  const dealPrice = parseFloat(deal.price) || 0;\n  if (dealPrice < priceMin || dealPrice > priceMax) continue;\n\n  // All checks passed\n  matches.push({\n    contact_id: buyer.id,\n    first_name: buyer.firstName,\n    last_name: buyer.lastName,\n    email: buyer.email,\n    phone: buyer.phone,\n    tier: buyerTier,\n    tier_priority: buyerTier === 'A' ? 1 : buyerTier === 'B' ? 2 : 3\n  });\n}\n\nmatches.sort((a, b) => a.tier_priority - b.tier_priority);\nreturn matches.map(m => ({ json: { ...m, deal } }));\n"
+      },
+      "id": "e492206f-139b-4f68-a421-5e1413e134fc",
+      "name": "Filter & Match Buyers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.tier}}",
+                    "rightValue": "A",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier A"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.tier}}",
+                    "rightValue": "B",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier B"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.tier}}",
+                    "rightValue": "C",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier C"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "030e733a-2e74-47f1-a8bc-396ed8847855",
+      "name": "Switch by Tier",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        128,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"customFields\":[{\"id\":\"JzmuiUCvNJtHiHOeEz90\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.asset_class}}\"},{\"id\":\"tAFA5xs5ZS7AG7AgheZw\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.market}}\"},{\"id\":\"h1PdpPrgYHfk7WKdEBjp\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.price}}\"},{\"id\":\"TENFLNR411SHBOBRzEQX\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_type}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.summary_url}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_id}}\"}]}\n",
+        "options": {}
+      },
+      "id": "a645fcd4-1c1a-44db-8a19-382757e60d06",
+      "name": "A: Write Deal Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        336,
+        -144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"tags\": [\"deal:new-inventory\"]}\n",
+        "options": {}
+      },
+      "id": "05f5f592-4122-4933-a2b9-70f3dd5ed47a",
+      "name": "A: Apply deal:new-inventory Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        -144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "This is what fires GHL WF02 (Deal Match & Send). The tag MUST be applied AFTER the custom fields are written, otherwise WF02 reads stale/empty fields."
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "hours"
+      },
+      "id": "31fbdd92-cbc0-4698-9e64-d678984962b0",
+      "name": "Wait 1h (Tier B)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        0
+      ],
+      "webhookId": "wait-tier-b"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"customFields\":[{\"id\":\"JzmuiUCvNJtHiHOeEz90\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.asset_class}}\"},{\"id\":\"tAFA5xs5ZS7AG7AgheZw\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.market}}\"},{\"id\":\"h1PdpPrgYHfk7WKdEBjp\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.price}}\"},{\"id\":\"TENFLNR411SHBOBRzEQX\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_type}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.summary_url}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_id}}\"}]}\n",
+        "options": {}
+      },
+      "id": "35f79b72-b1b5-464f-8138-1e023a88c540",
+      "name": "B: Write Deal Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"tags\": [\"deal:new-inventory\"]}\n",
+        "options": {}
+      },
+      "id": "861ef3ec-a17a-4f10-aefd-64328f31df59",
+      "name": "B: Apply deal:new-inventory Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        784,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "hours"
+      },
+      "id": "20be02de-aafc-42f8-af03-77b0ecc9a639",
+      "name": "Wait 4h (Tier C)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        144
+      ],
+      "webhookId": "wait-tier-c"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"customFields\":[{\"id\":\"JzmuiUCvNJtHiHOeEz90\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.asset_class}}\"},{\"id\":\"tAFA5xs5ZS7AG7AgheZw\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.market}}\"},{\"id\":\"h1PdpPrgYHfk7WKdEBjp\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.price}}\"},{\"id\":\"TENFLNR411SHBOBRzEQX\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_type}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.summary_url}}\"},{\"id\":\"hGftrRzv5pt24KrNd1sO\",\"value\":\"{{$('Filter & Match Buyers').item.json.deal.deal_id}}\"}]}\n",
+        "options": {}
+      },
+      "id": "d9c74dff-8089-43c4-b1b2-8280c8dd9dac",
+      "name": "C: Write Deal Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"tags\": [\"deal:new-inventory\"]}\n",
+        "options": {}
+      },
+      "id": "04f0d9d4-fe13-45b2-be9d-dcc31cbe0cac",
+      "name": "C: Apply deal:new-inventory Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        784,
+        144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n5bIuANRA5buEHIM",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, deal_id: $('Normalize Deal Payload').first().json.deal_id, matched_count: $('Filter & Match Buyers').all().length } }}",
+        "options": {}
+      },
+      "id": "5c0c2749-4688-4689-bf46-c084db771466",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        176
+      ]
+    }
+  ],
+  "pinData": {
+    "Webhook: New Deal": [
+      {
+        "json": {
+          "headers": {
+            "host": "dealpros.app.n8n.cloud",
+            "user-agent": "node",
+            "content-length": "217",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "*",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2600:8800:6fe3:5900:61f8:dd74:ca0a:1ffe",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9ed8e2b164f511d1-PHX",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "sec-fetch-mode": "cors",
+            "x-forwarded-for": "2600:8800:6fe3:5900:61f8:dd74:ca0a:1ffe, 104.23.195.9",
+            "x-forwarded-host": "dealpros.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-114-78f94484bb-ln942",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2600:8800:6fe3:5900:61f8:dd74:ca0a:1ffe"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "deal_id": "test-dryrun-1776402229854",
+            "source": "manual",
+            "asset_class": "SFR",
+            "market": "Phoenix AZ",
+            "price": 200000,
+            "deal_type": "Wholesale",
+            "summary_url": "https://example.com/dryrun",
+            "address": "123 Test St, Phoenix AZ"
+          },
+          "webhookUrl": "https://dealpros.app.n8n.cloud/webhook/new-deal-inventory",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook: New Deal": {
+      "main": [
+        [
+          {
+            "node": "Normalize Deal Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Deal Payload": {
+      "main": [
+        [
+          {
+            "node": "GHL: Fetch Active Buyers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: Fetch Active Buyers": {
+      "main": [
+        [
+          {
+            "node": "Filter & Match Buyers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Match Buyers": {
+      "main": [
+        [
+          {
+            "node": "Switch by Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by Tier": {
+      "main": [
+        [
+          {
+            "node": "A: Write Deal Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 1h (Tier B)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 4h (Tier C)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A: Write Deal Fields": {
+      "main": [
+        [
+          {
+            "node": "A: Apply deal:new-inventory Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1h (Tier B)": {
+      "main": [
+        [
+          {
+            "node": "B: Write Deal Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B: Write Deal Fields": {
+      "main": [
+        [
+          {
+            "node": "B: Apply deal:new-inventory Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 4h (Tier C)": {
+      "main": [
+        [
+          {
+            "node": "C: Write Deal Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "C: Write Deal Fields": {
+      "main": [
+        [
+          {
+            "node": "C: Apply deal:new-inventory Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4c9a32d0-80f1-43f4-8616-071076dc047a",
+  "meta": {
+    "instanceId": "8d9aeaa0e746bf46774713f3f3e460e77bf8dc9eed2f5d93f5f7c01518cc6602"
+  },
+  "id": "00fGAfuSJK0x9VaC",
+  "tags": []
+}

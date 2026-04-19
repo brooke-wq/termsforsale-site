@@ -1,5 +1,5 @@
 {
-  "name": "TFS — Buyer Match Engine (GHL + Notion)",
+  "name": "TFS \u2014 Buyer Match Engine (GHL + Notion)",
   "nodes": [
     {
       "parameters": {
@@ -69,15 +69,15 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "ghl_private_integration",
+          "id": "DR2T0oJKfFcj1GFD",
           "name": "GHL Private Integration Token"
         }
       },
-      "notes": "Uses GHL Private Integration Token (create under Settings → Private Integrations). Env var GHL_LOCATION_ID should be set to the TFS sub-account location ID. For paginated results beyond 100, add a Loop node — skipping that optimization until buyer list exceeds 100 active contacts."
+      "notes": "Uses GHL Private Integration Token (create under Settings \u2192 Private Integrations). Env var GHL_LOCATION_ID should be set to the TFS sub-account location ID. For paginated results beyond 100, add a Loop node \u2014 skipping that optimization until buyer list exceeds 100 active contacts."
     },
     {
       "parameters": {
-        "jsCode": "// --- auto-generated field ID preamble (2026-04-17T03:40:06.936Z) ---\nconst FIELD_IDS = {\n  \"Lead Source\": \"Ov2LMG8TipkI4jlNAFRR\",\n  \"Buyer Asset Class\": \"NT3w93SU9mkNugSZjHLB\",\n  \"Buyer Market\": \"Rt1ETvZZSh3pFlFZkhro\",\n  \"Buyer Price Min\": \"pM3aeMZALD2tmf2cFSmG\",\n  \"Buyer Price Max\": \"LcsBYM6iUurqTu8SsfTz\",\n  \"Capital / POF Amount\": \"pkNBpd4VwNblSMrB20I5\",\n  \"PoF on File\": \"zKyplmyTeBFlUFdYMfUD\",\n  \"Deals Last 12 Months\": \"ToK46ItNIDFiEcEFNN5m\",\n  \"Decision Maker\": \"06k53PRZ8o9hs2Zy5F4h\",\n  \"Buyer Tier\": \"GzB9iQ9Mb9IsAKuMS93X\",\n  \"Last Touch Date\": \"SwUKaml8kRpCrrLzunlh\",\n  \"Preferred Contact Method\": \"qoFIBxIWRow8HQy3GOw1\",\n  \"Re-verify Due Date\": \"1cgpp0vcBSWSKptqoORU\",\n  \"Entity Name\": \"05jevWkhMiY8bFoe9TWc\",\n  \"EMD Amount\": \"pEf6ih4rpT7oOMLlK9wN\",\n  \"Offer Price\": \"6c52JUALKfX7Apv4RpR4\",\n  \"Close Date Target\": \"wuXiUAbgKqaYGlmqqE0e\",\n  \"Contingencies\": \"cTtqBoUEGXEk7gUdtl9u\",\n  \"Assignment Fee Paid\": \"LkrfGd6ziGJNwlxugcVV\",\n  \"Last Deal Sent ID\": \"RiSmLK8l97DKzrK3VQaZ\",\n  \"Last Deal Sent Date\": \"CAJQUQSjrkcdygsCGDdK\",\n  \"Deal Asset Class (latest)\": \"JzmuiUCvNJtHiHOeEz90\",\n  \"Deal Market (latest)\": \"tAFA5xs5ZS7AG7AgheZw\",\n  \"Deal Price (latest)\": \"h1PdpPrgYHfk7WKdEBjp\",\n  \"Deal Type (latest)\": \"TENFLNR411SHBOBRzEQX\",\n  \"Deal Summary URL (latest)\": \"hGftrRzv5pt24KrNd1sO\"\n};\nconst getFieldById = (buyer, nameKey) => {\n  const id = FIELD_IDS[nameKey];\n  if (!id) return null;\n  const m = (buyer.customFields || []).find(f => f.id === id);\n  return m ? m.value : null;\n};\n\n// Match logic — filter buyers against deal criteria\nconst deal = $('Normalize Deal Payload').first().json;\nconst buyers = $input.first().json.contacts || [];\n\nconst matches = [];\n\nfor (const buyer of buyers) {\n  // Extract custom fields — GHL returns these as an array\n  const cf = {};\n  (buyer.customFields || []).forEach(f => { cf[f.id] = f.value; });\n  \n  // Map by field key (you'll replace these IDs with your actual GHL custom field IDs after first run)\n  // Field keys from 01_custom_fields.json — the code below uses the field NAME match as a fallback\n  const getField = (name) => {\n    const byId = getFieldById(buyer, name);\n    if (byId !== null && byId !== undefined) return byId;\n    const match = (buyer.customFields || []).find(f => f.name === name || f.fieldKey === name);\n    return match ? match.value : null;\n  };\n  \n  const buyerAssetClasses = (getField('Buyer Asset Class') || '').split(',').map(s => s.trim()).filter(Boolean);\n  const buyerMarkets = (getField('Buyer Market') || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);\n  const priceMin = parseFloat(getField('Buyer Price Min') || 0);\n  const priceMax = parseFloat(getField('Buyer Price Max') || Infinity);\n  const buyerTier = (getField('Buyer Tier') || 'C').toUpperCase();\n  const lastDealSentDate = getField('Last Deal Sent Date');\n  \n  // Cooldown check — skip buyers who got a deal blast in last 24h (spam prevention)\n  if (lastDealSentDate) {\n    const hoursSince = (Date.now() - new Date(lastDealSentDate).getTime()) / (1000 * 60 * 60);\n    if (hoursSince < 24) continue;\n  }\n  \n  // Asset class match (any overlap)\n  const assetMatch = buyerAssetClasses.some(ac => \n    ac.toLowerCase() === deal.asset_class.toLowerCase() ||\n    deal.asset_class.toLowerCase().includes(ac.toLowerCase())\n  );\n  if (!assetMatch) continue;\n  \n  // Market match (any substring overlap on buyer market list)\n  const dealMarketLower = deal.market.toLowerCase();\n  const marketMatch = buyerMarkets.some(bm => \n    dealMarketLower.includes(bm) || bm.includes(dealMarketLower)\n  );\n  if (!marketMatch) continue;\n  \n  // Price band match\n  if (deal.price < priceMin || deal.price > priceMax) continue;\n  \n  // All checks passed\n  matches.push({\n    contact_id: buyer.id,\n    first_name: buyer.firstName,\n    last_name: buyer.lastName,\n    email: buyer.email,\n    phone: buyer.phone,\n    tier: buyerTier,\n    tier_priority: buyerTier === 'A' ? 1 : buyerTier === 'B' ? 2 : 3\n  });\n}\n\n// Sort by tier (A first)\nmatches.sort((a, b) => a.tier_priority - b.tier_priority);\n\n// Return one item per match so downstream nodes loop naturally\nreturn matches.map(m => ({ json: { ...m, deal } }));"
+        "jsCode": "// --- auto-generated field ID preamble (2026-04-17T03:40:06.936Z) ---\nconst FIELD_IDS = {\n  \"Lead Source\": \"Ov2LMG8TipkI4jlNAFRR\",\n  \"Buyer Asset Class\": \"NT3w93SU9mkNugSZjHLB\",\n  \"Buyer Market\": \"Rt1ETvZZSh3pFlFZkhro\",\n  \"Buyer Price Min\": \"pM3aeMZALD2tmf2cFSmG\",\n  \"Buyer Price Max\": \"LcsBYM6iUurqTu8SsfTz\",\n  \"Capital / POF Amount\": \"pkNBpd4VwNblSMrB20I5\",\n  \"PoF on File\": \"zKyplmyTeBFlUFdYMfUD\",\n  \"Deals Last 12 Months\": \"ToK46ItNIDFiEcEFNN5m\",\n  \"Decision Maker\": \"06k53PRZ8o9hs2Zy5F4h\",\n  \"Buyer Tier\": \"GzB9iQ9Mb9IsAKuMS93X\",\n  \"Last Touch Date\": \"SwUKaml8kRpCrrLzunlh\",\n  \"Preferred Contact Method\": \"qoFIBxIWRow8HQy3GOw1\",\n  \"Re-verify Due Date\": \"1cgpp0vcBSWSKptqoORU\",\n  \"Entity Name\": \"05jevWkhMiY8bFoe9TWc\",\n  \"EMD Amount\": \"pEf6ih4rpT7oOMLlK9wN\",\n  \"Offer Price\": \"6c52JUALKfX7Apv4RpR4\",\n  \"Close Date Target\": \"wuXiUAbgKqaYGlmqqE0e\",\n  \"Contingencies\": \"cTtqBoUEGXEk7gUdtl9u\",\n  \"Assignment Fee Paid\": \"LkrfGd6ziGJNwlxugcVV\",\n  \"Last Deal Sent ID\": \"RiSmLK8l97DKzrK3VQaZ\",\n  \"Last Deal Sent Date\": \"CAJQUQSjrkcdygsCGDdK\",\n  \"Deal Asset Class (latest)\": \"JzmuiUCvNJtHiHOeEz90\",\n  \"Deal Market (latest)\": \"tAFA5xs5ZS7AG7AgheZw\",\n  \"Deal Price (latest)\": \"h1PdpPrgYHfk7WKdEBjp\",\n  \"Deal Type (latest)\": \"TENFLNR411SHBOBRzEQX\",\n  \"Deal Summary URL (latest)\": \"hGftrRzv5pt24KrNd1sO\"\n};\nconst getFieldById = (buyer, nameKey) => {\n  const id = FIELD_IDS[nameKey];\n  if (!id) return null;\n  const m = (buyer.customFields || []).find(f => f.id === id);\n  return m ? m.value : null;\n};\n\n// Match logic \u2014 filter buyers against deal criteria\nconst deal = $('Normalize Deal Payload').first().json;\nconst buyers = $input.first().json.contacts || [];\n\nconst matches = [];\n\nfor (const buyer of buyers) {\n  // Extract custom fields \u2014 GHL returns these as an array\n  const cf = {};\n  (buyer.customFields || []).forEach(f => { cf[f.id] = f.value; });\n  \n  // Map by field key (you'll replace these IDs with your actual GHL custom field IDs after first run)\n  // Field keys from 01_custom_fields.json \u2014 the code below uses the field NAME match as a fallback\n  const getField = (name) => {\n    const byId = getFieldById(buyer, name);\n    if (byId !== null && byId !== undefined) return byId;\n    const match = (buyer.customFields || []).find(f => f.name === name || f.fieldKey === name);\n    return match ? match.value : null;\n  };\n\n  // toArr \u2014 GHL multi-select returns arrays; string-type fields return strings. Handle both.\n  const toArr = (v) => {\n    if (v === null || v === undefined) return [];\n    if (Array.isArray(v)) return v.filter(x => x !== null && x !== undefined).map(String).map(s => s.trim()).filter(Boolean);\n    if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean);\n    return [String(v)];\n  };\n  \n  const buyerAssetClasses = toArr(getField('Buyer Asset Class'));\n  const buyerMarkets = toArr(getField('Buyer Market')).map(s => s.toLowerCase());\n  const priceMin = parseFloat(getField('Buyer Price Min') || 0);\n  const priceMax = parseFloat(getField('Buyer Price Max') || Infinity);\n  const buyerTier = (getField('Buyer Tier') || 'C').toUpperCase();\n  const lastDealSentDate = getField('Last Deal Sent Date');\n  \n  // Cooldown check \u2014 skip buyers who got a deal blast in last 24h (spam prevention)\n  if (lastDealSentDate) {\n    const hoursSince = (Date.now() - new Date(lastDealSentDate).getTime()) / (1000 * 60 * 60);\n    if (hoursSince < 24) continue;\n  }\n  \n  // Asset class match (any overlap)\n  const assetMatch = buyerAssetClasses.some(ac => \n    ac.toLowerCase() === deal.asset_class.toLowerCase() ||\n    deal.asset_class.toLowerCase().includes(ac.toLowerCase())\n  );\n  if (!assetMatch) continue;\n  \n  // Market match (any substring overlap on buyer market list)\n  const dealMarketLower = deal.market.toLowerCase();\n  const marketMatch = buyerMarkets.some(bm => \n    dealMarketLower.includes(bm) || bm.includes(dealMarketLower)\n  );\n  if (!marketMatch) continue;\n  \n  // Price band match\n  if (deal.price < priceMin || deal.price > priceMax) continue;\n  \n  // All checks passed\n  matches.push({\n    contact_id: buyer.id,\n    first_name: buyer.firstName,\n    last_name: buyer.lastName,\n    email: buyer.email,\n    phone: buyer.phone,\n    tier: buyerTier,\n    tier_priority: buyerTier === 'A' ? 1 : buyerTier === 'B' ? 2 : 3\n  });\n}\n\n// Sort by tier (A first)\nmatches.sort((a, b) => a.tier_priority - b.tier_priority);\n\n// Return one item per match so downstream nodes loop naturally\nreturn matches.map(m => ({ json: { ...m, deal } }));"
       },
       "id": "filter-match",
       "name": "Filter & Match Buyers",
@@ -96,7 +96,7 @@
               "conditions": {
                 "options": {
                   "caseSensitive": false,
-                  "typeValidation": "strict"
+                  "typeValidation": "loose"
                 },
                 "conditions": [
                   {
@@ -104,7 +104,9 @@
                     "rightValue": "A",
                     "operator": {
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "equals",
+                      "rightType": "string",
+                      "singleValue": true
                     }
                   }
                 ],
@@ -117,7 +119,7 @@
               "conditions": {
                 "options": {
                   "caseSensitive": false,
-                  "typeValidation": "strict"
+                  "typeValidation": "loose"
                 },
                 "conditions": [
                   {
@@ -125,7 +127,9 @@
                     "rightValue": "B",
                     "operator": {
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "equals",
+                      "rightType": "string",
+                      "singleValue": true
                     }
                   }
                 ],
@@ -138,7 +142,7 @@
               "conditions": {
                 "options": {
                   "caseSensitive": false,
-                  "typeValidation": "strict"
+                  "typeValidation": "loose"
                 },
                 "conditions": [
                   {
@@ -146,7 +150,9 @@
                     "rightValue": "C",
                     "operator": {
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "equals",
+                      "rightType": "string",
+                      "singleValue": true
                     }
                   }
                 ],
@@ -156,12 +162,15 @@
               "outputKey": "Tier C"
             }
           ]
+        },
+        "options": {
+          "fallbackOutput": "none"
         }
       },
       "id": "switch-tier",
       "name": "Switch by Tier",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 3,
+      "typeVersion": 3.2,
       "position": [
         1120,
         300
@@ -187,14 +196,9 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "customFields",
-              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
-            }
-          ]
-        }
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customFields: [\n  { id: 'JzmuiUCvNJtHiHOeEz90', field_value: $json.deal.asset_class },\n  { id: 'tAFA5xs5ZS7AG7AgheZw', field_value: $json.deal.market },\n  { id: 'h1PdpPrgYHfk7WKdEBjp', field_value: '$' + Number($json.deal.price).toLocaleString() },\n  { id: 'TENFLNR411SHBOBRzEQX', field_value: $json.deal.deal_type },\n  { id: 'hGftrRzv5pt24KrNd1sO', field_value: $json.deal.summary_url },\n  { id: 'RiSmLK8l97DKzrK3VQaZ', field_value: $json.deal.deal_id },\n  { id: 'CAJQUQSjrkcdygsCGDdK', field_value: new Date().toISOString().slice(0,10) }\n] }) }}"
       },
       "id": "write-deal-fields-a",
       "name": "A: Write Deal Fields",
@@ -203,12 +207,18 @@
       "position": [
         1340,
         180
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DR2T0oJKfFcj1GFD",
+          "name": "GHL Private Integration Token"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -225,14 +235,9 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "tags",
-              "value": "=[\"deal:new-inventory\"]"
-            }
-          ]
-        }
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={ \"tags\": [\"deal:new-inventory\"] }"
       },
       "id": "apply-tag-a",
       "name": "A: Apply deal:new-inventory Tag",
@@ -242,7 +247,13 @@
         1560,
         180
       ],
-      "notes": "This is what fires GHL WF02 (Deal Match & Send). The tag MUST be applied AFTER the custom fields are written, otherwise WF02 reads stale/empty fields."
+      "notes": "This is what fires GHL WF02 (Deal Match & Send). The tag MUST be applied AFTER the custom fields are written, otherwise WF02 reads stale/empty fields.",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DR2T0oJKfFcj1GFD",
+          "name": "GHL Private Integration Token"
+        }
+      }
     },
     {
       "parameters": {
@@ -279,14 +290,9 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "customFields",
-              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
-            }
-          ]
-        }
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customFields: [\n  { id: 'JzmuiUCvNJtHiHOeEz90', field_value: $json.deal.asset_class },\n  { id: 'tAFA5xs5ZS7AG7AgheZw', field_value: $json.deal.market },\n  { id: 'h1PdpPrgYHfk7WKdEBjp', field_value: '$' + Number($json.deal.price).toLocaleString() },\n  { id: 'TENFLNR411SHBOBRzEQX', field_value: $json.deal.deal_type },\n  { id: 'hGftrRzv5pt24KrNd1sO', field_value: $json.deal.summary_url },\n  { id: 'RiSmLK8l97DKzrK3VQaZ', field_value: $json.deal.deal_id },\n  { id: 'CAJQUQSjrkcdygsCGDdK', field_value: new Date().toISOString().slice(0,10) }\n] }) }}"
       },
       "id": "write-deal-fields-b",
       "name": "B: Write Deal Fields",
@@ -295,12 +301,18 @@
       "position": [
         1560,
         320
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DR2T0oJKfFcj1GFD",
+          "name": "GHL Private Integration Token"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -317,14 +329,9 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "tags",
-              "value": "=[\"deal:new-inventory\"]"
-            }
-          ]
-        }
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={ \"tags\": [\"deal:new-inventory\"] }"
       },
       "id": "apply-tag-b",
       "name": "B: Apply deal:new-inventory Tag",
@@ -333,7 +340,13 @@
       "position": [
         1780,
         320
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DR2T0oJKfFcj1GFD",
+          "name": "GHL Private Integration Token"
+        }
+      }
     },
     {
       "parameters": {
@@ -370,14 +383,9 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "customFields",
-              "value": "={{ [\n  { fieldKey: 'contact.deal_asset_class', value: $json.deal.asset_class },\n  { fieldKey: 'contact.deal_market', value: $json.deal.market },\n  { fieldKey: 'contact.deal_price', value: '$' + Number($json.deal.price).toLocaleString() },\n  { fieldKey: 'contact.deal_type', value: $json.deal.deal_type },\n  { fieldKey: 'contact.deal_summary_url', value: $json.deal.summary_url },\n  { fieldKey: 'contact.last_deal_sent_id', value: $json.deal.deal_id }\n] }}"
-            }
-          ]
-        }
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customFields: [\n  { id: 'JzmuiUCvNJtHiHOeEz90', field_value: $json.deal.asset_class },\n  { id: 'tAFA5xs5ZS7AG7AgheZw', field_value: $json.deal.market },\n  { id: 'h1PdpPrgYHfk7WKdEBjp', field_value: '$' + Number($json.deal.price).toLocaleString() },\n  { id: 'TENFLNR411SHBOBRzEQX', field_value: $json.deal.deal_type },\n  { id: 'hGftrRzv5pt24KrNd1sO', field_value: $json.deal.summary_url },\n  { id: 'RiSmLK8l97DKzrK3VQaZ', field_value: $json.deal.deal_id },\n  { id: 'CAJQUQSjrkcdygsCGDdK', field_value: new Date().toISOString().slice(0,10) }\n] }) }}"
       },
       "id": "write-deal-fields-c",
       "name": "C: Write Deal Fields",
@@ -386,12 +394,18 @@
       "position": [
         1560,
         460
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DR2T0oJKfFcj1GFD",
+          "name": "GHL Private Integration Token"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact_id}}/tags",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Filter & Match Buyers').item.json.contact_id}}/tags",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -408,14 +422,9 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "tags",
-              "value": "=[\"deal:new-inventory\"]"
-            }
-          ]
-        }
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={ \"tags\": [\"deal:new-inventory\"] }"
       },
       "id": "apply-tag-c",
       "name": "C: Apply deal:new-inventory Tag",
@@ -424,7 +433,13 @@
       "position": [
         1780,
         460
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DR2T0oJKfFcj1GFD",
+          "name": "GHL Private Integration Token"
+        }
+      }
     },
     {
       "parameters": {
