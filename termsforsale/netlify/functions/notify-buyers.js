@@ -778,6 +778,28 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
 // ─── GHL: Trigger alert for a buyer (with dedup) ────────────
 
 async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
+  // ═ COMPLIANCE GATE (TCPA / CAN-SPAM / carrier rules) ═════════════
+  // Skip the ENTIRE alert — no SMS, no tags, no workflow trigger — for
+  // any contact that has opted out. Checked in priority order:
+  //   1. GHL native `dnd` flag (top-level contact field; covers all channels)
+  //   2. Any tag starting with `opt-out` (covers `opt-out:sms`, `opt-out:email`,
+  //      `opt-out:all`) or `unsubscribe`
+  // This gate MUST come before any tag application or /conversations/messages
+  // call, because applying `new-deal-alert` could trigger a downstream GHL
+  // workflow that sends SMS on its own.
+  if (contact.dnd === true) {
+    console.log('notify-buyers: SKIP ' + (contact.name || contact.id) + ' — GHL dnd=true (contact-level opt-out)');
+    return 'skipped-dnd';
+  }
+  var optOutTag = (contact.tags || []).find(function (t) {
+    var tl = String(t).toLowerCase();
+    return tl.indexOf('opt-out') === 0 || tl.indexOf('unsubscribe') === 0;
+  });
+  if (optOutTag) {
+    console.log('notify-buyers: SKIP ' + (contact.name || contact.id) + ' — tag "' + optOutTag + '" indicates opt-out');
+    return 'skipped-optout-tag';
+  }
+
   // DEDUP CHECK 1: File-based dedup (Droplet — most reliable, zero API dependency)
   if (sentLog && sentLog.isDroplet()) {
     var dealIdShort = (deal.id || '').slice(0, 8);
