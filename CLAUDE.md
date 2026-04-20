@@ -302,6 +302,101 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 20 2026 GSC "Page with redirect" Email Triage
+
+Branch: `claude/fix-email-issue-JK3sa`. Commit `5034c09`.
+
+Brooke received a Google Search Console "New reasons prevent pages from
+being indexed" email flagging "Page with redirect" on
+`https://deals.termsforsale.com/`. Diagnosed as an expected consequence
+of the April 9 apex migration — not a bug.
+
+### Diagnosis
+
+- Every URL on `deals.termsforsale.com/*` correctly 301s to
+  `termsforsale.com/*` via `netlify.toml:9-19`.
+- GSC's "Page with redirect" is its generic label for "URL you
+  registered doesn't resolve to an indexable page because it redirects"
+  — which is exactly what we want post-migration.
+- Verified the code side is clean:
+  - All `<link rel="canonical">` tags point to apex ✅
+  - `termsforsale/robots.txt` advertises apex sitemap ✅
+  - `sitemap.js:9` emits apex URLs ✅
+  - No static HTML references `deals.termsforsale.com` in a way that
+    would tell Google to index the old host
+- Live curl (from Brooke's Mac) confirmed
+  `HTTP/2 301` + `location: https://termsforsale.com/` on the old
+  subdomain — textbook correct redirect.
+
+### Code change shipped
+
+- **`termsforsale/netlify/functions/_deal-url.js`** — removed a stale
+  doc comment that used `https://deals.termsforsale.com/` in the
+  inline example (misleading since `BASE_URL` has been pinned to apex
+  since April 9). Added a short note documenting why `BASE_URL` stays
+  on apex (avoids the 301 redirect hop on every outbound SMS/email/
+  sitemap link).
+
+### Search Console steps Brooke completed during session
+
+1. Added `termsforsale.com` as a **Domain property** via DNS TXT
+   verification in Squarespace DNS. The required TXT record
+   (`google-site-verification=YiqqTkp_37ngeGti0nFUUN69Socz7tm5tBqpQZStGZI`)
+   was already present on `@` from a prior attempt — verified
+   instantly.
+2. Submitted `https://termsforsale.com/sitemap.xml` — initially
+   "Couldn't fetch" (cosmetic — GSC hadn't crawled the property yet),
+   then flipped to **Success** after using URL Inspection → Request
+   Indexing to push it into Google's crawl queue.
+3. Attempted Change of Address from old
+   `https://deals.termsforsale.com/` property → new
+   `termsforsale.com` Domain property. Validator repeatedly returned
+   "Failed — 301-redirect from homepage" despite the redirect being
+   clean. Concluded this is a known flaky GSC validator issue
+   (sometimes works after a few days' cache settling). Not worth
+   fighting further since Change of Address is optional polish — the
+   301s themselves are what transfer ranking signals.
+
+### Open follow-up for Brooke (Search Console only, no code)
+
+- **Recommended:** Remove the old `https://deals.termsforsale.com/`
+  property from GSC (Settings → Remove property). Stops the "Page
+  with redirect" warning emails immediately. Historical data on
+  that property is already effectively frozen since every URL there
+  redirects, so nothing useful is being lost.
+- **Alternative:** Leave it and ignore the emails — they'll subside
+  on their own as Google recrawls.
+- **Optional:** Retry Change of Address in 2-3 days if the green
+  checkmark is wanted. No code changes will help — the 301s are
+  already correct; the validator is just grumpy.
+
+### Deliberately NOT changed
+
+- The `netlify.toml` 301 redirect rules for `deals.termsforsale.com`
+  → apex. They're working as designed and are exactly what the
+  migration requires.
+- The 2 commercial-lane CORS `ALLOWED_ORIGINS` arrays in
+  `commercial-deal.js` and `sign-commercial-nda.js` that still
+  include `deals.termsforsale.com`. Per CLAUDE.md these are
+  intentionally kept during the transition for backward compat.
+- `termsforsale/admin/paperclip-sop.html` line 424 — historical
+  migration documentation, not live marketing copy.
+
+### Verified locally
+
+- Static grep confirmed no remaining `deals.termsforsale.com` URLs in
+  static HTML canonicals, og:url, or JSON-LD across
+  `termsforsale/**/*.html`.
+- `sitemap.js` reviewed — it makes 2 internal HTTP calls (to
+  `/api/deals` and `/blog/posts-index.json`) with **no timeouts**.
+  Not a problem today (sitemap submitted successfully), but flagged
+  as a potential defensive hardening opportunity if "Couldn't fetch"
+  recurs in the future: add `AbortController` with a 4s timeout to
+  each internal fetch so the sitemap always responds quickly even
+  when Notion is slow.
+
+---
+
 ## Completed — April 18 2026 Auto-Underwrite PDF Render Service on Paperclip
 
 Branch: `claude/setup-nodejs-oauth-service-fpTNc`.

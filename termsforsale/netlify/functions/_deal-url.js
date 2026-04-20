@@ -9,6 +9,11 @@
  *   legacy: https://termsforsale.com/deal.html?id=a1b2c3d4-e5f6-...
  *   new:    https://termsforsale.com/d/phoenix-85016-phx001
  *
+ * Note: the site was migrated from `deals.termsforsale.com` to the
+ * apex `termsforsale.com` on April 9 2026; the subdomain now 301s to
+ * apex. Keep BASE_URL on the apex so every outbound link avoids the
+ * redirect hop and lands directly on the canonical host.
+ *
  * `deal.html` handles both formats — `/d/*` is rewritten to
  * `deal.html` by netlify.toml, and the page JS pulls the dealCode
  * off the last hyphen-separated segment of the path.
@@ -59,7 +64,7 @@ function buildDealPath(deal) {
   return '/d/' + buildDealSlug(deal);
 }
 
-// Full public URL, e.g. "https://deals.termsforsale.com/d/phoenix-85016-phx001".
+// Full public URL, e.g. "https://termsforsale.com/d/phoenix-85016-phx001".
 function buildDealUrl(deal) {
   return BASE_URL + buildDealPath(deal);
 }
