@@ -840,17 +840,11 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   if (sentTag) tagsToAdd.push(sentTag);
   if (tierTag) tagsToAdd.push(tierTag);
 
+  // Hybrid tier router applies these tags AFTER a tier-specific Wait (see
+  // bottom of function). We still fall back to direct apply if the router
+  // is unreachable.
   var tagUrl = 'https://services.leadconnectorhq.com/contacts/' + contact.id + '/tags';
-  var result = await httpRequest(tagUrl, {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + apiKey,
-      'Version': '2021-07-28',
-      'Content-Type': 'application/json'
-    }
-  }, {
-    tags: tagsToAdd
-  });
+  var result = { status: 200 };
 
   // Post a buyer match note on the contact so Brooke can see why this
   // buyer got this alert without leaving the GHL contact view.
@@ -931,33 +925,73 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     ]
   });
 
-  // Send SMS (dedup tag prevents duplicates)
-  if (contact.phone && locationId) {
-    var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
-    if (price) smsMsg += ' — ' + price;
-    if (entry) smsMsg += ' entry ' + entry;
-    // Short /d/{city}-{zip}-{code} link w/ ?c= for view tracking. The deal
-    // page JS reads ?c= and fires a track-view POST on load.
-    smsMsg += '. View: ' + buildTrackedDealUrl(deal, contact.id);
-    if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
+  // HYBRID TIER ROUTER: hand off tag application + SMS send to the n8n
+  // "Hybrid Tier Router" workflow. It Waits per tier (A immediate, B +1h,
+  // C +4h), then applies tagsToAdd + sends SMS. This implements the
+  // A/B/C staggered-release design from the Team SOP + deck.
+  //
+  // Tier mapping: Netlify matcher assigns tier 1/2/3 from buy-box fit.
+  //   Tier 1 (city + all extras pass) → A  (immediate, VIP)
+  //   Tier 2 (city match, not all extras) → B  (+1 hour)
+  //   Tier 3 (state fallback only) → C  (+4 hours)
+  //
+  // FALLBACK: if the router POST fails (network, n8n down), we fall back to
+  // the pre-hybrid direct path so a buyer still gets their alert — just
+  // without the tier stagger.
+  var tierLetter = ({ 1: 'A', 2: 'B', 3: 'C' })[contact.tier || contact._tier] || 'C';
+  var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
+  if (price) smsMsg += ' — ' + price;
+  if (entry) smsMsg += ' entry ' + entry;
+  smsMsg += '. View: ' + buildTrackedDealUrl(deal, contact.id);
+  if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
 
+  var hybridRouted = false;
+  if (contact.phone && locationId) {
     try {
-      await httpRequest('https://services.leadconnectorhq.com/conversations/messages', {
+      var routerRes = await httpRequest('https://n8n.termsforsale.com/webhook/hybrid-tier-route', {
         method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + apiKey,
-          'Version': '2021-07-28',
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       }, {
-        type: 'SMS',
-        contactId: contact.id,
-        message: smsMsg,
-        fromNumber: '+14806373117'
+        contact_id: contact.id,
+        tier: tierLetter,
+        sms_text: smsMsg,
+        sms_from: '+14806373117',
+        tags_to_add: tagsToAdd
       });
-      console.log('notify-buyers: SMS sent to ' + contact.name);
-    } catch (smsErr) {
-      console.warn('notify-buyers: SMS failed for ' + contact.name + ': ' + smsErr.message);
+      if (routerRes.status >= 200 && routerRes.status < 300) {
+        hybridRouted = true;
+        console.log('notify-buyers: posted to hybrid router — tier=' + tierLetter + ' contact=' + contact.name);
+      } else {
+        console.warn('notify-buyers: hybrid router returned ' + routerRes.status + ' for ' + contact.name + ' — falling back to direct send');
+      }
+    } catch (routerErr) {
+      console.warn('notify-buyers: hybrid router unreachable for ' + contact.name + ': ' + routerErr.message + ' — falling back to direct send');
+    }
+  }
+
+  // FALLBACK: if hybrid router didn't accept the job, apply tags and send
+  // SMS directly (pre-hybrid behavior). Covers network failures + the
+  // no-phone case (router needs a phone; contacts without phones still get
+  // tags applied so the email workflow + dashboard tracking still work).
+  if (!hybridRouted) {
+    try {
+      await httpRequest(tagUrl, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + apiKey, 'Version': '2021-07-28', 'Content-Type': 'application/json' }
+      }, { tags: tagsToAdd });
+    } catch (tagErr) {
+      console.warn('notify-buyers: direct tag apply failed for ' + contact.name + ': ' + tagErr.message);
+    }
+    if (contact.phone && locationId) {
+      try {
+        await httpRequest('https://services.leadconnectorhq.com/conversations/messages', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + apiKey, 'Version': '2021-07-28', 'Content-Type': 'application/json' }
+        }, { type: 'SMS', contactId: contact.id, message: smsMsg, fromNumber: '+14806373117' });
+        console.log('notify-buyers: SMS sent directly (fallback) to ' + contact.name);
+      } catch (smsErr) {
+        console.warn('notify-buyers: SMS failed for ' + contact.name + ': ' + smsErr.message);
+      }
     }
   }
 
