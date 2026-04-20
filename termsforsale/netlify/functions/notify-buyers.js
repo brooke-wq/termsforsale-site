@@ -611,7 +611,14 @@ async function fetchAllBuyers(apiKey, locationId) {
       if (!startAfter) hasMore = false;
     } else { hasMore = false; }
 
-    if (checked >= 2000) hasMore = false;
+    // Raised from 2000 on 2026-04-20. Real opted-in buyer count is ~8,964
+    // (tfs buyer + opt in + Contact Role = Buyer) and was growing past the
+    // old 2000 cap, silently cutting off ~77% of eligible buyers from
+    // every deal blast. 12000 gives headroom over current total contact
+    // count 17,377 while staying well under GHL search rate limits.
+    // Pagination is 100/page so at most ~120 HTTP calls per cron run
+    // (every 30 min) — negligible cost.
+    if (checked >= 12000) hasMore = false;
   }
 
   console.log('Fetched ' + checked + ' contacts, ' + allBuyers.length + ' are buyers');
