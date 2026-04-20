@@ -467,34 +467,62 @@ function selectDeal(id){
 }
 
 // ─── FILTERS ───────────────────────────────────────────────────
+// Keeps the filtered set (type + state) so bounds-only re-filtering after
+// a map pan/zoom doesn't re-run the type/state logic.
+var _lastFiltered=[];
+
+function isDealInBounds(dealId){
+  var marker=MARKERS[dealId];
+  if(!marker)return true; // not yet geocoded — don't hide
+  try{return map.getBounds().contains(marker.getLatLng());}catch(e){return true;}
+}
+
+function renderList(deals){
+  var list=document.getElementById('deal-list');
+  if(!deals.length){
+    list.innerHTML='<div class="list-state"><h3>No deals in view</h3><p>Zoom out or pan the map to see more deals</p></div>';
+  }else{
+    list.innerHTML=deals.map(renderListItem).join('');
+  }
+  document.getElementById('deal-count').textContent=deals.length;
+}
+
+function applyBoundsFilter(){
+  // Re-render sidebar from the last criteria-filtered set, further narrowed
+  // to deals whose markers are currently visible in the map viewport.
+  if(!_lastFiltered.length){renderList([]);return;}
+  var visible=_lastFiltered.filter(function(d){return isDealInBounds(d.id);});
+  renderList(visible);
+}
+
 function applyFilters(){
   var type=document.getElementById('f-type').value;
   var state=document.getElementById('f-state').value;
   var typeNorm=normType(type);
-  var filtered=ALL_DEALS.filter(function(d){
+  _lastFiltered=ALL_DEALS.filter(function(d){
     if(type&&normType(d.dealType)!==typeNorm)return false;
     if(state&&d.state!==state)return false;
     return true;
   });
 
-  // Update list
-  var list=document.getElementById('deal-list');
-  if(!filtered.length){
-    list.innerHTML='<div class="list-state"><h3>No deals match</h3><p>Try different filters</p></div>';
-  }else{
-    list.innerHTML=filtered.map(renderListItem).join('');
-  }
-  document.getElementById('deal-count').textContent=filtered.length;
-
-  // Update markers visibility
+  // Update markers visibility based on criteria
   Object.keys(MARKERS).forEach(function(id){
     var marker=MARKERS[id];
-    var deal=ALL_DEALS.find(function(d){return d.id===id;});
-    var show=filtered.some(function(d){return d.id===id;});
+    var show=_lastFiltered.some(function(d){return d.id===id;});
     if(show&&!map.hasLayer(marker)){marker.addTo(map);}
     else if(!show&&map.hasLayer(marker)){map.removeLayer(marker);}
   });
+
+  // Then narrow sidebar list by current map bounds
+  applyBoundsFilter();
 }
+
+// Re-filter the sidebar list whenever the user pans or zooms the map so it
+// shows only the deals currently visible. Markers themselves stay on the
+// map (Leaflet already culls ones outside the tile buffer).
+map.on('moveend zoomend', function(){
+  if(_lastFiltered.length)applyBoundsFilter();
+});
 
 function populateStateFilter(){
   var states=[...new Set(ALL_DEALS.map(function(d){return d.state;}).filter(Boolean))].sort();

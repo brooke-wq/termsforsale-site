@@ -1330,6 +1330,11 @@ function applyFilters(){
     if(_tab==='cash'&&normType(d.dealType)!=='cash')return false;
     return true;
   });
+  // Narrow further to only deals whose markers are in the current map viewport.
+  // When the user zooms / pans the map, the sidebar list tracks what they can see.
+  if(typeof window._isDealInBounds==='function'){
+    filtered=filtered.filter(d=>window._isDealInBounds(d.id));
+  }
   // Sort
   const sort=(document.getElementById('f-sort')||{}).value||'';
   if(sort==='price-low') filtered.sort(function(a,b){return(+a.askingPrice||0)-(+b.askingPrice||0);});
@@ -1340,7 +1345,7 @@ function applyFilters(){
   if(el)el.textContent=filtered.length+' deal'+(filtered.length!==1?'s':'');
   const row=document.getElementById('deals-row');
   if(!row)return;
-  if(!filtered.length){row.innerHTML='<div class="empty-deals" style="grid-column:1/-1;text-align:center;padding:60px 20px"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5" style="margin-bottom:12px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px">No deals match your filters</p><p style="font-size:12px;color:#A0AEC0">Try broadening your search or removing filters</p></div>';return;}
+  if(!filtered.length){row.innerHTML='<div class="empty-deals" style="grid-column:1/-1;text-align:center;padding:60px 20px"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E0" stroke-width="1.5" style="margin-bottom:12px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p style="font-size:14px;font-weight:600;color:#718096;margin-bottom:4px">No deals in view</p><p style="font-size:12px;color:#A0AEC0">Zoom out or pan the map to see more deals</p></div>';return;}
   row.innerHTML=filtered.map(d=>makeCard(d)).join('');
   // Lazy-load folder thumbnails for cards with Drive folders
   setTimeout(()=>loadCardThumbnails(filtered),100);
@@ -1903,10 +1908,27 @@ window._mapInitDeals=function(deals){
       if(ll){placeMarker(deal,ll);bounds.push(ll);}
       if(placed===deals.length&&bounds.length){
         try{map.fitBounds(bounds,{padding:[50,50],maxZoom:12});}catch(e){}
+        // Now that all markers are placed, enable the bounds filter so the
+        // sidebar list tracks the visible map viewport.
+        window._isDealInBounds=function(id){
+          var m=MARKERS[id];
+          if(!m)return true; // not geocoded — don't hide
+          try{return map.getBounds().contains(m.getLatLng());}catch(e){return true;}
+        };
+        // Re-run applyFilters once with the bounds check active so the sidebar
+        // matches the initial fit-to-bounds view.
+        if(typeof window.applyFilters==='function')window.applyFilters();
       }
     });
   });
 };
+
+// Refresh sidebar list whenever the user pans / zooms the map.
+map.on('moveend zoomend', function(){
+  if(window._isDealInBounds && typeof window.applyFilters==='function'){
+    window.applyFilters();
+  }
+});
 
 // ─── SYNC FILTERS WITH MAP ─────────────────────────────────────
 // Override applyFilters to also toggle markers

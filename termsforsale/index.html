@@ -331,21 +331,72 @@ footer{background:var(--navy);padding:52px 55px 0}
   .nav-right{gap:6px}
   .btn-signup,.btn-login{padding:6px 12px;font-size:11px}
   #tfs-buybox-container a{padding:6px 10px !important;font-size:11px !important}
-  .hero{margin-top:56px}
-  .hero-content{padding:36px 20px 36px;grid-template-columns:1fr !important;gap:20px !important}
-  .hero-widget{width:100%;padding:16px}
-  .hero-headline h1{font-size:28px;line-height:1.15}
-  .hero-headline p{font-size:14px}
+  .hero{margin-top:56px;min-height:0}
+  .hero-content{padding:24px 16px;grid-template-columns:1fr !important;gap:16px !important}
+  .hero-widget{width:100%;max-width:100%;padding:16px 14px;box-sizing:border-box}
+  .hero-headline{max-width:100%}
+  .hero-headline h1{font-size:26px;line-height:1.18;letter-spacing:-.5px}
+  .hero-headline p{font-size:13px;max-width:100%}
+  .hw-title{font-size:16px}
+  .hw-badge{padding:6px 10px;gap:8px}
+  .hw-badge-num{font-size:18px}
+  .hw-tab{padding:6px 10px;font-size:12px}
+  .hw-input{padding:11px 12px;font-size:13px;min-width:0}
+  .hw-search-btn{padding:11px 14px;font-size:12px}
   .streamlined,.how,.testi,.vip,.map-section,footer{padding-left:16px;padding-right:16px}
-  .testi-title{font-size:28px}
+  .streamlined{padding-top:48px;padding-bottom:48px}
+  .streamlined-inner{grid-template-columns:1fr;gap:24px}
+  .st-img{width:100%;height:auto;aspect-ratio:1/1;max-height:280px}
+  .st-text h2{font-size:28px}
+  .daily-pill{font-size:26px;padding:2px 10px}
+  .how{padding-top:48px;padding-bottom:48px}
+  .how-header h2{font-size:32px}
+  .how-step{padding:36px 0;gap:24px}
+  .how-step-text h3{font-size:26px}
+  .testi{padding-top:48px;padding-bottom:48px}
+  .testi-title{font-size:28px;margin-bottom:28px}
+  .vip{padding-top:48px;padding-bottom:48px}
   .vip-title{font-size:28px}
+  .vip-inner{gap:32px}
+  .vip-form-card{padding:22px 18px}
+  .vfc-top h3{font-size:22px}
+  .vf-row{grid-template-columns:1fr;gap:8px}
+  .vf-input,.vf-select{font-size:14px;padding:11px 12px}
   .testi-grid{grid-template-columns:1fr}
-  .footer-top{grid-template-columns:1fr;gap:24px}
+  .footer-top{grid-template-columns:1fr;gap:24px;padding-bottom:32px}
+  footer{padding-top:40px}
   .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
   .auth-overlay{align-items:flex-end}
   .sticky-bar{padding:10px 16px;gap:8px;flex-wrap:wrap;justify-content:center}
   .sticky-bar-text{font-size:12px;text-align:center;width:100%}
   .sticky-bar a{padding:9px 16px;font-size:12px;flex:1;text-align:center}
+
+  /* Sections with inline-styled padding (social proof bar, "How It Works"
+     3-step grid) don't pick up the class-based overrides above. These rules
+     target them by structure so they breathe properly on phones. */
+  .social-proof-bar{padding:16px 12px !important}
+  .social-proof-inner{gap:14px !important;row-gap:12px !important}
+  .social-proof-inner>div{min-width:0;flex:0 0 auto}
+  .social-proof-inner>div>div:first-child{font-size:19px !important}
+  .social-proof-inner>div>div:last-child{font-size:10px !important}
+  .hiw-section{padding:40px 16px !important}
+  .hiw-inner{max-width:100% !important}
+  .hiw-header{margin-bottom:28px !important}
+  .hiw-header>div:first-child{font-size:11px !important}
+  .hiw-header>div:last-child{font-size:22px !important;line-height:1.2 !important}
+  .hiw-grid{grid-template-columns:1fr !important;gap:14px !important}
+  .hiw-grid>div{padding:20px 18px !important}
+  .hiw-grid>div>div:nth-child(3){font-size:16px !important}
+  .hiw-grid>div>div:last-child{font-size:13px !important}
+  .hiw-trust-row{gap:10px !important;margin-top:24px !important;flex-direction:column !important;align-items:flex-start !important}
+  .hiw-trust-row>div{font-size:12px !important}
+}
+@media(max-width:400px){
+  .hero-headline h1{font-size:23px}
+  .hw-search-row{flex-direction:column;border-radius:10px}
+  .hw-input{padding:12px 14px;border-bottom:1px solid rgba(0,0,0,.06)}
+  .hw-search-btn{padding:11px;border-radius:0 0 10px 10px}
+  .social-proof-inner{justify-content:space-around !important}
 }
 
 /* ── MOBILE NAV DRAWER ──────────────────── */
@@ -531,8 +582,8 @@ footer{background:var(--navy);padding:52px 55px 0}
 </section>
 
 <!-- SOCIAL PROOF BAR -->
-<div style="background:var(--navy);padding:20px 40px">
-  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap">
+<div class="social-proof-bar" style="background:var(--navy);padding:20px 40px">
+  <div class="social-proof-inner" style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap">
     <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff" id="sp-count">&mdash;</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Active Deals</div></div>
     <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">$2.1M+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deal Volume</div></div>
     <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#fff">250+</div><div style="font-size:11px;color:rgba(255,255,255,.5);font-weight:500">Deals Closed</div></div>
@@ -542,13 +593,13 @@ footer{background:var(--navy);padding:52px 55px 0}
 </div>
 
 <!-- HOW IT WORKS -->
-<section style="background:#fff;border-top:1px solid #E2E8F0;padding:56px 40px">
-  <div style="max-width:1100px;margin:0 auto">
-    <div style="text-align:center;margin-bottom:44px">
+<section class="hiw-section" style="background:#fff;border-top:1px solid #E2E8F0;padding:56px 40px">
+  <div class="hiw-inner" style="max-width:1100px;margin:0 auto">
+    <div class="hiw-header" style="text-align:center;margin-bottom:44px">
       <div style="font-size:12px;font-weight:700;color:#29ABE2;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px">How It Works</div>
       <div style="font-size:28px;font-weight:900;color:#0D1F3C;letter-spacing:-.3px">From browse to close in 3 steps</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px">
+    <div class="hiw-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px">
       <div style="text-align:center;padding:28px 24px;background:#F5F7FA;border-radius:14px;border:1px solid #E9EDF2">
         <div style="width:52px;height:52px;border-radius:14px;background:#EBF8FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#29ABE2" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -574,7 +625,7 @@ footer{background:var(--navy);padding:52px 55px 0}
         <div style="font-size:13px;color:#718096;line-height:1.65">Your deal coordinator walks you through close in 7&ndash;30 days. Fewer middlemen, clear expectations, and creative structures built for investors.</div>
       </div>
     </div>
-    <div style="display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap">
+    <div class="hiw-trust-row" style="display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4A5568">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         Designed for investors, not retail buyers
