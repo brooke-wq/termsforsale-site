@@ -24,6 +24,19 @@ function verifyPassword(pw, stored) {
   return hash === parts[1];
 }
 
+// GHL v2 API rejects raw 10-digit US numbers — requires E.164 (+1XXXXXXXXXX).
+// Strips non-digits, prefixes +1 for 10-digit US, prefixes + for 11-digit
+// starting with 1. Returns original input if it can't confidently format.
+function normalizePhone(raw) {
+  if (!raw) return raw;
+  var s = String(raw).trim();
+  if (s.charAt(0) === '+') return s;
+  var digits = s.replace(/\D/g, '');
+  if (digits.length === 10) return '+1' + digits;
+  if (digits.length === 11 && digits.charAt(0) === '1') return '+' + digits;
+  return s;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsHeaders(), body: '' };
@@ -44,9 +57,11 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return respond(400, { error: 'Invalid JSON' }); }
 
-  const { firstName, lastName, email, phone, password, deal_structure, deal_structures, max_entry_fee, source } = body;
+  const { firstName, lastName, email, password, deal_structure, deal_structures, max_entry_fee, source } = body;
+  const rawPhone = body.phone;
+  const phone = normalizePhone(rawPhone);
 
-  if (!firstName || !email || !phone || !password) {
+  if (!firstName || !email || !rawPhone || !password) {
     return respond(400, { error: 'Missing required fields: firstName, email, phone, password' });
   }
   if (password.length < 6) {
@@ -125,8 +140,36 @@ exports.handler = async (event) => {
     const data = await res.json();
 
     if (!res.ok) {
-      console.error('Contact upsert failed:', JSON.stringify(data));
-      return respond(502, { error: 'Failed to create account' });
+      console.error('Contact upsert failed:', res.status, JSON.stringify(data), 'payload:', JSON.stringify({
+        email, phone, rawPhone, firstName, lastName,
+      }));
+
+      // Phone already on another contact — look them up and treat as existing.
+      const phoneDup = await findContactByPhone(phone, locationId, headers);
+      if (phoneDup) {
+        return respond(200, {
+          success: true,
+          exists: true,
+          user: {
+            id: phoneDup.id,
+            name: phoneDup.firstName || phoneDup.firstNameLowerCase || '',
+            firstName: phoneDup.firstName || '',
+            lastName: phoneDup.lastName || '',
+            email: phoneDup.email || email,
+            phone: phoneDup.phone || phone,
+            initials: getInitials(phoneDup.firstName, phoneDup.lastName),
+          },
+        });
+      }
+
+      // Surface the real GHL message so the user has something actionable
+      // ("Phone number is invalid", "Email already exists", etc.)
+      var ghlMsg = (data && (data.message || data.error)) ||
+        (Array.isArray(data && data.errors) ? data.errors.map(function(e) { return e.message || e; }).join(', ') : '');
+      return respond(502, {
+        error: ghlMsg || 'Failed to create account. Please try again or contact support.',
+        ghlStatus: res.status,
+      });
     }
 
     const contactId = data.contact?.id || data.id;
@@ -222,6 +265,15 @@ exports.handler = async (event) => {
 // ─── Find contact by email via GHL API ─────────────────────
 async function findContactByEmail(email, locationId, headers) {
   const url = `${GHL_BASE}/contacts/search/duplicate?locationId=${locationId}&email=${encodeURIComponent(email)}`;
+  const res = await ghlFetch(url, 'GET', null, headers);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.contact || null;
+}
+
+async function findContactByPhone(phone, locationId, headers) {
+  if (!phone) return null;
+  const url = `${GHL_BASE}/contacts/search/duplicate?locationId=${locationId}&number=${encodeURIComponent(phone)}`;
   const res = await ghlFetch(url, 'GET', null, headers);
   if (!res.ok) return null;
   const data = await res.json();

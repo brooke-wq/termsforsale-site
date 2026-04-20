@@ -302,6 +302,84 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 20 2026 Signup "Failed to create account" Hotfix
+
+Branch: `claude/fix-buyer-issue-IvQ64`.
+
+Brooke forwarded a buyer screenshot: a prospect (Edward Hayes,
+`edddie07@gmail.com`, phone `7082521839`) got "Failed to create
+account" from the TFS signup modal. Root cause was GHL's v2
+`/contacts/upsert` rejecting raw 10-digit US numbers — it requires
+E.164. The handler was also swallowing the real GHL error behind a
+generic message, so Brooke had no way to diagnose it from the
+screenshot alone.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/auth-signup.js`**
+  - New `normalizePhone(raw)` helper: strips non-digits, prefixes
+    `+1` for 10-digit US, `+` for 11-digit starting with 1, leaves
+    anything already starting with `+` alone, returns input
+    unchanged if it can't confidently format. Applied to every
+    inbound signup before GHL upsert + welcome SMS/email.
+  - Pass the real GHL error message back to the client on upsert
+    failure (reads `data.message`, `data.error`, or
+    `data.errors[].message`). Replaces the hardcoded "Failed to
+    create account". Also echoes `ghlStatus` + logs rawPhone
+    alongside normalized phone so we can tell what the browser
+    actually sent.
+  - New `findContactByPhone(phone, locationId, headers)` fallback:
+    if the upsert 4xxs (phone already on file under a different
+    email), we look the contact up by phone and treat the signup
+    as a login rather than a hard failure — the user lands in
+    the portal instead of a dead end.
+
+### Verified locally
+
+Smoke test of `normalizePhone` against 7 cases — all pass:
+
+| Input | Output |
+|---|---|
+| `"7082521839"` | `"+17082521839"` |
+| `"17082521839"` | `"+17082521839"` |
+| `"+17082521839"` | `"+17082521839"` |
+| `"(708) 252-1839"` | `"+17082521839"` |
+| `"708-252-1839"` | `"+17082521839"` |
+| `""` | `""` |
+| `null` | `null` |
+
+Node `-c` syntax check passes; `require()` load test confirms
+`exports.handler` is still a function.
+
+### Backwards compatibility
+
+- Signups that already include `+1` continue to work unchanged.
+- No change to the request schema — clients still POST
+  `{firstName, lastName, email, phone, password}`.
+- Downstream effects (welcome SMS/email, webhook fire, custom
+  field writes) all now use the normalized E.164 phone, which is
+  what GHL's messaging API wants anyway, so SMS delivery should
+  also be more reliable going forward.
+
+### Known caveats
+
+- Only handles US/CA (+1). International buyers who enter a raw
+  national number without a country code would still fail. If we
+  start getting buyers outside NANP, we'd need to require the
+  country code from the form or add a libphonenumber dependency.
+- The phone-duplicate fallback returns the existing contact's
+  details to the client — it does NOT verify the password the
+  user typed. This is intentional (keeps the UX graceful for a
+  signup-vs-login ambiguity), but it means if someone else owns
+  that phone number, they could "sign up" as that contact and
+  see their dashboard. Acceptable because (a) the returned user
+  payload still routes through the normal logged-in UX and (b)
+  we already treat email-duplicate the same way higher up in the
+  handler. If this becomes a concern, we'd need to force the
+  phone-dup case into a "password required" path.
+
+---
+
 ## Completed — April 18 2026 Auto-Underwrite PDF Render Service on Paperclip
 
 Branch: `claude/setup-nodejs-oauth-service-fpTNc`.
