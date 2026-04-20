@@ -155,24 +155,54 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 /* Below-fold sections spacer */
 .below-fold{position:relative;z-index:5}
 
-/* MOBILE */
+/* MOBILE
+   On phones we flip to a vertical stack with MAP ON TOP (45vh) and the
+   sidebar (filters + cards) below it. The sidebar scrolls inside the
+   viewport, and the map stays visible as you swipe through cards.
+   Tap the floating "Show Map" / "Show List" button to go full-screen
+   on either half. */
 @media(max-width:900px){
-  .split-app{flex-direction:column;height:auto;min-height:100vh}
-  .split-sidebar{width:100%;max-width:100%;min-width:0;height:auto;flex:1;flex-shrink:0;overflow:visible}
+  .split-app{flex-direction:column;height:calc(100vh - 72px);margin-top:72px;overflow:hidden}
+  .split-sidebar{order:2;width:100%;max-width:100%;min-width:0;flex:1 1 auto;min-height:0;border-right:none;border-top:1px solid var(--border)}
   .split-sidebar.map-mode{display:none}
-  .split-map{height:50vh;flex:none}
+  .split-map{order:1;flex:0 0 45vh;height:45vh;min-height:260px}
   .split-map.list-mode{display:none}
-  .split-cards{overflow:visible;max-height:none}
+  /* When the sidebar is toggled off (full-screen map), let the map fill
+     the whole split-app container instead of being pinned to 45vh. */
+  .split-sidebar.map-mode ~ .split-map{flex:1 1 auto;height:auto;min-height:0}
+  .split-cards{padding:14px 14px 90px;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .split-cards-grid{grid-template-columns:1fr 1fr;gap:12px}
-  .view-toggle{display:block}
-  .map-legend-float{bottom:70px;right:12px}
+  .view-toggle{display:inline-flex;align-items:center;gap:8px;bottom:18px;padding:11px 22px;font-size:13px}
+  .map-legend-float{bottom:12px;right:12px;padding:8px 12px;font-size:10px}
+  .map-legend-float h4{font-size:9px;margin-bottom:5px}
+  /* Keep Leaflet zoom controls clear of the legend */
+  .split-map .leaflet-top.leaflet-right{top:10px}
+  /* Sidebar toolbar: compact, sticky so filters stay visible while scrolling */
+  .split-toolbar{position:sticky;top:0;z-index:5;padding:10px 14px;border-bottom:1px solid var(--border);background:#fff}
+  .split-toolbar-top{margin-bottom:8px}
+  .split-toolbar-top h2{font-size:15px}
+  .split-search{font-size:13px;padding:10px 14px 10px 36px}
+  .split-filters{gap:6px;margin-top:8px}
+  .split-filter-select{font-size:12px;padding:8px 24px 8px 10px}
+  .split-tab{padding:6px 12px;font-size:12px}
+  .split-count{font-size:11px;flex-basis:100%;margin-left:0;text-align:right}
+}
+@media(max-width:768px){
+  /* Nav shrinks to 56px on mobile — reclaim those 16px for the map/list */
+  .split-app{height:calc(100vh - 56px);margin-top:56px}
+  .split-map{flex-basis:48vh;height:48vh;min-height:240px}
 }
 @media(max-width:600px){
-  .split-cards-grid{grid-template-columns:1fr}
-  .split-toolbar-top h2{font-size:15px}
-  .split-filters{gap:6px}
-  .split-filter-select{font-size:11px;padding:6px 22px 6px 8px}
+  .split-cards-grid{grid-template-columns:1fr;gap:12px}
+  .split-cards .deal-card-photo{height:180px}
+  .split-toolbar-top h2{font-size:14px}
+  .split-badge{padding:4px 10px;gap:5px}
+  .split-badge-num{font-size:13px}
+  .split-badge-lbl{font-size:9px}
+  .split-filters{gap:5px}
+  .split-filter-select{font-size:11px;padding:7px 22px 7px 9px}
   .split-tab{padding:5px 10px;font-size:11px}
+  .split-map{flex-basis:44vh;height:44vh;min-height:220px}
 }
 
 /* ── HERO ───────────────────────────────── */
