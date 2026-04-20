@@ -90,12 +90,36 @@ exports.handler = async function(event) {
     console.log('[buy-box-save] Found ' + Object.keys(fieldIds).length + ' custom fields');
 
     // Map form data to GHL field IDs
+    //
+    // FIELD ALIGNMENT NOTES (2026-04-20 cleanup):
+    //   - 'contact.property_type_new' is the canonical property-type field
+    //     (fieldKey resolves to id HGC6xWLpSqoAQPZr0uwY, name "Property Type").
+    //     Match engine reads this via CF.PROPERTY_TYPE. The old alias
+    //     'contact.property_type_preference' was a phantom (NOT FOUND in GHL
+    //     customFields registry) — data was silently dropped. Now aligned.
+    //   - 'contact.states_buying_in' and 'contact.target_location' hold
+    //     structured state + city market prefs (match engine reads these
+    //     via CF.TARGET_STATES and CF.TARGET_CITIES). The form previously
+    //     concatenated states into target_zips; now it can also send them
+    //     structured. target_zips stays for backward-compat and free-text.
+    //   - 'contact.buyer_profile_type' was removed — phantom fieldKey, no
+    //     matching GHL field. If Cash/Creative profile categorization is
+    //     needed, create the field in GHL Settings → Custom Fields first,
+    //     then re-add the mapping here.
+    //   - 'contact.deal_type' was duplicating the deal_structure value into
+    //     a separate field. Deal Structure is the canonical field — removed
+    //     the redundant deal_type write. (The GHL field 'contact.deal_type'
+    //     with id 0thrOdoETTLlFA45oN8U is used by notify-buyers to hold
+    //     per-alert deal type — NOT a buyer-profile field. Previously the
+    //     form was overwriting that field with buyer's deal structure prefs,
+    //     clobbering the last-alert deal type. Fix: don't write it here.)
     var fieldMap = {
       'contact.deal_structure': body.deal_structure || '',
-      'contact.deal_type': body.deal_structure || '',
       'contact.exits': body.exits || '',
-      'contact.property_type_preference': body.property_type_preference || '',
+      'contact.property_type_new': body.property_type_preference || body.property_type_new || '',
       'contact.target_zips': body.target_zips || '',
+      'contact.states_buying_in': body.target_states || body.states_buying_in || '',
+      'contact.target_location': body.target_cities || body.target_location || '',
       'contact.max_price': body.max_price || '',
       'contact.max_down': body.max_down || '',
       'contact.max_monthly': body.max_monthly || '',
@@ -112,7 +136,6 @@ exports.handler = async function(event) {
       'contact.purchase_timeline': normalizeTimeline(body.purchase_timeline) || '',
       'contact.buy_box': body.buy_box || '',
       'contact.buyer_type': body.buyer_type || 'Buyer',
-      'contact.buyer_profile_type': body.buyer_profile_type || '',
       'contact.criteria_last_update': body.criteria_last_update || new Date().toISOString().split('T')[0],
       'contact.max_repair_budget': body.max_repair_budget || '',
       'contact.occupancy_preference': body.occupancy_preference || '',
