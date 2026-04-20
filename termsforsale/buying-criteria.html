@@ -823,8 +823,11 @@ async function submitForm(){
     firstName: fn, lastName: ln, email: email, phone: phone,
     company: entity,
     preferred_contact: getExcl('grp-contact-pref'),
-    buyer_profile_type: profiles.join(', '),
+    buyer_profile_type: profiles.join(', '), // legacy — backend drops; create field in GHL if needed
     property_type_preference: getChips('grp-asset-types').join(', '),
+    property_type_new:       getChips('grp-asset-types').join(', '), // canonical alias (match engine reads this)
+    target_states:           getChips('grp-states').join(', '),      // structured state prefs (match engine reads TARGET_STATES)
+    target_cities:           v('bc-markets'),                        // structured city prefs (match engine reads TARGET_CITIES)
     exits:              getChips('grp-exits').join(', '),
     deal_structure:     structures.join(', '),
     target_zips:        v('bc-markets'),
