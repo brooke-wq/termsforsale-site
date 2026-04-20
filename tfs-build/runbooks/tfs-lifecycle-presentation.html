@@ -355,20 +355,9 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
 
   <section class="slide">
     <h2>When it breaks</h2>
-    <p>One known issue worth memorizing — plus how to route anything else.</p>
+    <p>How to route anything that isn't firing — and how the system recovers.</p>
 
-    <h3 style="margin-top:18px;color:var(--red)">The WF02 SMS gap</h3>
-    <p style="margin-top:6px">n8n successfully applies <span class="kbd">deal:new-inventory</span> to a buyer. GHL shows the tag on the contact. But WF02 doesn't fire — no SMS, no email. Tags applied via GHL UI work fine. Tags applied via API sometimes don't.</p>
-
-    <div class="break-diagram">
-      <div><span class="success">n8n tag-apply ✓ SUCCESS</span>  →→→  <span class="flow-text">GHL tag state: APPLIED</span></div>
-      <div style="margin-left:240px">│</div>
-      <div style="margin-left:240px" class="fail">×  trigger misses</div>
-      <div style="margin-left:240px">│</div>
-      <div style="margin-left:200px" class="fail">WF02 never fires — no send</div>
-    </div>
-
-    <div class="callout"><strong>Workaround (Junabelle):</strong> Open the contact in GHL. Remove the tag. Wait 10 seconds. Re-apply the tag via the UI. WF02 fires within 1 minute.</div>
+    <div class="callout" style="margin-top:14px"><strong>Historical note.</strong> A "WF02 SMS gap" used to affect API-applied tags intermittently. It was resolved 2026-04-20 by migrating WF02's trigger from "Contact Tag Added" to an inbound webhook that n8n POSTs to directly. If you hear the old gap referenced in a Slack thread or SOP, it's historical.</div>
 
     <h3 style="margin-top:22px">Escalation tiers</h3>
     <div class="escalation-tiers">
@@ -398,13 +387,13 @@ td.mono{font-family:'SF Mono',Menlo,monospace;font-size:13px;color:var(--orange)
       <li>Match engine + Notion bridge + helper increment running on n8n.dealpros.io</li>
       <li>26 custom fields + 9 tags + 12-stage pipeline in GHL</li>
       <li>Buyer qualifier form embedded on termsforsale.com/buyer-qualifier</li>
-      <li>Team SOP published — Junabelle + Darise can onboard off the doc</li>
+      <li>Team SOP published — Junabelle + Darsie can onboard off the doc</li>
     </ul>
     <h3 style="color:var(--orange);margin-top:22px">This week</h3>
     <ul>
       <li>Monitor Match Engine Log for zero-match deals — expand buyer coverage where needed</li>
       <li>Run first 90-day dormant sweep and verify no active buyers get false-flagged</li>
-      <li>Permanent fix for WF02 SMS gap — swap trigger from tag to direct webhook</li>
+      <li>Backfill 25 backlogged Notion deals (Asset Class / Market / Summary URL) and reactivate the Notion Bridge workflow</li>
     </ul>
     <h3 style="color:var(--blue);margin-top:22px">This quarter</h3>
     <ul>

@@ -36,9 +36,9 @@
 
 ### Team SOP + Operator Docs (April 19, 2026)
 
-- **Team SOP published** — `tfs-build/sop/TEAM_SOP.md` (GitHub) + `TEAM_SOP_notion.md` (Notion-paste) + `TEAM_SOP_gdoc.md` (Google Doc). Covers all 4 team roles (Brooke / Eddie / Junabelle / Darise), full end-to-end flow in 12 steps, 6 mini-runbooks, troubleshooting with WF02 SMS gap workaround, escalation ladder.
+- **Team SOP published** — `tfs-build/sop/TEAM_SOP.md` (GitHub) + Notion page at https://www.notion.so/348090d675e7815e8971c41fec5a7c79. Covers all 4 team roles (Brooke / Eddie / Junabelle / Darsie), full end-to-end flow in 12 steps, 6 mini-runbooks, troubleshooting, 3-tier escalation ladder. (Historical note: the original WF02 SMS gap workaround section is now marked "Historical — fixed 2026-04-20" per the trigger migration documented in Issues & Deviations.)
 - **Flow diagrams** — `tfs-build/sop/flow-diagram.md` + standalone shareable `flow-diagram.html`. Happy path + 27-node swim-lane across Notion/n8n/GHL/Buyer.
-- **Team lifecycle presentation updated** — `tfs-build/runbooks/tfs-lifecycle-presentation.html`. 12 slides. Now includes separate role cards for Junabelle (CRM/Ops) and Darise (Marketing/Listings), plus dedicated "When it breaks" slide with WF02 SMS gap visual + 3-tier escalation.
+- **Team lifecycle presentation updated** — `tfs-build/runbooks/tfs-lifecycle-presentation.html`. 12 slides. Includes separate role cards for Junabelle (CRM/Ops) and Darsie (Marketing/Listings), plus a "When it breaks" slide covering the 3-tier escalation ladder.
 
 ---
 
@@ -53,13 +53,7 @@
 
 **Full Buyer Intake** (16-field post-call form) — build when needed.
 
-### 2. WF02 SMS gap — permanent fix
-
-**Known issue:** tags applied to GHL contacts via the API (which is how the match engine does it) occasionally don't trigger WF02 — no SMS, no email. Tags applied via the GHL UI fire WF02 reliably. Workaround documented in Team SOP: Junabelle manually re-applies the tag via UI when a buyer is missing an expected deal alert.
-
-**Permanent fix:** swap WF02's trigger from "Contact Tag Added" to a webhook fired directly from n8n. Rough scope: 1-2 hours.
-
-### 3. Smoke test with 3 real-ish contacts (~15 min)
+### 2. Smoke test with 3 real-ish contacts (~15 min)
 
 Set up one contact per tier. Verify staggered delivery, tag transitions, and SMS/email arrival.
 
@@ -129,7 +123,43 @@ Fire test deal with `node scripts/dry-run-match-engine.js`. Expected: Tier A imm
 
 ## Next Phase
 
-1. **Light Qualifier form on termsforsale.com** — 10 min
-2. **Smoke test with 3 tiered contacts** — 15 min
-3. **WF02 SMS gap permanent fix** — 1-2 hrs
+1. **Light Qualifier form on termsforsale.com** — ✅ live at termsforsale.com/buyer-qualifier
+2. **Smoke test with tiered contacts** — ✅ completed 2026-04-20 (match engine + WF02 end-to-end verified)
+3. **WF02 SMS gap permanent fix** — ✅ completed 2026-04-20 (see Issues & Deviations below)
 4. **Asset-type specific matching fields** — when refactoring per-asset buy-box criteria
+5. **Backfill real buyer rolodex with `buyer:active` tag** — prerequisite before production use (current buyer:active count in GHL: 1)
+6. **Clear 25-deal Notion backlog** — backfill Asset Class / Market / Summary URL on Ready-to-Blast deals, then re-activate the Notion Bridge workflow (currently deactivated for safety)
+
+---
+
+## Issues & Deviations from Original Plan
+
+### WF02 SMS gap — RESOLVED 2026-04-20
+
+**Original issue.** Tags applied to GHL contacts via the API (match engine's path) occasionally didn't fire WF02 — no SMS, no email. Tags applied via the GHL UI fired reliably. Team SOP documented a manual UI re-tag workaround for Junabelle.
+
+**Resolution.** Migrated WF02's trigger from "Contact Tag Added → deal:new-inventory" to an Inbound Webhook. Match engine now POSTs directly to the WF02 webhook in each tier branch (A/B/C) with `{ email, contact_id, tier, deal_asset_class, deal_market, deal_price, deal_type, deal_summary_url, deal_id }`. GHL identifies the contact by email. Tag application (deal:new-inventory) is preserved downstream in the match engine for history/reporting — it no longer triggers the workflow. Old "Tag Added" trigger was deleted from WF02 to prevent double-fires.
+
+**Validated.** Direct POST to the new WF02 webhook returned `{"status":"Success: request sent to trigger execution server","id":"TiGy4XMSRkbRsjAtZiMj"}` and the email reached the contact's inbox.
+
+**Key config.** WF02 webhook URL: `https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/ccee7507-fd4b-4a83-a468-e3b22a791b4a`. Migrated match engine exported to `tfs-build/n8n/ready-to-import/01_buyer_match_engine.json` (17 nodes, includes 3 new `POST to WF02 Webhook` HTTP nodes — one per tier branch, inserted between Write Deal Fields and Apply Tag).
+
+### Notion Bridge field-mapping bug — RESOLVED 2026-04-20
+
+**Root cause.** Bridge's `Transform Notion → Deal Payload` Code node was reading `page.properties` (raw Notion API shape), but n8n's Notion node returns a flattened object with `property_*` keys. Result: every deal came out with empty `asset_class`, `market`, `price=0`, etc. Compounding bug: the `POST to Match Engine` HTTP node had `bodyContentType: json` set instead of the canonical `contentType: json` + `specifyBody: json` pair — n8n V4.2 silently ignored the body and sent `{"":""}`.
+
+**Resolution.** Rewrote Transform to read `property_*` keys with fallbacks (`property_asking_price` → `property_contracted_price`, `property_city` + `property_state` → market, `property_website_link` → summary URL, `property_property_type` → asset class), and fixed the POST body config. Snapshot of pre-fix workflow at `/tmp/bridge-wf-backup-1776647402763.json` on owner's Mac.
+
+**Current state.** Bridge is DEACTIVATED pending backfill of the 25 existing Ready-to-Blast Notion deals (all have empty Asset Class / Market / Summary URL). Once backfilled, reactivate via `POST /api/v1/workflows/Dj7d90y3ZhuyRtjy/activate`.
+
+### Monthly rollover workflow — BUILT 2026-04-20
+
+**Original spec.** `tfs-build/n8n/04_rollover_and_deadletter.json` was a human-readable design spec, not an importable n8n workflow. Had to be built from scratch.
+
+**Resolution.** Created `TFS — Monthly Deals Rollover` (n8n workflow ID `Gw4HpFAmg2EXSo5a`). Cron `0 9 1 * *` America/Phoenix. Cron-only scope for v1 (re-scoring webhook to WF01 deferred to v2). Next fire: 2026-05-01 09:00.
+
+### Buyer list finding — discovered 2026-04-20
+
+During smoke testing, confirmed via `POST /contacts/search` with proper tag filter that only **1 contact** in the GHL sub-account carries the `buyer:active` tag — and that contact is "Test Partner" (a JV affiliate, not a real buyer). The match engine is currently firing against an effectively empty buyer list. Before the system has real-world impact, the real buyer rolodex needs a one-time tagging pass. Added as item #5 in Next Phase.
+
+Also noted: the match engine's `GHL: Fetch Active Buyers` node uses `/contacts/?query=buyer:active` (full-text search across indexed contact content), not a true tag filter. Works incidentally because the tag name appears in indexed content, but fragile. Candidate refactor: migrate to `POST /contacts/search` with `{ filters: [{ field: "tags", operator: "contains", value: "buyer:active" }] }`.

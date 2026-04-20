@@ -103,16 +103,16 @@ The full cycle, 12 steps, deal discovery to closed assignment. Each step lists w
 - **Happens automatically:** These fields are what WF02 reads when it composes the SMS and email. They overwrite per deal — each matched buyer always shows the most recent match.
 - **Team confirms:** Nothing. If you open a buyer's contact and see stale deal info, it means they haven't been matched to anything recent.
 
-### 5. Tag applied, staggered by tier
+### 5. Webhook POST to WF02, staggered by tier
 
 - **Who triggers:** Automatic.
-- **System records:** Tag deal:new-inventory on each matched contact. Applied immediately for Tier A, after 1 hour for Tier B, after 4 hours for Tier C.
-- **Happens automatically:** The tag application is what fires GHL WF02. n8n uses a Wait node between tiers so the send order is enforced at the n8n layer, not the GHL layer.
-- **Team confirms:** Nothing in real time. If SMS doesn't arrive for a specific buyer after the expected delay, see the WF02 SMS troubleshooting section.
+- **System records:** In each tier branch, n8n POSTs to the WF02 webhook URL with the contact's email + 5 deal fields. Tier A fires immediately, Tier B after 1 hour, Tier C after 4 hours. The `deal:new-inventory` tag is still applied after the webhook call for history/reporting.
+- **Happens automatically:** The webhook POST is what fires GHL WF02. n8n uses Wait nodes between tier branches so the send order is enforced at the n8n layer, not the GHL layer.
+- **Team confirms:** Nothing in real time. If SMS doesn't arrive for a specific buyer after the expected delay, check n8n execution history for the match engine run and WF02 automation history in GHL for that contact.
 
 ### 6. GHL WF02 sends the deal alert
 
-- **Who triggers:** Tag application triggers WF02 — Deal Match & Send.
+- **Who triggers:** Inbound webhook POST from n8n fires WF02 — Deal Match & Send. (Prior to 2026-04-20, the trigger was "Contact Tag Added"; migrated to webhook to eliminate an intermittent trigger-miss issue.)
 - **System records:** SMS + email logged in GHL Conversations. Last Touch Date and Last Deal Sent Date updated on the contact.
 - **Happens automatically:** Tier-specific message copy fires — A-tier gets "VIP ALERT", B-tier gets standard alert, C-tier gets basic alert. All three point to the Summary URL (address-gated deal page).
 - **Team confirms:** Junabelle scans GHL Conversations through the day for replies. No proactive check needed per-send.
@@ -271,7 +271,7 @@ The full cycle, 12 steps, deal discovery to closed assignment. Each step lists w
 |---|---|---|---|
 | Deal not blasting (Notion shows Ready to Blast but Blasted still false after 20 min) | n8n.dealpros.io → Notion Bridge execution log | Notion integration still has access to the DB? | Brooke |
 | Match engine ran but zero buyers matched | Match Engine Log Notion DB | Are the deal's Asset Class / Market fields spelled the same way as buyer fields? | Junabelle; Brooke if deal fields malformed |
-| Buyer not receiving SMS (Tier A) | GHL WF02 workflow history | If WF02 fired: check GHL Conversations. If not: **see WF02 SMS gap below** | Junabelle first; Brooke if WF02 gap |
+| Buyer not receiving SMS (Tier A) | GHL WF02 workflow history (webhook trigger, fires on POST from n8n) | If WF02 fired: check GHL Conversations. If not: check n8n Match Engine execution history for the contact_id and confirm the `POST to WF02 Webhook` node succeeded | Junabelle first; Brooke if WF02 or n8n errored |
 | Buyer not receiving SMS (Tier B or C) | Same as above — but note stagger delay (1h / 4h) | Is Last Deal Sent Date within 24h? Cooldown may have skipped them | Junabelle |
 | Pipeline stage not advancing | Is the stage-change trigger workflow active in GHL? | Tag/permissions | Junabelle; Brooke if GHL workflow broken |
 | Tag not applied | n8n execution log | GHL contact history | Junabelle first; Brooke if n8n-side failure |
@@ -279,32 +279,15 @@ The full cycle, 12 steps, deal discovery to closed assignment. Each step lists w
 | WF03 didn't fire on Closed | GHL workflow history for WF03 | Confirm opportunity is actually in Closed stage | Junabelle; Brooke if history shows error |
 | Monthly rollover didn't run | n8n execution log, 1st of month 9 AM Phoenix time | Cron node enabled? | Brooke |
 
-### The WF02 SMS gap — known issue
+### Historical: WF02 SMS gap — fixed 2026-04-20
 
-**Symptom.** n8n execution log shows the deal:new-inventory tag was successfully applied to a contact, but WF02 never fired — no SMS, no email, no Last Touch Date update.
+**This issue is resolved.** Keeping the history here so the team understands the context if it's mentioned elsewhere.
 
-**What's actually happening.** When the tag is applied via GHL's API (which is how n8n does it), the workflow trigger occasionally misses it. When the same tag is applied via the GHL UI (manual click), the trigger fires reliably. This is a GHL-side quirk, not an n8n bug.
+**What used to happen.** When the match engine applied the `deal:new-inventory` tag via GHL's API, GHL's "Contact Tag Added" trigger intermittently missed the event — no SMS, no email, no Last Touch Date update. Tags applied via the UI fired reliably. Junabelle had a manual workaround: remove the tag, wait 10 seconds, re-apply via UI.
 
-**How to detect it.**
+**What changed.** WF02's trigger was migrated from "Contact Tag Added" to an Inbound Webhook. The match engine now POSTs directly to the WF02 webhook in each tier branch (A/B/C) with the contact's email + the 5 deal fields. GHL identifies the contact by email. The tag application is preserved after the webhook call so the contact still shows `deal:new-inventory` for reporting/history — but the tag no longer triggers the workflow. The old tag-added trigger was deleted from WF02.
 
-1. Open n8n at n8n.dealpros.io → Match Engine execution → find the specific contact_id.
-2. Open GHL → the same contact → Automation History.
-3. If the contact shows deal:new-inventory in its tag list but Automation History shows no WF02 run for that timestamp — you've hit the gap.
-
-**Workaround.** Junabelle manually re-triggers from the contact:
-
-1. Open the contact in GHL.
-2. Remove the deal:new-inventory tag (even though it's there).
-3. Wait 10 seconds.
-4. Re-apply the deal:new-inventory tag via the UI.
-5. UI-applied tags fire WF02 reliably. The buyer will receive SMS + email within 1 minute.
-
-**Routing.**
-
-- **Junabelle first line.** Verify tag state and buy-box. Run the workaround above.
-- **Brooke escalation.** Only if the workaround doesn't fire WF02 either.
-
-**Permanent fix.** Migrating WF02's trigger from "Contact Tag Added" to a webhook trigger. On the roadmap, not yet built.
+**Why this matters for you.** If you ever see a SOP reference or old Slack thread mentioning "the WF02 SMS gap" or a "remove and re-apply the tag" workaround — it's historical. If a buyer isn't receiving a deal alert today, the cause is something else: check n8n execution history for the match engine (look for the contact_id in the run data), then check WF02's automation history in GHL.
 
 ---
 
@@ -331,7 +314,7 @@ All three team members (Eddie, Junabelle, Darise) have full GHL access — same 
 
 | Gap | Workaround | Fix ETA |
 |---|---|---|
-| **WF02 SMS gap** — tag-via-API sometimes doesn't fire WF02 | Junabelle manually re-tags via UI | Next build sprint — swap WF02 trigger from tag to webhook |
+| ~~WF02 SMS gap~~ — RESOLVED 2026-04-20 | — | ✅ Fixed — WF02 trigger migrated from tag to webhook |
 | **Zero dead-letter logging** — if the match engine errors mid-run, no alert | Brooke checks n8n execution log Monday mornings | Implement dead-letter Notion log spec |
 | **Reply parsing is manual** — "YES" replies don't auto-advance the opportunity | Junabelle moves stage by hand | Possible v2 — NLP parsing; low priority |
 | **Weighted scoring not implemented** — WF01 is a 3-variable binary | Tier skew managed by manual criteria review monthly | v2 — weighted model with recency decay |
