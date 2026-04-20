@@ -1,6 +1,7 @@
 # TFS Buyer Lifecycle — Build Status
 
 **Build date:** April 17, 2026
+**Last updated:** April 19, 2026
 **Branch:** `claude/build-tfs-buyer-lifecycle-60s5U`
 **Status:** 🟢 **SYSTEM LIVE** — full buyer lifecycle automation running end-to-end.
 
@@ -25,12 +26,19 @@
 - **Bridge filter aligned**: uses your existing `Deal Status = Actively Marketing AND Blasted = false`.
 - **Transform schema-tolerant**: reads `Asking Price`/`Price`, `Street Address`/`Address`, `Website Link`/`Summary URL` interchangeably.
 
-### n8n (Cloud, `dealpros.app.n8n.cloud`)
+### n8n (self-hosted at `n8n.dealpros.io`)
 
 - **Credentials:** `GHL Private Integration Token` (HTTP Header Auth), `Notion TFS Integration` (Notion API).
-- **Buyer Match Engine** — active. Webhook: `https://dealpros.app.n8n.cloud/webhook/new-deal-inventory`. Dry-run returns `{"success":true,"matched_count":1}`.
-- **Helper: Deal Counter Math** — active. Webhook: `https://dealpros.app.n8n.cloud/webhook/increment-deals`. Called by GHL WF03.
+- **Buyer Match Engine** — active. Webhook: `https://n8n.dealpros.io/webhook/new-deal-inventory`.
+- **Helper: Deal Counter Math** — active. Webhook: `https://n8n.dealpros.io/webhook/increment-deals`. Called by GHL WF03.
 - **Notion Deal Inventory Bridge** — active. Polls Notion every 10 min, POSTs matched deals to the engine, marks Blasted.
+- **Migrated off n8n Cloud trial** — now running self-hosted at $0/mo infrastructure cost.
+
+### Team SOP + Operator Docs (April 19, 2026)
+
+- **Team SOP published** — `tfs-build/sop/TEAM_SOP.md` (GitHub) + Notion page at https://www.notion.so/348090d675e7815e8971c41fec5a7c79. Covers all 4 team roles (Brooke / Eddie / Junabelle / Darsie), full end-to-end flow in 12 steps, 6 mini-runbooks, troubleshooting, 3-tier escalation ladder. (Historical note: the original WF02 SMS gap workaround section is now marked "Historical — fixed 2026-04-20" per the trigger migration documented in Issues & Deviations.)
+- **Flow diagrams** — `tfs-build/sop/flow-diagram.md` + standalone shareable `flow-diagram.html`. Happy path + 27-node swim-lane across Notion/n8n/GHL/Buyer.
+- **Team lifecycle presentation updated** — `tfs-build/runbooks/tfs-lifecycle-presentation.html`. 12 slides. Includes separate role cards for Junabelle (CRM/Ops) and Darsie (Marketing/Listings), plus a "When it breaks" slide covering the 3-tier escalation ladder.
 
 ---
 
@@ -45,42 +53,6 @@
 
 **Full Buyer Intake** (16-field post-call form) — build when needed.
 
-Field-to-ID mapping tables below.
-
-#### Light Qualifier — 4 fields
-
-| Form Field | Custom Field | Field ID |
-|---|---|---|
-| First Name | (built-in) | — |
-| Phone | (built-in) | — |
-| Asset Class (multi-select) | Buyer Asset Class | `NT3w93SU9mkNugSZjHLB` |
-| Markets (long text) | Buyer Market | `Rt1ETvZZSh3pFlFZkhro` |
-
-On submit: apply tags `buyer:new` + `form:qualifier-submitted`; update Last Touch Date = today.
-
-#### Full Buyer Intake — 16 fields
-
-| Form Field | Custom Field | Field ID |
-|---|---|---|
-| First Name | (built-in) | — |
-| Last Name | (built-in) | — |
-| Email | (built-in) | — |
-| Phone | (built-in) | — |
-| Company / Entity Name | Entity Name | `05jevWkhMiY8bFoe9TWc` |
-| How did you hear about us? | Lead Source | `Ov2LMG8TipkI4jlNAFRR` |
-| Asset Class | Buyer Asset Class | `NT3w93SU9mkNugSZjHLB` |
-| Target Markets | Buyer Market | `Rt1ETvZZSh3pFlFZkhro` |
-| Min Purchase Price | Buyer Price Min | `pM3aeMZALD2tmf2cFSmG` |
-| Max Purchase Price | Buyer Price Max | `LcsBYM6iUurqTu8SsfTz` |
-| Proof of Funds Amount | Capital / POF Amount | `pkNBpd4VwNblSMrB20I5` |
-| POF on file? | PoF on File | `zKyplmyTeBFlUFdYMfUD` |
-| Deals in last 12 months | Deals Last 12 Months | `ToK46ItNIDFiEcEFNN5m` |
-| Final decision maker? | Decision Maker | `06k53PRZ8o9hs2Zy5F4h` |
-| Preferred contact method | Preferred Contact Method | `qoFIBxIWRow8HQy3GOw1` |
-| Notes | (built-in) | — |
-
-On submit: move opportunity to `Intake Call Scheduled`, update Last Touch Date = today.
-
 ### 2. Smoke test with 3 real-ish contacts (~15 min)
 
 Set up one contact per tier. Verify staggered delivery, tag transitions, and SMS/email arrival.
@@ -91,29 +63,7 @@ Set up one contact per tier. Verify staggered delivery, tag transitions, and SMS
 | Test B | Yes | 1 | Yes | B |
 | Test C | No | 0 | No | C |
 
-All three: asset class SFR, Phoenix AZ market, price band $100K-$300K, tag `buyer:active` + matching `engage:X-tier`.
-
-Fire test deal:
-```bash
-cd ~/termsforsale-site
-node scripts/dry-run-match-engine.js
-```
-
-Expected: Tier A gets SMS+email immediately, Tier B 1h later, Tier C 4h later. Match engine response: `matched_count: 3`.
-
-### 3. n8n trial ends April 30 (approx)
-
-Options:
-- **Upgrade to Starter** — $20/mo. Simplest.
-- **Migrate to self-hosted on Paperclip Droplet** — zero recurring cost. ~30 min migration. Matches the original SOP's self-hosted assumption.
-
-Ping me when you want to tackle the migration.
-
----
-
-## 🔧 Environment
-
-Nothing to maintain. All env values (GHL location ID, Notion DB ID, field IDs, cross-workflow webhook URL) are inlined in the n8n workflows.
+Fire test deal with `node scripts/dry-run-match-engine.js`. Expected: Tier A immediate, Tier B 1h later, Tier C 4h later.
 
 ---
 
@@ -121,99 +71,13 @@ Nothing to maintain. All env values (GHL location ID, Notion DB ID, field IDs, c
 
 | | |
 |---|---|
-| Provisioning scripts | $0 (one-time) |
-| n8n Cloud (free trial) | $0 until ~Apr 30. Then $20/mo OR self-host for $0. |
+| n8n (self-hosted on Paperclip Droplet) | $0 infrastructure |
 | GHL API calls | $0 (included) |
 | Notion API | $0 (free plan) |
-| SMS (LC Phone) | ~$0.015/msg. 100 buyers × 1 deal/week = ~$6/week |
-| Email (Mailgun) | ~$0.00068/msg. Same volume = ~$0.30/week |
+| SMS (LC Phone) | ~$6/week at 100 buyers × 1 deal/week |
+| Email (Mailgun) | ~$0.30/week |
 | Claude API | $0 (not used — pure deterministic JS) |
-| **Total recurring** | **~$25–30/mo at current volume** (+$20 if staying on n8n Cloud) |
-
----
-
-## 🚨 Issues & Deviations from Original Plan
-
-### What didn't go per plan — and what we patched
-
-1. **Sandbox proxy blocked all outbound API calls from the build environment.** GHL, n8n, Notion, Slack, GitHub — all 403'd with "Host not in allowlist" even with sandbox disabled. Pivoted to writing idempotent provisioning scripts the user runs locally. Same end result, one hop of user action.
-
-2. **GHL API has no custom field folder endpoint.** `POST /locations/{id}/customFields/folder` returns 404 — folders are UI-only. All 26 fields created at root of Contacts.
-
-3. **GHL option payload: objects vs strings.** First attempt sent `{key, label, position}` option objects — threw `"v.trim is not a function"`. Fix: pass plain string labels. Affects 5 dropdown/multi-select fields.
-
-4. **GHL body-payload double-encoding.** First attempt sent `locationId` redundantly in the body (it's already in the URL path) — 422 "property locationId should not exist". Fix: remove `locationId` from POST bodies for field + tag creation.
-
-5. **GHL PIT scope missing.** Private Integration Token didn't have `opportunities.readonly`/`.write` scopes (may not be available on user's tier). Pipeline created manually in UI instead — 6 min click-work.
-
-6. **n8n Cloud REST API is paid-plan only.** Free trial blocks `/api/v1/`. Pivoted to manual-import path: `scripts/prepare-n8n-manual-import.js` renders env-inlined workflow JSONs; user pastes into n8n UI via TextEdit + Cmd+V on blank canvas.
-
-7. **n8n MCP-server JWT ≠ REST API key.** User's initial token had `"aud": "mcp-server-api"` — wouldn't work on `/api/v1/` even on paid tier. Separate API key needed. Moot since we went manual-import anyway.
-
-8. **Notion "Deal Status" is `status` type, not `select`.** Status-type properties can't have options added via API. Pivoted bridge filter to use existing `Deal Status = "Actively Marketing"` — aligns better with your existing lifecycle anyway.
-
-9. **Notion property name drift.** Live TFS DB uses `Asking Price`/`Street Address`/`Website Link`; spec called for `Price`/`Address`/`Summary URL`. Bridge transform patched to read either.
-
-10. **Match engine Normalize node was too strict.** Original code threw on missing asset_class/market/price. Empty deal returned HTML error page; bridge couldn't parse. Patched: missing fields flag `_incomplete`, Filter node skips matching, returns 0 cleanly.
-
-11. **Stale credential IDs on workflow re-import.** When user fixed GHL credential config, n8n regenerated the internal credential ID. Already-imported workflow still referenced the old ID → "Credential with ID X does not exist". Patched `prepare-n8n-manual-import.js` to strip placeholder credential IDs so n8n resolves by name.
-
-12. **GHL multi-select fields return arrays, not comma strings.** Filter node called `.split(',')` on an array → crashed. Fix: `toArr()` helper handles both array and string inputs.
-
-13. **`$json.contact_id` lost after PUT response.** n8n HTTP nodes replace `$json` with the response body. Downstream nodes couldn't find `contact_id`. Fix: absolute reference `$('Filter & Match Buyers').item.json.contact_id`.
-
-14. **GHL tag/field POSTs rejected form-encoded bodies.** The bodyParameters form-encoded shape with stringified array value produced 400 "Your request is invalid." Fix: switched all 6 HTTP nodes to `bodyContentType: "json"` + `jsonBody` with proper JSON object payloads.
-
-15. **GHL workflow "Re-enter" blocks in-flight contacts.** Enabling "Allow re-entry" doesn't help if a contact is currently mid-workflow (in a Wait step). Fresh contact or manual enrollment removal required for testing.
-
-16. **GHL Sites → Forms Builder has no import API.** The 2 intake forms remain manual build. 20 min UI click-work.
-
-### What wasn't built
-
-- **Slack webhook integrations** — skipped per user request.
-- **Dead-letter log Notion DB** — spec in `n8n/04_rollover_and_deadletter.json`. Build in v2 when zero-match deals become common.
-- **Monthly rollover cron** — decrements Deals Last 12 Months for deals older than 12 months. Spec in same file. Build when buyers start closing deals >12 months ago.
-- **Both intake forms on the website** — partial (Light Qualifier built in GHL, not on site). Full Buyer Intake deferred.
-
----
-
-## File Map
-
-```
-tfs-build/
-├── sop/TFS_Buyer_Lifecycle_Build_SOP.md        Master SOP
-├── ghl/
-│   ├── 01_custom_fields.json                   Spec
-│   ├── 01_custom_fields_IDS.json               LIVE with real IDs
-│   ├── 02_tags.json                            Spec
-│   ├── 02_tags_IDS.json                        LIVE with real IDs
-│   ├── 03_pipeline.json                        Spec
-│   ├── 03_pipeline_IDS.json                    (pipeline.id=null — built manually)
-│   ├── WF01_intake_scoring.json                AI Builder prompt + 9 messages
-│   ├── WF02_deal_match_send.json               AI Builder prompt + 4 messages
-│   ├── WF03_close_recycle.json                 AI Builder prompt + 1 message
-│   ├── WF04_maintenance.json                   4a + 4b prompts
-│   └── WF_MANUAL_BUILD_GUIDE.md                Node-by-node manual guide
-├── forms/intake_forms.json                     2 form specs
-├── n8n/
-│   ├── 01_buyer_match_engine.json              Source
-│   ├── 02_notion_bridge.json                   Source (schema-tolerant)
-│   ├── 03_helper_increment.json                Source
-│   ├── 04_rollover_and_deadletter.json         Spec only, not imported
-│   ├── NOTION_DB_MAPPING.json                  Live mapping
-│   ├── MANUAL_IMPORT_GUIDE.md                  UI import walkthrough
-│   └── ready-to-import/                        Pre-rendered + env-inlined
-│       ├── 01_buyer_match_engine.json          IMPORTED + ACTIVE ✓
-│       ├── 02_notion_bridge.json               IMPORTED + ACTIVE ✓
-│       └── 03_helper_increment.json            IMPORTED + ACTIVE ✓
-
-scripts/
-├── provision-ghl.js                            Idempotent GHL provisioner
-├── provision-notion-db.js                      Idempotent Notion DB patch
-├── provision-n8n.js                            API-based n8n import (requires paid plan)
-├── prepare-n8n-manual-import.js                Free-tier manual-import prep
-└── dry-run-match-engine.js                     Fires a test deal, verifies webhook
-```
+| **Total recurring** | **~$25–30/mo at current volume** |
 
 ---
 
@@ -221,37 +85,81 @@ scripts/
 
 | Purpose | URL |
 |---|---|
-| Match engine webhook | `https://dealpros.app.n8n.cloud/webhook/new-deal-inventory` |
-| Increment-deals webhook (WF03 → n8n) | `https://dealpros.app.n8n.cloud/webhook/increment-deals` |
+| Match engine webhook | `https://n8n.dealpros.io/webhook/new-deal-inventory` |
+| Increment-deals webhook (WF03 → n8n) | `https://n8n.dealpros.io/webhook/increment-deals` |
 | Notion bridge | runs on 10-min cron |
 
 ---
 
-## Operator Runbook — what the team actually does now
+## Operator Runbook
 
-### Daily
-- Mark new deals in Notion as `Deal Status = Actively Marketing` + `Blasted = unchecked`
+**📘 Full team-facing SOP:** [`tfs-build/sop/TEAM_SOP.md`](tfs-build/sop/TEAM_SOP.md) — buyer lifecycle operations manual for Brooke, Eddie, Junabelle, Darise. Includes RACI table, 12-step end-to-end flow, 6 mini-runbooks, troubleshooting (WF02 SMS gap workaround), 3-tier escalation ladder. Notion-paste version at [`TEAM_SOP_notion.md`](tfs-build/sop/TEAM_SOP_notion.md); Google Doc version at [`TEAM_SOP_gdoc.md`](tfs-build/sop/TEAM_SOP_gdoc.md).
+
+**🎥 Team overview deck:** [`tfs-build/runbooks/tfs-lifecycle-presentation.html`](tfs-build/runbooks/tfs-lifecycle-presentation.html) — 12 slides. Open in a browser.
+
+**🗺 Visual flow diagrams:** [`tfs-build/sop/flow-diagram.html`](tfs-build/sop/flow-diagram.html) — happy path + full swim-lane with break points.
+
+### Quick reference — what the team actually does
+
+**Daily**
+- Mark new deals in Notion as `Deal Status = Actively Marketing` + `Blasted = unchecked` (Brooke)
 - Within 10 minutes, the bridge picks them up → match engine fires → matched buyers get tier-staggered SMS+email alerts
-- Inbound buyer replies hit GHL normally and auto-tag via `buyer-response-tag.js`
+- Inbound buyer replies hit GHL normally; Junabelle monitors the inbox and escalates hot replies
 
-### Per new buyer
-- Apply tag `buyer:new` (either via form submission or manual)
+**Per new buyer**
+- Apply tag `buyer:new` (via form submission or manual — Darise)
 - WF01 runs intake sequence
-- After intake call, move their opportunity to "Intake Call Complete" stage → WF01 scoring fires automatically
+- After intake call, move opportunity to "Intake Call Complete" → WF01 scoring fires
 
-### Per closed deal
-- Move the opportunity to "Closed" stage → WF03 fires: upgrades to VIP, bumps deals counter, creates your "confirm assignment fee" task
+**Per closed deal**
+- Move the opportunity to "Closed" stage → WF03 fires: upgrades to VIP, bumps deals counter, creates "confirm assignment fee" task for Brooke
 
-### Passive automations (no operator work)
+**Passive automations (no operator work)**
 - WF04a — daily dormant sweep at 8am AZ
 - WF04b — daily POF re-verify at 9am AZ
 - Notion bridge — every 10 min
 
 ---
 
-## Next Phase (when ready)
+## Next Phase
 
-1. **Light Qualifier form on termsforsale.com** — 10 min (Netlify redirect to GHL form URL)
-2. **Smoke test with 3 tiered contacts** — 15 min
-3. **n8n migration to self-hosted (or upgrade)** — ~30 min, decide before ~Apr 30
-4. **Asset-type specific matching fields** — when you refactor per-asset buy-box criteria; architecture plan in previous session notes
+1. **Light Qualifier form on termsforsale.com** — ✅ live at termsforsale.com/buyer-qualifier
+2. **Smoke test with tiered contacts** — ✅ completed 2026-04-20 (match engine + WF02 end-to-end verified)
+3. **WF02 SMS gap permanent fix** — ✅ completed 2026-04-20 (see Issues & Deviations below)
+4. **Asset-type specific matching fields** — when refactoring per-asset buy-box criteria
+5. **Backfill real buyer rolodex with `buyer:active` tag** — prerequisite before production use (current buyer:active count in GHL: 1)
+6. **Clear 25-deal Notion backlog** — backfill Asset Class / Market / Summary URL on Ready-to-Blast deals, then re-activate the Notion Bridge workflow (currently deactivated for safety)
+
+---
+
+## Issues & Deviations from Original Plan
+
+### WF02 SMS gap — RESOLVED 2026-04-20
+
+**Original issue.** Tags applied to GHL contacts via the API (match engine's path) occasionally didn't fire WF02 — no SMS, no email. Tags applied via the GHL UI fired reliably. Team SOP documented a manual UI re-tag workaround for Junabelle.
+
+**Resolution.** Migrated WF02's trigger from "Contact Tag Added → deal:new-inventory" to an Inbound Webhook. Match engine now POSTs directly to the WF02 webhook in each tier branch (A/B/C) with `{ email, contact_id, tier, deal_asset_class, deal_market, deal_price, deal_type, deal_summary_url, deal_id }`. GHL identifies the contact by email. Tag application (deal:new-inventory) is preserved downstream in the match engine for history/reporting — it no longer triggers the workflow. Old "Tag Added" trigger was deleted from WF02 to prevent double-fires.
+
+**Validated.** Direct POST to the new WF02 webhook returned `{"status":"Success: request sent to trigger execution server","id":"TiGy4XMSRkbRsjAtZiMj"}` and the email reached the contact's inbox.
+
+**Key config.** WF02 webhook URL: `https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/ccee7507-fd4b-4a83-a468-e3b22a791b4a`. Migrated match engine exported to `tfs-build/n8n/ready-to-import/01_buyer_match_engine.json` (17 nodes, includes 3 new `POST to WF02 Webhook` HTTP nodes — one per tier branch, inserted between Write Deal Fields and Apply Tag).
+
+### Notion Bridge field-mapping bug — RESOLVED 2026-04-20
+
+**Root cause.** Bridge's `Transform Notion → Deal Payload` Code node was reading `page.properties` (raw Notion API shape), but n8n's Notion node returns a flattened object with `property_*` keys. Result: every deal came out with empty `asset_class`, `market`, `price=0`, etc. Compounding bug: the `POST to Match Engine` HTTP node had `bodyContentType: json` set instead of the canonical `contentType: json` + `specifyBody: json` pair — n8n V4.2 silently ignored the body and sent `{"":""}`.
+
+**Resolution.** Rewrote Transform to read `property_*` keys with fallbacks (`property_asking_price` → `property_contracted_price`, `property_city` + `property_state` → market, `property_website_link` → summary URL, `property_property_type` → asset class), and fixed the POST body config. Snapshot of pre-fix workflow at `/tmp/bridge-wf-backup-1776647402763.json` on owner's Mac.
+
+**Current state.** Bridge is DEACTIVATED pending backfill of the 25 existing Ready-to-Blast Notion deals (all have empty Asset Class / Market / Summary URL). Once backfilled, reactivate via `POST /api/v1/workflows/Dj7d90y3ZhuyRtjy/activate`.
+
+### Monthly rollover workflow — BUILT 2026-04-20
+
+**Original spec.** `tfs-build/n8n/04_rollover_and_deadletter.json` was a human-readable design spec, not an importable n8n workflow. Had to be built from scratch.
+
+**Resolution.** Created `TFS — Monthly Deals Rollover` (n8n workflow ID `Gw4HpFAmg2EXSo5a`). Cron `0 9 1 * *` America/Phoenix. Cron-only scope for v1 (re-scoring webhook to WF01 deferred to v2). Next fire: 2026-05-01 09:00.
+
+### Buyer list finding — discovered 2026-04-20
+
+During smoke testing, confirmed via `POST /contacts/search` with proper tag filter that only **1 contact** in the GHL sub-account carries the `buyer:active` tag — and that contact is "Test Partner" (a JV affiliate, not a real buyer). The match engine is currently firing against an effectively empty buyer list. Before the system has real-world impact, the real buyer rolodex needs a one-time tagging pass. Added as item #5 in Next Phase.
+
+Also noted: the match engine's `GHL: Fetch Active Buyers` node uses `/contacts/?query=buyer:active` (full-text search across indexed contact content), not a true tag filter. Works incidentally because the tag name appears in indexed content, but fragile. Candidate refactor: migrate to `POST /contacts/search` with `{ filters: [{ field: "tags", operator: "contains", value: "buyer:active" }] }`.
