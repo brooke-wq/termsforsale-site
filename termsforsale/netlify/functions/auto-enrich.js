@@ -1,15 +1,16 @@
 const { complete } = require('./_claude');
 const { postNote, sendSmsToBrooke, sendEmailToContact } = require('./_ghl');
+const { runCompute } = require('./_compute');
 
 const NOTION_BASE = 'https://api.notion.com/v1';
 const NOTION_DB_ID = 'a3c0a38fd9294d758dedabab2548ff29';
 const RENTCAST_BASE = 'https://api.rentcast.io/v1';
-const BROOKE_CONTACT_ID = 'qO4YuZHrhGTTBaFKPDYD';
+const BROOKE_CONTACT_ID = process.env.BROOKE_CONTACT_ID || '1HMBtAv9EuTlJa5EekAL';
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
-const CLAUDE_SYSTEM = `You are a concise real-estate wholesale operator writing dispo narrative for a creative-finance deal. You will be handed a JSON blob with deal basics (address, beds/baths/sqft/year, asking price, deal type, entry fee) plus enrichment pulled from RentCast (property record, AVM value, AVM rent, top comps) and HUD Fair Market Rents.
+const CLAUDE_SYSTEM = `You are a concise real-estate wholesale operator writing dispo narrative AND a 3-scenario rehab budget for a creative-finance deal. You will be handed a JSON blob with deal basics (address, beds/baths/sqft/year, asking price, deal type, entry fee) plus enrichment pulled from RentCast (property record, AVM value, AVM rent, top comps), HUD Fair Market Rents, ATTOM tax records, FEMA flood zone, and FEMA disaster history.
 
-Your job: turn that blob into a short, honest write-up for Terms For Sale's internal deal package. Buyers are wholesalers, landlords, and BRRRR operators.
+Your job: turn that blob into a short, honest write-up AND a defensible 3-tier rehab estimate for Terms For Sale's internal deal package. Buyers are wholesalers, landlords, and BRRRR operators.
 
 Output strict JSON with exactly these keys:
 - \`hook\` — ONE sentence, 180 characters or fewer. Lead with the numeric angle. No hype words. No exclamation points.
@@ -17,7 +18,12 @@ Output strict JSON with exactly these keys:
 - \`strategies\` — 2 to 4 bullet strategies joined with \\n. Each bullet starts with a verb.
 - \`buyerFitYes\` — 1 to 2 sentences describing the ideal buyer specifically.
 - \`redFlags\` — 0 to 3 bullets joined with \\n, or empty string "" if none.
-- \`confidence\` — "High", "Medium", or "Low". High = AVM + comps + HUD all populated and agree within 10%. Medium = AVM present but comps sparse. Low = missing AVM or HUD or fewer than 2 comps.`;
+- \`confidence\` — "High", "Medium", or "Low". High = AVM + comps + HUD all populated and agree within 10%. Medium = AVM present but comps sparse. Low = missing AVM or HUD or fewer than 2 comps.
+- \`rehab\` — object with three keys \`light\`, \`moderate\`, \`substantial\`. Each is an object { items: [{name, cost}], total, description }. Bases your estimates on sqft, year built, beds/baths, and comp condition.
+  - light ($0–20k): cosmetic only — paint, clean, carpet/vinyl, minor patching, basic landscaping
+  - moderate ($15–50k): light PLUS kitchen/bath refresh, flooring replacement, HVAC tune or partial replace, minor roof repair
+  - substantial ($40–120k): moderate PLUS full kitchen/bath remodel, full flooring, roof replace, HVAC full replace, electrical/plumbing updates
+  Each scenario \`items\` should have 4–8 realistic line items summing to \`total\`. \`description\` is one sentence on scope. If sqft is unknown, assume 1500 sqft.`;
 
 function notionHeaders(token) {
   return {
@@ -60,13 +66,20 @@ async function patchNotion(token, pageId, properties) {
     });
     if (res.status === 200) return { ok: true };
     const errStr = await res.text().catch(() => '');
-    const badMatches = errStr.match(/`([^`]+)` is not a property/g) || [];
-    if (badMatches.length) {
-      badMatches.forEach(m => {
-        const name = m.replace(/`/g, '').replace(' is not a property', '').trim();
-        delete props[name];
-      });
-      if (!Object.keys(props).length) return { ok: false, error: 'all props dropped' };
+    const toDrop = new Set();
+    const notAProp = errStr.match(/`?([^`"]+?)`? is not a property that exists/g) || [];
+    notAProp.forEach(m => {
+      const name = m.replace(/`/g, '').replace(/\s+is not a property that exists\.?/, '').trim();
+      if (name && props[name]) toDrop.add(name);
+    });
+    const typeMismatch = errStr.match(/([A-Za-z][A-Za-z0-9 _\-/]+?) is expected to be [a-z_]+/g) || [];
+    typeMismatch.forEach(m => {
+      const name = m.replace(/\s+is expected to be.+$/, '').trim();
+      if (name && props[name]) toDrop.add(name);
+    });
+    if (toDrop.size) {
+      toDrop.forEach(name => delete props[name]);
+      if (!Object.keys(props).length) return { ok: false, error: 'all props dropped', lastError: errStr.slice(0, 200) };
       continue;
     }
     return { ok: false, status: res.status, error: errStr.slice(0, 200) };
@@ -105,6 +118,70 @@ async function fetchHudFmr(state, city, beds) {
   const params = new URLSearchParams({ state, city, beds: String(beds || 3) });
   const res = await fetch('https://termsforsale.com/api/hud-fmr?' + params.toString());
   if (!res.ok) throw new Error('HUD FMR ' + res.status);
+  return res.json();
+}
+
+async function fetchRentcastListings(apiKey, address, city, state, zipCode) {
+  const params = new URLSearchParams({ address, city, state, zipCode, limit: '1' });
+  const res = await fetch(RENTCAST_BASE + '/listings/sale?' + params.toString(), {
+    headers: { 'X-Api-Key': apiKey }
+  });
+  if (!res.ok) throw new Error('RentCast listings ' + res.status);
+  return res.json();
+}
+
+async function fetchAttomProperty(apiKey, address, city, state, zipCode) {
+  const params = new URLSearchParams({
+    address1: address,
+    address2: [city, state].filter(Boolean).join(', ') + (zipCode ? ' ' + zipCode : '')
+  });
+  const res = await fetch('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/expandedprofile?' + params.toString(), {
+    headers: { 'apikey': apiKey, 'Accept': 'application/json' }
+  });
+  if (!res.ok) throw new Error('ATTOM ' + res.status);
+  const data = await res.json();
+  if (data.status && data.status.code !== 0) throw new Error('ATTOM status ' + data.status.code + ': ' + (data.status.msg || ''));
+  return data;
+}
+
+async function fetchFemaDisasters(state, fipsCountyCode) {
+  const fiveYearsAgo = new Date();
+  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+  const sinceDate = fiveYearsAgo.toISOString();
+  // No type filter server-side — FEMA's exact incidentType values vary ("Severe Storm" vs
+  // "Severe Storm(s)", etc). Do type filtering client-side.
+  // No fipsCountyCode filter server-side either — OData string-equality on county FIPS can
+  // miss statewide declarations. We do state-wide query + client-side county match.
+  const filter = `state eq '${state}' and declarationDate ge '${sinceDate}'`;
+  const params = new URLSearchParams({
+    '$filter': filter,
+    '$select': 'disasterNumber,declarationDate,declarationTitle,incidentType,incidentBeginDate,incidentEndDate,designatedArea,fipsCountyCode',
+    '$orderby': 'declarationDate desc',
+    '$top': '500'
+  });
+  const url = 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?' + params.toString();
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('FEMA disasters ' + res.status);
+  const data = await res.json();
+  const rows = (data && data.DisasterDeclarationsSummaries) || [];
+  console.log('[auto-enrich] FEMA disasters raw=' + rows.length + ' state=' + state + ' since=' + sinceDate.split('T')[0]);
+  return { DisasterDeclarationsSummaries: rows, _fipsCountyCode: fipsCountyCode };
+}
+
+async function fetchFemaFlood(latitude, longitude) {
+  if (latitude == null || longitude == null) throw new Error('FEMA flood needs lat/lng');
+  const geometry = JSON.stringify({ x: longitude, y: latitude, spatialReference: { wkid: 4326 } });
+  const params = new URLSearchParams({
+    geometry,
+    geometryType: 'esriGeometryPoint',
+    inSR: '4326',
+    spatialRel: 'esriSpatialRelIntersects',
+    outFields: 'FLD_ZONE,ZONE_SUBTY,STATIC_BFE,SFHA_TF,FLD_AR_ID',
+    returnGeometry: 'false',
+    f: 'json'
+  });
+  const res = await fetch('https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query?' + params.toString());
+  if (!res.ok) throw new Error('FEMA flood ' + res.status);
   return res.json();
 }
 
@@ -165,6 +242,7 @@ exports.handler = async (event) => {
     const city = prop(page, 'City') || '';
     const state = prop(page, 'State') || '';
     const zip = prop(page, 'ZIP') || '';
+    const county = prop(page, 'County') || '';
     const dealId = prop(page, 'Deal ID') || '';
     const dealType = prop(page, 'Deal Type') || '';
     const askingPrice = prop(page, 'Asking Price');
@@ -181,22 +259,116 @@ exports.handler = async (event) => {
     const fullAddress = [streetAddress, city, state, zip].filter(Boolean).join(', ');
     console.log('[auto-enrich] pageId=' + pageId + ' dealId=' + dealId + ' address=' + fullAddress);
 
-    const [rcPropResult, rcAvmResult, rcRentResult, hudResult] = await Promise.allSettled([
-      rentcastKey && streetAddress ? withTimeout(fetchRentcastProperty(rentcastKey, streetAddress, city, state, zip), 6000) : Promise.reject(new Error('no rentcast key or address')),
-      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmValue(rentcastKey, streetAddress, city, state, zip), 6000) : Promise.reject(new Error('no rentcast key or address')),
-      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmRent(rentcastKey, streetAddress, city, state, zip), 6000) : Promise.reject(new Error('no rentcast key or address')),
-      city && state ? withTimeout(fetchHudFmr(state, city, existingBeds || 3), 6000) : Promise.reject(new Error('no city or state'))
+    const attomKey = process.env.ATTOM_API_KEY;
+
+    // Wave 1: independent enrichment sources (6 parallel)
+    const [rcPropResult, rcAvmResult, rcRentResult, hudResult, rcListingsResult, attomResult] = await Promise.allSettled([
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastProperty(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmValue(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmRent(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      city && state ? withTimeout(fetchHudFmr(state, city, existingBeds || 3), 8000) : Promise.reject(new Error('no city or state')),
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastListings(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      attomKey && streetAddress ? withTimeout(fetchAttomProperty(attomKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no attom key or address'))
     ]);
 
     const rcProp = rcPropResult.status === 'fulfilled' ? rcPropResult.value : null;
     const rcAvm  = rcAvmResult.status  === 'fulfilled' ? rcAvmResult.value  : null;
     const rcRent = rcRentResult.status === 'fulfilled' ? rcRentResult.value : null;
     const hud    = hudResult.status    === 'fulfilled' ? hudResult.value    : null;
+    const rcListings = rcListingsResult.status === 'fulfilled' ? rcListingsResult.value : null;
+    const attom  = attomResult.status  === 'fulfilled' ? attomResult.value  : null;
 
     if (rcPropResult.status === 'rejected') console.warn('[auto-enrich] RentCast property failed:', rcPropResult.reason && rcPropResult.reason.message);
     if (rcAvmResult.status  === 'rejected') console.warn('[auto-enrich] RentCast AVM failed:', rcAvmResult.reason && rcAvmResult.reason.message);
     if (rcRentResult.status === 'rejected') console.warn('[auto-enrich] RentCast rent failed:', rcRentResult.reason && rcRentResult.reason.message);
     if (hudResult.status    === 'rejected') console.warn('[auto-enrich] HUD FMR failed:', hudResult.reason && hudResult.reason.message);
+    if (rcListingsResult.status === 'rejected') console.warn('[auto-enrich] RentCast listings failed:', rcListingsResult.reason && rcListingsResult.reason.message);
+    if (attomResult.status  === 'rejected') console.warn('[auto-enrich] ATTOM failed:', attomResult.reason && attomResult.reason.message);
+
+    const attomProp = attom && attom.property && attom.property[0] || null;
+    const latitude = (attomProp && attomProp.location && attomProp.location.latitude) || (rcProp && rcProp.latitude) || null;
+    const longitude = (attomProp && attomProp.location && attomProp.location.longitude) || (rcProp && rcProp.longitude) || null;
+
+    // Extract 3-digit county FIPS from ATTOM (e.g. "48029" → "029") for server-side FEMA filter
+    const attomFips = attomProp && attomProp.identifier && attomProp.identifier.fips;
+    const countyFips = attomFips && String(attomFips).length >= 5 ? String(attomFips).slice(-3) : null;
+    if (countyFips) console.log('[auto-enrich] ATTOM FIPS=' + attomFips + ' → countyFips=' + countyFips);
+
+    // ATTOM area.siteinffloodzone is the primary flood source — faster and more reliable than NFHL.
+    // Only fall back to NFHL if ATTOM returned nothing.
+    const attomFloodZone = attomProp && attomProp.area && attomProp.area.siteinffloodzone;
+    const needsNfhl = !attomFloodZone && latitude != null && longitude != null;
+    if (attomFloodZone) console.log('[auto-enrich] ATTOM flood zone=' + attomFloodZone);
+
+    // Wave 2: FEMA disasters (county-scoped) + optional NFHL fallback
+    const [femaFloodResult, femaDisastersResult] = await Promise.allSettled([
+      needsNfhl
+        ? withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 8000)
+        : Promise.reject(new Error('flood zone from attom — skipping nfhl')),
+      state
+        ? withTimeout(fetchFemaDisasters(state, countyFips), 10000)
+        : Promise.reject(new Error('no state'))
+    ]);
+
+    const femaFloodRaw = femaFloodResult.status === 'fulfilled' ? femaFloodResult.value : null;
+    const femaDisasters = femaDisastersResult.status === 'fulfilled' ? femaDisastersResult.value : null;
+
+    if (femaFloodResult.status === 'rejected') console.warn('[auto-enrich] FEMA flood failed:', femaFloodResult.reason && femaFloodResult.reason.message);
+    if (femaDisastersResult.status === 'rejected') console.warn('[auto-enrich] FEMA disasters failed:', femaDisastersResult.reason && femaDisastersResult.reason.message);
+
+    // Normalize NFHL response: handles both {features:[...]} and direct-array formats
+    const femaFloodFeatures = femaFloodRaw
+      ? (Array.isArray(femaFloodRaw) ? femaFloodRaw : (Array.isArray(femaFloodRaw.features) ? femaFloodRaw.features : []))
+      : [];
+    const floodFeature = femaFloodFeatures[0] || null;
+
+    const rcListing = (rcListings && rcListings[0]) || null;
+    const listingHistory = rcListing && rcListing.history
+      ? Object.entries(rcListing.history).map(([date, ev]) => ({
+          date,
+          event: ev.event,
+          price: ev.price,
+          daysOnMarket: ev.daysOnMarket
+        })).sort((a, b) => a.date.localeCompare(b.date))
+      : [];
+
+    const taxExemption = attomProp && attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.exemption;
+    const hasHomestead = !!(taxExemption && (
+      (typeof taxExemption === 'object' && (taxExemption.Homeowner || taxExemption.homestead || taxExemption.Homestead)) ||
+      (Array.isArray(attomProp && attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.exemptiontype) &&
+        attomProp.assessment.tax.exemptiontype.some(t => /home(stead|owner)/i.test(String(t))))
+    ));
+
+    const floodZone = floodFeature ? (floodFeature.attributes && floodFeature.attributes.FLD_ZONE) : 'X';
+    const floodBfe = floodFeature && floodFeature.attributes ? floodFeature.attributes.STATIC_BFE : null;
+    const floodSfha = floodFeature && floodFeature.attributes ? floodFeature.attributes.SFHA_TF === 'T' : false;
+
+    // Client-side filter: match by 3-digit county FIPS or by county name in designatedArea,
+    // then filter to incident types we care about (handles "Severe Storm" / "Severe Storm(s)" variants).
+    const interestingTypes = /hurricane|flood|severe storm|tornado|winter storm/i;
+    const countyRe = county ? new RegExp('\\b' + county.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i') : null;
+    const uniqueDisasters = [];
+    if (femaDisasters && femaDisasters.DisasterDeclarationsSummaries) {
+      const seen = new Set();
+      for (const d of femaDisasters.DisasterDeclarationsSummaries) {
+        if (seen.has(d.disasterNumber)) continue;
+        const fipsMatch = countyFips && d.fipsCountyCode === countyFips;
+        const nameMatch = countyRe && d.designatedArea && countyRe.test(d.designatedArea);
+        if (!fipsMatch && !nameMatch) continue;
+        if (d.incidentType && !interestingTypes.test(d.incidentType)) continue;
+        seen.add(d.disasterNumber);
+        uniqueDisasters.push({
+          disasterNumber: d.disasterNumber,
+          title: d.declarationTitle,
+          incidentType: d.incidentType,
+          declarationDate: d.declarationDate,
+          incidentBegin: d.incidentBeginDate,
+          incidentEnd: d.incidentEndDate,
+          area: d.designatedArea
+        });
+        if (uniqueDisasters.length >= 10) break;
+      }
+    }
 
     const enriched = {
       dealId,
@@ -204,6 +376,7 @@ exports.handler = async (event) => {
       city,
       state,
       zip,
+      county,
       dealType,
       askingPrice,
       entryFee,
@@ -216,7 +389,9 @@ exports.handler = async (event) => {
         sqft: rcProp.squareFootage,
         yearBuilt: rcProp.yearBuilt,
         lotSize: rcProp.lotSize,
-        propertyType: rcProp.propertyType
+        propertyType: rcProp.propertyType,
+        latitude: rcProp.latitude,
+        longitude: rcProp.longitude
       } : null,
       rcAvm: rcAvm ? {
         value: rcAvm.price,
@@ -239,6 +414,51 @@ exports.handler = async (event) => {
           distance: c.distance
         }))
       } : null,
+      rcListing: rcListing ? {
+        status: rcListing.status,
+        listPrice: rcListing.price,
+        listedDate: rcListing.listedDate,
+        removedDate: rcListing.removedDate,
+        daysOnMarket: rcListing.daysOnMarket,
+        mlsNumber: rcListing.mlsNumber,
+        mlsName: rcListing.mlsName,
+        history: listingHistory
+      } : null,
+      attom: attomProp ? {
+        attomId: attomProp.identifier && attomProp.identifier.attomId,
+        apn: attomProp.identifier && attomProp.identifier.apn,
+        fips: attomProp.identifier && attomProp.identifier.fips,
+        assessedValue: attomProp.assessment && attomProp.assessment.assessed && attomProp.assessment.assessed.assdTtlValue,
+        marketValue: attomProp.assessment && attomProp.assessment.market && attomProp.assessment.market.mktTtlValue,
+        taxAmount: attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.taxAmt,
+        taxYear: attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.taxYear,
+        hasHomestead,
+        yearBuilt: attomProp.summary && attomProp.summary.yearbuilt,
+        lotSizeAcres: attomProp.lot && attomProp.lot.lotsize1,
+        lotSizeSqft: attomProp.lot && attomProp.lot.lotsize2,
+        lastSaleDate: attomProp.sale && attomProp.sale.saleTransDate,
+        lastSalePrice: attomProp.sale && attomProp.sale.amount && attomProp.sale.amount.saleamt,
+        livingSize: attomProp.building && attomProp.building.size && attomProp.building.size.livingsize,
+        beds: attomProp.building && attomProp.building.rooms && attomProp.building.rooms.beds,
+        baths: attomProp.building && attomProp.building.rooms && attomProp.building.rooms.bathstotal,
+        addressOneLine: attomProp.address && attomProp.address.oneLine,
+        latitude: attomProp.location && attomProp.location.latitude,
+        longitude: attomProp.location && attomProp.location.longitude,
+        floodZone: attomFloodZone || null,
+        millageRate: attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.taxRate
+      } : null,
+      femaFlood: attomFloodZone ? {
+        zone: attomFloodZone,
+        isSpecialFloodHazardArea: /^(A|AE|AH|AO|AR|A99|V|VE)\b/.test(attomFloodZone),
+        source: 'attom'
+      } : (floodFeature != null ? {
+        zone: floodZone,
+        subtype: floodFeature.attributes && floodFeature.attributes.ZONE_SUBTY,
+        baseFloodElevation: floodBfe === -9999 ? null : floodBfe,
+        isSpecialFloodHazardArea: floodSfha,
+        source: 'nfhl'
+      } : (femaFloodRaw ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area', source: 'nfhl' } : null)),
+      femaDisasters: uniqueDisasters,
       hud: hud ? {
         ltr: hud.ltr,
         ltrLow: hud.ltrLow,
@@ -256,7 +476,7 @@ exports.handler = async (event) => {
         const claudeResult = await complete(claudeKey, {
           system: CLAUDE_SYSTEM,
           user: JSON.stringify(enriched),
-          maxTokens: 600,
+          maxTokens: 1400,
           json: true,
           model: HAIKU_MODEL
         });
@@ -270,6 +490,19 @@ exports.handler = async (event) => {
       console.warn('[auto-enrich] CLAUDE_API_KEY not set — skipping narrative');
     }
 
+    // Phase 2 compute layer: tax-reset, 4-scenario returns, PASS/PROCEED verdict
+    let compute = null;
+    try {
+      compute = runCompute({
+        deal: { askingPrice, state, city, zip, dealType },
+        enriched,
+        rehab: (narrative && narrative.rehab) || null
+      });
+      console.log('[auto-enrich] Compute verdict=' + compute.verdict.verdict + ' best=' + compute.verdict.bestScenario + ' CoC=' + compute.verdict.bestCashOnCash + '%');
+    } catch (e) {
+      console.error('[auto-enrich] Compute failed:', e.message);
+    }
+
     let notionPatched = { ok: false, skipped: true };
     if (!dryRun) {
       const notionProps = {};
@@ -279,19 +512,19 @@ exports.handler = async (event) => {
         notionProps['LTR Market Rent'] = { number: Math.round(estRent) };
       }
 
-      notionProps['Enriched At'] = { date: { start: new Date().toISOString().split('T')[0] } };
+      notionProps['Enriched at'] = { date: { start: new Date().toISOString().split('T')[0] } };
 
       if (!existingArv && rcAvm && rcAvm.price) {
         notionProps['ARV'] = { number: Math.round(rcAvm.price) };
       }
-      if (existingBeds == null && rcProp && rcProp.beds != null) {
-        notionProps['Beds'] = { number: rcProp.beds };
+      if (existingBeds == null && rcProp && rcProp.bedrooms != null) {
+        notionProps['Beds'] = { number: rcProp.bedrooms };
       }
-      if (existingBaths == null && rcProp && rcProp.baths != null) {
-        notionProps['Baths'] = { number: rcProp.baths };
+      if (existingBaths == null && rcProp && rcProp.bathrooms != null) {
+        notionProps['Baths'] = { number: rcProp.bathrooms };
       }
-      if (existingLivingArea == null && rcProp && rcProp.sqft != null) {
-        notionProps['Living Area'] = { number: rcProp.sqft };
+      if (existingLivingArea == null && rcProp && rcProp.squareFootage != null) {
+        notionProps['Living Area'] = { number: rcProp.squareFootage };
       }
       if (existingYearBuilt == null && rcProp && rcProp.yearBuilt != null) {
         notionProps['Year Built'] = { number: rcProp.yearBuilt };
@@ -300,6 +533,13 @@ exports.handler = async (event) => {
       if (narrative && narrative.hook) {
         notionProps['Description'] = {
           rich_text: [{ type: 'text', text: { content: narrative.hook.slice(0, 2000) } }]
+        };
+      }
+
+      // Write compute verdict so the team can filter Notion views by PASS/PROCEED
+      if (compute && compute.verdict && compute.verdict.verdict) {
+        notionProps['UW Verdict'] = {
+          rich_text: [{ type: 'text', text: { content: compute.verdict.verdict + ' — ' + compute.verdict.bestScenario + ' (CoC ' + compute.verdict.bestCashOnCash + '%, spread ' + compute.verdict.maxSpreadPct + '%)' } }]
         };
       }
 
@@ -325,9 +565,9 @@ exports.handler = async (event) => {
             loanBalance,
             interestRate,
             piti,
-            beds: (rcProp && rcProp.beds) || existingBeds,
-            baths: (rcProp && rcProp.baths) || existingBaths,
-            sqft: (rcProp && rcProp.sqft) || existingLivingArea,
+            beds: (rcProp && rcProp.bedrooms) || existingBeds,
+            baths: (rcProp && rcProp.bathrooms) || existingBaths,
+            sqft: (rcProp && rcProp.squareFootage) || existingLivingArea,
             yearBuilt: (rcProp && rcProp.yearBuilt) || existingYearBuilt,
             arv: (rcAvm && rcAvm.price) || existingArv,
             estRent: (rcRent && rcRent.rent) || (hud && hud.ltr),
@@ -335,8 +575,13 @@ exports.handler = async (event) => {
             whyExists: narrative && narrative.whyExists,
             strategies: narrative && narrative.strategies,
             buyerFitYes: narrative && narrative.buyerFitYes,
-            analysis: narrative ? JSON.stringify({ redFlags: narrative.redFlags, confidence: narrative.confidence }) : null
-          }
+            analysis: narrative ? JSON.stringify({ redFlags: narrative.redFlags, confidence: narrative.confidence }) : null,
+            verdict: compute && compute.verdict && compute.verdict.verdict,
+            bestScenarioLabel: compute && compute.verdict && compute.verdict.bestScenario,
+            bestCashOnCash: compute && compute.verdict && compute.verdict.bestCashOnCash,
+            maxSpreadPct: compute && compute.verdict && compute.verdict.maxSpreadPct
+          },
+          compute: compute || null
         };
 
         const renderRes = await withTimeout(fetch(renderUrl, {
@@ -361,6 +606,9 @@ exports.handler = async (event) => {
 
     if (!dryRun && ghlKey) {
       const addr = streetAddress ? streetAddress + ', ' + city + ', ' + state : city + ', ' + state;
+      const verdict = compute && compute.verdict && compute.verdict.verdict;
+      const bestCoc = compute && compute.verdict && compute.verdict.bestCashOnCash;
+      const maxSpread = compute && compute.verdict && compute.verdict.maxSpreadPct;
       const summaryLines = [
         '🏠 Auto-Enrichment Complete',
         'Deal: ' + (dealId || pageId.slice(0, 8)),
@@ -373,6 +621,7 @@ exports.handler = async (event) => {
         rcRent && rcRent.rent ? '• AVM Rent: $' + Math.round(rcRent.rent) + '/mo' : '• AVM Rent: not available',
         hud && hud.ltr ? '• HUD FMR: $' + Math.round(hud.ltr) + '/mo (' + (hud.marketTier || '') + ')' : '• HUD FMR: not available',
         narrative ? '• Narrative: ' + (narrative.confidence || '') + ' confidence' : '• Narrative: skipped',
+        verdict ? '• Verdict: ' + verdict + ' (best CoC ' + bestCoc + '%, spread ' + maxSpread + '%)' : '• Verdict: not computed',
         driveFileId ? '• Drive doc: ' + (driveWebViewLink || driveFileId) : '• Drive doc: not generated',
         notionPatched.ok ? '• Notion: updated' : '• Notion: ' + (notionPatched.error || 'not patched')
       ];
@@ -383,10 +632,10 @@ exports.handler = async (event) => {
         console.error('[auto-enrich] GHL note failed:', e.message);
       }
 
-      const smsText = 'Auto-enrich done: ' + (dealId || addr) +
+      const smsText = (verdict ? verdict + ': ' : 'Auto-enrich done: ') + (dealId || addr) +
         (rcAvm && rcAvm.price ? ' | AVM $' + Number(rcAvm.price).toLocaleString() : '') +
         (rcRent && rcRent.rent ? ' | Rent $' + Math.round(rcRent.rent) + '/mo' : '') +
-        (narrative ? ' | ' + (narrative.confidence || '') + ' confidence' : '');
+        (bestCoc != null ? ' | CoC ' + bestCoc + '%' : '');
 
       try {
         await sendSmsToBrooke(smsText);
@@ -437,6 +686,7 @@ ${narrative.redFlags ? '<p><strong>Red Flags:</strong><br>' + narrative.redFlags
         fullAddress,
         enriched,
         narrative,
+        compute,
         notionPatched,
         driveFileId,
         driveLink: driveWebViewLink,

@@ -310,6 +310,7 @@ async function sendSmsToBrooke(message) {
       type: 'SMS',
       locationId: process.env.GHL_LOCATION_ID,
       contactId: process.env.BROOKE_CONTACT_ID,
+      toNumber: to,
       message,
       fromNumber: CAMPAIGN_FROM_PHONE,
     }),

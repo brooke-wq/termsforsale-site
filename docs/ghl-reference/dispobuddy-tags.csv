@@ -1,0 +1,17 @@
+tag,category,trigger,effect,set_by
+dispo-buddy,Identity,Any Dispo Buddy form submission,Segments from TFS buyers in campaigns,dispo-buddy-submit.js + partner-onboard.js
+jv-partner,Identity,Any Dispo Buddy form submission,JV wholesale partner identity,dispo-buddy-submit.js + partner-onboard.js
+jv-submitted,Identity,Deal submission,"Trigger for dispo-buddy-triage cron (DEFERRED)",dispo-buddy-submit.js
+db-cash,Deal Type,deal_type contains 'cash',Cash deal submitted,dispo-buddy-submit.js
+db-subto,Deal Type,deal_type contains 'subto' or 'subject',Subject To deal (also set for Hybrid and Morby),dispo-buddy-submit.js
+db-seller-finance,Deal Type,deal_type contains 'seller finance',Seller Finance (also set for Hybrid and Morby),dispo-buddy-submit.js
+db-hybrid,Deal Type,deal_type contains 'hybrid',Hybrid deal submitted,dispo-buddy-submit.js
+db-morby,Deal Type,deal_type contains 'morby' or 'stack',Morby Method / Stack Method,dispo-buddy-submit.js
+db-lease-option,Deal Type,deal_type contains 'lease',Lease Option deal,dispo-buddy-submit.js
+db-novation,Deal Type,deal_type contains 'novation',Novation deal,dispo-buddy-submit.js
+db-first-deal,Relationship,is_this_your_first_deal = Yes,First-time partner,dispo-buddy-submit.js
+db-affiliate-referred,Relationship,affiliate_id field present,Partner came via affiliate link,dispo-buddy-submit.js
+db-direct-to-seller,Relationship,Contract path = 'direct to seller' or 'agent',Partner has deal direct to seller,dispo-buddy-submit.js
+db-jv-with-wholesaler,Relationship,Contract path = 'jv agreement',Partner has JV with another wholesaler,dispo-buddy-submit.js
+jv-viable,Triage,Claude viability screen pass (DEFERRED),Deal passed AI triage,dispo-buddy-triage.js (deferred)
+jv-rejected,Triage,Claude viability screen fail (DEFERRED),Deal rejected by AI triage,dispo-buddy-triage.js (deferred)

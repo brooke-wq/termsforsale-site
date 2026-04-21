@@ -1,0 +1,41 @@
+field_key,display_name,type,purpose,set_by
+jv_partner_name,JV Partner Name,Text,Full name of submitting partner,dispo-buddy-submit.js
+jv_phone_number,JV Phone Number,Phone,Partner's phone (also used as contact phone),dispo-buddy-submit.js
+jv_partner_email,JV Partner Email,Email,Partner's email,dispo-buddy-submit.js
+do_you_have_the_property_under_contract,Under Contract?,Select,Yes / No / JV Agreement with wholesaler,dispo-buddy-submit.js
+is_this_your_first_deal_with_dispo_buddy,First Deal?,Select,Yes / No — triggers db-first-deal tag,dispo-buddy-submit.js
+how_did_you_hear_about_us,Lead Source,Text,How partner found Dispo Buddy,dispo-buddy-submit.js
+property_address,Property Address,Text,Full address (street + city + state + zip combined),dispo-buddy-submit.js
+coe,Close of Escrow,Date/Text,Target closing date,dispo-buddy-submit.js
+property_occupancy,Occupancy,Text,Vacant / Occupied / Other,dispo-buddy-submit.js
+how_can_we_access_the_property,Property Access,Text,Lockbox / Agent / Other instructions,dispo-buddy-submit.js
+link_to_photos,Photos Link,URL,"Link to Google Drive, Dropbox, etc.",dispo-buddy-submit.js
+link_to_supporting_documents,Docs Link,URL,"Contract, title report, etc.",dispo-buddy-submit.js
+deal_type,Deal Type,Select,Cash / Subject To / Seller Finance / Hybrid / etc.,dispo-buddy-submit.js
+contracted_price,Contracted Price,Monetary,Price partner has under contract,dispo-buddy-submit.js
+desired_asking_price,Asking Price,Monetary,Price partner wants to market at,dispo-buddy-submit.js
+arv_estimate,ARV Estimate,Monetary,After Repair Value estimate,dispo-buddy-submit.js
+what_is_the_buyer_entry_fee,Buyer Entry Fee,Monetary,Entry fee charged to end buyer,dispo-buddy-submit.js
+contracted_entry_fee,Contracted Entry Fee,Monetary,Entry fee in partner's contract,dispo-buddy-submit.js
+est_taxes__insurance,Est. Taxes & Insurance,Monetary,Monthly taxes + insurance estimate,dispo-buddy-submit.js
+subto_loan_balance,SubTo Loan Balance,Monetary,Existing mortgage balance being assumed,dispo-buddy-submit.js
+interest_rate,SubTo Interest Rate,Number,Rate on existing mortgage (percent),dispo-buddy-submit.js
+monthly_payment,SubTo PITI,Monetary,Monthly PITI on existing loan,dispo-buddy-submit.js
+loan_maturity,Loan Maturity,Date/Text,When existing mortgage matures,dispo-buddy-submit.js
+subto_balloon,SubTo Balloon,Date/Text,Balloon payment date if any,dispo-buddy-submit.js
+seller_finance_loan_amount,SF Loan Amount,Monetary,Seller-financed portion amount,dispo-buddy-submit.js
+sf_loan_payment,SF Monthly Payment,Monetary,Monthly payment on SF portion,dispo-buddy-submit.js
+interest_rate_seller_finance,SF Interest Rate,Number,Rate on seller-financed portion (percent),dispo-buddy-submit.js
+loan_term,SF Loan Term,Number,Term in years for SF portion,dispo-buddy-submit.js
+sf_balloon,SF Balloon,Date/Text,Balloon on SF portion,dispo-buddy-submit.js
+dscr_loan_amount,DSCR Loan Amount,Monetary,DSCR loan amount if applicable,dispo-buddy-submit.js
+important_details,Notes / Details,Large text,Additional notes from partner,dispo-buddy-submit.js
+referred_by_affiliate,Affiliate ID,Text,Affiliate referral code if applicable,dispo-buddy-submit.js
+property_type,Property Type,Select,SFR / Multi-family / Commercial / etc.,dispo-buddy-submit.js
+beds,Bedrooms,Number,Bedroom count,dispo-buddy-submit.js
+baths,Bathrooms,Number,Bathroom count,dispo-buddy-submit.js
+sqft,Square Footage,Number,Living area in sqft,dispo-buddy-submit.js
+year_built,Year Built,Number,Year property was built,dispo-buddy-submit.js
+lot_size,Lot Size,Text/Number,Lot size (acres or sqft),dispo-buddy-submit.js
+notion_deal_id,Notion Deal ID,Text,Auto-written back after Notion page created,dispo-buddy-submit.js
+portal_otp_code,Portal OTP Code,Large text,OTP login code (format: OTP:6digits:timestamp),partner-login.js

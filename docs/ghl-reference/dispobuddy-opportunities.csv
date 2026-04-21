@@ -1,0 +1,10 @@
+pipeline_name,pipeline_id,stage_name,stage_id,written_by,notes
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,New JV Lead,cf2388f0-fdbf-4fb1-b633-86569034fcce,dispo-buddy-submit.js,Auto-created on every deal submission
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,Under Review,(GHL manual),partner-stage-notify.js,Triage in progress
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,JV Agreement Sent,(GHL manual),partner-stage-notify.js,JV terms sent to partner
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,JV Agreement Signed,(GHL manual),partner-stage-notify.js,Agreement executed
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,Actively Marketing,(GHL manual),partner-stage-notify.js,Deal listed on TFS marketplace
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,Assignment Sent,(GHL manual),partner-stage-notify.js,Buyer contract sent
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,Assigned with EMD,(GHL manual),partner-stage-notify.js,EMD received
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,Closed,(GHL manual),partner-stage-notify.js,Deal funded — partner paid
+3. JV Deals,XbZojO2rHmYtYa8C0yUP,Lost,(GHL manual),partner-stage-notify.js,Dead deal

@@ -1,0 +1,16 @@
+pipeline_name,pipeline_id,stage_name,stage_id,written_by,notes
+Buyer Inquiries,env:GHL_PIPELINE_ID_BUYER,New Lead,(via webhook),auth-signup.js,Signup webhook fires pipeline_stage=New Lead
+Buyer Inquiries,env:GHL_PIPELINE_ID_BUYER,Offer Submitted,cd4df0dc-731b-4885-a54e-2c2a3bf7acfc,submit-offer.js,env var: GHL_STAGE_OFFER_RECEIVED
+Buyer Inquiries,env:GHL_PIPELINE_ID_BUYER,Contract Sent,(GHL manual),buyer-contract-lifecycle.js,Triggered by stage-change webhook
+Buyer Inquiries,env:GHL_PIPELINE_ID_BUYER,Contract Signed,(GHL manual),buyer-contract-lifecycle.js,Triggered by stage-change webhook
+Buyer Inquiries,env:GHL_PIPELINE_ID_BUYER,EMD Received,(GHL manual),buyer-contract-lifecycle.js,Triggered by stage-change webhook
+Buyer Inquiries,env:GHL_PIPELINE_ID_BUYER,Closed / Won,(GHL manual),buyer-contract-lifecycle.js,Final won state
+Buyer Inquiries,env:GHL_PIPELINE_ID_BUYER,Lost,(GHL manual),buyer-contract-lifecycle.js,Lost/dead state
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,Profile Completed,(resolved by name),commercial-buyer-submit.js,"getStageIdByName() resolves at runtime"
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,NDA Requested,(resolved by name),commercial-nda-request.js,"Opportunity fields: deal_code, deal_type, price_range"
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,NDA Signed,(resolved by name),nda-signed-webhook.js,Triggered by e-sign provider webhook
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,Package Delivered,(resolved by name),nda-signed-webhook.js,Tokenized data room link sent
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,LOI Submitted,(GHL manual),n/a,Manual stage advance
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,Under Contract,(GHL manual),n/a,Manual stage advance
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,Closed Won,(GHL manual),n/a,Final won state
+Commercial / Multifamily,HTpFvaMGATSXsECYFhoB,Dead,(GHL manual),n/a,Dead state

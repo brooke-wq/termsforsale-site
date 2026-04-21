@@ -99,7 +99,7 @@ textarea{resize:vertical;min-height:60px}
     <input type="url" id="url-offer" value="https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1">
 
     <hr class="divider">
-    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px">Test payload will include all these fields:</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px">Test payload matches the live <code>deal.html</code> offer form. All fields are top-level so GHL maps them directly to <code>{{contact.*}}</code> merge tags.</div>
 
     <label>First Name</label>
     <input id="o-fn" value="Sarah">
@@ -109,16 +109,27 @@ textarea{resize:vertical;min-height:60px}
     <input id="o-phone" value="6025559876">
     <label>Email</label>
     <input id="o-email" value="sarah.johnson@test.com">
-    <label>Deal ID</label>
-    <input id="o-deal" value="DP-001">
-    <label>Offer Amount <span style="color:rgba(255,255,255,.3);font-size:10px">→ opportunity.offer_amount</span></label>
-    <input id="o-amount" value="$155,000">
-    <label>Requested COE Date <span style="color:rgba(255,255,255,.3);font-size:10px">→ opportunity.how_soon_can_you_close</span></label>
-    <input id="o-coe" value="2026-05-01">
-    <label>Payment Method <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.deal_structure</span></label>
-    <input id="o-pay" value="Subject To">
-    <label>Notes / Terms</label>
-    <textarea id="o-notes">Offering asking price, would like to close by May 1. Cash available for EMD.</textarea>
+    <label>Deal ID <span style="color:rgba(255,255,255,.3);font-size:10px">→ deal_id</span></label>
+    <input id="o-deal" value="PHX-001">
+    <label>Offer Amount <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer_amount</span></label>
+    <input id="o-amount" value="155000">
+    <label>Type of Deal <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.type_of_deal  (auto-detected Cash vs Creative)</span></label>
+    <select id="o-type" style="width:100%;padding:10px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(255,255,255,.07);color:#fff;font-family:'Poppins',sans-serif;font-size:13px;outline:none">
+      <option value="Creative">Creative</option>
+      <option value="Cash">Cash</option>
+    </select>
+    <label>Entry Fee <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer__entry_fee  (blank on Cash deals)</span></label>
+    <input id="o-entry" value="25000">
+    <label>Target Close <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.close_date_target</span></label>
+    <input id="o-coe" value="14–21 days">
+    <label>Property Address <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.property_address</span></label>
+    <input id="o-addr" value="123 Main St">
+    <label>Property City <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer__property_city</span></label>
+    <input id="o-city" value="Phoenix">
+    <label>Property State <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer__property_state</span></label>
+    <input id="o-state" value="AZ">
+    <label>Notes / Proposed Terms <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer_notes</span></label>
+    <textarea id="o-notes">Offering asking price. Proposing 4.5% rate, 30yr term, 7yr balloon, $1,800/mo payment. Cash available for EMD.</textarea>
 
     <button class="btn btn-orange" onclick="sendTest('offer')">&#9889; Send Test to GHL</button>
     <div class="result" id="res-offer"></div>
@@ -152,26 +163,33 @@ async function sendTest(type) {
   }
 
   var payload = isOffer ? {
-    firstName:             document.getElementById('o-fn').value,
-    lastName:              document.getElementById('o-ln').value,
-    phone:                 document.getElementById('o-phone').value,
-    email:                 document.getElementById('o-email').value,
-    deal_id:               document.getElementById('o-deal').value,       // opportunity.deal_id
-    offer_amount:          document.getElementById('o-amount').value,     // opportunity.offer_amount
-    how_soon_can_you_close:document.getElementById('o-coe').value,        // opportunity.how_soon_can_you_close
-    deal_structure:        document.getElementById('o-pay').value,        // contact.deal_structure
-    notes:                 document.getElementById('o-notes').value,      // opportunity.notes
-    source:                'TFS Website - Offer'                          // opportunity.source
+    firstName:              document.getElementById('o-fn').value,
+    lastName:               document.getElementById('o-ln').value,
+    phone:                  document.getElementById('o-phone').value,
+    email:                  document.getElementById('o-email').value,
+    deal_id:                document.getElementById('o-deal').value,      // contact.deal_id
+    offer_amount:           document.getElementById('o-amount').value,    // contact.offer_amount
+    type_of_deal:           document.getElementById('o-type').value,      // contact.type_of_deal
+    offer__entry_fee:       document.getElementById('o-entry').value,     // contact.offer__entry_fee
+    close_date_target:      document.getElementById('o-coe').value,       // contact.close_date_target
+    property_address:       document.getElementById('o-addr').value,      // contact.property_address
+    offer__property_city:   document.getElementById('o-city').value,      // contact.offer__property_city
+    offer__property_state:  document.getElementById('o-state').value,     // contact.offer__property_state
+    offer_notes:            document.getElementById('o-notes').value,     // contact.offer_notes
+    tags:                   ['TFS Buyer', 'Offer Submitted', 'consent:sms'],
+    source:                 'TFS Website - Offer',
+    pipeline_name:          'Buyer Inquiries',
+    pipeline_stage:         'Offer Submitted'
   } : {
     firstName:    document.getElementById('a-fn').value,
     lastName:     document.getElementById('a-ln').value,
     phone:        document.getElementById('a-phone').value,
     email:        document.getElementById('a-email').value,
-    deal_id:      document.getElementById('a-deal').value,                // opportunity.deal_id
-    request_type: document.getElementById('a-type').value,               // informational
-    deal_structure:document.getElementById('a-buy').value,               // contact.deal_structure
-    notes:        document.getElementById('a-notes').value,              // opportunity.notes
-    source:       'TFS Website - Inquiry'                                // opportunity.source
+    deal_id:      document.getElementById('a-deal').value,
+    request_type: document.getElementById('a-type').value,
+    deal_structure:document.getElementById('a-buy').value,
+    notes:        document.getElementById('a-notes').value,
+    source:       'TFS Website - Inquiry'
   };
 
   payEl.textContent = JSON.stringify(payload, null, 2);
