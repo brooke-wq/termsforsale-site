@@ -302,6 +302,55 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 21 2026 Auto-Enrichment Workflow (Path 3)
+
+Branch: `claude/auto-enrichment-workflow-myS1p`.
+
+Built the full auto-enrichment pipeline that reduces manual deal data-gathering from ~35 min to ~3–5 min.
+
+### What was built
+
+- **`termsforsale/netlify/functions/auto-enrich.js`** — POST `/api/auto-enrich`. Auth-gated (Bearer token). Fetches the Notion deal page, runs 4 parallel enrichment calls (RentCast property record + AVM value + AVM rent + HUD FMR, each with 6s timeout via `Promise.allSettled`), calls Claude Haiku to produce a 6-key narrative JSON (hook, whyExists, strategies, buyerFitYes, redFlags, confidence), smart-patches Notion back (up to 5 retries, drops unknown properties), calls the Paperclip `/render` service to produce a `.docx` in Google Drive, and notifies Brooke via GHL note + SMS + email.
+
+- **`auto-underwrite/n8n/auto-enrichment.workflow.json`** — Importable n8n workflow. Schedule trigger every 5 min → Notion database query (filter: Deal Status = Intake) → Code node to extract page IDs → HTTP Request POST to `/api/auto-enrich` per deal.
+
+- **`auto-underwrite/n8n/README.md`** — Setup guide: Netlify env vars, n8n Variables, import steps, curl test example, Notion schema notes.
+
+- **`netlify.toml`** — `/api/auto-enrich` → `/.netlify/functions/auto-enrich` redirect (already present from prior session scaffolding).
+
+### Env vars to add in Netlify (Terms For Sale site)
+
+| Var | Value |
+|---|---|
+| `AUTOENRICH_AUTH_TOKEN` | `openssl rand -hex 32` |
+| `RENTCAST_API_KEY` | copy from Dispo Buddy env |
+| `RENDER_SERVICE_URL` | `http://64.23.204.220:3001/render` |
+| `RENDER_SERVICE_TOKEN` | from `/home/brooke/pdf-render-service/.env` AUTH_TOKEN |
+
+### n8n Variables to create
+
+| Variable | Value |
+|---|---|
+| `NOTION_TOKEN` | Notion integration secret |
+| `AUTOENRICH_AUTH_TOKEN` | same value as Netlify env var |
+
+### Notion schema requirements
+
+The following Notion properties must exist on the deals DB for full enrichment:
+- `Deal Status` (status) — must have "Intake" as an option
+- `LTR Market Rent` (number) — written by enrichment
+- `Enriched At` (date) — written by enrichment
+- `Deal Narrative` (rich_text) — written speculatively (dropped silently if missing)
+- `ARV`, `Beds`, `Baths`, `Living Area`, `Year Built` — filled in if blank
+
+### Cost per deal
+
+- RentCast: 3 API calls (counts against monthly quota)
+- Claude Haiku: ~1200 input tokens + ~400 output tokens ≈ $0.003/deal
+- Paperclip render: compute only (no additional cost)
+
+---
+
 ## Completed — April 20 2026 GSC "Page with redirect" Email Triage
 
 Branch: `claude/fix-email-issue-JK3sa`. Commit `5034c09`.
@@ -3087,9 +3136,12 @@ blog page).
      - (a) Leave as-is — AUTH_TOKEN is 32 random bytes, brute-force isn't realistic.
      - (b) Enable ufw and lock 3001 to known caller IPs (n8n Cloud's egress range, or a Cloudflare tunnel).
      - (b) is more secure but breaks ad-hoc testing from your laptop. Pick when n8n is wired up.
-   - **Build the n8n Cloud workflow** that calls `/render`. The chat session that designed the underwriting prompt + workflow JSON has the source-of-truth doc — port that into n8n Cloud and point its HTTP Request node at `http://64.23.204.220:3001/render` with `X-Auth-Token` header and the deal JSON in the body.
+   - **Build the n8n Cloud workflow** that calls `/render`. The chat session that designed the underwriting prompt + workflow JSON has the source-of-truth doc — port that into n8n Cloud and point its HTTP Request node at `http://64.23.204.220:3001/render` with `X-Auth-Token` header and the deal JSON in the body. (The auto-enrichment n8n workflow at `auto-underwrite/n8n/auto-enrichment.workflow.json` is a separate pipeline — it calls `/api/auto-enrich`, not `/render` directly.)
    - **Test the round-trip** with a real Notion deal once n8n is live: trigger the workflow, confirm the `.docx` lands in `/Deal Analyses/`, eyeball the formatting, iterate on `generate_pdf.js` if section ordering or labels need tweaking.
    - **Optional polish:** add a `puppeteer`-based "real PDF" output mode behind a `?format=pdf` flag if the team wants true PDFs instead of `.docx`. Not needed right now — Drive renders `.docx` natively.
+
+- **Test auto-enrich end-to-end**: Set the 4 Netlify env vars (`AUTOENRICH_AUTH_TOKEN`, `RENTCAST_API_KEY`, `RENDER_SERVICE_URL`, `RENDER_SERVICE_TOKEN`), set a deal's status to "Intake" in Notion, then run: `curl -sS -X POST https://termsforsale.com/api/auto-enrich -H "Authorization: Bearer $AUTOENRICH_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"pageId":"<notion-page-id>"}'`. Check Netlify function logs, verify Notion fields updated (`LTR Market Rent`, `Enriched At`), check Google Drive `/Deal Analyses/` for `.docx`, check Brooke's GHL contact for note + SMS.
+- **Import n8n workflow**: In n8n Cloud, Workflows → Import → paste `auto-underwrite/n8n/auto-enrichment.workflow.json`. Set Variables `NOTION_TOKEN` and `AUTOENRICH_AUTH_TOKEN`. Activate. See `auto-underwrite/n8n/README.md` for full setup.
 
 1. **Test 3 Terms For Sale GHL workflows are firing live** (Brooke's request — PRIORITY for tomorrow):
    - **Customer Reply workflow** → POSTs to `/api/buyer-response-tag`
