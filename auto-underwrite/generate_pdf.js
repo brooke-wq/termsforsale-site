@@ -10,6 +10,7 @@ const ORANGE = 'F7941D';
 const BLUE   = '29ABE2';
 const WHITE  = 'FFFFFF';
 const LGRAY  = 'F5F5F5';
+const PAGE_WIDTH = 9360; // letter, 1-in margins each side (twips)
 const MGRAY  = 'CCCCCC';
 const DGRAY  = '555555';
 const GREEN  = '16A34A';
@@ -85,7 +86,7 @@ function textCell(text, opts = {}) {
     margins: { top: 80, bottom: 80, left: 120, right: 120 }
   };
   if (fill) cellOpts.shading = shade(fill);
-  if (width != null) cellOpts.width = { size: width, type: WidthType.PERCENTAGE };
+  if (width != null) cellOpts.width = { size: Math.round(PAGE_WIDTH * width / 100), type: WidthType.DXA };
   return new TableCell(cellOpts);
 }
 
@@ -95,7 +96,8 @@ function sectionHeading(label, pageBreakBef = true) {
   if (pageBreakBef) elements.push(breakPage());
   elements.push(
     new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
+      width: { size: PAGE_WIDTH, type: WidthType.DXA },
+      columnWidths: [PAGE_WIDTH],
       borders: noTableBorders(),
       rows: [new TableRow({
         children: [new TableCell({
@@ -133,13 +135,14 @@ function kvTable(pairs) {
       ]
     });
   });
-  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows });
+  return new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [3557, 5803], borders: stdBorders(), rows });
 }
 
 // Full-width colored callout
 function calloutBox(text, fill, textColor = WHITE, size = 40) {
   return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: PAGE_WIDTH, type: WidthType.DXA },
+    columnWidths: [PAGE_WIDTH],
     borders: noTableBorders(),
     rows: [new TableRow({
       children: [new TableCell({
@@ -187,7 +190,8 @@ function buildCover(deal, compute) {
   const labels = ['Asking Price', 'ARV', 'Est. Rent', 'Bed/Bath', 'Flood Zone'];
   const vals = [askingStr, arvStr, rentStr, bedsStr, String(floodTier).toUpperCase()];
   elements.push(new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: PAGE_WIDTH, type: WidthType.DXA },
+    columnWidths: [1872, 1872, 1872, 1872, 1872],
     borders: stdBorders(),
     rows: [
       new TableRow({
@@ -348,7 +352,7 @@ function buildComparables(enriched) {
           ]
         });
       });
-      elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows: [headerRow, ...compRows] }));
+      elements.push(new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [3744, 1404, 1404, 1404, 1404], borders: stdBorders(), rows: [headerRow, ...compRows] }));
       elements.push(spacer());
     }
   }
@@ -381,7 +385,7 @@ function buildComparables(enriched) {
           ]
         });
       });
-      elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows: [headerRow, ...rentCompRows] }));
+      elements.push(new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [5148, 2106, 2106], borders: stdBorders(), rows: [headerRow, ...rentCompRows] }));
       elements.push(spacer());
     }
   }
@@ -454,7 +458,7 @@ function buildFloodRisk(compute, enriched) {
         ]
       });
     });
-    elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows: [headerRow, ...disRows] }));
+    elements.push(new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [936, 2808, 1404, 1872, 2340], borders: stdBorders(), rows: [headerRow, ...disRows] }));
   }
   return elements;
 }
@@ -503,7 +507,7 @@ function buildRehabBudget(compute) {
         ]
       })
     ];
-    elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows }));
+    elements.push(new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [6552, 2808], borders: stdBorders(), rows }));
 
     if (tier.description) {
       elements.push(new Paragraph({
@@ -596,7 +600,9 @@ function buildReturns(compute) {
     return new TableRow({ children: [labelCell, ...valueCells] });
   });
 
-  elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows: [headerRow, ...bodyRows] }));
+  const metricColW = Math.round(PAGE_WIDTH * 0.32);
+  const scenColW = Math.round((PAGE_WIDTH - metricColW) / (scenarios.length || 1));
+  elements.push(new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [metricColW, ...Array(scenarios.length).fill(scenColW)], borders: stdBorders(), rows: [headerRow, ...bodyRows] }));
   return elements;
 }
 
@@ -635,7 +641,7 @@ function buildVerdict(compute, deal) {
         ]
       });
     });
-    elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows: reasonRows }));
+    elements.push(new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [468, 8892], borders: stdBorders(), rows: reasonRows }));
     elements.push(spacer());
   }
 
@@ -650,7 +656,7 @@ function buildVerdict(compute, deal) {
         ]
       });
     });
-    elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: stdBorders(), rows: flagRows }));
+    elements.push(new Table({ width: { size: PAGE_WIDTH, type: WidthType.DXA }, columnWidths: [468, 8892], borders: stdBorders(), rows: flagRows }));
     elements.push(spacer());
   }
 
