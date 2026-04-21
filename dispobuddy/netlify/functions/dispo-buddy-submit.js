@@ -64,6 +64,9 @@ exports.handler = async (event) => {
 
     if (!contactRes.ok) {
       console.error('Contact upsert failed:', JSON.stringify(contactData));
+      if (contactRes.status === 401) {
+        return respond(503, { error: 'Our CRM is temporarily unreachable. Please try again in a few minutes or call (480) 842-5332.' });
+      }
       return respond(502, { error: 'Failed to create contact', detail: contactData });
     }
 
