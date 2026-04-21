@@ -1,5 +1,6 @@
 const { complete } = require('./_claude');
 const { postNote, sendSmsToBrooke, sendEmailToContact } = require('./_ghl');
+const { runCompute } = require('./_compute');
 
 const NOTION_BASE = 'https://api.notion.com/v1';
 const NOTION_DB_ID = 'a3c0a38fd9294d758dedabab2548ff29';
@@ -7,9 +8,9 @@ const RENTCAST_BASE = 'https://api.rentcast.io/v1';
 const BROOKE_CONTACT_ID = process.env.BROOKE_CONTACT_ID || '1HMBtAv9EuTlJa5EekAL';
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
-const CLAUDE_SYSTEM = `You are a concise real-estate wholesale operator writing dispo narrative for a creative-finance deal. You will be handed a JSON blob with deal basics (address, beds/baths/sqft/year, asking price, deal type, entry fee) plus enrichment pulled from RentCast (property record, AVM value, AVM rent, top comps) and HUD Fair Market Rents.
+const CLAUDE_SYSTEM = `You are a concise real-estate wholesale operator writing dispo narrative AND a 3-scenario rehab budget for a creative-finance deal. You will be handed a JSON blob with deal basics (address, beds/baths/sqft/year, asking price, deal type, entry fee) plus enrichment pulled from RentCast (property record, AVM value, AVM rent, top comps), HUD Fair Market Rents, ATTOM tax records, FEMA flood zone, and FEMA disaster history.
 
-Your job: turn that blob into a short, honest write-up for Terms For Sale's internal deal package. Buyers are wholesalers, landlords, and BRRRR operators.
+Your job: turn that blob into a short, honest write-up AND a defensible 3-tier rehab estimate for Terms For Sale's internal deal package. Buyers are wholesalers, landlords, and BRRRR operators.
 
 Output strict JSON with exactly these keys:
 - \`hook\` — ONE sentence, 180 characters or fewer. Lead with the numeric angle. No hype words. No exclamation points.
@@ -17,7 +18,12 @@ Output strict JSON with exactly these keys:
 - \`strategies\` — 2 to 4 bullet strategies joined with \\n. Each bullet starts with a verb.
 - \`buyerFitYes\` — 1 to 2 sentences describing the ideal buyer specifically.
 - \`redFlags\` — 0 to 3 bullets joined with \\n, or empty string "" if none.
-- \`confidence\` — "High", "Medium", or "Low". High = AVM + comps + HUD all populated and agree within 10%. Medium = AVM present but comps sparse. Low = missing AVM or HUD or fewer than 2 comps.`;
+- \`confidence\` — "High", "Medium", or "Low". High = AVM + comps + HUD all populated and agree within 10%. Medium = AVM present but comps sparse. Low = missing AVM or HUD or fewer than 2 comps.
+- \`rehab\` — object with three keys \`light\`, \`moderate\`, \`substantial\`. Each is an object { items: [{name, cost}], total, description }. Bases your estimates on sqft, year built, beds/baths, and comp condition.
+  - light ($0–20k): cosmetic only — paint, clean, carpet/vinyl, minor patching, basic landscaping
+  - moderate ($15–50k): light PLUS kitchen/bath refresh, flooring replacement, HVAC tune or partial replace, minor roof repair
+  - substantial ($40–120k): moderate PLUS full kitchen/bath remodel, full flooring, roof replace, HVAC full replace, electrical/plumbing updates
+  Each scenario \`items\` should have 4–8 realistic line items summing to \`total\`. \`description\` is one sentence on scope. If sqft is unknown, assume 1500 sqft.`;
 
 function notionHeaders(token) {
   return {
@@ -470,7 +476,7 @@ exports.handler = async (event) => {
         const claudeResult = await complete(claudeKey, {
           system: CLAUDE_SYSTEM,
           user: JSON.stringify(enriched),
-          maxTokens: 600,
+          maxTokens: 1400,
           json: true,
           model: HAIKU_MODEL
         });
@@ -482,6 +488,19 @@ exports.handler = async (event) => {
       }
     } else {
       console.warn('[auto-enrich] CLAUDE_API_KEY not set — skipping narrative');
+    }
+
+    // Phase 2 compute layer: tax-reset, 4-scenario returns, PASS/PROCEED verdict
+    let compute = null;
+    try {
+      compute = runCompute({
+        deal: { askingPrice, state, city, zip, dealType },
+        enriched,
+        rehab: (narrative && narrative.rehab) || null
+      });
+      console.log('[auto-enrich] Compute verdict=' + compute.verdict.verdict + ' best=' + compute.verdict.bestScenario + ' CoC=' + compute.verdict.bestCashOnCash + '%');
+    } catch (e) {
+      console.error('[auto-enrich] Compute failed:', e.message);
     }
 
     let notionPatched = { ok: false, skipped: true };
@@ -517,6 +536,13 @@ exports.handler = async (event) => {
         };
       }
 
+      // Write compute verdict so the team can filter Notion views by PASS/PROCEED
+      if (compute && compute.verdict && compute.verdict.verdict) {
+        notionProps['UW Verdict'] = {
+          rich_text: [{ type: 'text', text: { content: compute.verdict.verdict + ' — ' + compute.verdict.bestScenario + ' (CoC ' + compute.verdict.bestCashOnCash + '%, spread ' + compute.verdict.maxSpreadPct + '%)' } }]
+        };
+      }
+
       notionPatched = await patchNotion(notionToken, pageId, notionProps);
       console.log('[auto-enrich] Notion patch:', JSON.stringify(notionPatched));
     }
@@ -549,8 +575,13 @@ exports.handler = async (event) => {
             whyExists: narrative && narrative.whyExists,
             strategies: narrative && narrative.strategies,
             buyerFitYes: narrative && narrative.buyerFitYes,
-            analysis: narrative ? JSON.stringify({ redFlags: narrative.redFlags, confidence: narrative.confidence }) : null
-          }
+            analysis: narrative ? JSON.stringify({ redFlags: narrative.redFlags, confidence: narrative.confidence }) : null,
+            verdict: compute && compute.verdict && compute.verdict.verdict,
+            bestScenarioLabel: compute && compute.verdict && compute.verdict.bestScenario,
+            bestCashOnCash: compute && compute.verdict && compute.verdict.bestCashOnCash,
+            maxSpreadPct: compute && compute.verdict && compute.verdict.maxSpreadPct
+          },
+          compute: compute || null
         };
 
         const renderRes = await withTimeout(fetch(renderUrl, {
@@ -575,6 +606,9 @@ exports.handler = async (event) => {
 
     if (!dryRun && ghlKey) {
       const addr = streetAddress ? streetAddress + ', ' + city + ', ' + state : city + ', ' + state;
+      const verdict = compute && compute.verdict && compute.verdict.verdict;
+      const bestCoc = compute && compute.verdict && compute.verdict.bestCashOnCash;
+      const maxSpread = compute && compute.verdict && compute.verdict.maxSpreadPct;
       const summaryLines = [
         '🏠 Auto-Enrichment Complete',
         'Deal: ' + (dealId || pageId.slice(0, 8)),
@@ -587,6 +621,7 @@ exports.handler = async (event) => {
         rcRent && rcRent.rent ? '• AVM Rent: $' + Math.round(rcRent.rent) + '/mo' : '• AVM Rent: not available',
         hud && hud.ltr ? '• HUD FMR: $' + Math.round(hud.ltr) + '/mo (' + (hud.marketTier || '') + ')' : '• HUD FMR: not available',
         narrative ? '• Narrative: ' + (narrative.confidence || '') + ' confidence' : '• Narrative: skipped',
+        verdict ? '• Verdict: ' + verdict + ' (best CoC ' + bestCoc + '%, spread ' + maxSpread + '%)' : '• Verdict: not computed',
         driveFileId ? '• Drive doc: ' + (driveWebViewLink || driveFileId) : '• Drive doc: not generated',
         notionPatched.ok ? '• Notion: updated' : '• Notion: ' + (notionPatched.error || 'not patched')
       ];
@@ -597,10 +632,10 @@ exports.handler = async (event) => {
         console.error('[auto-enrich] GHL note failed:', e.message);
       }
 
-      const smsText = 'Auto-enrich done: ' + (dealId || addr) +
+      const smsText = (verdict ? verdict + ': ' : 'Auto-enrich done: ') + (dealId || addr) +
         (rcAvm && rcAvm.price ? ' | AVM $' + Number(rcAvm.price).toLocaleString() : '') +
         (rcRent && rcRent.rent ? ' | Rent $' + Math.round(rcRent.rent) + '/mo' : '') +
-        (narrative ? ' | ' + (narrative.confidence || '') + ' confidence' : '');
+        (bestCoc != null ? ' | CoC ' + bestCoc + '%' : '');
 
       try {
         await sendSmsToBrooke(smsText);
@@ -651,6 +686,7 @@ ${narrative.redFlags ? '<p><strong>Red Flags:</strong><br>' + narrative.redFlags
         fullAddress,
         enriched,
         narrative,
+        compute,
         notionPatched,
         driveFileId,
         driveLink: driveWebViewLink,
