@@ -4,21 +4,23 @@ Complete inventory of every GHL contact custom field, opportunity field, and tag
 used across the two public brands. Generated from a full code audit on
 **April 21, 2026**.
 
-## Files in this folder
+## Folder structure
 
-| File | Contents |
-|---|---|
-| `terms-for-sale.md` | Full Terms For Sale reference (fields, tags, opps, forms, flows) |
-| `dispo-buddy.md` | Full Dispo Buddy reference (fields, tags, opps, forms, flows) |
-| `tfs-fields.csv` | Terms For Sale contact custom fields — flat spreadsheet |
-| `tfs-tags.csv` | Terms For Sale tags — flat spreadsheet |
-| `tfs-opportunities.csv` | Terms For Sale opportunity pipelines + fields |
-| `dispobuddy-fields.csv` | Dispo Buddy contact custom fields — flat spreadsheet |
-| `dispobuddy-tags.csv` | Dispo Buddy tags — flat spreadsheet |
-| `dispobuddy-opportunities.csv` | Dispo Buddy opportunity pipeline + fields |
+```
+docs/ghl-reference/
+├── README.md                 (this file)
+├── tfs/
+│   ├── fields.csv           (45 contact custom fields)
+│   ├── tags.csv             (65+ tags by category)
+│   └── opportunities.csv     (2 pipelines: Buyer Inquiries + Commercial)
+└── dispobuddy/
+    ├── fields.csv           (37 partner submission fields)
+    ├── tags.csv             (16 deal type + relationship tags)
+    └── opportunities.csv     (JV Deals pipeline with 9 stages)
+```
 
-The CSVs open cleanly in Excel, Google Sheets, or Airtable. The `.md` files
-render in any markdown viewer and on GitHub.
+All CSVs open cleanly in Excel, Google Sheets, or Airtable for easy reference
+and team sharing.
 
 ## Quick map — where each brand lives
 
