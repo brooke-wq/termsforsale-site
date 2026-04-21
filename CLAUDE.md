@@ -353,6 +353,184 @@ Previous attempts to write detailed markdown with inline tables consistently tim
 
 ---
 
+## Completed — April 21 2026 Dispo Buddy Submission Triage (PR #103)
+
+Branch: `claude/fix-deal-submission-issue-3WLfn`. A JV partner reported
+multiple failed deal submissions on `dispobuddy.com/submit-deal` with
+nothing but a generic "Submission failed: Submission failed. Call
+(480) 842-5332." banner. Triage uncovered two bugs: a UX bug that
+hid the real backend error, and the actual cause — an invalid GHL
+Private Integration token on the Dispo Buddy Netlify site.
+
+### Root cause
+
+Netlify function log for `dispo-buddy-submit` showed:
+```
+Custom field lookup failed: 401 {"statusCode":401,"message":"Invalid Private Integration token"}
+Contact upsert failed: 401 {"statusCode":401,"message":"Invalid Private Integration token"}
+```
+
+The `GHL_API_KEY` env var on the Dispo Buddy Netlify site was stale /
+had been rotated in GHL without the new value being pushed to Netlify.
+Every contact upsert was being rejected before any business logic ran,
+so no contact, opportunity, Notion page, or notification ever fired.
+Brooke rotated the token in Netlify's Dispo Buddy site dashboard mid-
+session and confirmed submissions are working again.
+
+### Why the partner didn't know what happened
+
+`dispobuddy/submit-deal.html:1445` was reading the wrong field off the
+error response:
+
+```js
+var err = await res.json().catch(function() { return {}; });
+throw new Error(err.message || 'Submission failed');
+```
+
+But `dispo-buddy-submit.js` returns errors as `{ error: '...' }`, not
+`{ message: '...' }`. So every failure — missing field, bad phone,
+GHL 401, Netlify timeout, anything — collapsed to the same useless
+generic banner. Partner had no idea what went wrong and the only cue
+was the phone number at the end of the message.
+
+### Files shipped (both in PR #103, merged)
+
+- **`dispobuddy/submit-deal.html`** (commit `dfae943`) — error banner
+  now reads `err.error` first, falling back to `err.message` then to
+  `'HTTP ' + res.status`. Next failure surfaces the real reason.
+- **`dispobuddy/netlify/functions/dispo-buddy-submit.js`** (commit
+  `7d02efb`) — contact upsert now specifically detects `401` and
+  returns a clean `503` with a human message ("Our CRM is temporarily
+  unreachable. Please try again in a few minutes or call (480) 842-
+  5332.") instead of the generic 502 "Failed to create contact". The
+  detailed 401 still lands in the Netlify function log via the
+  existing `console.error` so the next token rotation is diagnosable
+  in under a minute.
+
+### Operational follow-up (Brooke owned, in-session)
+
+- Rotated `GHL_API_KEY` in Netlify → Dispo Buddy site → Environment
+  variables. Submissions now succeed.
+- TODO (Brooke): ping the partner who called so they re-submit. Their
+  earlier attempts never reached GHL or Notion — there's no CRM
+  record of them whatsoever.
+
+### Deliberately NOT touched
+
+- The sequential control flow in `dispo-buddy-submit.js` (custom
+  field map → upsert → tags → opportunity → Notion retry loop →
+  notifications) — still a 10s Netlify timeout risk if Notion schema
+  drifts again. Flagged in the diagnosis but no changes this pass.
+  If it bites again, the cleanest fix is to fire Notion creation +
+  notifications as fire-and-forget (don't `await`) and return 200 to
+  the partner as soon as the GHL upsert succeeds.
+- The frontend validation path — no regression there; the real
+  failure was server-side.
+
+### Other known caveats
+
+- The Dispo Buddy Netlify site and the Terms For Sale Netlify site
+  each maintain their own copy of `GHL_API_KEY`. If you rotate a
+  Private Integration token in GHL, you have to push the new value
+  to BOTH Netlify sites or one of them will start 401-ing silently.
+  The Terms For Sale side wasn't affected this time but is vulnerable
+  to the same failure mode.
+
+---
+
+## Completed — April 21 2026 Auto-Enrichment Go-Live + Schema Hotfixes
+
+Follow-up session that took the Path 3 pipeline from "code merged" to
+"fully live end-to-end". Shipped 5 commits on `main` after merging the
+feature branch.
+
+### What went live
+
+- **Full round-trip verified on SAN-02** (13420 Homestead Way, San Antonio, TX). Curl POST to `/api/auto-enrich` with a real Notion pageId:
+  - RentCast AVM $231k (vs $265k asking) + 4 comps
+  - RentCast rent $1,410/mo + 4 comps
+  - HUD FMR $1,750/mo (San Antonio-New Braunfels, medium tier)
+  - Claude Haiku narrative (hook/whyExists/3 strategies/buyerFit/redFlags/"High" confidence)
+  - Notion PATCH succeeded (`LTR Market Rent`, `Enriched at`, `ARV`, `Description`, `Beds/Baths/Living Area/Year Built`)
+  - Paperclip `/render` produced a `.docx` in `/Deal Analyses/`
+  - Cost: $0.0025/deal Claude Haiku
+
+### Hotfixes shipped (in order)
+
+1. **`aa19244`** — `'Deal Narrative'` → `'Description'` (real Notion property name)
+2. **`569795e`** — Smart-retry regex rewrite. Old regex only matched backtick-wrapped errors; Notion's real format is unquoted (`Enriched At is not a property that exists`). Now handles both formats AND type-mismatch errors (`expected to be rich_text`).
+3. **`88129c3`** — `'Enriched At'` → `'Enriched at'` (lowercase "a" in actual Notion schema — confirmed by querying the database schema via Notion API).
+4. **`69803b0`** — `BROOKE_CONTACT_ID` hardcoded to `qO4YuZHrhGTTBaFKPDYD` (CEO Briefing contact, no phone/email) → `1HMBtAv9EuTlJa5EekAL` (Brooke's actual contact). Now reads from `BROOKE_CONTACT_ID` env var with that as fallback. Fixes 422/400 GHL errors on SMS + email.
+
+### Notion schema updates (done by Brooke in the UI)
+
+- `LTR Market Rent` → changed from Rich Text to **Number**
+- `Enriched at` → confirmed exists as **Date** (lowercase "a")
+- `Description` → confirmed exists as Rich Text
+
+### Env var updates
+
+- **Netlify `AUTOENRICH_AUTH_TOKEN`** — was initially set to the literal text `openssl rand -hex 32` (command, not value). Regenerated via `openssl rand -hex 32` and pasted the real hex string.
+- **Netlify `ANTHROPIC_API_KEY`** — added. Value came from paperclip where the key had been typo'd as `ANTHROPIC_API_KY` in `/etc/environment`. Fixed typo on paperclip (restarted pm2 processes with `--update-env`). Confirmed valid against `api.anthropic.com/v1/messages`.
+- **Old Anthropic key** (`sk-ant-api03-KQOe...` from `/root/.pm2/dump.pm2`) returned 401 — was revoked. Only the `5NEmt3q6...` key in `/etc/environment` is live on paperclip.
+
+### Known follow-ups
+
+- **Google Drive .docx quality gap** — the current `auto-underwrite/generate_pdf.js` produces a minimal ~half-page doc (Property table + Economics table + optional sections). Brooke's reference template is a full **9-page institutional investment report** with: Cover sheet, Property Overview, Price & Tax History (+ tax-reset math), Comparable Sales, Flood & Risk Assessment, 3-scenario Rehab Budget, 4-scenario Investment Returns, PASS/PROCEED recommendation, branded footer every page. Huge gap — tracked in TODO below as multi-session project.
+- **SMS + email verification still pending** — the `69803b0` contact-ID fix was pushed but Brooke hadn't re-run the live curl to confirm the SMS/email actually land after the fix. First task next session: re-run the curl, verify both arrive.
+- **Rotate the Anthropic key that was visible in chat** — `sk-ant-api03-KQOe...` is already revoked (good), but the newer working key visible during troubleshooting should be rotated at https://console.anthropic.com/settings/keys for hygiene.
+
+---
+
+
+
+Branch: `claude/auto-enrichment-workflow-myS1p`.
+
+Built the full auto-enrichment pipeline that reduces manual deal data-gathering from ~35 min to ~3–5 min.
+
+### What was built
+
+- **`termsforsale/netlify/functions/auto-enrich.js`** — POST `/api/auto-enrich`. Auth-gated (Bearer token). Fetches the Notion deal page, runs 4 parallel enrichment calls (RentCast property record + AVM value + AVM rent + HUD FMR, each with 6s timeout via `Promise.allSettled`), calls Claude Haiku to produce a 6-key narrative JSON (hook, whyExists, strategies, buyerFitYes, redFlags, confidence), smart-patches Notion back (up to 5 retries, drops unknown properties), calls the Paperclip `/render` service to produce a `.docx` in Google Drive, and notifies Brooke via GHL note + SMS + email.
+
+- **`auto-underwrite/n8n/auto-enrichment.workflow.json`** — Importable n8n workflow. Schedule trigger every 5 min → Notion database query (filter: Deal Status = Ready to Underwrite) → Code node to extract page IDs → HTTP Request POST to `/api/auto-enrich` per deal.
+
+- **`auto-underwrite/n8n/README.md`** — Setup guide: Netlify env vars, n8n Variables, import steps, curl test example, Notion schema notes.
+
+- **`netlify.toml`** — `/api/auto-enrich` → `/.netlify/functions/auto-enrich` redirect (already present from prior session scaffolding).
+
+### Env vars to add in Netlify (Terms For Sale site)
+
+| Var | Value |
+|---|---|
+| `AUTOENRICH_AUTH_TOKEN` | `openssl rand -hex 32` |
+| `RENTCAST_API_KEY` | copy from Dispo Buddy env |
+| `RENDER_SERVICE_URL` | `http://64.23.204.220:3001/render` |
+| `RENDER_SERVICE_TOKEN` | from `/home/brooke/pdf-render-service/.env` AUTH_TOKEN |
+
+### n8n Variables to create
+
+| Variable | Value |
+|---|---|
+| `NOTION_TOKEN` | Notion integration secret |
+| `AUTOENRICH_AUTH_TOKEN` | same value as Netlify env var |
+
+### Notion schema requirements
+
+The following Notion properties must exist on the deals DB for full enrichment:
+- `Deal Status` (status) — must have "Ready to Underwrite" as an option
+- `LTR Market Rent` (number) — written by enrichment
+- `Enriched At` (date) — written by enrichment
+- `Deal Narrative` (rich_text) — written speculatively (dropped silently if missing)
+- `ARV`, `Beds`, `Baths`, `Living Area`, `Year Built` — filled in if blank
+
+### Cost per deal
+
+- RentCast: 3 API calls (counts against monthly quota)
+- Claude Haiku: ~1200 input tokens + ~400 output tokens ≈ $0.003/deal
+- Paperclip render: compute only (no additional cost)
+
+---
+
 ## Completed — April 20 2026 GSC "Page with redirect" Email Triage
 
 Branch: `claude/fix-email-issue-JK3sa`. Commit `5034c09`.
@@ -3124,7 +3302,58 @@ blog page).
 
 ## TODO — Next Session
 
-0. **Auto-Underwrite — security follow-ups + n8n wiring** (carry-over from April 18):
+0a. **🔥 Ping the JV partner who called about the Dispo Buddy submission failure** — the `GHL_API_KEY` rotation is done and submissions work again, but their earlier attempts never wrote anything to GHL or Notion. They need to re-submit. See "Dispo Buddy Submission Triage (PR #103)" session log above for context.
+
+0b. **Cross-site env var sync audit.** The Dispo Buddy Netlify site and the Terms For Sale Netlify site each maintain separate copies of `GHL_API_KEY`. When we rotated the Dispo Buddy side on April 21, the Terms For Sale side was untouched — but nothing guarantees both stay in sync going forward. Consider either (a) a recurring ops-audit check that hits a cheap GHL auth endpoint from each deployed function to catch 401s proactively, or (b) a shared env-var store (Netlify Team Environment Variables) so a single rotation pushes to both sites. Same concern applies to any other secret duplicated across sites (`NOTION_TOKEN`, `ANTHROPIC_API_KEY`, etc.).
+
+0. **🔥 FIRST — verify SMS + email landed after `69803b0` contact-ID fix.** Quick one:
+   ```bash
+   curl -sS --max-time 60 -X POST https://termsforsale.com/api/auto-enrich \
+     -H "Authorization: Bearer $AUTOENRICH_AUTH_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"pageId":"337090d675e7815b88d4f82b2d5e5d01"}' | jq '.notionPatched, .driveLink'
+   ```
+   Verify Brooke's phone got SMS + Brooke's GHL inbox got email. If still failing, check Netlify function logs for `[auto-enrich] SMS failed` / `Email failed`.
+
+0b. **Option B — full 9-page institutional investment report** (multi-session project):
+
+   **Reference template:** https://drive.google.com/file/d/1CCri6NE7jWSN41Gaa1bhKkNx3119N6ZN/view (Brooke's original 120 SW Monroe Cir N analysis — 9 pages, branded header/footer, tax-reset math, 3-scenario rehab, 4-scenario returns, PASS recommendation).
+
+   **Branding decided:**
+   - Navy `#0D1F3C` (headings, borders)
+   - Blue `#29ABE2` (accents, links)
+   - Orange `#F7941D` (callouts, PASS/PROCEED badge)
+   - Poppins-like sans-serif (Calibri fallback in .docx)
+   - Footer every page: `Prepared for Terms for Sale | termsforsale.com | [Month] [Year] Page X`
+
+   **Phase 1 — Data pipeline expansion** (start next session):
+   - **FEMA flood zone** (free) — National Flood Hazard Layer REST API (`services.arcgis.com`) → zone (AE/X/etc), base flood elevation
+   - **FEMA disaster history** (free) — `www.fema.gov/api/open/v2/DisasterDeclarationsSummaries` → hurricane/flood events by county
+   - **ATTOM tax records** (~$0.15/lookup, paid) — Brooke needs to get API key from https://api.developer.attomdata.com → add to Netlify as `ATTOM_API_KEY`. Pulls assessed value, tax history, homestead status, last sold, parcel, lot dimensions.
+   - **RentCast listing history** (free, existing key) — `/listings/sale` endpoint for DOM + price reductions
+   - Wire all 4 into `auto-enrich.js` alongside existing RentCast + HUD calls via `Promise.allSettled` with 8s timeout
+
+   **Phase 2 — Compute layer** (new helper `auto-underwrite/compute.js`):
+   - Tax reset math: `newTaxEst = (marketValue - homesteadExemption) × millageRate` (millage by county; Pinellas FL = ~1.3%)
+   - 3-scenario rehab budget — Claude generates with strict JSON schema `{ light: {...line items...}, moderate: {...}, substantial: {...} }`
+   - 4-scenario financial returns — compute `cap rate`, `P&I @ 7.25%/30yr`, `monthly CF`, `COC` for: Light / Moderate / Negotiated / All-Cash
+   - Flood risk classifier: zone + disaster history → severity tier
+   - PASS/PROCEED logic: thresholds on spread, COC, flood severity, tax shock
+
+   **Phase 3 — Document generator rewrite** (`auto-underwrite/generate_pdf.js`):
+   - 9-section layout matching the reference template verbatim in structure
+   - Cover: navy banner, address, 5-stat grid (asking / ARV / DOM / flood zone / recommendation)
+   - Properly-styled tables (navy header row, alternating row shading)
+   - Multi-column scenario tables (3-col rehab, 4-col returns)
+   - Orange verdict box for PASS/PROCEED with bullet rationale
+   - Branded footer via `docx` section footer (auto-paginates)
+   - Deploy to paperclip via `/auto-underwrite/deploy.sh`
+
+   **Phase 4 — Test + iterate**: Run against 3-5 real deals (spanning Cash/SubTo/SF dealTypes), compare to reference template side-by-side, fix data gaps or styling regressions.
+
+   **Prereq before starting Phase 1:** Brooke needs to get ATTOM API key and add to Netlify. If she prefers Estated instead (~$0.08/lookup, less data), that works too — helper can be provider-agnostic.
+
+1. **Auto-Underwrite — security follow-ups + n8n wiring** (carry-over from April 18):
    - **Rotate the OAuth refresh token** (it was visible in chat during setup):
      1. Go to https://myaccount.google.com/permissions
      2. Find "Deal Pros Auto-Underwrite" → Remove access
@@ -3138,9 +3367,12 @@ blog page).
      - (a) Leave as-is — AUTH_TOKEN is 32 random bytes, brute-force isn't realistic.
      - (b) Enable ufw and lock 3001 to known caller IPs (n8n Cloud's egress range, or a Cloudflare tunnel).
      - (b) is more secure but breaks ad-hoc testing from your laptop. Pick when n8n is wired up.
-   - **Build the n8n Cloud workflow** that calls `/render`. The chat session that designed the underwriting prompt + workflow JSON has the source-of-truth doc — port that into n8n Cloud and point its HTTP Request node at `http://64.23.204.220:3001/render` with `X-Auth-Token` header and the deal JSON in the body.
+   - **Build the n8n Cloud workflow** that calls `/render`. The chat session that designed the underwriting prompt + workflow JSON has the source-of-truth doc — port that into n8n Cloud and point its HTTP Request node at `http://64.23.204.220:3001/render` with `X-Auth-Token` header and the deal JSON in the body. (The auto-enrichment n8n workflow at `auto-underwrite/n8n/auto-enrichment.workflow.json` is a separate pipeline — it calls `/api/auto-enrich`, not `/render` directly.)
    - **Test the round-trip** with a real Notion deal once n8n is live: trigger the workflow, confirm the `.docx` lands in `/Deal Analyses/`, eyeball the formatting, iterate on `generate_pdf.js` if section ordering or labels need tweaking.
    - **Optional polish:** add a `puppeteer`-based "real PDF" output mode behind a `?format=pdf` flag if the team wants true PDFs instead of `.docx`. Not needed right now — Drive renders `.docx` natively.
+
+- **Test auto-enrich end-to-end**: Set the 4 Netlify env vars (`AUTOENRICH_AUTH_TOKEN`, `RENTCAST_API_KEY`, `RENDER_SERVICE_URL`, `RENDER_SERVICE_TOKEN`), set a deal's status to "Intake" in Notion, then run: `curl -sS -X POST https://termsforsale.com/api/auto-enrich -H "Authorization: Bearer $AUTOENRICH_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"pageId":"<notion-page-id>"}'`. Check Netlify function logs, verify Notion fields updated (`LTR Market Rent`, `Enriched At`), check Google Drive `/Deal Analyses/` for `.docx`, check Brooke's GHL contact for note + SMS.
+- **Import n8n workflow**: In n8n Cloud, Workflows → Import → paste `auto-underwrite/n8n/auto-enrichment.workflow.json`. Set Variables `NOTION_TOKEN` and `AUTOENRICH_AUTH_TOKEN`. Activate. See `auto-underwrite/n8n/README.md` for full setup.
 
 1. **Test 3 Terms For Sale GHL workflows are firing live** (Brooke's request — PRIORITY for tomorrow):
    - **Customer Reply workflow** → POSTs to `/api/buyer-response-tag`

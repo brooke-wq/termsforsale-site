@@ -911,6 +911,10 @@ function renderDeal(d,allDeals){
   const dsRaw=(d.dealStatus||'').toLowerCase().trim();
   const dsIsPending=dsRaw==='assigned with emd';
   const dsIsClosed =dsRaw==='closed';
+  // Cash vs Creative — the only dealType that's "Cash" is literally "Cash".
+  // Everything else (Subject To, Seller Finance, Hybrid, Morby, Wrap, etc.) is Creative.
+  const dtIsCash=/^cash$/i.test((d.dealType||'').trim());
+  const dtTypeLabel=dtIsCash?'Cash':'Creative';
   let statusBannerHtml='';
   if(dsIsPending){
     statusBannerHtml=`<div class="deal-status-banner pending" style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
@@ -1166,31 +1170,26 @@ function renderDeal(d,allDeals){
         ${dsIsPending?'':`<!-- OFFER FORM -->
         <div id="offer-section" style="display:none;padding:0 20px 20px">
           <div class="sidebar-form">
+            <div id="o-type-chip" data-type="${dtTypeLabel}" style="display:flex;align-items:center;gap:8px;background:${dtIsCash?'#ECFDF5':'#EEF2FF'};border:1px solid ${dtIsCash?'#10B981':'#6366F1'};border-radius:8px;padding:8px 12px;font-size:12px;color:${dtIsCash?'#065F46':'#3730A3'};font-weight:700;margin-bottom:4px">
+              <span style="font-size:14px">${dtIsCash?'💵':'🧩'}</span>
+              <span>${dtIsCash?'Cash deal — offer the purchase price':'Creative deal — offer your entry fee + proposed terms'}</span>
+            </div>
             <div class="sf-row">
               <input class="sf-input" placeholder="Your Name" id="o-name">
               <input class="sf-input" placeholder="Phone" id="o-phone" type="tel">
             </div>
             <input class="sf-input" placeholder="Email Address" id="o-email" type="email">
-            <input class="sf-input" placeholder="Offer Amount ($)" id="o-amount" type="number">
-            <div class="sf-row">
-              <select class="sf-select" id="o-structure">
-                <option value="">Funding source</option>
-                <option>Cash</option>
-                <option>Hard Money / DSCR</option>
-                <option>Subject To (existing terms)</option>
-                <option>Seller Finance (existing terms)</option>
-                <option>Partnership / JV</option>
-              </select>
-              <select class="sf-select" id="o-timeline">
-                <option value="">Target close</option>
-                <option>ASAP / 7 days</option>
-                <option>10–14 days</option>
-                <option>14–21 days</option>
-                <option>21–30 days</option>
-                <option>30–45 days</option>
-              </select>
-            </div>
-            <textarea class="sf-input" placeholder="Additional notes (optional)" rows="2" id="o-notes" style="resize:vertical"></textarea>
+            <input class="sf-input" placeholder="${dtIsCash?'Offer Amount ($)':'Offer / Purchase Price ($)'}" id="o-amount" type="number">
+            ${dtIsCash?'':`<input class="sf-input" placeholder="Entry Fee / Cash at Close ($)" id="o-entry-fee" type="number">`}
+            <select class="sf-select" id="o-timeline" style="width:100%">
+              <option value="">Target close</option>
+              <option>ASAP / 7 days</option>
+              <option>10–14 days</option>
+              <option>14–21 days</option>
+              <option>21–30 days</option>
+              <option>30–45 days</option>
+            </select>
+            <textarea class="sf-input" placeholder="${dtIsCash?'Additional notes (optional)':'Proposed terms + notes — rate, monthly payment, term, balloon, anything else'}" rows="${dtIsCash?2:3}" id="o-notes" style="resize:vertical"></textarea>
             <button class="btn" style="width:100%;justify-content:center;background:var(--navy);color:#fff;border:none;font-size:14px" onclick="submitOffer('${d.id}')">
               Submit Offer
             </button>
@@ -1438,19 +1437,33 @@ async function submitOffer(dealId){
   var phone=document.getElementById('o-phone').value.trim();
   var email=document.getElementById('o-email').value.trim();
   var amount=document.getElementById('o-amount').value.trim();
-  var structure=document.getElementById('o-structure').value;
   var timeline=document.getElementById('o-timeline').value;
   var notes=document.getElementById('o-notes').value.trim();
+  // Entry Fee input only renders on Creative deals
+  var entryEl=document.getElementById('o-entry-fee');
+  var entryFee=entryEl?entryEl.value.trim():'';
+  // type_of_deal auto-detected from the deal's dealType ("Cash" or "Creative")
+  var chip=document.getElementById('o-type-chip');
+  var typeOfDeal=(chip&&chip.getAttribute('data-type'))||'';
   if(!name||!phone||!amount){alert('Please enter your name, phone, and offer amount.');return;}
   var btn=event.target;btn.textContent='Submitting…';btn.disabled=true;
   var user=getUser();
   var deal=window._currentDeal||{};
   try{
     if(user&&user.contactId){
-      // Send every field as its own key — structure and notes are separate
-      await fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',streetAddress:deal.streetAddress||'',name:name,phone:phone,email:email||'',amount:amount,structure:structure||'',coe:timeline||'',notes:notes||''})});
+      // Logged-in: route through our Netlify function so it can write
+      // the 9 contact custom fields Workflow B's email needs
+      // (offer_amount / type_of_deal / close_date_target /
+      // offer__entry_fee / property_address / offer__property_city /
+      // offer__property_state / offer_notes / deal_id) and post a
+      // formatted note.
+      await fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',streetAddress:deal.streetAddress||'',name:name,phone:phone,email:email||'',amount:amount,typeOfDeal:typeOfDeal,entryFee:entryFee,coe:timeline||'',notes:notes||''})});
     } else {
-      await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:name.split(' ')[0],lastName:name.split(' ').slice(1).join(' '),phone,email:email||'',tags:['TFS Buyer','Offer Submitted','consent:sms'],source:'TFS Deal Page - Offer',pipeline_name:'Buyer Inquiries',pipeline_stage:'Offer Submitted',customFields:{current_deal_interest:dealId||'',purchase_timeline:timeline||'',buy_box_notes:'Offer: $'+Number(amount).toLocaleString()+'. '+(structure?'Funding: '+structure+'. ':'')+notes}})});
+      // Logged-out: POST to the GHL Offer workflow with every field at the
+      // TOP level of the payload so {{contact.*}} merge tags resolve. Keys
+      // match GHL's actual contact custom field keys exactly (incl. the
+      // offer__ double-underscore prefixes).
+      await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:name.split(' ')[0],lastName:name.split(' ').slice(1).join(' '),phone:phone,email:email||'',deal_id:dealId||'',offer_amount:amount,type_of_deal:typeOfDeal,close_date_target:timeline||'',offer__entry_fee:entryFee||'',offer_notes:notes||'',property_address:deal.streetAddress||'',offer__property_city:deal.city||'',offer__property_state:deal.state||'',tags:['TFS Buyer','Offer Submitted','consent:sms'],source:'TFS Deal Page - Offer',pipeline_name:'Buyer Inquiries',pipeline_stage:'Offer Submitted'})});
     }
   }catch(err){console.error('Offer error:',err);}
   btn.innerHTML='✓ Offer Submitted!';btn.style.background='#276749';btn.style.color='#fff';

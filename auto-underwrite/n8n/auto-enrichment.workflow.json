@@ -1,0 +1,149 @@
+{
+  "name": "Auto-Enrichment — Ready to Underwrite Deals",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/databases/a3c0a38fd9294d758dedabab2548ff29/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$vars.NOTION_TOKEN}}"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "{\"filter\":{\"property\":\"Deal Status\",\"status\":{\"equals\":\"Ready to Underwrite\"}}}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Query Notion — Ready to Underwrite",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.first().json.results || [];\nreturn results.map(page => ({\n  pageId: page.id,\n  dealId: (((page.properties['Deal ID'] || {}).rich_text || []).map(r => r.plain_text).join('')) ||\n           (((page.properties['Deal ID'] || {}).title || []).map(r => r.plain_text).join('')) || page.id.slice(0, 8)\n}));"
+      },
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Extract Page IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://termsforsale.com/api/auto-enrich",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$vars.AUTOENRICH_AUTH_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"pageId\":\"{{ $json.pageId }}\"}",
+        "options": {
+          "timeout": 55000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "POST to /api/auto-enrich",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Query Notion — Ready to Underwrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Notion — Ready to Underwrite": {
+      "main": [
+        [
+          {
+            "node": "Extract Page IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Page IDs": {
+      "main": [
+        [
+          {
+            "node": "POST to /api/auto-enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1a2b3c4d-5e6f-7890-abcd-ef1234567890",
+  "meta": {
+    "instanceId": "auto-enrichment-workflow-v1"
+  },
+  "id": "auto-enrichment-ready-to-underwrite",
+  "tags": []
+}
