@@ -302,7 +302,51 @@ All form submissions send confirmation SMS + email:
 
 ---
 
-## Completed — April 21 2026 Auto-Enrichment Workflow (Path 3)
+## Completed — April 21 2026 Auto-Enrichment Go-Live + Schema Hotfixes
+
+Follow-up session that took the Path 3 pipeline from "code merged" to
+"fully live end-to-end". Shipped 5 commits on `main` after merging the
+feature branch.
+
+### What went live
+
+- **Full round-trip verified on SAN-02** (13420 Homestead Way, San Antonio, TX). Curl POST to `/api/auto-enrich` with a real Notion pageId:
+  - RentCast AVM $231k (vs $265k asking) + 4 comps
+  - RentCast rent $1,410/mo + 4 comps
+  - HUD FMR $1,750/mo (San Antonio-New Braunfels, medium tier)
+  - Claude Haiku narrative (hook/whyExists/3 strategies/buyerFit/redFlags/"High" confidence)
+  - Notion PATCH succeeded (`LTR Market Rent`, `Enriched at`, `ARV`, `Description`, `Beds/Baths/Living Area/Year Built`)
+  - Paperclip `/render` produced a `.docx` in `/Deal Analyses/`
+  - Cost: $0.0025/deal Claude Haiku
+
+### Hotfixes shipped (in order)
+
+1. **`aa19244`** — `'Deal Narrative'` → `'Description'` (real Notion property name)
+2. **`569795e`** — Smart-retry regex rewrite. Old regex only matched backtick-wrapped errors; Notion's real format is unquoted (`Enriched At is not a property that exists`). Now handles both formats AND type-mismatch errors (`expected to be rich_text`).
+3. **`88129c3`** — `'Enriched At'` → `'Enriched at'` (lowercase "a" in actual Notion schema — confirmed by querying the database schema via Notion API).
+4. **`69803b0`** — `BROOKE_CONTACT_ID` hardcoded to `qO4YuZHrhGTTBaFKPDYD` (CEO Briefing contact, no phone/email) → `1HMBtAv9EuTlJa5EekAL` (Brooke's actual contact). Now reads from `BROOKE_CONTACT_ID` env var with that as fallback. Fixes 422/400 GHL errors on SMS + email.
+
+### Notion schema updates (done by Brooke in the UI)
+
+- `LTR Market Rent` → changed from Rich Text to **Number**
+- `Enriched at` → confirmed exists as **Date** (lowercase "a")
+- `Description` → confirmed exists as Rich Text
+
+### Env var updates
+
+- **Netlify `AUTOENRICH_AUTH_TOKEN`** — was initially set to the literal text `openssl rand -hex 32` (command, not value). Regenerated via `openssl rand -hex 32` and pasted the real hex string.
+- **Netlify `ANTHROPIC_API_KEY`** — added. Value came from paperclip where the key had been typo'd as `ANTHROPIC_API_KY` in `/etc/environment`. Fixed typo on paperclip (restarted pm2 processes with `--update-env`). Confirmed valid against `api.anthropic.com/v1/messages`.
+- **Old Anthropic key** (`sk-ant-api03-KQOe...` from `/root/.pm2/dump.pm2`) returned 401 — was revoked. Only the `5NEmt3q6...` key in `/etc/environment` is live on paperclip.
+
+### Known follow-ups
+
+- **Google Drive .docx quality gap** — the current `auto-underwrite/generate_pdf.js` produces a minimal ~half-page doc (Property table + Economics table + optional sections). Brooke's reference template is a full **9-page institutional investment report** with: Cover sheet, Property Overview, Price & Tax History (+ tax-reset math), Comparable Sales, Flood & Risk Assessment, 3-scenario Rehab Budget, 4-scenario Investment Returns, PASS/PROCEED recommendation, branded footer every page. Huge gap — tracked in TODO below as multi-session project.
+- **SMS + email verification still pending** — the `69803b0` contact-ID fix was pushed but Brooke hadn't re-run the live curl to confirm the SMS/email actually land after the fix. First task next session: re-run the curl, verify both arrive.
+- **Rotate the Anthropic key that was visible in chat** — `sk-ant-api03-KQOe...` is already revoked (good), but the newer working key visible during troubleshooting should be rotated at https://console.anthropic.com/settings/keys for hygiene.
+
+---
+
+
 
 Branch: `claude/auto-enrichment-workflow-myS1p`.
 
@@ -3122,7 +3166,54 @@ blog page).
 
 ## TODO — Next Session
 
-0. **Auto-Underwrite — security follow-ups + n8n wiring** (carry-over from April 18):
+0. **🔥 FIRST — verify SMS + email landed after `69803b0` contact-ID fix.** Quick one:
+   ```bash
+   curl -sS --max-time 60 -X POST https://termsforsale.com/api/auto-enrich \
+     -H "Authorization: Bearer $AUTOENRICH_AUTH_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"pageId":"337090d675e7815b88d4f82b2d5e5d01"}' | jq '.notionPatched, .driveLink'
+   ```
+   Verify Brooke's phone got SMS + Brooke's GHL inbox got email. If still failing, check Netlify function logs for `[auto-enrich] SMS failed` / `Email failed`.
+
+0b. **Option B — full 9-page institutional investment report** (multi-session project):
+
+   **Reference template:** https://drive.google.com/file/d/1CCri6NE7jWSN41Gaa1bhKkNx3119N6ZN/view (Brooke's original 120 SW Monroe Cir N analysis — 9 pages, branded header/footer, tax-reset math, 3-scenario rehab, 4-scenario returns, PASS recommendation).
+
+   **Branding decided:**
+   - Navy `#0D1F3C` (headings, borders)
+   - Blue `#29ABE2` (accents, links)
+   - Orange `#F7941D` (callouts, PASS/PROCEED badge)
+   - Poppins-like sans-serif (Calibri fallback in .docx)
+   - Footer every page: `Prepared for Terms for Sale | termsforsale.com | [Month] [Year] Page X`
+
+   **Phase 1 — Data pipeline expansion** (start next session):
+   - **FEMA flood zone** (free) — National Flood Hazard Layer REST API (`services.arcgis.com`) → zone (AE/X/etc), base flood elevation
+   - **FEMA disaster history** (free) — `www.fema.gov/api/open/v2/DisasterDeclarationsSummaries` → hurricane/flood events by county
+   - **ATTOM tax records** (~$0.15/lookup, paid) — Brooke needs to get API key from https://api.developer.attomdata.com → add to Netlify as `ATTOM_API_KEY`. Pulls assessed value, tax history, homestead status, last sold, parcel, lot dimensions.
+   - **RentCast listing history** (free, existing key) — `/listings/sale` endpoint for DOM + price reductions
+   - Wire all 4 into `auto-enrich.js` alongside existing RentCast + HUD calls via `Promise.allSettled` with 8s timeout
+
+   **Phase 2 — Compute layer** (new helper `auto-underwrite/compute.js`):
+   - Tax reset math: `newTaxEst = (marketValue - homesteadExemption) × millageRate` (millage by county; Pinellas FL = ~1.3%)
+   - 3-scenario rehab budget — Claude generates with strict JSON schema `{ light: {...line items...}, moderate: {...}, substantial: {...} }`
+   - 4-scenario financial returns — compute `cap rate`, `P&I @ 7.25%/30yr`, `monthly CF`, `COC` for: Light / Moderate / Negotiated / All-Cash
+   - Flood risk classifier: zone + disaster history → severity tier
+   - PASS/PROCEED logic: thresholds on spread, COC, flood severity, tax shock
+
+   **Phase 3 — Document generator rewrite** (`auto-underwrite/generate_pdf.js`):
+   - 9-section layout matching the reference template verbatim in structure
+   - Cover: navy banner, address, 5-stat grid (asking / ARV / DOM / flood zone / recommendation)
+   - Properly-styled tables (navy header row, alternating row shading)
+   - Multi-column scenario tables (3-col rehab, 4-col returns)
+   - Orange verdict box for PASS/PROCEED with bullet rationale
+   - Branded footer via `docx` section footer (auto-paginates)
+   - Deploy to paperclip via `/auto-underwrite/deploy.sh`
+
+   **Phase 4 — Test + iterate**: Run against 3-5 real deals (spanning Cash/SubTo/SF dealTypes), compare to reference template side-by-side, fix data gaps or styling regressions.
+
+   **Prereq before starting Phase 1:** Brooke needs to get ATTOM API key and add to Netlify. If she prefers Estated instead (~$0.08/lookup, less data), that works too — helper can be provider-agnostic.
+
+1. **Auto-Underwrite — security follow-ups + n8n wiring** (carry-over from April 18):
    - **Rotate the OAuth refresh token** (it was visible in chat during setup):
      1. Go to https://myaccount.google.com/permissions
      2. Find "Deal Pros Auto-Underwrite" → Remove access
