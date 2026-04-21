@@ -302,6 +302,91 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 21 2026 Dispo Buddy Submission Triage (PR #103)
+
+Branch: `claude/fix-deal-submission-issue-3WLfn`. A JV partner reported
+multiple failed deal submissions on `dispobuddy.com/submit-deal` with
+nothing but a generic "Submission failed: Submission failed. Call
+(480) 842-5332." banner. Triage uncovered two bugs: a UX bug that
+hid the real backend error, and the actual cause — an invalid GHL
+Private Integration token on the Dispo Buddy Netlify site.
+
+### Root cause
+
+Netlify function log for `dispo-buddy-submit` showed:
+```
+Custom field lookup failed: 401 {"statusCode":401,"message":"Invalid Private Integration token"}
+Contact upsert failed: 401 {"statusCode":401,"message":"Invalid Private Integration token"}
+```
+
+The `GHL_API_KEY` env var on the Dispo Buddy Netlify site was stale /
+had been rotated in GHL without the new value being pushed to Netlify.
+Every contact upsert was being rejected before any business logic ran,
+so no contact, opportunity, Notion page, or notification ever fired.
+Brooke rotated the token in Netlify's Dispo Buddy site dashboard mid-
+session and confirmed submissions are working again.
+
+### Why the partner didn't know what happened
+
+`dispobuddy/submit-deal.html:1445` was reading the wrong field off the
+error response:
+
+```js
+var err = await res.json().catch(function() { return {}; });
+throw new Error(err.message || 'Submission failed');
+```
+
+But `dispo-buddy-submit.js` returns errors as `{ error: '...' }`, not
+`{ message: '...' }`. So every failure — missing field, bad phone,
+GHL 401, Netlify timeout, anything — collapsed to the same useless
+generic banner. Partner had no idea what went wrong and the only cue
+was the phone number at the end of the message.
+
+### Files shipped (both in PR #103, merged)
+
+- **`dispobuddy/submit-deal.html`** (commit `dfae943`) — error banner
+  now reads `err.error` first, falling back to `err.message` then to
+  `'HTTP ' + res.status`. Next failure surfaces the real reason.
+- **`dispobuddy/netlify/functions/dispo-buddy-submit.js`** (commit
+  `7d02efb`) — contact upsert now specifically detects `401` and
+  returns a clean `503` with a human message ("Our CRM is temporarily
+  unreachable. Please try again in a few minutes or call (480) 842-
+  5332.") instead of the generic 502 "Failed to create contact". The
+  detailed 401 still lands in the Netlify function log via the
+  existing `console.error` so the next token rotation is diagnosable
+  in under a minute.
+
+### Operational follow-up (Brooke owned, in-session)
+
+- Rotated `GHL_API_KEY` in Netlify → Dispo Buddy site → Environment
+  variables. Submissions now succeed.
+- TODO (Brooke): ping the partner who called so they re-submit. Their
+  earlier attempts never reached GHL or Notion — there's no CRM
+  record of them whatsoever.
+
+### Deliberately NOT touched
+
+- The sequential control flow in `dispo-buddy-submit.js` (custom
+  field map → upsert → tags → opportunity → Notion retry loop →
+  notifications) — still a 10s Netlify timeout risk if Notion schema
+  drifts again. Flagged in the diagnosis but no changes this pass.
+  If it bites again, the cleanest fix is to fire Notion creation +
+  notifications as fire-and-forget (don't `await`) and return 200 to
+  the partner as soon as the GHL upsert succeeds.
+- The frontend validation path — no regression there; the real
+  failure was server-side.
+
+### Other known caveats
+
+- The Dispo Buddy Netlify site and the Terms For Sale Netlify site
+  each maintain their own copy of `GHL_API_KEY`. If you rotate a
+  Private Integration token in GHL, you have to push the new value
+  to BOTH Netlify sites or one of them will start 401-ing silently.
+  The Terms For Sale side wasn't affected this time but is vulnerable
+  to the same failure mode.
+
+---
+
 ## Completed — April 21 2026 Auto-Enrichment Go-Live + Schema Hotfixes
 
 Follow-up session that took the Path 3 pipeline from "code merged" to
@@ -3165,6 +3250,10 @@ blog page).
 ---
 
 ## TODO — Next Session
+
+0a. **🔥 Ping the JV partner who called about the Dispo Buddy submission failure** — the `GHL_API_KEY` rotation is done and submissions work again, but their earlier attempts never wrote anything to GHL or Notion. They need to re-submit. See "Dispo Buddy Submission Triage (PR #103)" session log above for context.
+
+0b. **Cross-site env var sync audit.** The Dispo Buddy Netlify site and the Terms For Sale Netlify site each maintain separate copies of `GHL_API_KEY`. When we rotated the Dispo Buddy side on April 21, the Terms For Sale side was untouched — but nothing guarantees both stay in sync going forward. Consider either (a) a recurring ops-audit check that hits a cheap GHL auth endpoint from each deployed function to catch 401s proactively, or (b) a shared env-var store (Netlify Team Environment Variables) so a single rotation pushes to both sites. Same concern applies to any other secret duplicated across sites (`NOTION_TOKEN`, `ANTHROPIC_API_KEY`, etc.).
 
 0. **🔥 FIRST — verify SMS + email landed after `69803b0` contact-ID fix.** Quick one:
    ```bash
