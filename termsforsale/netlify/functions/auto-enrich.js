@@ -4,7 +4,7 @@ const { postNote, sendSmsToBrooke, sendEmailToContact } = require('./_ghl');
 const NOTION_BASE = 'https://api.notion.com/v1';
 const NOTION_DB_ID = 'a3c0a38fd9294d758dedabab2548ff29';
 const RENTCAST_BASE = 'https://api.rentcast.io/v1';
-const BROOKE_CONTACT_ID = 'qO4YuZHrhGTTBaFKPDYD';
+const BROOKE_CONTACT_ID = process.env.BROOKE_CONTACT_ID || '1HMBtAv9EuTlJa5EekAL';
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
 const CLAUDE_SYSTEM = `You are a concise real-estate wholesale operator writing dispo narrative for a creative-finance deal. You will be handed a JSON blob with deal basics (address, beds/baths/sqft/year, asking price, deal type, entry fee) plus enrichment pulled from RentCast (property record, AVM value, AVM rent, top comps) and HUD Fair Market Rents.
