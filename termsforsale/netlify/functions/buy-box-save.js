@@ -7,6 +7,11 @@
 
 const { upsertContact, addTags, updateCustomFields, postNote, sendSMS } = require('./_ghl');
 
+// AI-parse the buy-box free text + tags into structured prefs
+// (best effort — failures never block the form save)
+var parsePreferencesModule;
+try { parsePreferencesModule = require('./_parse-preferences'); } catch(e) { parsePreferencesModule = null; }
+
 // Fetch all custom field IDs for a location, return { fieldKey: fieldId } map
 async function getFieldIds(apiKey, locationId) {
   var res = await fetch('https://services.leadconnectorhq.com/locations/' + locationId + '/customFields', {
@@ -176,6 +181,55 @@ exports.handler = async function(event) {
     noteLines.push('\n--- Buy Box / Terms For Sale ---');
 
     await postNote(ghlKey, contactId, noteLines.join('\n'));
+
+    // 4b. AI parse of preferences (best effort — do NOT block on this)
+    // Runs Haiku on the buy_box + tags + structured fields to produce a
+    // structured JSON blob stored on contact.parsed_prefs. Matching reads
+    // that blob instead of re-parsing free text on every deal blast.
+    if (parsePreferencesModule && process.env.ANTHROPIC_API_KEY) {
+      try {
+        var parsed = await parsePreferencesModule.parsePreferences(
+          process.env.ANTHROPIC_API_KEY,
+          {
+            buyBox: body.buy_box || '',
+            notes: [],
+            tags: body.tags || ['tfs buyer', 'buy box complete', 'buyer-signup', 'opt in'],
+            structuredFields: {
+              deal_structures:   body.deal_structure || '',
+              property_types:    body.property_type_preference || body.property_type_new || '',
+              target_states:     body.target_states || body.states_buying_in || '',
+              target_cities:     body.target_cities || body.target_location || '',
+              max_price:         body.max_price || '',
+              max_entry_fee:     body.max_down || '',
+              max_monthly_piti:  body.max_monthly || '',
+              min_cashflow:      body.target_monthly_cashflow || '',
+              max_interest_rate: body.max_rate_ || '',
+              min_arv:           body.arv || '',
+              min_beds:          body.bedrooms_min || '',
+              min_baths:         body.baths_min || '',
+              min_sqft:          body.min_sqft || '',
+              min_year_built:    body.min_year_build || '',
+              remodel_level:     body.remodel_level || '',
+              hoa_tolerance:     body.hoa_tolerance || '',
+              pool:              body.pool || '',
+              max_repair_budget: body.max_repair_budget || '',
+              occupancy_pref:    body.occupancy_preference || '',
+              purchase_timeline: body.purchase_timeline || ''
+            }
+          }
+        );
+        if (parsed && fieldIds['contact.parsed_prefs']) {
+          await updateCustomFields(ghlKey, contactId, [
+            { id: fieldIds['contact.parsed_prefs'], value: JSON.stringify(parsed) }
+          ]);
+          console.log('[buy-box-save] parsed_prefs written (confidence=' + parsed.confidence + ')');
+        } else if (parsed) {
+          console.warn('[buy-box-save] parsed_prefs computed but contact.parsed_prefs field not in GHL schema yet — skipping write');
+        }
+      } catch (e) {
+        console.warn('[buy-box-save] parse_preferences failed (non-fatal):', e.message);
+      }
+    }
 
     // 5. Internal notification to Brooke
     if (brookePhone) {
