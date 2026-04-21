@@ -581,7 +581,8 @@ exports.handler = async (event) => {
             bestCashOnCash: compute && compute.verdict && compute.verdict.bestCashOnCash,
             maxSpreadPct: compute && compute.verdict && compute.verdict.maxSpreadPct
           },
-          compute: compute || null
+          compute: compute || null,
+          enriched: enriched || null
         };
 
         const renderRes = await withTimeout(fetch(renderUrl, {
