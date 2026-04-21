@@ -60,13 +60,20 @@ async function patchNotion(token, pageId, properties) {
     });
     if (res.status === 200) return { ok: true };
     const errStr = await res.text().catch(() => '');
-    const badMatches = errStr.match(/`([^`]+)` is not a property/g) || [];
-    if (badMatches.length) {
-      badMatches.forEach(m => {
-        const name = m.replace(/`/g, '').replace(' is not a property', '').trim();
-        delete props[name];
-      });
-      if (!Object.keys(props).length) return { ok: false, error: 'all props dropped' };
+    const toDrop = new Set();
+    const notAProp = errStr.match(/`?([^`"]+?)`? is not a property that exists/g) || [];
+    notAProp.forEach(m => {
+      const name = m.replace(/`/g, '').replace(/\s+is not a property that exists\.?/, '').trim();
+      if (name && props[name]) toDrop.add(name);
+    });
+    const typeMismatch = errStr.match(/([A-Za-z][A-Za-z0-9 _\-/]+?) is expected to be [a-z_]+/g) || [];
+    typeMismatch.forEach(m => {
+      const name = m.replace(/\s+is expected to be.+$/, '').trim();
+      if (name && props[name]) toDrop.add(name);
+    });
+    if (toDrop.size) {
+      toDrop.forEach(name => delete props[name]);
+      if (!Object.keys(props).length) return { ok: false, error: 'all props dropped', lastError: errStr.slice(0, 200) };
       continue;
     }
     return { ok: false, status: res.status, error: errStr.slice(0, 200) };
