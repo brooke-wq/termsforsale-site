@@ -30,6 +30,12 @@
 const https = require('https');
 const path = require('path');
 
+// When piped to `head` or similar, ignore EPIPE so the script exits cleanly
+// instead of crashing with an unhandled error.
+process.stdout.on('error', function (err) {
+  if (err.code === 'EPIPE') process.exit(0);
+});
+
 const { parsePreferences } = require(
   path.join(__dirname, '..', 'termsforsale', 'netlify', 'functions', '_parse-preferences')
 );
