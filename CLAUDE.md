@@ -378,12 +378,29 @@ Total ongoing Claude cost after backfill: **~$2/month**. Matching itself is now 
 
 If `contact.parsed_prefs` doesn't exist yet on a contact (buyer never saved buy box, or hasn't been backfilled), `getParsedPrefs()` returns `null` and the existing legacy match logic runs exactly as before. **Zero risk to current buyers' alerts.**
 
+### Nightly refresh cron (Option 2 — shipped April 21 2026)
+
+- **`jobs/parsed-prefs-nightly.js`** (NEW) — pm2-managed cron wrapper that runs `scripts/backfill-parsed-prefs.js` every night at 03:00 AZ (10:00 UTC). Because the backfill is idempotent via `source_checksum`, only buyers whose buy-box/notes/tags actually changed get re-parsed. Quiet nights cost ~$0; active nights cost ~$0.05-$0.30 depending on how many buyers picked up new notes.
+- **`jobs/ecosystem.config.js`** — registers the cron with pm2 (`cron_restart: '0 10 * * *'`, `autorestart: false`).
+
+**To activate on Droplet:**
+```
+cd /root/termsforsale-site
+git pull origin main
+pm2 startOrReload jobs/ecosystem.config.js
+pm2 save
+pm2 logs parsed-prefs-nightly --lines 50    # verify first run
+```
+
 ### What's NOT done (intentional deferrals)
 
-- **Not wired into GHL note-added webhook** — if a buyer gets a new note that changes their prefs, the re-parse only happens on the next buy-box-save or the next backfill cron run. Could add a Netlify function + GHL workflow to re-parse on every note. Skipped for v1.
+- **Not wired into GHL note-added webhook** — real-time re-parse on every note would cost ~$9/month for negligible gain over the 24hr cron delay. Revisit if staleness becomes a visible problem.
 - **Not yet used by any GHL email template** — the parsed_prefs JSON is visible in GHL UI but no email template references it yet. Could show buyer-specific "we matched because: deal has pool (which you wanted)" lines.
 - **No admin UI** — to audit or correct parsed_prefs output, operators have to view/edit the raw JSON in the GHL contact record. A lightweight admin page could visualize it.
-- **No nightly cron job** — backfill is a one-shot script. For continuous freshness (buyers adding notes over time), need to add a cron wrapper or run the script weekly.
+
+### Team brief
+
+User-facing explainer at `docs/smart-matching-team-brief.md` — share with ops team to explain how the Parsed Preferences (AI) field works, why low-confidence scores = call opportunities, and how adding a note auto-updates prefs overnight.
 
 ---
 

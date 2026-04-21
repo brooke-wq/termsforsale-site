@@ -123,5 +123,13 @@ module.exports = {
       watch: false,
       max_memory_restart: '200M',
     },
+    {
+      name: 'parsed-prefs-nightly',
+      script: './parsed-prefs-nightly.js',
+      cron_restart: '0 10 * * *',     // 10:00 UTC = 03:00 AZ (MST)
+      autorestart: false,
+      watch: false,
+      max_memory_restart: '300M',
+    },
   ],
 };
