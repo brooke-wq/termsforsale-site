@@ -402,6 +402,16 @@ pm2 logs parsed-prefs-nightly --lines 50    # verify first run
 
 User-facing explainer at `docs/smart-matching-team-brief.md` — share with ops team to explain how the Parsed Preferences (AI) field works, why low-confidence scores = call opportunities, and how adding a note auto-updates prefs overnight.
 
+### Next-up project: GHL Conversation AI (deferred)
+
+Use GHL's native Conversation AI + AI Employee features for the conversational/per-contact layer (what they're actually good at), while keeping our Option D build for batch matching (what we're good at). Three phases ranked by ROI:
+
+1. **Inbound buyer reply handler** — AI auto-replies to non-standard SMS replies, auto-updates parsed_prefs when buyer mentions new prefs, tags for human follow-up on complex Qs. Tool: GHL Conversation AI. Est $15-30/month.
+2. **Pre-call briefing bot** — 30 min before scheduled call, AI generates 1-para brief from recent notes + parsed_prefs. Tool: GHL AI Employee. Est $5-10/month.
+3. **Deal alert personalization** — per-buyer "why you" line in alert emails pulling from parsed_prefs.persona_notes. Tool: GHL Content Studio. Est $3-5/month.
+
+Revisit after 2 weeks of parsed_prefs running in production — data will show whether phase 1 is needed.
+
 ---
 
 ## Completed — April 21 2026 GoHighLevel Reference Documentation (CSV Format)
