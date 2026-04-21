@@ -142,18 +142,24 @@ async function fetchFemaDisasters(state, fipsCountyCode) {
   const fiveYearsAgo = new Date();
   fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
   const sinceDate = fiveYearsAgo.toISOString();
-  const typeFilter = "(incidentType eq 'Hurricane' or incidentType eq 'Flood' or incidentType eq 'Severe Storm' or incidentType eq 'Tornado' or incidentType eq 'Severe Winter Storm' or incidentType eq 'Winter Storm')";
-  const baseFilter = `state eq '${state}' and declarationDate ge '${sinceDate}' and ${typeFilter}`;
-  const filter = fipsCountyCode ? `${baseFilter} and fipsCountyCode eq '${fipsCountyCode}'` : baseFilter;
+  // No type filter server-side — FEMA's exact incidentType values vary ("Severe Storm" vs
+  // "Severe Storm(s)", etc). Do type filtering client-side.
+  // No fipsCountyCode filter server-side either — OData string-equality on county FIPS can
+  // miss statewide declarations. We do state-wide query + client-side county match.
+  const filter = `state eq '${state}' and declarationDate ge '${sinceDate}'`;
   const params = new URLSearchParams({
     '$filter': filter,
     '$select': 'disasterNumber,declarationDate,declarationTitle,incidentType,incidentBeginDate,incidentEndDate,designatedArea,fipsCountyCode',
     '$orderby': 'declarationDate desc',
-    '$top': '20'
+    '$top': '500'
   });
-  const res = await fetch('https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?' + params.toString());
+  const url = 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?' + params.toString();
+  const res = await fetch(url);
   if (!res.ok) throw new Error('FEMA disasters ' + res.status);
-  return res.json();
+  const data = await res.json();
+  const rows = (data && data.DisasterDeclarationsSummaries) || [];
+  console.log('[auto-enrich] FEMA disasters raw=' + rows.length + ' state=' + state + ' since=' + sinceDate.split('T')[0]);
+  return { DisasterDeclarationsSummaries: rows, _fipsCountyCode: fipsCountyCode };
 }
 
 async function fetchFemaFlood(latitude, longitude) {
@@ -331,12 +337,19 @@ exports.handler = async (event) => {
     const floodBfe = floodFeature && floodFeature.attributes ? floodFeature.attributes.STATIC_BFE : null;
     const floodSfha = floodFeature && floodFeature.attributes ? floodFeature.attributes.SFHA_TF === 'T' : false;
 
-    // Server-side county FIPS filter in fetchFemaDisasters handles scoping; just dedup here
+    // Client-side filter: match by 3-digit county FIPS or by county name in designatedArea,
+    // then filter to incident types we care about (handles "Severe Storm" / "Severe Storm(s)" variants).
+    const interestingTypes = /hurricane|flood|severe storm|tornado|winter storm/i;
+    const countyRe = county ? new RegExp('\\b' + county.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i') : null;
     const uniqueDisasters = [];
     if (femaDisasters && femaDisasters.DisasterDeclarationsSummaries) {
       const seen = new Set();
       for (const d of femaDisasters.DisasterDeclarationsSummaries) {
         if (seen.has(d.disasterNumber)) continue;
+        const fipsMatch = countyFips && d.fipsCountyCode === countyFips;
+        const nameMatch = countyRe && d.designatedArea && countyRe.test(d.designatedArea);
+        if (!fipsMatch && !nameMatch) continue;
+        if (d.incidentType && !interestingTypes.test(d.incidentType)) continue;
         seen.add(d.disasterNumber);
         uniqueDisasters.push({
           disasterNumber: d.disasterNumber,
