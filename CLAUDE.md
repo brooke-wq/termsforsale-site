@@ -302,6 +302,91 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 21 2026 Smarter Buyer Matching — Pre-Parsed Preferences (Option D)
+
+Branch: `claude/ghl-fields-tags-documentation-aux2c`.
+
+Shipped the AI-parsed preferences layer that makes deal matching far smarter without blowing up costs. Before this, notify-buyers re-parsed the buyer's `contact.buy_box` free text on EVERY deal blast (every 30 min × every buyer × every deal) and only caught HOA rejections. After this, each buyer's preferences are AI-parsed ONCE into structured JSON stored on `contact.parsed_prefs`, and matching reads that blob directly — no AI at match time.
+
+### What's smarter now
+
+Where before matching only checked Max Price / Min Beds / HOA checkbox / Market, it now honors (from parsed_prefs):
+
+- **cities_only / cities_avoid** — hard filters. "Phoenix only, no Mesa" parses into `cities_only=['Phoenix, AZ']`, `cities_avoid=['Mesa, AZ']`, and the match engine rejects non-Phoenix deals even if state fallback would've passed before.
+- **states_only** — hard state whitelist
+- **hoa_acceptable: false** — auto-reject HOA deals (was previously only caught by raw checkbox check)
+- **requires_pool: true** — deal must mention "pool" in highlights/details
+- **min_year_built / min_sqft / min_baths** — hard numeric gates
+- **deal_killers** — generic rejection phrases ("flood zone", "septic", "cash only", etc.) scanned against deal features
+- **deal_delights** — matching features bump tier UP (e.g., "pool" + "ADU" hits → tier 2 → tier 1)
+- **structure_pref** — buyer's preferred deal type bumps tier up on match
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/_parse-preferences.js`** (NEW) — Claude Haiku-powered parser. `parsePreferences(claudeKey, {buyBox, notes, tags, structuredFields})` returns a normalized JSON object with 23 fields (cities_only, cities_avoid, states_only, min_beds/baths/sqft/year_built, max_price/entry/arv/monthly_piti, min_cashflow, max_interest_rate, max_repair_budget, property_types, structure_pref/open_to, hoa_acceptable, requires_pool, occupancy_pref, remodel_tolerance, deal_killers, deal_delights, persona_notes, confidence). Includes `source_checksum` (SHA256 truncated to 16 chars) for idempotency — backfill skips unchanged buyers. Returns `null` on any failure (missing API key, parse error, network) so callers fall through gracefully. Uses `claude-haiku-4-5-20251001` per CLAUDE.md cost rules (~$0.001/buyer).
+
+- **`termsforsale/netlify/functions/buy-box-save.js`** — calls `parsePreferences()` after the main save, writes result to `contact.parsed_prefs` custom field. Failures are non-fatal (wrapped in try/catch) — the form save always succeeds even if the parse fails. Gated on `ANTHROPIC_API_KEY` env var being set. Gracefully skips write if `contact.parsed_prefs` field doesn't exist in GHL yet (logs warning and moves on).
+
+- **`termsforsale/netlify/functions/notify-buyers.js`** — two new helpers:
+  - `getParsedPrefs(contact)` — reads and JSON-parses `contact.parsed_prefs`
+  - `parsedPrefsReject(prefs, deal)` — applies 9 hard-filter checks (cities_only, cities_avoid, states_only, hoa_acceptable, requires_pool, min_year_built, min_sqft, min_baths, deal_killers)
+  - `parsedPrefsTierBump(prefs, deal)` — applies soft tier bumps based on deal_delights + structure_pref matches
+
+  Filters run BEFORE legacy checks in `matchesBuyBox()`. If parsed_prefs says reject, we skip the buyer without running the legacy filter path (faster AND more accurate). If parsed_prefs says OK or buyer has no parsed_prefs yet, we fall through to the existing logic — safe gradual rollout.
+
+- **`scripts/backfill-parsed-prefs.js`** (NEW) — one-shot backfill script that scans all buyer-tagged contacts and parses each one. Flags:
+  - `DRY_RUN=1` — preview, no writes
+  - `MAX_CONTACTS=N` — cap for testing
+  - `FORCE_REPARSE=1` — ignore checksum, reparse everyone
+
+  Idempotent: computes the SHA256 checksum of current `(buyBox + notes + tags)` and compares to `parsed_prefs.source_checksum`. If they match, skips the API call entirely (~0 cost re-runs). Rate limited to 5/sec (200ms sleep between contacts).
+
+### Cost math
+
+- Initial backfill: 8,964 buyers × $0.001 = **~$9 one-time**
+- Per buy-box save: ~$0.001 (handful of saves per day) = **~$0.05/day**
+- Matching: $0 — all comparisons are pure field reads, no API calls
+
+Total ongoing Claude cost after backfill: **~$2/month**. Matching itself is now free.
+
+### Prerequisites for go-live
+
+1. **Create `contact.parsed_prefs` custom field in GHL:**
+   - Settings → Custom Fields → Contacts → Add Field
+   - Type: Large Text
+   - Name: Parsed Preferences (AI)
+   - Field Key: `contact.parsed_prefs`
+2. **Set `ANTHROPIC_API_KEY` env var** on Netlify (Terms For Sale site) AND on the Droplet `/etc/environment`.
+3. **Run backfill dry-run** first:
+   ```
+   cd /root/termsforsale-site
+   DRY_RUN=1 node scripts/backfill-parsed-prefs.js | head -50
+   ```
+4. **Run backfill on small batch** to verify real writes:
+   ```
+   MAX_CONTACTS=10 node scripts/backfill-parsed-prefs.js
+   ```
+5. **Spot-check in GHL UI** — open 2-3 contacts, view the `Parsed Preferences (AI)` field, confirm it's valid JSON with reasonable values.
+6. **Full backfill:**
+   ```
+   node scripts/backfill-parsed-prefs.js
+   ```
+   Total runtime: ~30 min for 8,964 buyers at 200ms/contact + Claude latency.
+7. **Set up nightly re-parse cron** (optional, once stable): after a buyer gets a new note or updates their buy box, their source_checksum will change and next nightly run re-parses them.
+
+### Graceful fallback
+
+If `contact.parsed_prefs` doesn't exist yet on a contact (buyer never saved buy box, or hasn't been backfilled), `getParsedPrefs()` returns `null` and the existing legacy match logic runs exactly as before. **Zero risk to current buyers' alerts.**
+
+### What's NOT done (intentional deferrals)
+
+- **Not wired into GHL note-added webhook** — if a buyer gets a new note that changes their prefs, the re-parse only happens on the next buy-box-save or the next backfill cron run. Could add a Netlify function + GHL workflow to re-parse on every note. Skipped for v1.
+- **Not yet used by any GHL email template** — the parsed_prefs JSON is visible in GHL UI but no email template references it yet. Could show buyer-specific "we matched because: deal has pool (which you wanted)" lines.
+- **No admin UI** — to audit or correct parsed_prefs output, operators have to view/edit the raw JSON in the GHL contact record. A lightweight admin page could visualize it.
+- **No nightly cron job** — backfill is a one-shot script. For continuous freshness (buyers adding notes over time), need to add a cron wrapper or run the script weekly.
+
+---
+
 ## Completed — April 21 2026 GoHighLevel Reference Documentation (CSV Format)
 
 Branch: `claude/ghl-fields-tags-documentation-aux2c`. Commit `5b09c48`.

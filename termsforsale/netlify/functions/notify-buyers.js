@@ -238,7 +238,8 @@ var DYNAMIC_FIELD_KEYS = [
   'contact.hoa_tolerance',             // text/dropdown — "no" = excluded on HOA deals
   'contact.property_type_preference',  // multi-select — buyer's preferred prop types
   'contact.deal_structure',            // multi-select — buyer's accepted structures
-  'contact.buy_box'                    // large text — free-form buy box description
+  'contact.buy_box',                   // large text — free-form buy box description
+  'contact.parsed_prefs'               // Large text JSON — AI-parsed buy box (Option D)
 ];
 var dynamicFieldIds = {}; // populated at runtime: fieldKey -> fieldId
 
@@ -376,6 +377,137 @@ function buyerRejectsHoa(contact, extraText) {
   return { reject: false };
 }
 
+// ─── Option D: parsed_prefs helpers ───────────────────────────
+//
+// contact.parsed_prefs is a JSON blob written by _parse-preferences.js and
+// the backfill script. It contains structured extracts of the buyer's free-
+// text preferences (cities_only, deal_killers, requires_pool, etc.) so
+// matching can evaluate them as exact filters instead of re-parsing prose on
+// every blast.
+
+function getParsedPrefs(contact) {
+  var raw = getCFByKey(contact, 'contact.parsed_prefs');
+  if (!raw) return null;
+  try {
+    var p = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (p && typeof p === 'object') return p;
+  } catch (e) {}
+  return null;
+}
+
+// Returns { reject: bool, reason: string } if parsed prefs explicitly
+// disqualify this deal. Does NOT return reject=false — caller should treat
+// "null" / no rejection as "keep going with legacy checks".
+function parsedPrefsReject(prefs, deal) {
+  if (!prefs) return null;
+
+  // cities_only — hard filter. If set, deal city MUST be in list.
+  if (prefs.cities_only && prefs.cities_only.length) {
+    var dealCityState = (deal.city || '').toLowerCase().trim() + ', ' + (deal.state || '').toUpperCase().trim();
+    var dealCity = (deal.city || '').toLowerCase().trim();
+    var hit = prefs.cities_only.some(function (c) {
+      var low = String(c).toLowerCase().trim();
+      return low === dealCityState || low === dealCity || low.indexOf(dealCity) > -1;
+    });
+    if (!hit) return { reject: true, reason: 'parsed_prefs cities_only: deal city not in buyer list' };
+  }
+
+  // cities_avoid — hard filter. If deal city in list, reject.
+  if (prefs.cities_avoid && prefs.cities_avoid.length) {
+    var cavLow = (deal.city || '').toLowerCase().trim();
+    var blocked = prefs.cities_avoid.some(function (c) {
+      return String(c).toLowerCase().indexOf(cavLow) > -1;
+    });
+    if (blocked) return { reject: true, reason: 'parsed_prefs cities_avoid: deal city blocked' };
+  }
+
+  // states_only — hard filter. If set, deal state MUST be in list.
+  if (prefs.states_only && prefs.states_only.length) {
+    var ds = (deal.state || '').toUpperCase().trim();
+    if (prefs.states_only.indexOf(ds) === -1) {
+      return { reject: true, reason: 'parsed_prefs states_only: deal state not in buyer list' };
+    }
+  }
+
+  // hoa_acceptable = false → reject HOA deals
+  if (prefs.hoa_acceptable === false && parseHoaDeal(deal.hoa)) {
+    return { reject: true, reason: 'parsed_prefs hoa_acceptable=false and deal has HOA' };
+  }
+
+  // requires_pool = true → deal must indicate pool somehow. We don't have a
+  // structured "has pool" field on deals yet, so we scan highlights + details.
+  if (prefs.requires_pool === true) {
+    var dealText = [deal.highlight1, deal.highlight2, deal.highlight3, deal.highlights, deal.details]
+      .filter(Boolean).join(' ').toLowerCase();
+    if (!/\bpool\b/.test(dealText)) {
+      return { reject: true, reason: 'parsed_prefs requires_pool=true but deal has no pool mention' };
+    }
+  }
+
+  // min_year_built — reject if deal built earlier
+  if (prefs.min_year_built && +deal.yearBuilt > 0 && +deal.yearBuilt < +prefs.min_year_built) {
+    return { reject: true, reason: 'parsed_prefs min_year_built=' + prefs.min_year_built + ' but deal built ' + deal.yearBuilt };
+  }
+
+  // min_sqft — reject if deal smaller
+  if (prefs.min_sqft && +deal.sqft > 0 && +deal.sqft < +prefs.min_sqft) {
+    return { reject: true, reason: 'parsed_prefs min_sqft=' + prefs.min_sqft + ' but deal is ' + deal.sqft };
+  }
+
+  // min_baths — reject if deal has fewer
+  if (prefs.min_baths && +deal.baths > 0 && +deal.baths < +prefs.min_baths) {
+    return { reject: true, reason: 'parsed_prefs min_baths=' + prefs.min_baths + ' but deal has ' + deal.baths };
+  }
+
+  // deal_killers — scan against deal features for explicit rejection phrases.
+  // This is the catch-all for buyer-stated "won't touch X" preferences.
+  if (prefs.deal_killers && prefs.deal_killers.length) {
+    var dealFeatures = [deal.highlight1, deal.highlight2, deal.highlight3,
+      deal.highlights, deal.details, deal.propertyType, deal.dealType,
+      deal.hoa, deal.yearBuilt, deal.city].filter(Boolean).join(' ').toLowerCase();
+    for (var i = 0; i < prefs.deal_killers.length; i++) {
+      var killer = String(prefs.deal_killers[i]).toLowerCase().trim();
+      if (!killer) continue;
+      // Skip pre-YYYY / no-hoa / no-pool — already handled above specifically.
+      if (/^(pre-\d+|no.hoa|no.pool|no hoa|no pool)$/.test(killer)) continue;
+      if (dealFeatures.indexOf(killer) > -1) {
+        return { reject: true, reason: 'parsed_prefs deal_killer hit: "' + killer + '"' };
+      }
+    }
+  }
+
+  return null; // no rejection
+}
+
+// Returns an integer bump (+1, 0, -1) to the tier based on soft signals in
+// parsed_prefs. Used AFTER base tier is assigned.
+function parsedPrefsTierBump(prefs, deal) {
+  if (!prefs) return 0;
+  var bump = 0;
+
+  // deal_delights matching → bump up
+  if (prefs.deal_delights && prefs.deal_delights.length) {
+    var dealText = [deal.highlight1, deal.highlight2, deal.highlight3,
+      deal.highlights, deal.details, deal.propertyType, deal.dealType]
+      .filter(Boolean).join(' ').toLowerCase();
+    var delightHits = prefs.deal_delights.filter(function (d) {
+      return dealText.indexOf(String(d).toLowerCase().trim()) > -1;
+    }).length;
+    if (delightHits >= 2) bump -= 1; // bump tier UP (lower number)
+  }
+
+  // structure_pref exact match → bump up (the buyer wants THIS type)
+  if (prefs.structure_pref && prefs.structure_pref.length) {
+    var hit = prefs.structure_pref.some(function (s) {
+      var a = String(s).toLowerCase(), b = String(deal.dealType || '').toLowerCase();
+      return a.indexOf(b) > -1 || b.indexOf(a) > -1;
+    });
+    if (hit) bump -= 1;
+  }
+
+  return bump;
+}
+
 function matchesBuyBox(contact, deal) {
   var reasons = [];
   var fails = [];
@@ -383,6 +515,20 @@ function matchesBuyBox(contact, deal) {
   // Day-2 "pref-market-only" tag — buyer explicitly wants their target
   // market only. If set, disable the state fallback for this buyer.
   var marketOnly = (contact.tags || []).indexOf('pref-market-only') > -1;
+
+  // Option D: AI-parsed preferences (authoritative when present)
+  var parsedPrefs = getParsedPrefs(contact);
+
+  // ═ HARD FILTER 0: parsed_prefs explicit rejections ═
+  // Runs BEFORE legacy filters — if AI extracted "Phoenix only" or "no pool",
+  // the deal is rejected even if structured fields say otherwise.
+  if (parsedPrefs) {
+    var prefReject = parsedPrefsReject(parsedPrefs, deal);
+    if (prefReject) {
+      return { match: false, fails: [prefReject.reason] };
+    }
+    reasons.push('Parsed prefs OK (conf=' + (parsedPrefs.confidence != null ? parsedPrefs.confidence : '?') + ')');
+  }
 
   // ═ HARD FILTER 1: buyer status ═
   var buyerStatus = getCFByKey(contact, 'contact.buyer_status');
@@ -548,6 +694,18 @@ function matchesBuyBox(contact, deal) {
   } else {
     // State fallback → T3
     tier = 3;
+  }
+
+  // Option D: parsed_prefs soft signals can bump the tier up or down
+  if (parsedPrefs) {
+    var bump = parsedPrefsTierBump(parsedPrefs, deal);
+    if (bump !== 0) {
+      var newTier = Math.max(1, Math.min(3, tier + bump));
+      if (newTier !== tier) {
+        reasons.push('Tier bumped ' + tier + '→' + newTier + ' by parsed_prefs');
+        tier = newTier;
+      }
+    }
   }
 
   return { match: true, tier: tier, reasons: reasons, fails: fails };
