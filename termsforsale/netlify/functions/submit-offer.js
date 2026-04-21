@@ -16,9 +16,15 @@ const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } 
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
-// 4 contact custom fields required by Brooke's offer-notification templates.
-// We write these to the contact so {{contact.<key>}} merge tags resolve.
-const OFFER_CUSTOM_FIELD_KEYS = ['offer_amount', 'type_of_deal', 'close_date_target', 'entry_fee'];
+// 10 contact custom fields required by Brooke's offer-notification templates.
+// We write these to the contact so {{contact.<key>}} merge tags resolve in
+// Workflow B's internal email (which fires on the "Offer Submitted" tag for
+// both logged-in and logged-out paths).
+const OFFER_CUSTOM_FIELD_KEYS = [
+  'offer_amount', 'type_of_deal', 'close_date_target', 'entry_fee',
+  'property_address', 'property_city', 'property_state',
+  'asset_type', 'offer_notes', 'current_deal_interest',
+];
 
 // In-memory cache (per container invocation) of GHL location custom field map.
 let CF_MAP_CACHE = null;
@@ -158,10 +164,16 @@ exports.handler = async (event) => {
   try {
     var cfMap = await getLocationCustomFieldMap(apiKey, locationId);
     var values = {
-      offer_amount:      amount    != null ? String(amount)    : '',
-      type_of_deal:      typeOfDeal || '',
-      close_date_target: coe        || '',
-      entry_fee:         entryFee   || '',
+      offer_amount:          amount    != null ? String(amount)    : '',
+      type_of_deal:          typeOfDeal || '',
+      close_date_target:     coe        || '',
+      entry_fee:             entryFee   || '',
+      property_address:      streetAddress || '',
+      property_city:         city          || '',
+      property_state:        state         || '',
+      asset_type:            dealType      || '',   // Notion deal type (SubTo, Cash, SF, Hybrid, etc.)
+      offer_notes:           notes         || '',
+      current_deal_interest: dealId        || '',   // Notion Deal ID (e.g. PHX-001)
     };
     var cfPayload = [];
     var missing = [];
