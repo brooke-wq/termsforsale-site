@@ -198,12 +198,26 @@ function getCustomFieldValue(contact, fieldId) {
 
   // Step 2 + 3: parse + write
   console.log('\n[2/3] Parsing each buyer (Haiku ~$0.001/buyer)...\n');
-  var stats = { parsed: 0, skipped_unchanged: 0, skipped_empty: 0, failed: 0, would_parse: 0 };
+  var stats = { parsed: 0, skipped_unchanged: 0, skipped_empty: 0, skipped_test: 0, failed: 0, would_parse: 0 };
   var totalCost = 0;
 
   for (var j = 0; j < all.length; j++) {
     var c = all[j];
     var name = ((c.firstName || '') + ' ' + (c.lastName || '')).trim() || c.email || c.id;
+
+    // Skip test / placeholder contacts so production parsing doesn't waste
+    // tokens on garbage data. Matches: first/last name starts with "Test",
+    // is exactly "Test", or first+last name contains "test" as standalone
+    // word. Does NOT match "Testa" or "Tester" (real names).
+    var fn = String(c.firstName || '').trim();
+    var ln = String(c.lastName || '').trim();
+    var isTest = /^test(\s|$|\d)/i.test(fn) ||
+                 /^test(\s|$|\d)/i.test(ln) ||
+                 /\btest\b/i.test(fn + ' ' + ln) && fn.length <= 6;
+    if (isTest) {
+      stats.skipped_test++;
+      continue;
+    }
 
     var buyBox = buyBoxFieldId ? String(getCustomFieldValue(c, buyBoxFieldId) || '') : '';
     var tags = c.tags || [];
@@ -276,6 +290,7 @@ function getCustomFieldValue(contact, fieldId) {
     console.log('Failed:                 ' + stats.failed);
   }
   console.log('Skipped (unchanged):    ' + stats.skipped_unchanged);
+  console.log('Skipped (test contact): ' + stats.skipped_test);
   console.log('Elapsed:                ' + elapsed + 's');
   if (!DRY_RUN && stats.parsed > 0) {
     console.log('Est. cost:              ~$' + (stats.parsed * 0.001).toFixed(2));
