@@ -283,12 +283,13 @@ exports.handler = async (event) => {
     if (countyFips) console.log('[auto-enrich] ATTOM FIPS=' + attomFips + ' → countyFips=' + countyFips);
 
     // Wave 2: FEMA calls that need lat/lng (flood) or county FIPS (disasters) from wave 1
+    // NFHL ArcGIS server is slow — use a generous 15s timeout
     const [femaFloodResult, femaDisastersResult] = await Promise.allSettled([
       (latitude != null && longitude != null)
-        ? withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 8000)
+        ? withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 15000)
         : Promise.reject(new Error('no lat/lng for flood query')),
       state
-        ? withTimeout(fetchFemaDisasters(state, countyFips), 8000)
+        ? withTimeout(fetchFemaDisasters(state, countyFips), 15000)
         : Promise.reject(new Error('no state'))
     ]);
 
