@@ -249,14 +249,14 @@ exports.handler = async (event) => {
 
     const attomKey = process.env.ATTOM_API_KEY;
 
-    const [rcPropResult, rcAvmResult, rcRentResult, hudResult, rcListingsResult, attomResult, femaDisastersResult] = await Promise.allSettled([
+    // Wave 1: independent enrichment sources (6 parallel)
+    const [rcPropResult, rcAvmResult, rcRentResult, hudResult, rcListingsResult, attomResult] = await Promise.allSettled([
       rentcastKey && streetAddress ? withTimeout(fetchRentcastProperty(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
       rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmValue(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
       rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmRent(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
       city && state ? withTimeout(fetchHudFmr(state, city, existingBeds || 3), 8000) : Promise.reject(new Error('no city or state')),
       rentcastKey && streetAddress ? withTimeout(fetchRentcastListings(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
-      attomKey && streetAddress ? withTimeout(fetchAttomProperty(attomKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no attom key or address')),
-      state ? withTimeout(fetchFemaDisasters(state, null), 8000) : Promise.reject(new Error('no state'))
+      attomKey && streetAddress ? withTimeout(fetchAttomProperty(attomKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no attom key or address'))
     ]);
 
     const rcProp = rcPropResult.status === 'fulfilled' ? rcPropResult.value : null;
@@ -265,7 +265,6 @@ exports.handler = async (event) => {
     const hud    = hudResult.status    === 'fulfilled' ? hudResult.value    : null;
     const rcListings = rcListingsResult.status === 'fulfilled' ? rcListingsResult.value : null;
     const attom  = attomResult.status  === 'fulfilled' ? attomResult.value  : null;
-    const femaDisasters = femaDisastersResult.status === 'fulfilled' ? femaDisastersResult.value : null;
 
     if (rcPropResult.status === 'rejected') console.warn('[auto-enrich] RentCast property failed:', rcPropResult.reason && rcPropResult.reason.message);
     if (rcAvmResult.status  === 'rejected') console.warn('[auto-enrich] RentCast AVM failed:', rcAvmResult.reason && rcAvmResult.reason.message);
@@ -273,22 +272,37 @@ exports.handler = async (event) => {
     if (hudResult.status    === 'rejected') console.warn('[auto-enrich] HUD FMR failed:', hudResult.reason && hudResult.reason.message);
     if (rcListingsResult.status === 'rejected') console.warn('[auto-enrich] RentCast listings failed:', rcListingsResult.reason && rcListingsResult.reason.message);
     if (attomResult.status  === 'rejected') console.warn('[auto-enrich] ATTOM failed:', attomResult.reason && attomResult.reason.message);
-    if (femaDisastersResult.status === 'rejected') console.warn('[auto-enrich] FEMA disasters failed:', femaDisastersResult.reason && femaDisastersResult.reason.message);
 
     const attomProp = attom && attom.property && attom.property[0] || null;
     const latitude = (attomProp && attomProp.location && attomProp.location.latitude) || (rcProp && rcProp.latitude) || null;
     const longitude = (attomProp && attomProp.location && attomProp.location.longitude) || (rcProp && rcProp.longitude) || null;
 
-    let femaFlood = null;
-    if (latitude != null && longitude != null) {
-      try {
-        femaFlood = await withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 6000);
-      } catch (e) {
-        console.warn('[auto-enrich] FEMA flood failed:', e.message);
-      }
-    } else {
-      console.warn('[auto-enrich] FEMA flood skipped — no lat/lng from RentCast or ATTOM');
-    }
+    // Extract 3-digit county FIPS from ATTOM (e.g. "48029" → "029") for server-side FEMA filter
+    const attomFips = attomProp && attomProp.identifier && attomProp.identifier.fips;
+    const countyFips = attomFips && String(attomFips).length >= 5 ? String(attomFips).slice(-3) : null;
+    if (countyFips) console.log('[auto-enrich] ATTOM FIPS=' + attomFips + ' → countyFips=' + countyFips);
+
+    // Wave 2: FEMA calls that need lat/lng (flood) or county FIPS (disasters) from wave 1
+    const [femaFloodResult, femaDisastersResult] = await Promise.allSettled([
+      (latitude != null && longitude != null)
+        ? withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 8000)
+        : Promise.reject(new Error('no lat/lng for flood query')),
+      state
+        ? withTimeout(fetchFemaDisasters(state, countyFips), 8000)
+        : Promise.reject(new Error('no state'))
+    ]);
+
+    const femaFloodRaw = femaFloodResult.status === 'fulfilled' ? femaFloodResult.value : null;
+    const femaDisasters = femaDisastersResult.status === 'fulfilled' ? femaDisastersResult.value : null;
+
+    if (femaFloodResult.status === 'rejected') console.warn('[auto-enrich] FEMA flood failed:', femaFloodResult.reason && femaFloodResult.reason.message);
+    if (femaDisastersResult.status === 'rejected') console.warn('[auto-enrich] FEMA disasters failed:', femaDisastersResult.reason && femaDisastersResult.reason.message);
+
+    // Normalize NFHL response: handles both {features:[...]} and direct-array formats
+    const femaFloodFeatures = femaFloodRaw
+      ? (Array.isArray(femaFloodRaw) ? femaFloodRaw : (Array.isArray(femaFloodRaw.features) ? femaFloodRaw.features : []))
+      : [];
+    const floodFeature = femaFloodFeatures[0] || null;
 
     const rcListing = (rcListings && rcListings[0]) || null;
     const listingHistory = rcListing && rcListing.history
@@ -307,17 +321,16 @@ exports.handler = async (event) => {
         attomProp.assessment.tax.exemptiontype.some(t => /home(stead|owner)/i.test(String(t))))
     ));
 
-    const floodFeature = femaFlood && femaFlood.features && femaFlood.features[0];
     const floodZone = floodFeature ? (floodFeature.attributes && floodFeature.attributes.FLD_ZONE) : 'X';
     const floodBfe = floodFeature && floodFeature.attributes ? floodFeature.attributes.STATIC_BFE : null;
     const floodSfha = floodFeature && floodFeature.attributes ? floodFeature.attributes.SFHA_TF === 'T' : false;
 
+    // Server-side county FIPS filter in fetchFemaDisasters handles scoping; just dedup here
     const uniqueDisasters = [];
     if (femaDisasters && femaDisasters.DisasterDeclarationsSummaries) {
       const seen = new Set();
       for (const d of femaDisasters.DisasterDeclarationsSummaries) {
         if (seen.has(d.disasterNumber)) continue;
-        if (county && d.designatedArea && !new RegExp(county, 'i').test(d.designatedArea)) continue;
         seen.add(d.disasterNumber);
         uniqueDisasters.push({
           disasterNumber: d.disasterNumber,
@@ -412,7 +425,7 @@ exports.handler = async (event) => {
         subtype: floodFeature.attributes && floodFeature.attributes.ZONE_SUBTY,
         baseFloodElevation: floodBfe === -9999 ? null : floodBfe,
         isSpecialFloodHazardArea: floodSfha
-      } : (femaFlood ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area' } : null),
+      } : (femaFloodRaw ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area' } : null),
       femaDisasters: uniqueDisasters,
       hud: hud ? {
         ltr: hud.ltr,
@@ -459,14 +472,14 @@ exports.handler = async (event) => {
       if (!existingArv && rcAvm && rcAvm.price) {
         notionProps['ARV'] = { number: Math.round(rcAvm.price) };
       }
-      if (existingBeds == null && rcProp && rcProp.beds != null) {
-        notionProps['Beds'] = { number: rcProp.beds };
+      if (existingBeds == null && rcProp && rcProp.bedrooms != null) {
+        notionProps['Beds'] = { number: rcProp.bedrooms };
       }
-      if (existingBaths == null && rcProp && rcProp.baths != null) {
-        notionProps['Baths'] = { number: rcProp.baths };
+      if (existingBaths == null && rcProp && rcProp.bathrooms != null) {
+        notionProps['Baths'] = { number: rcProp.bathrooms };
       }
-      if (existingLivingArea == null && rcProp && rcProp.sqft != null) {
-        notionProps['Living Area'] = { number: rcProp.sqft };
+      if (existingLivingArea == null && rcProp && rcProp.squareFootage != null) {
+        notionProps['Living Area'] = { number: rcProp.squareFootage };
       }
       if (existingYearBuilt == null && rcProp && rcProp.yearBuilt != null) {
         notionProps['Year Built'] = { number: rcProp.yearBuilt };
@@ -500,9 +513,9 @@ exports.handler = async (event) => {
             loanBalance,
             interestRate,
             piti,
-            beds: (rcProp && rcProp.beds) || existingBeds,
-            baths: (rcProp && rcProp.baths) || existingBaths,
-            sqft: (rcProp && rcProp.sqft) || existingLivingArea,
+            beds: (rcProp && rcProp.bedrooms) || existingBeds,
+            baths: (rcProp && rcProp.bathrooms) || existingBaths,
+            sqft: (rcProp && rcProp.squareFootage) || existingLivingArea,
             yearBuilt: (rcProp && rcProp.yearBuilt) || existingYearBuilt,
             arv: (rcAvm && rcAvm.price) || existingArv,
             estRent: (rcRent && rcRent.rent) || (hud && hud.ltr),
