@@ -115,6 +115,64 @@ async function fetchHudFmr(state, city, beds) {
   return res.json();
 }
 
+async function fetchRentcastListings(apiKey, address, city, state, zipCode) {
+  const params = new URLSearchParams({ address, city, state, zipCode, limit: '1' });
+  const res = await fetch(RENTCAST_BASE + '/listings/sale?' + params.toString(), {
+    headers: { 'X-Api-Key': apiKey }
+  });
+  if (!res.ok) throw new Error('RentCast listings ' + res.status);
+  return res.json();
+}
+
+async function fetchAttomProperty(apiKey, address, city, state, zipCode) {
+  const params = new URLSearchParams({
+    address1: address,
+    address2: [city, state].filter(Boolean).join(', ') + (zipCode ? ' ' + zipCode : '')
+  });
+  const res = await fetch('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/expandedprofile?' + params.toString(), {
+    headers: { 'apikey': apiKey, 'Accept': 'application/json' }
+  });
+  if (!res.ok) throw new Error('ATTOM ' + res.status);
+  const data = await res.json();
+  if (data.status && data.status.code !== 0) throw new Error('ATTOM status ' + data.status.code + ': ' + (data.status.msg || ''));
+  return data;
+}
+
+async function fetchFemaDisasters(state, fipsCountyCode) {
+  const threeYearsAgo = new Date();
+  threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+  const sinceDate = threeYearsAgo.toISOString();
+  const typeFilter = "(incidentType eq 'Hurricane' or incidentType eq 'Flood' or incidentType eq 'Severe Storm' or incidentType eq 'Tornado')";
+  const baseFilter = `state eq '${state}' and declarationDate ge '${sinceDate}' and ${typeFilter}`;
+  const filter = fipsCountyCode ? `${baseFilter} and fipsCountyCode eq '${fipsCountyCode}'` : baseFilter;
+  const params = new URLSearchParams({
+    '$filter': filter,
+    '$select': 'disasterNumber,declarationDate,declarationTitle,incidentType,incidentBeginDate,incidentEndDate,designatedArea,fipsCountyCode',
+    '$orderby': 'declarationDate desc',
+    '$top': '20'
+  });
+  const res = await fetch('https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?' + params.toString());
+  if (!res.ok) throw new Error('FEMA disasters ' + res.status);
+  return res.json();
+}
+
+async function fetchFemaFlood(latitude, longitude) {
+  if (latitude == null || longitude == null) throw new Error('FEMA flood needs lat/lng');
+  const geometry = JSON.stringify({ x: longitude, y: latitude, spatialReference: { wkid: 4326 } });
+  const params = new URLSearchParams({
+    geometry,
+    geometryType: 'esriGeometryPoint',
+    inSR: '4326',
+    spatialRel: 'esriSpatialRelIntersects',
+    outFields: 'FLD_ZONE,ZONE_SUBTY,STATIC_BFE,SFHA_TF,FLD_AR_ID',
+    returnGeometry: 'false',
+    f: 'json'
+  });
+  const res = await fetch('https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query?' + params.toString());
+  if (!res.ok) throw new Error('FEMA flood ' + res.status);
+  return res.json();
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -172,6 +230,7 @@ exports.handler = async (event) => {
     const city = prop(page, 'City') || '';
     const state = prop(page, 'State') || '';
     const zip = prop(page, 'ZIP') || '';
+    const county = prop(page, 'County') || '';
     const dealId = prop(page, 'Deal ID') || '';
     const dealType = prop(page, 'Deal Type') || '';
     const askingPrice = prop(page, 'Asking Price');
@@ -188,22 +247,90 @@ exports.handler = async (event) => {
     const fullAddress = [streetAddress, city, state, zip].filter(Boolean).join(', ');
     console.log('[auto-enrich] pageId=' + pageId + ' dealId=' + dealId + ' address=' + fullAddress);
 
-    const [rcPropResult, rcAvmResult, rcRentResult, hudResult] = await Promise.allSettled([
-      rentcastKey && streetAddress ? withTimeout(fetchRentcastProperty(rentcastKey, streetAddress, city, state, zip), 6000) : Promise.reject(new Error('no rentcast key or address')),
-      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmValue(rentcastKey, streetAddress, city, state, zip), 6000) : Promise.reject(new Error('no rentcast key or address')),
-      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmRent(rentcastKey, streetAddress, city, state, zip), 6000) : Promise.reject(new Error('no rentcast key or address')),
-      city && state ? withTimeout(fetchHudFmr(state, city, existingBeds || 3), 6000) : Promise.reject(new Error('no city or state'))
+    const attomKey = process.env.ATTOM_API_KEY;
+
+    const [rcPropResult, rcAvmResult, rcRentResult, hudResult, rcListingsResult, attomResult, femaDisastersResult] = await Promise.allSettled([
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastProperty(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmValue(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastAvmRent(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      city && state ? withTimeout(fetchHudFmr(state, city, existingBeds || 3), 8000) : Promise.reject(new Error('no city or state')),
+      rentcastKey && streetAddress ? withTimeout(fetchRentcastListings(rentcastKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no rentcast key or address')),
+      attomKey && streetAddress ? withTimeout(fetchAttomProperty(attomKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no attom key or address')),
+      state ? withTimeout(fetchFemaDisasters(state, null), 8000) : Promise.reject(new Error('no state'))
     ]);
 
     const rcProp = rcPropResult.status === 'fulfilled' ? rcPropResult.value : null;
     const rcAvm  = rcAvmResult.status  === 'fulfilled' ? rcAvmResult.value  : null;
     const rcRent = rcRentResult.status === 'fulfilled' ? rcRentResult.value : null;
     const hud    = hudResult.status    === 'fulfilled' ? hudResult.value    : null;
+    const rcListings = rcListingsResult.status === 'fulfilled' ? rcListingsResult.value : null;
+    const attom  = attomResult.status  === 'fulfilled' ? attomResult.value  : null;
+    const femaDisasters = femaDisastersResult.status === 'fulfilled' ? femaDisastersResult.value : null;
 
     if (rcPropResult.status === 'rejected') console.warn('[auto-enrich] RentCast property failed:', rcPropResult.reason && rcPropResult.reason.message);
     if (rcAvmResult.status  === 'rejected') console.warn('[auto-enrich] RentCast AVM failed:', rcAvmResult.reason && rcAvmResult.reason.message);
     if (rcRentResult.status === 'rejected') console.warn('[auto-enrich] RentCast rent failed:', rcRentResult.reason && rcRentResult.reason.message);
     if (hudResult.status    === 'rejected') console.warn('[auto-enrich] HUD FMR failed:', hudResult.reason && hudResult.reason.message);
+    if (rcListingsResult.status === 'rejected') console.warn('[auto-enrich] RentCast listings failed:', rcListingsResult.reason && rcListingsResult.reason.message);
+    if (attomResult.status  === 'rejected') console.warn('[auto-enrich] ATTOM failed:', attomResult.reason && attomResult.reason.message);
+    if (femaDisastersResult.status === 'rejected') console.warn('[auto-enrich] FEMA disasters failed:', femaDisastersResult.reason && femaDisastersResult.reason.message);
+
+    const attomProp = attom && attom.property && attom.property[0] || null;
+    const latitude = (attomProp && attomProp.location && attomProp.location.latitude) || (rcProp && rcProp.latitude) || null;
+    const longitude = (attomProp && attomProp.location && attomProp.location.longitude) || (rcProp && rcProp.longitude) || null;
+
+    let femaFlood = null;
+    if (latitude != null && longitude != null) {
+      try {
+        femaFlood = await withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 6000);
+      } catch (e) {
+        console.warn('[auto-enrich] FEMA flood failed:', e.message);
+      }
+    } else {
+      console.warn('[auto-enrich] FEMA flood skipped — no lat/lng from RentCast or ATTOM');
+    }
+
+    const rcListing = (rcListings && rcListings[0]) || null;
+    const listingHistory = rcListing && rcListing.history
+      ? Object.entries(rcListing.history).map(([date, ev]) => ({
+          date,
+          event: ev.event,
+          price: ev.price,
+          daysOnMarket: ev.daysOnMarket
+        })).sort((a, b) => a.date.localeCompare(b.date))
+      : [];
+
+    const taxExemption = attomProp && attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.exemption;
+    const hasHomestead = !!(taxExemption && (
+      (typeof taxExemption === 'object' && (taxExemption.Homeowner || taxExemption.homestead || taxExemption.Homestead)) ||
+      (Array.isArray(attomProp && attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.exemptiontype) &&
+        attomProp.assessment.tax.exemptiontype.some(t => /home(stead|owner)/i.test(String(t))))
+    ));
+
+    const floodFeature = femaFlood && femaFlood.features && femaFlood.features[0];
+    const floodZone = floodFeature ? (floodFeature.attributes && floodFeature.attributes.FLD_ZONE) : 'X';
+    const floodBfe = floodFeature && floodFeature.attributes ? floodFeature.attributes.STATIC_BFE : null;
+    const floodSfha = floodFeature && floodFeature.attributes ? floodFeature.attributes.SFHA_TF === 'T' : false;
+
+    const uniqueDisasters = [];
+    if (femaDisasters && femaDisasters.DisasterDeclarationsSummaries) {
+      const seen = new Set();
+      for (const d of femaDisasters.DisasterDeclarationsSummaries) {
+        if (seen.has(d.disasterNumber)) continue;
+        if (county && d.designatedArea && !new RegExp(county, 'i').test(d.designatedArea)) continue;
+        seen.add(d.disasterNumber);
+        uniqueDisasters.push({
+          disasterNumber: d.disasterNumber,
+          title: d.declarationTitle,
+          incidentType: d.incidentType,
+          declarationDate: d.declarationDate,
+          incidentBegin: d.incidentBeginDate,
+          incidentEnd: d.incidentEndDate,
+          area: d.designatedArea
+        });
+        if (uniqueDisasters.length >= 10) break;
+      }
+    }
 
     const enriched = {
       dealId,
@@ -211,6 +338,7 @@ exports.handler = async (event) => {
       city,
       state,
       zip,
+      county,
       dealType,
       askingPrice,
       entryFee,
@@ -223,7 +351,9 @@ exports.handler = async (event) => {
         sqft: rcProp.squareFootage,
         yearBuilt: rcProp.yearBuilt,
         lotSize: rcProp.lotSize,
-        propertyType: rcProp.propertyType
+        propertyType: rcProp.propertyType,
+        latitude: rcProp.latitude,
+        longitude: rcProp.longitude
       } : null,
       rcAvm: rcAvm ? {
         value: rcAvm.price,
@@ -246,6 +376,44 @@ exports.handler = async (event) => {
           distance: c.distance
         }))
       } : null,
+      rcListing: rcListing ? {
+        status: rcListing.status,
+        listPrice: rcListing.price,
+        listedDate: rcListing.listedDate,
+        removedDate: rcListing.removedDate,
+        daysOnMarket: rcListing.daysOnMarket,
+        mlsNumber: rcListing.mlsNumber,
+        mlsName: rcListing.mlsName,
+        history: listingHistory
+      } : null,
+      attom: attomProp ? {
+        attomId: attomProp.identifier && attomProp.identifier.attomId,
+        apn: attomProp.identifier && attomProp.identifier.apn,
+        fips: attomProp.identifier && attomProp.identifier.fips,
+        assessedValue: attomProp.assessment && attomProp.assessment.assessed && attomProp.assessment.assessed.assdTtlValue,
+        marketValue: attomProp.assessment && attomProp.assessment.market && attomProp.assessment.market.mktTtlValue,
+        taxAmount: attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.taxAmt,
+        taxYear: attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.taxYear,
+        hasHomestead,
+        yearBuilt: attomProp.summary && attomProp.summary.yearbuilt,
+        lotSizeAcres: attomProp.lot && attomProp.lot.lotsize1,
+        lotSizeSqft: attomProp.lot && attomProp.lot.lotsize2,
+        lastSaleDate: attomProp.sale && attomProp.sale.saleTransDate,
+        lastSalePrice: attomProp.sale && attomProp.sale.amount && attomProp.sale.amount.saleamt,
+        livingSize: attomProp.building && attomProp.building.size && attomProp.building.size.livingsize,
+        beds: attomProp.building && attomProp.building.rooms && attomProp.building.rooms.beds,
+        baths: attomProp.building && attomProp.building.rooms && attomProp.building.rooms.bathstotal,
+        addressOneLine: attomProp.address && attomProp.address.oneLine,
+        latitude: attomProp.location && attomProp.location.latitude,
+        longitude: attomProp.location && attomProp.location.longitude
+      } : null,
+      femaFlood: floodFeature != null ? {
+        zone: floodZone,
+        subtype: floodFeature.attributes && floodFeature.attributes.ZONE_SUBTY,
+        baseFloodElevation: floodBfe === -9999 ? null : floodBfe,
+        isSpecialFloodHazardArea: floodSfha
+      } : (femaFlood ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area' } : null),
+      femaDisasters: uniqueDisasters,
       hud: hud ? {
         ltr: hud.ltr,
         ltrLow: hud.ltrLow,
