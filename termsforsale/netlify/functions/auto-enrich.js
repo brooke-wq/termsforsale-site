@@ -139,10 +139,10 @@ async function fetchAttomProperty(apiKey, address, city, state, zipCode) {
 }
 
 async function fetchFemaDisasters(state, fipsCountyCode) {
-  const threeYearsAgo = new Date();
-  threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
-  const sinceDate = threeYearsAgo.toISOString();
-  const typeFilter = "(incidentType eq 'Hurricane' or incidentType eq 'Flood' or incidentType eq 'Severe Storm' or incidentType eq 'Tornado')";
+  const fiveYearsAgo = new Date();
+  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+  const sinceDate = fiveYearsAgo.toISOString();
+  const typeFilter = "(incidentType eq 'Hurricane' or incidentType eq 'Flood' or incidentType eq 'Severe Storm' or incidentType eq 'Tornado' or incidentType eq 'Severe Winter Storm' or incidentType eq 'Winter Storm')";
   const baseFilter = `state eq '${state}' and declarationDate ge '${sinceDate}' and ${typeFilter}`;
   const filter = fipsCountyCode ? `${baseFilter} and fipsCountyCode eq '${fipsCountyCode}'` : baseFilter;
   const params = new URLSearchParams({
@@ -282,14 +282,19 @@ exports.handler = async (event) => {
     const countyFips = attomFips && String(attomFips).length >= 5 ? String(attomFips).slice(-3) : null;
     if (countyFips) console.log('[auto-enrich] ATTOM FIPS=' + attomFips + ' → countyFips=' + countyFips);
 
-    // Wave 2: FEMA calls that need lat/lng (flood) or county FIPS (disasters) from wave 1
-    // NFHL ArcGIS server is slow — use a generous 15s timeout
+    // ATTOM area.siteinffloodzone is the primary flood source — faster and more reliable than NFHL.
+    // Only fall back to NFHL if ATTOM returned nothing.
+    const attomFloodZone = attomProp && attomProp.area && attomProp.area.siteinffloodzone;
+    const needsNfhl = !attomFloodZone && latitude != null && longitude != null;
+    if (attomFloodZone) console.log('[auto-enrich] ATTOM flood zone=' + attomFloodZone);
+
+    // Wave 2: FEMA disasters (county-scoped) + optional NFHL fallback
     const [femaFloodResult, femaDisastersResult] = await Promise.allSettled([
-      (latitude != null && longitude != null)
-        ? withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 15000)
-        : Promise.reject(new Error('no lat/lng for flood query')),
+      needsNfhl
+        ? withTimeout(fetchFemaFlood(Number(latitude), Number(longitude)), 8000)
+        : Promise.reject(new Error('flood zone from attom — skipping nfhl')),
       state
-        ? withTimeout(fetchFemaDisasters(state, countyFips), 15000)
+        ? withTimeout(fetchFemaDisasters(state, countyFips), 10000)
         : Promise.reject(new Error('no state'))
     ]);
 
@@ -419,14 +424,21 @@ exports.handler = async (event) => {
         baths: attomProp.building && attomProp.building.rooms && attomProp.building.rooms.bathstotal,
         addressOneLine: attomProp.address && attomProp.address.oneLine,
         latitude: attomProp.location && attomProp.location.latitude,
-        longitude: attomProp.location && attomProp.location.longitude
+        longitude: attomProp.location && attomProp.location.longitude,
+        floodZone: attomFloodZone || null,
+        millageRate: attomProp.assessment && attomProp.assessment.tax && attomProp.assessment.tax.taxRate
       } : null,
-      femaFlood: floodFeature != null ? {
+      femaFlood: attomFloodZone ? {
+        zone: attomFloodZone,
+        isSpecialFloodHazardArea: /^(A|AE|AH|AO|AR|A99|V|VE)\b/.test(attomFloodZone),
+        source: 'attom'
+      } : (floodFeature != null ? {
         zone: floodZone,
         subtype: floodFeature.attributes && floodFeature.attributes.ZONE_SUBTY,
         baseFloodElevation: floodBfe === -9999 ? null : floodBfe,
-        isSpecialFloodHazardArea: floodSfha
-      } : (femaFloodRaw ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area' } : null),
+        isSpecialFloodHazardArea: floodSfha,
+        source: 'nfhl'
+      } : (femaFloodRaw ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area', source: 'nfhl' } : null)),
       femaDisasters: uniqueDisasters,
       hud: hud ? {
         ltr: hud.ltr,
