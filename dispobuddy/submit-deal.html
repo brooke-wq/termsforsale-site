@@ -1442,7 +1442,7 @@ img{max-width:100%;display:block}
       });
       if (!res.ok) {
         var err = await res.json().catch(function() { return {}; });
-        throw new Error(err.message || 'Submission failed');
+        throw new Error(err.error || err.message || ('HTTP ' + res.status));
       }
 
       // Clear saved draft on successful submit
