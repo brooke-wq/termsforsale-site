@@ -28,15 +28,15 @@ The `tfs-fields.csv` is organized by these categories (column 1):
 
 | Category | Purpose |
 |---|---|
-| **1a Buyer Profile (match engine)** | Fields read by `notify-buyers.js` to match buyers to deals (12 fields) |
-| **1a-dyn Dynamic Lookups** | fieldKey-resolved at runtime (no hardcoded ID) (16 fields) |
-| **1a-dyn PHANTOM** | Fields the form used to write that DON'T EXIST in GHL (fixed PR #97) |
-| **1b Lifecycle Timestamps** | Workflow-written dates (WF02/WF03/WF04) (4 fields) |
-| **1c Deal Alert Fields** | Written by `notify-buyers.js` on each alert (16 fields) |
-| **1d DEPRECATED** | Legacy n8n "(latest)" fields pending deletion (5 fields) |
-| **1e Transaction Fields** | Post-close buyer data (6 fields) |
-| **1f Duplicates (intentional)** | Total Deals Closed — separate for buyers vs JV |
-| **1g System/Auth** | Password hash + reset code (2 fields) |
+| **Buyer Profile (Match Engine Core)** | Hardcoded IDs in `_ghl.js` `CF_IDS`. Hot path — read by `notify-buyers.js` for every match (12 fields) |
+| **Buyer Profile (Extended Criteria)** | fieldKey-resolved at runtime (no hardcoded ID). Written by `buy-box-save.js` form (16 fields) |
+| **PHANTOM (do not use)** | fieldKeys the form used to write that DON'T EXIST in GHL (fixed PR #97) (2 fields) |
+| **Lifecycle Timestamps** | Workflow-written dates (WF02/WF03/WF04) (4 fields) |
+| **Deal Alert Fields** | Written by `notify-buyers.js` on each alert — GHL email templates read these (16 fields) |
+| **DEPRECATED (pending deletion)** | Legacy n8n "(latest)" fields pending deletion (5 fields) |
+| **Transaction Fields (post-close)** | Post-close buyer data (EMD, offer price, etc.) (6 fields) |
+| **Total Deals Closed** | Two intentional duplicates — separate for buyers vs JV partners |
+| **System/Auth** | Password hash + reset code (2 fields) |
 
 ## Production stats (as of 2026-04-20 audit)
 
