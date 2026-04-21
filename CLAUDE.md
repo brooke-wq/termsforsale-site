@@ -213,6 +213,7 @@ The VS Code "Deploy to Netlify" task (Cmd+Shift+B) automates this.
 - Notion deal status `"Actively Marketing"` is the filter used by `deals.js` to show live deals
 - GHL is the source of truth for contacts/leads; Notion is the source of truth for deal inventory
 - The `termsforsale-site/lead-engine/` subdirectory is a separate Next.js app — do not modify unless specifically working on it
+- **Avoiding response timeouts on large file writes:** when writing or rewriting files that will be 400+ lines (or when assembling a large file from scratch), spawn a background Agent (`run_in_background: true`) to do the write instead of inlining the full content in the main assistant response. The main response gets cut off by the stream-idle timeout on very long outputs; the Agent runs independently, isn't subject to the same timeout, and notifies the session when it's done. Always verify the Agent's work after it completes (read the file back) before reporting the task done.
 
 ---
 
