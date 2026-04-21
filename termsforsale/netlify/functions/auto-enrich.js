@@ -40,6 +40,18 @@ function withTimeout(promise, ms) {
   });
 }
 
+// Coerce a Claude-generated narrative field (string OR array OR object) to
+// safe HTML. Claude sometimes returns strategies as a list ['strat1','strat2']
+// instead of a newline-separated string. Either form should render cleanly.
+function narrativeFieldToHtml(v) {
+  if (v == null) return '—';
+  if (Array.isArray(v)) return v.filter(Boolean).map(String).join('<br>');
+  if (typeof v === 'object') {
+    try { return String(JSON.stringify(v)).replace(/\n/g, '<br>'); } catch (e) { return '—'; }
+  }
+  return String(v).replace(/\n/g, '<br>');
+}
+
 function prop(page, name) {
   const p = (page.properties || {})[name];
   if (!p) return null;
@@ -659,9 +671,9 @@ exports.handler = async (event) => {
 <h3>AI Narrative</h3>
 <p><strong>Hook:</strong> ${narrative.hook || '—'}</p>
 <p><strong>Why It Exists:</strong> ${narrative.whyExists || '—'}</p>
-<p><strong>Strategies:</strong><br>${(narrative.strategies || '').replace(/\n/g, '<br>')}</p>
+<p><strong>Strategies:</strong><br>${narrativeFieldToHtml(narrative.strategies)}</p>
 <p><strong>Ideal Buyer:</strong> ${narrative.buyerFitYes || '—'}</p>
-${narrative.redFlags ? '<p><strong>Red Flags:</strong><br>' + narrative.redFlags.replace(/\n/g, '<br>') + '</p>' : ''}
+${narrative.redFlags ? '<p><strong>Red Flags:</strong><br>' + narrativeFieldToHtml(narrative.redFlags) + '</p>' : ''}
 <p><strong>Confidence:</strong> ${narrative.confidence || '—'}</p>`;
 
         try {
