@@ -298,7 +298,7 @@ exports.handler = async (event) => {
       }
 
       if (narrative && narrative.hook) {
-        notionProps['Deal Narrative'] = {
+        notionProps['Description'] = {
           rich_text: [{ type: 'text', text: { content: narrative.hook.slice(0, 2000) } }]
         };
       }
