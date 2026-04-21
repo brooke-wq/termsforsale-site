@@ -16,14 +16,24 @@ const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } 
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
-// 10 contact custom fields required by Brooke's offer-notification templates.
-// We write these to the contact so {{contact.<key>}} merge tags resolve in
-// Workflow B's internal email (which fires on the "Offer Submitted" tag for
-// both logged-in and logged-out paths).
+// 9 contact custom fields keyed exactly as they live in GHL → Settings →
+// Custom Fields → Contact (Offer Submitted folder). Writing these populates
+// the {{contact.<key>}} merge tags Brooke's "Offer Notification" workflow
+// uses. The double-underscore prefix on several keys is intentional — that's
+// how GHL stores them after the folder-prefix display rename.
+//   asset_type is NOT in this list: in GHL's taxonomy that field is for
+//   property type (SFH / MFH / etc.), which the offer form doesn't capture
+//   today. type_of_deal covers Cash vs Creative.
 const OFFER_CUSTOM_FIELD_KEYS = [
-  'offer_amount', 'type_of_deal', 'close_date_target', 'entry_fee',
-  'property_address', 'property_city', 'property_state',
-  'asset_type', 'offer_notes', 'current_deal_interest',
+  'offer_amount',
+  'type_of_deal',
+  'close_date_target',
+  'offer__entry_fee',
+  'property_address',
+  'offer__property_city',
+  'offer__property_state',
+  'offer_notes',
+  'deal_id',
 ];
 
 // In-memory cache (per container invocation) of GHL location custom field map.
@@ -164,16 +174,15 @@ exports.handler = async (event) => {
   try {
     var cfMap = await getLocationCustomFieldMap(apiKey, locationId);
     var values = {
-      offer_amount:          amount    != null ? String(amount)    : '',
-      type_of_deal:          typeOfDeal || '',
-      close_date_target:     coe        || '',
-      entry_fee:             entryFee   || '',
-      property_address:      streetAddress || '',
-      property_city:         city          || '',
-      property_state:        state         || '',
-      asset_type:            dealType      || '',   // Notion deal type (SubTo, Cash, SF, Hybrid, etc.)
-      offer_notes:           notes         || '',
-      current_deal_interest: dealId        || '',   // Notion Deal ID (e.g. PHX-001)
+      offer_amount:           amount != null ? String(amount) : '',
+      type_of_deal:           typeOfDeal || '',       // Cash | Creative
+      close_date_target:      coe        || '',
+      offer__entry_fee:       entryFee   || '',
+      property_address:       streetAddress || '',
+      offer__property_city:   city          || '',
+      offer__property_state:  state         || '',
+      offer_notes:            notes         || '',
+      deal_id:                dealId        || '',   // Notion Deal ID (e.g. PHX-001)
     };
     var cfPayload = [];
     var missing = [];

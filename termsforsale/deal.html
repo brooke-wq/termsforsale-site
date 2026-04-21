@@ -1452,15 +1452,18 @@ async function submitOffer(dealId){
   try{
     if(user&&user.contactId){
       // Logged-in: route through our Netlify function so it can write
-      // the 4 contact custom fields (offer_amount/type_of_deal/
-      // close_date_target/entry_fee) and post a formatted note.
+      // the 9 contact custom fields Workflow B's email needs
+      // (offer_amount / type_of_deal / close_date_target /
+      // offer__entry_fee / property_address / offer__property_city /
+      // offer__property_state / offer_notes / deal_id) and post a
+      // formatted note.
       await fetch('/api/submit-offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',streetAddress:deal.streetAddress||'',name:name,phone:phone,email:email||'',amount:amount,typeOfDeal:typeOfDeal,entryFee:entryFee,coe:timeline||'',notes:notes||''})});
     } else {
       // Logged-out: POST to the GHL Offer workflow with every field at the
-      // TOP level of the payload so {{contact.*}} merge tags resolve. The
-      // workflow was trained (via webhook-test.html) to expect these keys:
-      // deal_id, offer_amount, type_of_deal, close_date_target, entry_fee, notes.
-      await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:name.split(' ')[0],lastName:name.split(' ').slice(1).join(' '),phone:phone,email:email||'',deal_id:dealId||'',offer_amount:amount,type_of_deal:typeOfDeal,close_date_target:timeline||'',entry_fee:entryFee||'',notes:notes||'',property_city:deal.city||'',property_state:deal.state||'',property_address:deal.streetAddress||'',asset_type:deal.dealType||'',tags:['TFS Buyer','Offer Submitted','consent:sms'],source:'TFS Deal Page - Offer',pipeline_name:'Buyer Inquiries',pipeline_stage:'Offer Submitted'})});
+      // TOP level of the payload so {{contact.*}} merge tags resolve. Keys
+      // match GHL's actual contact custom field keys exactly (incl. the
+      // offer__ double-underscore prefixes).
+      await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:name.split(' ')[0],lastName:name.split(' ').slice(1).join(' '),phone:phone,email:email||'',deal_id:dealId||'',offer_amount:amount,type_of_deal:typeOfDeal,close_date_target:timeline||'',offer__entry_fee:entryFee||'',offer_notes:notes||'',property_address:deal.streetAddress||'',offer__property_city:deal.city||'',offer__property_state:deal.state||'',tags:['TFS Buyer','Offer Submitted','consent:sms'],source:'TFS Deal Page - Offer',pipeline_name:'Buyer Inquiries',pipeline_stage:'Offer Submitted'})});
     }
   }catch(err){console.error('Offer error:',err);}
   btn.innerHTML='✓ Offer Submitted!';btn.style.background='#276749';btn.style.color='#fff';

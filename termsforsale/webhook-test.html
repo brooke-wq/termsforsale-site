@@ -118,19 +118,17 @@ textarea{resize:vertical;min-height:60px}
       <option value="Creative">Creative</option>
       <option value="Cash">Cash</option>
     </select>
-    <label>Entry Fee <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.entry_fee  (blank on Cash deals)</span></label>
+    <label>Entry Fee <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer__entry_fee  (blank on Cash deals)</span></label>
     <input id="o-entry" value="25000">
     <label>Target Close <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.close_date_target</span></label>
     <input id="o-coe" value="14–21 days">
-    <label>Property Address <span style="color:rgba(255,255,255,.3);font-size:10px">→ property_address</span></label>
+    <label>Property Address <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.property_address</span></label>
     <input id="o-addr" value="123 Main St">
-    <label>Property City <span style="color:rgba(255,255,255,.3);font-size:10px">→ property_city</span></label>
+    <label>Property City <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer__property_city</span></label>
     <input id="o-city" value="Phoenix">
-    <label>Property State <span style="color:rgba(255,255,255,.3);font-size:10px">→ property_state</span></label>
+    <label>Property State <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer__property_state</span></label>
     <input id="o-state" value="AZ">
-    <label>Asset Type <span style="color:rgba(255,255,255,.3);font-size:10px">→ asset_type  (Notion deal type)</span></label>
-    <input id="o-asset" value="Subject To">
-    <label>Notes / Proposed Terms</label>
+    <label>Notes / Proposed Terms <span style="color:rgba(255,255,255,.3);font-size:10px">→ contact.offer_notes</span></label>
     <textarea id="o-notes">Offering asking price. Proposing 4.5% rate, 30yr term, 7yr balloon, $1,800/mo payment. Cash available for EMD.</textarea>
 
     <button class="btn btn-orange" onclick="sendTest('offer')">&#9889; Send Test to GHL</button>
@@ -165,24 +163,23 @@ async function sendTest(type) {
   }
 
   var payload = isOffer ? {
-    firstName:         document.getElementById('o-fn').value,
-    lastName:          document.getElementById('o-ln').value,
-    phone:             document.getElementById('o-phone').value,
-    email:             document.getElementById('o-email').value,
-    deal_id:           document.getElementById('o-deal').value,
-    offer_amount:      document.getElementById('o-amount').value,    // contact.offer_amount
-    type_of_deal:      document.getElementById('o-type').value,      // contact.type_of_deal
-    entry_fee:         document.getElementById('o-entry').value,     // contact.entry_fee
-    close_date_target: document.getElementById('o-coe').value,       // contact.close_date_target
-    property_address:  document.getElementById('o-addr').value,
-    property_city:     document.getElementById('o-city').value,
-    property_state:    document.getElementById('o-state').value,
-    asset_type:        document.getElementById('o-asset').value,     // Notion deal type (SubTo, Cash, etc.)
-    notes:             document.getElementById('o-notes').value,
-    tags:              ['TFS Buyer', 'Offer Submitted', 'consent:sms'],
-    source:            'TFS Website - Offer',
-    pipeline_name:     'Buyer Inquiries',
-    pipeline_stage:    'Offer Submitted'
+    firstName:              document.getElementById('o-fn').value,
+    lastName:               document.getElementById('o-ln').value,
+    phone:                  document.getElementById('o-phone').value,
+    email:                  document.getElementById('o-email').value,
+    deal_id:                document.getElementById('o-deal').value,      // contact.deal_id
+    offer_amount:           document.getElementById('o-amount').value,    // contact.offer_amount
+    type_of_deal:           document.getElementById('o-type').value,      // contact.type_of_deal
+    offer__entry_fee:       document.getElementById('o-entry').value,     // contact.offer__entry_fee
+    close_date_target:      document.getElementById('o-coe').value,       // contact.close_date_target
+    property_address:       document.getElementById('o-addr').value,      // contact.property_address
+    offer__property_city:   document.getElementById('o-city').value,      // contact.offer__property_city
+    offer__property_state:  document.getElementById('o-state').value,     // contact.offer__property_state
+    offer_notes:            document.getElementById('o-notes').value,     // contact.offer_notes
+    tags:                   ['TFS Buyer', 'Offer Submitted', 'consent:sms'],
+    source:                 'TFS Website - Offer',
+    pipeline_name:          'Buyer Inquiries',
+    pipeline_stage:         'Offer Submitted'
   } : {
     firstName:    document.getElementById('a-fn').value,
     lastName:     document.getElementById('a-ln').value,
