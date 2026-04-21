@@ -40,6 +40,15 @@ function withTimeout(promise, ms) {
   });
 }
 
+// Claude sometimes returns bullet fields as arrays instead of \n-joined strings.
+// Normalize: array → join on \n, string → as-is, null/undefined/other → "".
+function toBulletStr(v) {
+  if (Array.isArray(v)) return v.map(x => String(x || '').trim()).filter(Boolean).join('\n');
+  if (typeof v === 'string') return v;
+  if (v == null) return '';
+  return String(v);
+}
+
 function prop(page, name) {
   const p = (page.properties || {})[name];
   if (!p) return null;
@@ -482,6 +491,12 @@ exports.handler = async (event) => {
         });
         narrative = claudeResult.text;
         claudeUsage = claudeResult.usage;
+        // Normalize bullet fields that Claude sometimes returns as arrays.
+        if (narrative && typeof narrative === 'object') {
+          narrative.strategies = toBulletStr(narrative.strategies);
+          narrative.redFlags = toBulletStr(narrative.redFlags);
+          narrative.buyerFitYes = toBulletStr(narrative.buyerFitYes);
+        }
         console.log('[auto-enrich] Claude narrative generated, confidence=' + (narrative && narrative.confidence));
       } catch (e) {
         console.error('[auto-enrich] Claude failed:', e.message);
