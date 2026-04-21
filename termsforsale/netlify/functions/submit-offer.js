@@ -12,9 +12,50 @@
  *           GHL_STAGE_OFFER_RECEIVED, BROOKE_PHONE
  */
 
-const { getContact, postNote, addTags, sendSMS, sendEmail } = require('./_ghl');
+const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } = require('./_ghl');
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
+
+// 4 contact custom fields required by Brooke's offer-notification templates.
+// We write these to the contact so {{contact.<key>}} merge tags resolve.
+const OFFER_CUSTOM_FIELD_KEYS = ['offer_amount', 'type_of_deal', 'close_date_target', 'entry_fee'];
+
+// In-memory cache (per container invocation) of GHL location custom field map.
+let CF_MAP_CACHE = null;
+
+async function getLocationCustomFieldMap(apiKey, locationId) {
+  if (CF_MAP_CACHE) return CF_MAP_CACHE;
+  var map = {};
+  try {
+    var res = await fetch(GHL_BASE + '/locations/' + locationId + '/customFields', {
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Accept': 'application/json',
+      },
+    });
+    if (res.status >= 400) {
+      console.warn('[submit-offer] custom-field map fetch -> ' + res.status);
+      return map;
+    }
+    var data = await res.json().catch(function () { return {}; });
+    var fields = data.customFields || data.fields || [];
+    fields.forEach(function (f) {
+      var key = f.fieldKey || f.key || f.name;
+      if (key && f.id) {
+        // Some GHL responses return keys namespaced like "contact.offer_amount" —
+        // normalize to the bare key so lookups match what callers pass.
+        var bare = String(key).replace(/^contact\./, '');
+        map[bare] = f.id;
+        map[key] = f.id; // keep original too, just in case
+      }
+    });
+    CF_MAP_CACHE = map;
+  } catch (e) {
+    console.warn('[submit-offer] custom-field map error:', e.message);
+  }
+  return map;
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -45,6 +86,12 @@ exports.handler = async (event) => {
   var coe          = body.coe || '';
   var structure    = body.structure || body.funding || '';
   var notes        = body.notes || '';
+  // New fields for Brooke's notification template
+  var entryFee     = (body.entryFee != null ? String(body.entryFee) : '').trim();
+  // type_of_deal is the auto-detected Cash/Creative category. Fall back to
+  // inferring from the Notion dealType if the client didn't send it.
+  var typeOfDeal   = (body.typeOfDeal || '').trim()
+                     || (/^cash$/i.test(dealType.trim()) ? 'Cash' : (dealType ? 'Creative' : ''));
   // Form-level overrides for buyer contact (allow logged-in user to edit)
   var formName     = (body.name || '').trim();
   var formPhone    = (body.phone || '').trim();
@@ -72,6 +119,8 @@ exports.handler = async (event) => {
   var fullAddress = streetAddress ? streetAddress + ', ' + city + ', ' + state : location;
   var amountFmt = amount && !isNaN(+amount) ? '$' + Number(amount).toLocaleString() : amount;
 
+  var entryFeeFmt = entryFee && !isNaN(+entryFee) ? '$' + Number(entryFee).toLocaleString() : entryFee;
+
   // 1. Build comprehensive note — include buyer contact info AND every submitted field
   var noteLines = [
     '📋 OFFER SUBMITTED',
@@ -83,8 +132,10 @@ exports.handler = async (event) => {
     'Deal: ' + location + (dealType ? ' (' + dealType + ')' : ''),
     streetAddress ? 'Address: ' + fullAddress : '',
     'Deal ID: ' + dealId,
+    typeOfDeal ? 'Type: ' + typeOfDeal : '',
     '─────────────────',
     amount     ? 'Offer Amount: ' + amountFmt : 'Offer Amount: (not provided)',
+    entryFee   ? 'Entry Fee: ' + entryFeeFmt : '',
     structure  ? 'Funding Source: ' + structure : '',
     coe        ? 'Target Close: ' + coe : '',
     notes      ? 'Notes: ' + notes : '',
@@ -98,6 +149,44 @@ exports.handler = async (event) => {
     postNote(apiKey, contactId, noteLines),
     addTags(apiKey, contactId, ['Offer Submitted', 'Active Buyer', 'offer-' + dealId.substring(0, 8)])
   ]);
+
+  // 2b. Write the 4 contact custom fields Brooke's templates expect
+  // ({{contact.offer_amount}}, {{contact.type_of_deal}},
+  // {{contact.close_date_target}}, {{contact.entry_fee}}). GHL requires
+  // field UUIDs, so look them up on the location and PUT only the fields
+  // we can resolve. Silently skipped fields are logged.
+  try {
+    var cfMap = await getLocationCustomFieldMap(apiKey, locationId);
+    var values = {
+      offer_amount:      amount    != null ? String(amount)    : '',
+      type_of_deal:      typeOfDeal || '',
+      close_date_target: coe        || '',
+      entry_fee:         entryFee   || '',
+    };
+    var cfPayload = [];
+    var missing = [];
+    OFFER_CUSTOM_FIELD_KEYS.forEach(function (k) {
+      var id = cfMap[k];
+      if (id) {
+        cfPayload.push({ id: id, value: values[k] });
+      } else if (values[k]) {
+        missing.push(k);
+      }
+    });
+    if (cfPayload.length) {
+      var cfRes = await updateCustomFields(apiKey, contactId, cfPayload);
+      if (cfRes.status >= 400) {
+        console.warn('[submit-offer] custom fields update -> ' + cfRes.status, JSON.stringify(cfRes.body));
+      } else {
+        console.log('[submit-offer] wrote ' + cfPayload.length + ' custom fields to contact=' + contactId);
+      }
+    }
+    if (missing.length) {
+      console.warn('[submit-offer] custom-field keys not found on location, skipped:', missing.join(', '));
+    }
+  } catch (e) {
+    console.warn('[submit-offer] custom fields write failed:', e.message);
+  }
 
   // 3. Create GHL opportunity (if pipeline is configured)
   var pipelineId = process.env.GHL_PIPELINE_ID_BUYER;
@@ -143,7 +232,8 @@ exports.handler = async (event) => {
   if (brookePhone && locationId) {
     var sms = 'New offer: ' + (buyerName || 'Buyer') + ' on ' + location;
     if (amount) sms += ' — ' + amountFmt;
-    if (structure) sms += ' (' + structure + ')';
+    if (typeOfDeal) sms += ' [' + typeOfDeal + ']';
+    if (entryFee) sms += ', entry ' + entryFeeFmt;
     if (coe) sms += ', close ' + coe;
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
@@ -157,10 +247,11 @@ exports.handler = async (event) => {
   if (buyerEmail && contactId) {
     try {
       var detailRows = '';
-      if (amount)    detailRows += row('Offer amount', amountFmt);
-      if (structure) detailRows += row('Funding source', structure);
-      if (coe)       detailRows += row('Target close', coe);
-      if (notes)     detailRows += row('Your notes', escapeHtml(notes));
+      if (amount)     detailRows += row('Offer amount', amountFmt);
+      if (typeOfDeal) detailRows += row('Deal type', escapeHtml(typeOfDeal));
+      if (entryFee)   detailRows += row('Entry fee', entryFeeFmt);
+      if (coe)        detailRows += row('Target close', coe);
+      if (notes)      detailRows += row('Your notes', escapeHtml(notes));
 
       var html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
         + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0">'
@@ -204,7 +295,7 @@ exports.handler = async (event) => {
     console.warn('[submit-offer] no buyer email on contact — skipping confirmation send');
   }
 
-  console.log('[submit-offer] contact=' + contactId + ' deal=' + dealId + ' amount=' + amount + ' structure=' + structure + ' coe=' + coe);
+  console.log('[submit-offer] contact=' + contactId + ' deal=' + dealId + ' amount=' + amount + ' type=' + typeOfDeal + ' entry=' + entryFee + ' coe=' + coe);
 
   return respond(200, { ok: true });
 };
