@@ -1,0 +1,47 @@
+field_name,ghl_field_key,ghl_field_id,type,purpose,set_by
+Contact Role,contact.contact_role,agG4HMPB5wzsZXiRxfmR,Multi-select,"REQUIRED = ['Buyer'] for notify-buyers to see contact",auth-signup.js:98
+Target States,contact.states_buying_in,aewzY7iEvZh12JhMVi7E,Multi-select,"States buyer buys in e.g. ['AZ','TX']",buy-box-save.js
+Target Cities,contact.target_location,DbY7dHIXk8YowpaWrxYj,Multi-select,"City+state pairs e.g. 'Phoenix, AZ'",buy-box-save.js + vip-buyer-submit.js
+Deal Structures,contact.deal_structure,0L0ycmmsEjy6OPDL0rgq,Multi-select,"Accepted deal types: Cash, Subject To, Seller Finance, etc.",buy-box-save.js + auth-signup.js + vip-buyer-submit.js
+Property Type,contact.property_type_new,HGC6xWLpSqoAQPZr0uwY,Multi-select,"e.g. Single Family, Multi-Family",buy-box-save.js + vip-buyer-submit.js
+Max Price,contact.max_price,BcxuopmSK4wA3Z3NyanD,Monetary,Maximum acquisition price buyer will pay,buy-box-save.js + vip-buyer-submit.js
+Max Entry Fee,contact.max_down,SZmNHA3BQva2AZg00ZNP,Monetary,Maximum entry fee / down payment,buy-box-save.js
+Min ARV,contact.arv,KKGEfgdaqu98yrZYkmoO,Monetary,Minimum ARV buyer requires,buy-box-save.js
+Min Beds,contact.bedrooms_min,RRuCraVtRUlEMvdFXngv,Number,Minimum bedroom count,buy-box-save.js
+Exit Strategies,contact.exits,98i8EKc3OWYSqS4Qb1nP,Multi-select,"e.g. Rental, Flip, Wholetail",buy-box-save.js + vip-buyer-submit.js
+Target Markets (text),contact.target_zips,XjXqGv6Y82iTP659pO4t,Large text,Free-form markets/ZIPs,buy-box-save.js + vip-buyer-submit.js
+Buyer Type,contact.buyer_type,95PgdlIYfXYcMymnjsIv,Single select,"e.g. Buyer, Investor",buy-box-save.js + vip-buyer-submit.js
+Max Monthly/PITI,contact.max_monthly,(dynamic),Monetary,Max monthly payment buyer can carry,buy-box-save.js
+Target Cash Flow,contact.target_monthly_cashflow,(dynamic),Monetary,Min monthly cash flow required,buy-box-save.js
+Max Interest Rate,contact.max_rate_,(dynamic),Number,Max interest rate on creative deals,buy-box-save.js
+Min Sqft,contact.min_sqft,(dynamic),Number,Minimum square footage,buy-box-save.js
+Min Year Built,contact.min_year_build,(dynamic),Number,Minimum year built,buy-box-save.js
+Min Baths,contact.baths_min,(dynamic),Number,Minimum bathroom count,buy-box-save.js
+Remodel Level,contact.remodel_level,(dynamic),Select,Condition tolerance: Turn-key / Light / Heavy,buy-box-save.js
+HOA Tolerance,contact.hoa_tolerance,(dynamic),Text/Select,"""no"", ""under $100/mo"" etc. — used by HOA hard filter",buy-box-save.js
+Pool,contact.pool,(dynamic),Checkbox/Select,Requires pool Y/N,buy-box-save.js
+Purchase Timeline,contact.purchase_timeline,(dynamic),Select,Immediate 0-30 / Short-Term 31-90 / Long-Term 90+,buy-box-save.js
+Buy Box Notes,contact.buy_box,(dynamic),Large text,Free-form buy box description — scanned by AI match,buy-box-save.js
+Criteria Last Updated,contact.criteria_last_update,(dynamic),Date,Auto-set on every buy-box save,buy-box-save.js
+Max Repair Budget,contact.max_repair_budget,(dynamic),Monetary,Max rehab spend,buy-box-save.js
+Occupancy Preference,contact.occupancy_preference,(dynamic),Select,Vacant / Occupied / Either,buy-box-save.js
+Password Hash,tfs_password_hash,(dynamic),Large text,PBKDF2 hash (salt:hash format). Never expose client-side,auth-signup.js
+Reset Code,tfs_reset_code,(dynamic),Large text,6-digit OTP with expiry (format: 6digits:13digitTimestamp),auth-reset.js
+HOA Checkbox,contact.hoa,(dynamic),Checkbox,Hard reject HOA deals if unchecked/false,notify-buyers.js
+Buyer Status,contact.buyer_status,(dynamic),Select,"""not buying now"" = excluded from match",notify-buyers.js
+Alert - Full Address,(alert_full_address),TerjqctukTW67rB21ugC,Text,Last deal alert street address,notify-buyers.js
+Alert - City,(alert_city),KuaUFXhbQB6kKvBSKfoI,Text,Last deal alert city,notify-buyers.js
+Alert - State,(alert_state),ltmVcWUpbwZ0S3dBid3U,Text,Last deal alert state,notify-buyers.js
+Alert - ZIP,(alert_zip),UqJl4Dq6T8wfNb70EMrL,Text,Last deal alert ZIP,notify-buyers.js
+Alert - Deal Type,(alert_deal_type),0thrOdoETTLlFA45oN8U,Text,"Last deal type sent (Cash / SubTo / etc.)",notify-buyers.js
+Alert - Deal URL,(alert_deal_url),5eEVPcp8nERlR6GpjZUn,URL,Short deal URL (/d/city-zip-code),notify-buyers.js
+Alert - Summary,(alert_summary),YjoPoDPv7Joo1izePpDx,Large text,Deal summary text sent in alert,notify-buyers.js
+Alert - Asking Price,(alert_asking_price),iur6TZsfKotwO3gZb8yk,Monetary,Asking price on last alert,notify-buyers.js
+Alert - Entry Fee,(alert_entry_fee),DH4Ekmyw2dvzrE74JSzs,Monetary,Entry fee on last alert,notify-buyers.js
+Alert - Property Type,(alert_property_type),DJFMav5mPvWBzsPdhAqy,Text,Property type on last alert,notify-buyers.js
+Alert - Beds,(alert_beds),2iVO7pRpi0f0ABb6nYka,Number,Beds on last alert,notify-buyers.js
+Alert - Baths,(alert_baths),rkzCcjHJMFJP3GcwnNx6,Number,Baths on last alert,notify-buyers.js
+Alert - Year Built,(alert_year_built),nNMHvkPbjGYRbOB1v7vQ,Number,Year built on last alert,notify-buyers.js
+Alert - Sqft,(alert_sqft),MgNeVZgMdTcdatcTTHue,Number,Sqft on last alert,notify-buyers.js
+Alert - Highlights,(alert_highlights),eke6ZGnex77y5aUCNgly,Large text,Deal highlights bullet points,notify-buyers.js
+Alert - Cover Photo,(alert_cover_photo),FXp9oPT4T4xqA1HIJuSC,URL,Cover photo URL on last alert,notify-buyers.js

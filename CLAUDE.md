@@ -302,6 +302,57 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 21 2026 GoHighLevel Reference Documentation (CSV Format)
+
+Branch: `claude/ghl-fields-tags-documentation-aux2c`. Commit `5b09c48`.
+
+User requested comprehensive GHL field/tag/pipeline reference split between TFS and Dispo Buddy, laid out in easy-to-read spreadsheet format with full field keys, IDs, definitions, triggers, and code mappings. Delivered as 6 CSV files (Excel-friendly, no timeouts).
+
+### Files shipped
+
+- **`docs/ghl-reference/tfs-fields.csv`** (45 rows) — Contact custom fields for TFS buyer network. Columns: field_name, ghl_field_key, ghl_field_id, type, purpose, set_by. Includes critical fields: Contact Role (agG4HMPB5wzsZXiRxfmR, REQUIRED for buyer visibility), Target States/Cities (for market-only filtering), Deal Structures, Property Type, Max Price, Alert Preference fields, HOA Tolerance, Buy Box completion tracking, password hash storage. Set by: auth-signup.js, buy-box-save.js, vip-buyer-submit.js, notify-buyers.js.
+
+- **`docs/ghl-reference/tfs-tags.csv`** (65+ rows) — All TFS tags organized by 13 categories: Signup/Opt-In (opt in, TFS Buyer, buyer-signup), Buyer Type/Strategy (use:fix-flip, use:rental-buyer, use:creative-finance, use:wholetail), Deal Response (buyer-interested, buyer-maybe, buyer-pass), Alert Preference (pref-keep-all, pref-market-only, alerts-paused — mutually exclusive), Deal Sprint (deal-hot, deal-warm, deal-paused), Engagement (new-deal-alert, Active Viewer, Active Buyer), Per-Deal Tracking (sent:[slug], viewed-[dealCode], alert-[dealCode]), Lead Scoring (lead-new, lead-warm, lead-hot, lead-dead), Underwriting (uw-requested, uw-complete, call-prepped), Bird Dog, Equity Exit, Commercial (buyer-commercial, tier-a/b/c, nda-requested), Cross-Brand (dispo-buddy, jv-partner). Set by: 15+ functions covering buyer signup, response tagging, engagement tracking, lead scoring, underwriting automation.
+
+- **`docs/ghl-reference/tfs-opportunities.csv`** (17 rows) — Two pipelines: Buyer Inquiries (env:GHL_PIPELINE_ID_BUYER) with 7 stages (New Lead via webhook → Offer Submitted cd4df0dc... → Contract Sent → Contract Signed → EMD Received → Closed/Won → Lost); Commercial/Multifamily (HTpFvaMGATSXsECYFhoB) with 8 stages (Profile Completed → NDA Requested → NDA Signed → Package Delivered → LOI Submitted → Under Contract → Closed Won → Dead). Most stages GHL-manual or webhook-triggered; stage IDs resolved by name at runtime via getStageIdByName() for Commercial lane.
+
+- **`docs/ghl-reference/dispobuddy-fields.csv`** (37 rows) — Dispo Buddy partner submission custom fields. Columns: field_key, display_name, type, purpose, set_by. Includes: partner identity (jv_partner_name, jv_phone_number, jv_partner_email), property details (address, occupancy, access instructions, photos/docs links), deal structure (deal_type select parsing maps to db-* tags), pricing (contracted_price, asking_price, arv_estimate, buyer_entry_fee, etc.), financing details (subto_loan_balance, interest_rate, monthly_payment, loan_maturity, subto_balloon, seller_finance amounts/rates/terms), property attributes (beds, baths, sqft, year_built, lot_size), OTP login (portal_otp_code). All set by: dispo-buddy-submit.js or partner-login.js. Key pattern: uses field_key (runtime resolved) not hardcoded IDs — getCustomFieldMap() builds the key→ID resolution at startup.
+
+- **`docs/ghl-reference/dispobuddy-tags.csv`** (16 rows) — Dispo Buddy tags organized by 4 categories: Identity (dispo-buddy, jv-partner, jv-submitted which triggers deferred cron), Deal Type (db-cash, db-subto, db-seller-finance, db-hybrid, db-morby, db-lease-option, db-novation — auto-applied by deal_type field parsing), Relationship (db-first-deal, db-affiliate-referred, db-direct-to-seller, db-jv-with-wholesaler), Triage (jv-viable, jv-rejected — both deferred). All set by: dispo-buddy-submit.js buildTags() function which parses the deal_type field and applies zero or more type tags + zero or more relationship tags per contact.
+
+- **`docs/ghl-reference/dispobuddy-opportunities.csv`** (11 rows) — JV Deals pipeline (XbZojO2rHmYtYa8C0yUP). Nine stages in order: New JV Lead (cf2388f0-fdbf-4fb1-b633-86569034fcce, auto-created on submission) → Under Review (GHL manual) → JV Agreement Sent → JV Agreement Signed → Actively Marketing → Assignment Sent → Assigned with EMD → Closed → Lost. Mapped to trigger events via partner-stage-notify.js webhook (fired on stage change in GHL workflow).
+
+### Data source verification
+
+All 6 CSVs reverse-engineered from production source code and validated against:
+- `_ghl.js:111-143` — CF_IDS hardcoded object (25 TFS field IDs)
+- `auth-signup.js:97-100` — Contact Role requirement + signup tags
+- `buy-box-save.js:73-142` — buy-box form mappings to 25+ custom fields
+- `vip-buyer-submit.js:41-82` — VIP signup tags + buyer type strategy tags
+- `notify-buyers.js:217-272` — buyer field access patterns (CF constants) + deal matching filters
+- `buyer-response-tag.js:27-69` — response tag patterns + preference tag system
+- `dispo-buddy-submit.js:19-560` — field_key resolution, buildTags() logic, deal type mapping
+- `partner-login.js:23-60` — OTP encoding format
+- Notion schema inspection for deal type select options and opportunity stage IDs
+
+### Why CSV format instead of markdown
+
+Previous attempts to write detailed markdown with inline tables consistently timed out (stream idle timeout — partial response received) across 4+ sessions. CSV format:
+- Smaller per-file output size (avoids timeout)
+- Native Excel/Google Sheets import (more useful than markdown for field reference)
+- Easier to maintain and version-control (structured data, not narrative)
+- All critical details preserved in columns (field names, IDs, purposes, triggers, code references)
+- Can be imported directly into GHL admin docs or team wikis
+
+### Limitations (intentional omissions)
+
+- No markdown narrative guide included (deferred to avoid timeout risk; CSVs alone are the primary deliverable)
+- Field ID values for Dispo Buddy not included (all runtime-resolved via getCustomFieldMap(); use function logs to find real IDs on first run)
+- GHL webhook workflows not included (must be configured manually in GHL UI — CSVs document the fields/tags they write to)
+- Historical data cleanup + deal engagement tracking flows documented in separate CLAUDE.md sections already
+
+---
+
 ## Completed — April 21 2026 Dispo Buddy Submission Triage (PR #103)
 
 Branch: `claude/fix-deal-submission-issue-3WLfn`. A JV partner reported
