@@ -1,5 +1,5 @@
 {
-  "name": "Auto-Enrichment — Intake Deals",
+  "name": "Auto-Enrichment — Ready to Underwrite Deals",
   "nodes": [
     {
       "parameters": {
@@ -44,13 +44,13 @@
           "parameters": []
         },
         "specifyBody": "json",
-        "jsonBody": "{\"filter\":{\"property\":\"Deal Status\",\"status\":{\"equals\":\"Intake\"}}}",
+        "jsonBody": "{\"filter\":{\"property\":\"Deal Status\",\"status\":{\"equals\":\"Ready to Underwrite\"}}}",
         "options": {
           "timeout": 15000
         }
       },
       "id": "a1b2c3d4-0002-4000-8000-000000000002",
-      "name": "Query Notion — Intake Deals",
+      "name": "Query Notion — Ready to Underwrite",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [480, 300]
@@ -106,14 +106,14 @@
       "main": [
         [
           {
-            "node": "Query Notion — Intake Deals",
+            "node": "Query Notion — Ready to Underwrite",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Query Notion — Intake Deals": {
+    "Query Notion — Ready to Underwrite": {
       "main": [
         [
           {
@@ -144,6 +144,6 @@
   "meta": {
     "instanceId": "auto-enrichment-workflow-v1"
   },
-  "id": "auto-enrichment-intake",
+  "id": "auto-enrichment-ready-to-underwrite",
   "tags": []
 }

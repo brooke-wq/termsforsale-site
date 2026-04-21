@@ -1,12 +1,12 @@
 # Auto-Enrichment Workflow — Setup Guide
 
-Automatically enriches deals in the "Intake" status in Notion with RentCast market data, HUD FMR rents, and a Claude Haiku narrative. Runs every 5 minutes via n8n Cloud.
+Automatically enriches deals in the "Ready to Underwrite" status in Notion with RentCast market data, HUD FMR rents, and a Claude Haiku narrative. Runs every 5 minutes via n8n Cloud.
 
 ---
 
 ## What It Does
 
-1. n8n polls Notion every 5 min for deals with `Deal Status = Intake`.
+1. n8n polls Notion every 5 min for deals with `Deal Status = Ready to Underwrite`.
 2. For each deal, POSTs the Notion page ID to `/api/auto-enrich` on the Terms For Sale Netlify site.
 3. The function enriches the deal with:
    - RentCast property record (beds/baths/sqft/year built)
@@ -52,7 +52,7 @@ The following properties must exist on the deals database (`a3c0a38fd9294d758ded
 
 | Property | Type | Notes |
 |---|---|---|
-| `Deal Status` | Status | Must include `Intake` as an option |
+| `Deal Status` | Status | Must include `Ready to Underwrite` as an option |
 | `Deal ID` | Rich Text or Title | e.g. `PHX-001` |
 | `Street Address` | Rich Text | Full street address |
 | `City` | Rich Text | |
@@ -80,7 +80,7 @@ The following properties must exist on the deals database (`a3c0a38fd9294d758ded
 4. Set the two n8n Variables (`NOTION_TOKEN`, `AUTOENRICH_AUTH_TOKEN`) if not already done.
 5. Click **Activate** to turn it on.
 
-The workflow polls on a 5-minute schedule and processes all Intake deals it finds each run. Deals already processed will still be re-enriched until you change their status out of Intake — so move enriched deals to the next status (e.g. `Actively Marketing` or `Ready to Market`) once reviewed.
+The workflow polls on a 5-minute schedule and processes all Ready to Underwrite deals it finds each run. Deals already processed will still be re-enriched until you change their status out of Ready to Underwrite — so move enriched deals to the next status (e.g. `Actively Marketing` or `Ready to Market`) once reviewed.
 
 ---
 

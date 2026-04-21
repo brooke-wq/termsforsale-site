@@ -312,7 +312,7 @@ Built the full auto-enrichment pipeline that reduces manual deal data-gathering 
 
 - **`termsforsale/netlify/functions/auto-enrich.js`** — POST `/api/auto-enrich`. Auth-gated (Bearer token). Fetches the Notion deal page, runs 4 parallel enrichment calls (RentCast property record + AVM value + AVM rent + HUD FMR, each with 6s timeout via `Promise.allSettled`), calls Claude Haiku to produce a 6-key narrative JSON (hook, whyExists, strategies, buyerFitYes, redFlags, confidence), smart-patches Notion back (up to 5 retries, drops unknown properties), calls the Paperclip `/render` service to produce a `.docx` in Google Drive, and notifies Brooke via GHL note + SMS + email.
 
-- **`auto-underwrite/n8n/auto-enrichment.workflow.json`** — Importable n8n workflow. Schedule trigger every 5 min → Notion database query (filter: Deal Status = Intake) → Code node to extract page IDs → HTTP Request POST to `/api/auto-enrich` per deal.
+- **`auto-underwrite/n8n/auto-enrichment.workflow.json`** — Importable n8n workflow. Schedule trigger every 5 min → Notion database query (filter: Deal Status = Ready to Underwrite) → Code node to extract page IDs → HTTP Request POST to `/api/auto-enrich` per deal.
 
 - **`auto-underwrite/n8n/README.md`** — Setup guide: Netlify env vars, n8n Variables, import steps, curl test example, Notion schema notes.
 
@@ -337,7 +337,7 @@ Built the full auto-enrichment pipeline that reduces manual deal data-gathering 
 ### Notion schema requirements
 
 The following Notion properties must exist on the deals DB for full enrichment:
-- `Deal Status` (status) — must have "Intake" as an option
+- `Deal Status` (status) — must have "Ready to Underwrite" as an option
 - `LTR Market Rent` (number) — written by enrichment
 - `Enriched At` (date) — written by enrichment
 - `Deal Narrative` (rich_text) — written speculatively (dropped silently if missing)
