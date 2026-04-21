@@ -1,66 +1,66 @@
 category,field_name,ghl_field_key,ghl_field_id,type,purpose,set_by
-1a Buyer Profile (match engine),Contact Role,contact.buyer_type,agG4HMPB5wzsZXiRxfmR,Multi-select,"REQUIRED = ['Buyer'] for notify-buyers to see contact (THE BUYER GATE). Display name 'Contact Role' despite fieldKey 'contact.buyer_type'.",auth-signup.js:98
-1a Buyer Profile (match engine),Target States,contact.states_buying_in,aewzY7iEvZh12JhMVi7E,Multi-select,"States buyer buys in e.g. ['AZ','TX']",buy-box-save.js
-1a Buyer Profile (match engine),Target Cities,contact.target_location,DbY7dHIXk8YowpaWrxYj,Multi-select,"City+state pairs e.g. 'Phoenix, AZ'",buy-box-save.js + vip-buyer-submit.js
-1a Buyer Profile (match engine),Target Markets,contact.target_zips,XjXqGv6Y82iTP659pO4t,Large text,Free-form city/state blob (backward compat),buy-box-save.js + vip-buyer-submit.js
-1a Buyer Profile (match engine),Deal Structures,contact.deal_structure,0L0ycmmsEjy6OPDL0rgq,Multi-select,"Accepted deal types: Cash, Subject To, Seller Finance, Hybrid, Morby, Wrap, Lease Option, Novation",buy-box-save.js + auth-signup.js + vip-buyer-submit.js
-1a Buyer Profile (match engine),Property Type,contact.property_type_new,HGC6xWLpSqoAQPZr0uwY,Multi-select,"e.g. Single Family, Multi-Family. Canonical fieldKey after PR #97.",buy-box-save.js + vip-buyer-submit.js
-1a Buyer Profile (match engine),Max Price,contact.max_price,BcxuopmSK4wA3Z3NyanD,Monetary,Maximum acquisition price buyer will pay,buy-box-save.js + vip-buyer-submit.js
-1a Buyer Profile (match engine),Max Entry Fee,contact.max_down,SZmNHA3BQva2AZg00ZNP,Monetary,Maximum entry fee / down payment,buy-box-save.js
-1a Buyer Profile (match engine),Min ARV,contact.arv,KKGEfgdaqu98yrZYkmoO,Monetary,Minimum ARV buyer requires,buy-box-save.js
-1a Buyer Profile (match engine),Min Beds,contact.bedrooms_min,RRuCraVtRUlEMvdFXngv,Number,Minimum bedroom count,buy-box-save.js
-1a Buyer Profile (match engine),Exit Strategies,contact.exits,98i8EKc3OWYSqS4Qb1nP,Multi-select,"e.g. Rental, Flip, Wholetail",buy-box-save.js + vip-buyer-submit.js
-1a Buyer Profile (match engine),Buyer Type,(verify in GHL),95PgdlIYfXYcMymnjsIv,Single select,"Distinct field from Contact Role. Used by _ghl.js CF_IDS.BUYER_TYPE. Confirm exact fieldKey in GHL UI.",buy-box-save.js
-1a-dyn Dynamic Lookups,Max Monthly/PITI,contact.max_monthly,(dynamic),Monetary,Max monthly payment buyer can carry,buy-box-save.js
-1a-dyn Dynamic Lookups,Target Cash Flow,contact.target_monthly_cashflow,(dynamic),Monetary,Min monthly cash flow required,buy-box-save.js
-1a-dyn Dynamic Lookups,Max Interest Rate,contact.max_rate_,(dynamic),Number,Max interest rate on creative deals,buy-box-save.js
-1a-dyn Dynamic Lookups,Min Sqft,contact.min_sqft,(dynamic),Number,Minimum square footage,buy-box-save.js
-1a-dyn Dynamic Lookups,Min Year Built,contact.min_year_build,(dynamic),Number,Minimum year built,buy-box-save.js
-1a-dyn Dynamic Lookups,Min Baths,contact.baths_min,(dynamic),Number,Minimum bathroom count,buy-box-save.js
-1a-dyn Dynamic Lookups,Remodel Level,contact.remodel_level,(dynamic),Select,Condition tolerance: Turn-key / Light / Heavy,buy-box-save.js
-1a-dyn Dynamic Lookups,HOA Tolerance,contact.hoa_tolerance,(dynamic),Text/Select,"""no"", ""under $100/mo"" etc. — used by HOA hard filter",buy-box-save.js
-1a-dyn Dynamic Lookups,Pool,contact.pool,(dynamic),Checkbox/Select,Requires pool Y/N,buy-box-save.js
-1a-dyn Dynamic Lookups,Purchase Timeline,contact.purchase_timeline,(dynamic),Select,Immediate 0-30 / Short-Term 31-90 / Long-Term 90+,buy-box-save.js
-1a-dyn Dynamic Lookups,Buy Box Notes,contact.buy_box,(dynamic),Large text,Free-form buy box description — scanned by AI match,buy-box-save.js
-1a-dyn Dynamic Lookups,Criteria Last Updated,contact.criteria_last_update,(dynamic),Date,Auto-set on every buy-box save,buy-box-save.js
-1a-dyn Dynamic Lookups,Max Repair Budget,contact.max_repair_budget,(dynamic),Monetary,Max rehab spend,buy-box-save.js
-1a-dyn Dynamic Lookups,Occupancy Preference,contact.occupancy_preference,(dynamic),Select,Vacant / Occupied / Either,buy-box-save.js
-1a-dyn Dynamic Lookups,HOA Checkbox,contact.hoa,(dynamic),Checkbox,Hard reject HOA deals if unchecked/false,notify-buyers.js
-1a-dyn Dynamic Lookups,Buyer Status,contact.buyer_status,(dynamic),Select,"""not buying now"" = excluded from match",notify-buyers.js
-1a-dyn PHANTOM (do not write),property_type_preference,contact.property_type_preference,(NOT FOUND),phantom,"NOT FOUND in GHL. Fixed PR #97 — form now writes to contact.property_type_new.",form (removed PR #97)
-1a-dyn PHANTOM (do not write),buyer_profile_type,contact.buyer_profile_type,(NOT FOUND),phantom,"NOT FOUND in GHL. Cash/Creative categorization silently dropped. Removed from form PR #97.",form (removed PR #97)
-1b Lifecycle Timestamps,Last Touch Date,(verify),SwUKaml8kRpCrrLzunlh,Date,Written by WF02 after send; read by WF04a (dormant sweep),WF02 (GHL workflow)
-1b Lifecycle Timestamps,Last Deal Sent Date,(verify),CAJQUQSjrkcdygsCGDdK,Date,"Legacy n8n match engine (no longer running as matcher)",legacy n8n
-1b Lifecycle Timestamps,Last Deal Sent ID,(verify),RiSmLK8l97DKzrK3VQaZ,Text,Legacy n8n (not currently updated),legacy n8n
-1b Lifecycle Timestamps,Re-verify Due Date,(verify),1cgpp0vcBSWSKptqoORU,Date,Written by WF03/WF04b; used for quarterly POF re-verify,WF03 / WF04b
-1c Deal Alert Fields,Deal Location,(verify),TerjqctukTW67rB21ugC,Text,"'City, State' — last deal sent",notify-buyers.js (on each alert)
-1c Deal Alert Fields,Deal City,(verify),KuaUFXhbQB6kKvBSKfoI,Text,City of last deal sent,notify-buyers.js
-1c Deal Alert Fields,Deal State,(verify),ltmVcWUpbwZ0S3dBid3U,Text,State of last deal sent,notify-buyers.js
-1c Deal Alert Fields,Deal Zip,(verify),UqJl4Dq6T8wfNb70EMrL,Text,Zip of last deal sent,notify-buyers.js
-1c Deal Alert Fields,Deal Type,(verify),0thrOdoETTLlFA45oN8U,Text,"Wholesale / SubTo / Hybrid / Seller Finance — last deal type sent",notify-buyers.js
-1c Deal Alert Fields,Deal URL,(verify),5eEVPcp8nERlR6GpjZUn,URL,Short tracked link /d/city-zip-code with ?c=contactId,notify-buyers.js
-1c Deal Alert Fields,Deal Summary,(verify),YjoPoDPv7Joo1izePpDx,Large text,"Combined 'Type · City · Price · Entry' summary",notify-buyers.js
-1c Deal Alert Fields,Price,(verify),iur6TZsfKotwO3gZb8yk,Monetary,"'$X' formatted price of last deal",notify-buyers.js
-1c Deal Alert Fields,Entry Fee,(verify),DH4Ekmyw2dvzrE74JSzs,Monetary,"'$X + CC/TC' formatted entry fee",notify-buyers.js
-1c Deal Alert Fields,Property Type (deal),(verify),DJFMav5mPvWBzsPdhAqy,Text,Property type on last deal alert,notify-buyers.js
-1c Deal Alert Fields,Beds (deal),(verify),2iVO7pRpi0f0ABb6nYka,Number,Beds on last deal alert,notify-buyers.js
-1c Deal Alert Fields,Baths (deal),(verify),rkzCcjHJMFJP3GcwnNx6,Number,Baths on last deal alert,notify-buyers.js
-1c Deal Alert Fields,Year Built (deal),(verify),nNMHvkPbjGYRbOB1v7vQ,Number,Year built on last deal alert,notify-buyers.js
-1c Deal Alert Fields,Sqft (deal),(verify),MgNeVZgMdTcdatcTTHue,Number,Sqft on last deal alert,notify-buyers.js
-1c Deal Alert Fields,Highlights,(verify),eke6ZGnex77y5aUCNgly,Large text,3-line bullet string for the alert,notify-buyers.js
-1c Deal Alert Fields,Cover Photo URL,(verify),FXp9oPT4T4xqA1HIJuSC,URL,Google Drive thumbnail for alert email,notify-buyers.js
-1d DEPRECATED (pending deletion),Deal Asset Class (latest),(verify),JzmuiUCvNJtHiHOeEz90,deprecated,"n8n legacy. Cleared on Test Partner 2026-04-20. Delete after 1 week clean hybrid ops. Use Property Type (HGC6xWLpSqoAQPZr0uwY) instead.",legacy n8n (retired)
-1d DEPRECATED (pending deletion),Deal Market (latest),(verify),tAFA5xs5ZS7AG7AgheZw,deprecated,"n8n legacy. Use Deal Location (TerjqctukTW67rB21ugC) instead.",legacy n8n (retired)
-1d DEPRECATED (pending deletion),Deal Price (latest),(verify),h1PdpPrgYHfk7WKdEBjp,deprecated,"n8n legacy. Use Price (iur6TZsfKotwO3gZb8yk) instead.",legacy n8n (retired)
-1d DEPRECATED (pending deletion),Deal Type (latest),(verify),TENFLNR411SHBOBRzEQX,deprecated,"n8n legacy. Use Deal Type (0thrOdoETTLlFA45oN8U) instead.",legacy n8n (retired)
-1d DEPRECATED (pending deletion),Deal Summary URL (latest),(verify),hGftrRzv5pt24KrNd1sO,deprecated,"n8n legacy. Use Deal URL (5eEVPcp8nERlR6GpjZUn) instead.",legacy n8n (retired)
-1e Transaction Fields (post-close),Entity Name,(verify),05jevWkhMiY8bFoe9TWc,Text,Buyer's LLC / entity name for closing,manual (GHL UI)
-1e Transaction Fields (post-close),EMD Amount,(verify),pEf6ih4rpT7oOMLlK9wN,Monetary,Earnest Money Deposit amount,manual / submit-offer.js
-1e Transaction Fields (post-close),Offer Price,(verify),6c52JUALKfX7Apv4RpR4,Monetary,Buyer's offer amount,submit-offer.js
-1e Transaction Fields (post-close),Close Date Target,(verify),wuXiUAbgKqaYGlmqqE0e,Date,Target closing date,manual / submit-offer.js
-1e Transaction Fields (post-close),Contingencies,(verify),cTtqBoUEGXEk7gUdtl9u,Text,"Inspection, financing, etc.",manual
-1e Transaction Fields (post-close),Assignment Fee Paid,(verify),LkrfGd6ziGJNwlxugcVV,Monetary,Final fee collected at close,manual / buyer-contract-lifecycle.js
-1f Duplicates (intentional),Total Deals Closed (buyers),contact.deals_closed_total,115O40WYMTdhd54m2AVA,Number,Buyer's closed deal count. Separate from JV field.,workflow on close
-1f Duplicates (intentional),Total Deals Closed (JV),contact.total_deals_closed,ADO5Q6LYuluxdj2Xx8rH,Number,JV partner's closed deal count. Separate from buyer field.,workflow on close
-1g System/Auth,Password Hash,tfs_password_hash,(dynamic),Large text,PBKDF2 hash (salt:hash format). Never expose client-side,auth-signup.js
-1g System/Auth,Reset Code,tfs_reset_code,(dynamic),Large text,6-digit OTP with expiry (format: 6digits:13digitTimestamp),auth-reset.js
+Buyer Profile (Match Engine Core),Contact Role,contact.buyer_type,agG4HMPB5wzsZXiRxfmR,Multi-select,"REQUIRED = ['Buyer'] for notify-buyers to see contact (THE BUYER GATE). Display name 'Contact Role' despite fieldKey 'contact.buyer_type'.",auth-signup.js:98
+Buyer Profile (Match Engine Core),Target States,contact.states_buying_in,aewzY7iEvZh12JhMVi7E,Multi-select,"States buyer buys in e.g. ['AZ','TX']",buy-box-save.js
+Buyer Profile (Match Engine Core),Target Cities,contact.target_location,DbY7dHIXk8YowpaWrxYj,Multi-select,"City+state pairs e.g. 'Phoenix, AZ'",buy-box-save.js + vip-buyer-submit.js
+Buyer Profile (Match Engine Core),Target Markets,contact.target_zips,XjXqGv6Y82iTP659pO4t,Large text,Free-form city/state blob (backward compat),buy-box-save.js + vip-buyer-submit.js
+Buyer Profile (Match Engine Core),Deal Structures,contact.deal_structure,0L0ycmmsEjy6OPDL0rgq,Multi-select,"Accepted deal types: Cash, Subject To, Seller Finance, Hybrid, Morby, Wrap, Lease Option, Novation",buy-box-save.js + auth-signup.js + vip-buyer-submit.js
+Buyer Profile (Match Engine Core),Property Type,contact.property_type_new,HGC6xWLpSqoAQPZr0uwY,Multi-select,"e.g. Single Family, Multi-Family. Canonical fieldKey after PR #97.",buy-box-save.js + vip-buyer-submit.js
+Buyer Profile (Match Engine Core),Max Price,contact.max_price,BcxuopmSK4wA3Z3NyanD,Monetary,Maximum acquisition price buyer will pay,buy-box-save.js + vip-buyer-submit.js
+Buyer Profile (Match Engine Core),Max Entry Fee,contact.max_down,SZmNHA3BQva2AZg00ZNP,Monetary,Maximum entry fee / down payment,buy-box-save.js
+Buyer Profile (Match Engine Core),Min ARV,contact.arv,KKGEfgdaqu98yrZYkmoO,Monetary,Minimum ARV buyer requires,buy-box-save.js
+Buyer Profile (Match Engine Core),Min Beds,contact.bedrooms_min,RRuCraVtRUlEMvdFXngv,Number,Minimum bedroom count,buy-box-save.js
+Buyer Profile (Match Engine Core),Exit Strategies,contact.exits,98i8EKc3OWYSqS4Qb1nP,Multi-select,"e.g. Rental, Flip, Wholetail",buy-box-save.js + vip-buyer-submit.js
+Buyer Profile (Match Engine Core),Buyer Type,(verify in GHL),95PgdlIYfXYcMymnjsIv,Single select,"Distinct field from Contact Role. Used by _ghl.js CF_IDS.BUYER_TYPE. Confirm exact fieldKey in GHL UI.",buy-box-save.js
+Buyer Profile (Extended Criteria),Max Monthly/PITI,contact.max_monthly,(dynamic),Monetary,Max monthly payment buyer can carry,buy-box-save.js
+Buyer Profile (Extended Criteria),Target Cash Flow,contact.target_monthly_cashflow,(dynamic),Monetary,Min monthly cash flow required,buy-box-save.js
+Buyer Profile (Extended Criteria),Max Interest Rate,contact.max_rate_,(dynamic),Number,Max interest rate on creative deals,buy-box-save.js
+Buyer Profile (Extended Criteria),Min Sqft,contact.min_sqft,(dynamic),Number,Minimum square footage,buy-box-save.js
+Buyer Profile (Extended Criteria),Min Year Built,contact.min_year_build,(dynamic),Number,Minimum year built,buy-box-save.js
+Buyer Profile (Extended Criteria),Min Baths,contact.baths_min,(dynamic),Number,Minimum bathroom count,buy-box-save.js
+Buyer Profile (Extended Criteria),Remodel Level,contact.remodel_level,(dynamic),Select,Condition tolerance: Turn-key / Light / Heavy,buy-box-save.js
+Buyer Profile (Extended Criteria),HOA Tolerance,contact.hoa_tolerance,(dynamic),Text/Select,"""no"", ""under $100/mo"" etc. — used by HOA hard filter",buy-box-save.js
+Buyer Profile (Extended Criteria),Pool,contact.pool,(dynamic),Checkbox/Select,Requires pool Y/N,buy-box-save.js
+Buyer Profile (Extended Criteria),Purchase Timeline,contact.purchase_timeline,(dynamic),Select,Immediate 0-30 / Short-Term 31-90 / Long-Term 90+,buy-box-save.js
+Buyer Profile (Extended Criteria),Buy Box Notes,contact.buy_box,(dynamic),Large text,Free-form buy box description — scanned by AI match,buy-box-save.js
+Buyer Profile (Extended Criteria),Criteria Last Updated,contact.criteria_last_update,(dynamic),Date,Auto-set on every buy-box save,buy-box-save.js
+Buyer Profile (Extended Criteria),Max Repair Budget,contact.max_repair_budget,(dynamic),Monetary,Max rehab spend,buy-box-save.js
+Buyer Profile (Extended Criteria),Occupancy Preference,contact.occupancy_preference,(dynamic),Select,Vacant / Occupied / Either,buy-box-save.js
+Buyer Profile (Extended Criteria),HOA Checkbox,contact.hoa,(dynamic),Checkbox,Hard reject HOA deals if unchecked/false,notify-buyers.js
+Buyer Profile (Extended Criteria),Buyer Status,contact.buyer_status,(dynamic),Select,"""not buying now"" = excluded from match",notify-buyers.js
+PHANTOM (do not use),property_type_preference,contact.property_type_preference,(NOT FOUND),phantom,"NOT FOUND in GHL. Fixed PR #97 — form now writes to contact.property_type_new.",form (removed PR #97)
+PHANTOM (do not use),buyer_profile_type,contact.buyer_profile_type,(NOT FOUND),phantom,"NOT FOUND in GHL. Cash/Creative categorization silently dropped. Removed from form PR #97.",form (removed PR #97)
+Lifecycle Timestamps,Last Touch Date,(verify),SwUKaml8kRpCrrLzunlh,Date,Written by WF02 after send; read by WF04a (dormant sweep),WF02 (GHL workflow)
+Lifecycle Timestamps,Last Deal Sent Date,(verify),CAJQUQSjrkcdygsCGDdK,Date,"Legacy n8n match engine (no longer running as matcher)",legacy n8n
+Lifecycle Timestamps,Last Deal Sent ID,(verify),RiSmLK8l97DKzrK3VQaZ,Text,Legacy n8n (not currently updated),legacy n8n
+Lifecycle Timestamps,Re-verify Due Date,(verify),1cgpp0vcBSWSKptqoORU,Date,Written by WF03/WF04b; used for quarterly POF re-verify,WF03 / WF04b
+Deal Alert Fields,Deal Location,(verify),TerjqctukTW67rB21ugC,Text,"'City, State' — last deal sent",notify-buyers.js (on each alert)
+Deal Alert Fields,Deal City,(verify),KuaUFXhbQB6kKvBSKfoI,Text,City of last deal sent,notify-buyers.js
+Deal Alert Fields,Deal State,(verify),ltmVcWUpbwZ0S3dBid3U,Text,State of last deal sent,notify-buyers.js
+Deal Alert Fields,Deal Zip,(verify),UqJl4Dq6T8wfNb70EMrL,Text,Zip of last deal sent,notify-buyers.js
+Deal Alert Fields,Deal Type,(verify),0thrOdoETTLlFA45oN8U,Text,"Wholesale / SubTo / Hybrid / Seller Finance — last deal type sent",notify-buyers.js
+Deal Alert Fields,Deal URL,(verify),5eEVPcp8nERlR6GpjZUn,URL,Short tracked link /d/city-zip-code with ?c=contactId,notify-buyers.js
+Deal Alert Fields,Deal Summary,(verify),YjoPoDPv7Joo1izePpDx,Large text,"Combined 'Type · City · Price · Entry' summary",notify-buyers.js
+Deal Alert Fields,Price,(verify),iur6TZsfKotwO3gZb8yk,Monetary,"'$X' formatted price of last deal",notify-buyers.js
+Deal Alert Fields,Entry Fee,(verify),DH4Ekmyw2dvzrE74JSzs,Monetary,"'$X + CC/TC' formatted entry fee",notify-buyers.js
+Deal Alert Fields,Property Type (deal),(verify),DJFMav5mPvWBzsPdhAqy,Text,Property type on last deal alert,notify-buyers.js
+Deal Alert Fields,Beds (deal),(verify),2iVO7pRpi0f0ABb6nYka,Number,Beds on last deal alert,notify-buyers.js
+Deal Alert Fields,Baths (deal),(verify),rkzCcjHJMFJP3GcwnNx6,Number,Baths on last deal alert,notify-buyers.js
+Deal Alert Fields,Year Built (deal),(verify),nNMHvkPbjGYRbOB1v7vQ,Number,Year built on last deal alert,notify-buyers.js
+Deal Alert Fields,Sqft (deal),(verify),MgNeVZgMdTcdatcTTHue,Number,Sqft on last deal alert,notify-buyers.js
+Deal Alert Fields,Highlights,(verify),eke6ZGnex77y5aUCNgly,Large text,3-line bullet string for the alert,notify-buyers.js
+Deal Alert Fields,Cover Photo URL,(verify),FXp9oPT4T4xqA1HIJuSC,URL,Google Drive thumbnail for alert email,notify-buyers.js
+DEPRECATED (pending deletion),Deal Asset Class (latest),(verify),JzmuiUCvNJtHiHOeEz90,deprecated,"n8n legacy. Cleared on Test Partner 2026-04-20. Delete after 1 week clean hybrid ops. Use Property Type (HGC6xWLpSqoAQPZr0uwY) instead.",legacy n8n (retired)
+DEPRECATED (pending deletion),Deal Market (latest),(verify),tAFA5xs5ZS7AG7AgheZw,deprecated,"n8n legacy. Use Deal Location (TerjqctukTW67rB21ugC) instead.",legacy n8n (retired)
+DEPRECATED (pending deletion),Deal Price (latest),(verify),h1PdpPrgYHfk7WKdEBjp,deprecated,"n8n legacy. Use Price (iur6TZsfKotwO3gZb8yk) instead.",legacy n8n (retired)
+DEPRECATED (pending deletion),Deal Type (latest),(verify),TENFLNR411SHBOBRzEQX,deprecated,"n8n legacy. Use Deal Type (0thrOdoETTLlFA45oN8U) instead.",legacy n8n (retired)
+DEPRECATED (pending deletion),Deal Summary URL (latest),(verify),hGftrRzv5pt24KrNd1sO,deprecated,"n8n legacy. Use Deal URL (5eEVPcp8nERlR6GpjZUn) instead.",legacy n8n (retired)
+Transaction Fields (post-close),Entity Name,(verify),05jevWkhMiY8bFoe9TWc,Text,Buyer's LLC / entity name for closing,manual (GHL UI)
+Transaction Fields (post-close),EMD Amount,(verify),pEf6ih4rpT7oOMLlK9wN,Monetary,Earnest Money Deposit amount,manual / submit-offer.js
+Transaction Fields (post-close),Offer Price,(verify),6c52JUALKfX7Apv4RpR4,Monetary,Buyer's offer amount,submit-offer.js
+Transaction Fields (post-close),Close Date Target,(verify),wuXiUAbgKqaYGlmqqE0e,Date,Target closing date,manual / submit-offer.js
+Transaction Fields (post-close),Contingencies,(verify),cTtqBoUEGXEk7gUdtl9u,Text,"Inspection, financing, etc.",manual
+Transaction Fields (post-close),Assignment Fee Paid,(verify),LkrfGd6ziGJNwlxugcVV,Monetary,Final fee collected at close,manual / buyer-contract-lifecycle.js
+Total Deals Closed,Total Deals Closed (buyers),contact.deals_closed_total,115O40WYMTdhd54m2AVA,Number,Buyer's closed deal count. Separate from JV field.,workflow on close
+Total Deals Closed,Total Deals Closed (JV),contact.total_deals_closed,ADO5Q6LYuluxdj2Xx8rH,Number,JV partner's closed deal count. Separate from buyer field.,workflow on close
+System/Auth,Password Hash,tfs_password_hash,(dynamic),Large text,PBKDF2 hash (salt:hash format). Never expose client-side,auth-signup.js
+System/Auth,Reset Code,tfs_reset_code,(dynamic),Large text,6-digit OTP with expiry (format: 6digits:13digitTimestamp),auth-reset.js
