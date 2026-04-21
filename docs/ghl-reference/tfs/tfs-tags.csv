@@ -2,9 +2,11 @@ tag,category,trigger,effect,set_by
 TFS Buyer,Signup,Website signup,Primary buyer identity,auth-signup.js
 Website Signup,Signup,Website signup,Source attribution,auth-signup.js
 buyer-signup,Signup,Website / VIP / buy-box submit,Trigger for buyer-relations cron,auth-signup.js + vip-buyer-submit.js + buy-box-save.js
-opt in,Opt-In,Any website signup form,REQUIRED before any outbound SMS/email (hasOptInTag gate),auth-signup.js + vip-buyer-submit.js + buy-box-save.js
-tfs buyer,Signup,Buy box submit (legacy lowercase),Buyer identity,buy-box-save.js
-buy box complete,Signup,Buy box form submit,Buyer has filled out criteria,buy-box-save.js
+opt in,Compliance Gate,Any website signup form,REQUIRED before any outbound SMS/email (hasOptInTag gate). ~9084 contacts as of 2026-04-20.,auth-signup.js + vip-buyer-submit.js + buy-box-save.js
+opt-out:sms,Compliance Gate,Inbound STOP / unsubscribe reply,"Skips entire alert flow (PR #95 compliance gate). ANY tag matching /^opt-out/ or /^unsubscribe/ blocks sends.",buyer-response-tag.js + GHL native STOP
+dnd (contact.dnd=true),Compliance Gate,Admin sets do-not-disturb,"Native GHL DND flag. PR #95 gate — skips entire alert flow.",manual / GHL native
+tfs buyer,Signup,Buy box submit (legacy lowercase),Buyer identity — de facto audience label (~10370 contacts),buy-box-save.js
+buy box complete,Signup,Buy box form submit,Buyer has filled out criteria (~69 contacts),buy-box-save.js
 use:buyer,Signup,VIP / buy box submit,General buyer flag,vip-buyer-submit.js + buy-box-save.js
 VIP Buyer List,VIP,VIP QR funnel signup,VIP buyer status (first access),vip-buyer-submit.js
 Source: Cowork QR Buyer,VIP,VIP QR funnel signup,VIP source attribution,vip-buyer-submit.js
@@ -12,6 +14,12 @@ use:fix-flip,Buyer Type,VIP buyType selection,Fix and flip investor,vip-buyer-su
 use:rental-buyer,Buyer Type,VIP buyType selection,Buy and hold investor,vip-buyer-submit.js
 use:creative-finance,Buyer Type,VIP buyType selection,SubTo / SF interested,vip-buyer-submit.js
 use:wholetail,Buyer Type,VIP buyType selection,Wholetail strategy,vip-buyer-submit.js
+buy:subto,Deal Pref (canonical),Buyer prefs captured,"Canonical form after 2026-04-20 cleanup. Replaces acq:subto.",buy-box-save.js / manual
+buy:creative,Deal Pref (canonical),Buyer prefs captured,"Subject To or Seller Finance interest.",buy-box-save.js / manual
+buy:seller-finance,Deal Pref (canonical),Buyer prefs captured,"Seller Finance-focused buyer.",buy-box-save.js / manual
+strategy:padsplit,Strategy Pref,Buyer uses PadSplit model,PadSplit-focused buyer strategy tag.,manual
+market:[city-state] (e.g. market:phoenix-az),Market Pref (canonical),Buyer prefs captured,"Canonical city-state market label after 2026-04-20 cleanup. Replaces mkt:[city-state].",buy-box-save.js / manual
+market:[state] (e.g. market:texas),Market Pref (canonical),Buyer prefs captured,State-level market label.,buy-box-save.js / manual
 buyer-interested,Deal Response,"Buyer replies IN/YES/1/""interested""","Interested in last deal sent",buyer-response-tag.js
 buyer-maybe,Deal Response,"Buyer replies MAYBE/2/""more info""",Maybe interested,buyer-response-tag.js
 buyer-pass,Deal Response,"Buyer replies PASS/NO/3/""not interested""",Not interested in specific deal,buyer-response-tag.js
@@ -22,14 +30,21 @@ alerts-paused,Alert Preference,"Buyer replies C or ""pause""",Stop all future al
 deal-hot,Deal Sprint,Strong interest signal,Trigger for hot follow-up sequence,deal-follow-up.js
 deal-warm,Deal Sprint,Some interest,Warm follow-up sequence,deal-follow-up.js
 deal-paused,Deal Sprint,Pause requested,Paused in follow-up sprint,deal-follow-up.js
-new-deal-alert,Engagement,Received any deal alert,Lifetime engagement signal,notify-buyers.js
+new-deal-alert,Engagement,Received any deal alert,"Lifetime engagement signal + triggers GHL email workflow",notify-buyers.js
 Active Viewer,Engagement,Clicked/viewed a deal,Viewer engagement lifetime tag,track-view.js
 Active Buyer,Engagement,Submitted inquiry,Active buyer status,submit-inquiry.js
 Website Inquiry,Engagement,Submitted inquiry form,Inquiry source attribution,submit-inquiry.js
-sent:[slug],Per-Deal,Notify-buyers sent alert,"Admin lookup tag (format: sent:street-city-state-code)",notify-buyers.js
+last view: YYYY-MM-DD,Engagement (timestamp),Clicked tracked deal link,"Last deal-page view date — one per contact (rotates).",deal-view-tracker.js
+tier1:[slug],Tier Router (PR #99),Hybrid Tier Router after Wait,"A-tier match quality per deal (canonical buy-box fit). Slug = street-city-state-code.",notify-buyers.js + n8n hybrid router
+tier2:[slug],Tier Router (PR #99),Hybrid Tier Router after Wait,B-tier match quality per deal (softer fit).,notify-buyers.js + n8n hybrid router
+tier3:[slug],Tier Router (PR #99),Hybrid Tier Router after Wait,C-tier match quality per deal (state-only fallback).,notify-buyers.js + n8n hybrid router
+sprint-d0-[deal-id],Follow-up Sprint,Day 0 initial send,First send marker for multi-day follow-up,deal-follow-up.js
+sprint-d1-[deal-id],Follow-up Sprint,Day 1 follow-up,Day-1 send marker,deal-follow-up.js
+sprint-d2-[deal-id],Follow-up Sprint,Day 2 follow-up,Day-2 send marker (final nudge),deal-follow-up.js
+sent:[slug],Per-Deal,Notify-buyers sent alert,"Admin lookup tag (format: sent:street-city-state-code). Visible in /admin/deal-buyers.html.",notify-buyers.js
 viewed-[dealCode],Per-Deal,Clicked deal link,Lowercase deal code e.g. viewed-phx-001,deal-view-tracker.js
 alert-[dealCode],Per-Deal,Replied INTERESTED,Promoted from sent- tag,buyer-alert.js
-alerted-[shortId],Per-Deal,Notify-buyers dedup,Legacy 8-char UUID prefix dedup,notify-buyers.js
+alerted-[shortId],Per-Deal,Notify-buyers dedup,Legacy 8-char UUID prefix dedup (also: alerted-[deal-id-prefix]),notify-buyers.js
 inquiry-[dealId],Per-Deal,Inquiry form submit,Per-deal inquiry marker,submit-inquiry.js
 lead-new,Lead Scoring,Seller lead submitted,Trigger for lead-intake cron,lead-intake.js
 lead-warm,Lead Scoring,Lead score 20-34,Warm seller lead,lead-intake.js
@@ -50,3 +65,9 @@ nda-requested,Commercial,NDA requested on commercial deal,NDA pending,commercial
 deal-[code],Commercial,NDA on specific commercial deal,Deal interest marker,commercial-nda-request.js
 dispo-buddy,Cross-Brand,Dispo Buddy partner,Segments from TFS campaigns,dispo-buddy-submit.js
 jv-partner,Cross-Brand,JV wholesale partner,Partner identity,dispo-buddy-submit.js
+buyer-active,RETIRED 2026-04-20,(was: buyer identity),"Never gated match engine — false belief. Removed from 14 contacts. Pending pool-level deletion in GHL UI.",(retired)
+buyer:active,RETIRED 2026-04-20,(was: orphan from deprecated n8n),Removed from Test Partner. Pending pool-level deletion.,(retired)
+active buyer,RETIRED 2026-04-20,(was: variant of buyer-active),"Pending pool-level deletion.",(retired)
+type:buyer,RETIRED 2026-04-20,(was: redundant with 'tfs buyer'),Pending pool-level deletion.,(retired)
+mkt:[city-state],RETIRED 2026-04-20,(was: market label),"Retagged to canonical market:[city-state]. Pending pool-level deletion.",(retired)
+acq:subto,RETIRED 2026-04-20,(was: deal pref),"Retagged to canonical buy:subto. Pending pool-level deletion.",(retired)
