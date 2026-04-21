@@ -286,7 +286,7 @@ exports.handler = async (event) => {
         notionProps['LTR Market Rent'] = { number: Math.round(estRent) };
       }
 
-      notionProps['Enriched At'] = { date: { start: new Date().toISOString().split('T')[0] } };
+      notionProps['Enriched at'] = { date: { start: new Date().toISOString().split('T')[0] } };
 
       if (!existingArv && rcAvm && rcAvm.price) {
         notionProps['ARV'] = { number: Math.round(rcAvm.price) };
