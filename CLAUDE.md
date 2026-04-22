@@ -354,9 +354,9 @@ Test harness against "today = 2026-04-22":
 - Funded 119 days ago → SHOW
 - Funded 121 days ago → HIDE
 - Funded 12 months ago → HIDE
-- Closed, no `dateFunded`, edited 10 days ago → SHOW (falls back to
-  `lastEdited`)
-- Closed, no `dateFunded`, edited 200 days ago → HIDE
+- Closed with no `Date Funded` in Notion → HIDE (Date Funded is now
+  required; previously fell back to `last_edited_time` but Brooke flagged
+  that as too imprecise)
 - Active deals → correctly skipped by the status filter upstream
 
 Both files passed div/section/script tag-balance checks. All 5 real inline

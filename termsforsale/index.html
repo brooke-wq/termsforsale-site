@@ -1188,14 +1188,11 @@ function renderRecentlyClosed(deals){
   var closed=(deals||[])
     .filter(function(d){return(String(d.dealStatus||'').toLowerCase().trim())==='closed';})
     .filter(function(d){
-      var key=d.dateFunded||d.lastEdited||'';
-      var t=Date.parse(key);
+      var t=Date.parse(d.dateFunded||'');
       return!isNaN(t)&&t>=cutoff;
     })
     .sort(function(a,b){
-      var aKey=a.dateFunded||a.lastEdited||'';
-      var bKey=b.dateFunded||b.lastEdited||'';
-      return bKey.localeCompare(aKey);
+      return String(b.dateFunded||'').localeCompare(String(a.dateFunded||''));
     })
     .slice(0,4);
   if(!closed.length){sec.style.display='none';return;}
@@ -1203,7 +1200,7 @@ function renderRecentlyClosed(deals){
     var img=rcImgSrc(d);
     var loc=[d.city,d.state].filter(Boolean).join(', ');
     var price=rcFmtPrice(d.askingPrice);
-    var when=rcFmtDate(d.dateFunded||d.lastEdited);
+    var when=rcFmtDate(d.dateFunded);
     var photoHtml=img
       ?'<img src="'+rcEscape(img)+'" alt="Closed property in '+rcEscape(loc)+'" loading="lazy" onerror="this.remove()">'
       :'<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
