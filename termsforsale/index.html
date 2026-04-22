@@ -202,8 +202,8 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .rc-eyebrow{font-size:13px;font-weight:700;color:#10B981;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
 .rc-title{font-size:36px;font-weight:900;color:var(--navy);line-height:1.15;letter-spacing:-.3px;margin-bottom:10px;max-width:900px}
 .rc-sub{font-size:15px;color:var(--text-mid);margin-bottom:32px;max-width:820px;line-height:1.55}
-.rc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
-.rc-stat{background:linear-gradient(180deg,#F0FDF4,#ECFDF5);border:1px solid #BBF7D0;border-radius:14px;padding:18px 20px}
+.rc-stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:36px}
+.rc-stat{background:linear-gradient(180deg,#F0FDF4,#ECFDF5);border:1px solid #BBF7D0;border-radius:14px;padding:18px 22px;min-width:220px}
 .rc-stat-num{font-size:28px;font-weight:900;color:#059669;line-height:1}
 .rc-stat-lbl{font-size:11px;color:#065F46;font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.4px}
 .rc-stat-sub{font-size:11px;color:#047857;margin-top:6px;font-style:italic;line-height:1.35}
@@ -239,7 +239,7 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 @media(max-width:960px){
   .rc{padding:48px 28px}
   .rc-title{font-size:26px}
-  .rc-stats{grid-template-columns:repeat(2,1fr);gap:12px}
+  .rc-stats{gap:12px}
   .rc-grid{grid-template-columns:repeat(2,1fr);gap:14px}
   .rc-cta{grid-template-columns:1fr;padding:24px 22px}
   .rc-cta-half + .rc-cta-half{border-left:none;border-top:1px solid rgba(255,255,255,.15);padding-left:0;padding-top:20px}
@@ -733,21 +733,6 @@ footer{background:var(--navy);padding:52px 55px 0}
     <h2 class="rc-title">Deals Our Buyers Closed Through Terms For Sale</h2>
     <p class="rc-sub">Contracts our JV partners brought us that turned into real checks for them and real properties for our buyers &mdash; all closed with creative / investor-friendly terms, no banks required.</p>
     <div class="rc-stats">
-      <div class="rc-stat">
-        <div class="rc-stat-num" id="rc-stat-count">0</div>
-        <div class="rc-stat-lbl">Deals Closed</div>
-        <div class="rc-stat-sub">Contracts we turned into checks.</div>
-      </div>
-      <div class="rc-stat" id="rc-stat-volume-wrap" style="display:none">
-        <div class="rc-stat-num" id="rc-stat-volume">&mdash;</div>
-        <div class="rc-stat-lbl">In Assignments Paid</div>
-        <div class="rc-stat-sub" id="rc-stat-avg">&nbsp;</div>
-      </div>
-      <div class="rc-stat" id="rc-stat-days-wrap" style="display:none">
-        <div class="rc-stat-num" id="rc-stat-days">&mdash;</div>
-        <div class="rc-stat-lbl">Avg Days to Assignment</div>
-        <div class="rc-stat-sub">From ready-to-market to under contract.</div>
-      </div>
       <div class="rc-stat" id="rc-stat-creative-wrap" style="display:none">
         <div class="rc-stat-num" id="rc-stat-creative">&mdash;</div>
         <div class="rc-stat-lbl">Creative / Terms Deals</div>
@@ -1215,13 +1200,11 @@ async function loadDealsFromSheet(){
 }
 
 // ─── RECENTLY CLOSED (homepage social-proof strip) ─────────────
-// Stats tiles: 12-month window (magnitude / social proof).
-// Card grid: last 120 days AND only deals that went ready-to-market ->
-// under-contract in under 20 days (speed flex). Street addresses are
-// intentionally NOT shown on homepage — city/state only.
+// Stat tile: % creative (last 12 months). Card grid: last 120 days,
+// simple gallery of closed deals. Street addresses are intentionally
+// NOT shown on homepage — city/state only.
 function rcEscape(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
-function rcFmtPrice(n){var v=+n;if(!v)return'';return'$'+Math.round(v).toLocaleString();}
-function rcFmtK(n){var v=+n;if(!v)return'';if(v>=1000)return'$'+Math.round(v/1000).toLocaleString()+'K';return'$'+v.toLocaleString();}
+function rcFmtDate(s){if(!s)return'';var t=Date.parse(s);if(isNaN(t))return'';var d=new Date(t);return d.toLocaleString('en-US',{month:'short',year:'numeric'});}
 function rcDriveId(url){if(!url)return'';var m=String(url).match(/\/d\/([a-zA-Z0-9_-]{10,})/);return m?m[1]:'';}
 function rcImgSrc(d){
   var id=rcDriveId(d.coverPhoto);
@@ -1229,60 +1212,28 @@ function rcImgSrc(d){
   if(d.coverPhoto&&/^https?:/.test(d.coverPhoto))return d.coverPhoto;
   return'';
 }
-function rcDaysBetween(a,b){
-  var ta=Date.parse(a||''),tb=Date.parse(b||'');
-  if(isNaN(ta)||isNaN(tb))return null;
-  return Math.max(1,Math.round((tb-ta)/86400000));
-}
-function rcDaysToAssignment(d){
-  return rcDaysBetween(d.startedMarketing,d.dateAssigned||d.dateFunded);
-}
 function rcIsCreative(t){
   var l=String(t||'').toLowerCase();
   if(!l)return false;
   return l.indexOf('cash')===-1;
 }
-function rcCashflow(d){
-  var rent=+d.rentFinal,piti=+d.piti,sfPay=+d.sfPayment;
-  var pay=piti||sfPay;
-  if(!rent||!pay)return 0;
-  return Math.round(rent-pay);
-}
 function rcMakeCard(d){
   var img=rcImgSrc(d);
   var loc=[d.city,d.state].filter(Boolean).join(', ');
-  var entry=rcFmtPrice(d.entryFee||d.askingPrice);
-  var bedsBaths=(d.beds&&d.baths)?(d.beds+'/'+d.baths):'';
-  var days=rcDaysToAssignment(d);
   var creative=rcIsCreative(d.dealType);
-  var cashflow=rcCashflow(d);
-  var head=[];
-  if(entry)head.push(entry+' Entry');
-  if(bedsBaths)head.push(bedsBaths);
-  var headline=head.join(' &mdash; ');
-  if(loc)headline+=(headline?' in ':'')+rcEscape(loc);
-  var story=String(d.description||d.details||'').trim();
-  var badges=[];
-  if(days)badges.push('<span class="rc-badge rc-badge-closed">Closed in '+days+' days</span>');
-  else badges.push('<span class="rc-badge rc-badge-closed">&#10003; Closed</span>');
-  if(d.dealType){
-    var cls=creative?'rc-badge rc-badge-creative':'rc-badge rc-badge-cash';
-    badges.push('<span class="'+cls+'">'+rcEscape(d.dealType)+'</span>');
-  }
+  var when=rcFmtDate(d.dateFunded);
   var photoHtml=img
     ?'<img src="'+rcEscape(img)+'" alt="Closed property in '+rcEscape(loc)+'" loading="lazy" onerror="this.remove()">'
     :'<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
-  var outcomes=[];
-  outcomes.push('<div class="rc-outcome"><span class="rc-outcome-icon">&#9679;</span><span><strong>Dispo strategy:</strong> '+(creative?'Matched to a creative-finance buyer from our list.':'Cash buyer, no financing contingency.')+'</span></div>');
-  if(cashflow>0){
-    outcomes.push('<div class="rc-outcome"><span class="rc-outcome-icon">&#9679;</span><span><strong>Buyer cash flow:</strong> ~$'+cashflow.toLocaleString()+'/mo projected.</span></div>');
-  }
+  var typeBadgeCls=creative?'rc-badge rc-badge-creative':'rc-badge rc-badge-cash';
   return'<a class="rc-card" href="/deal.html?id='+rcEscape(d.id)+'">'
-    +'<div class="rc-photo">'+photoHtml+'<div class="rc-badges">'+badges.join('')+'</div></div>'
+    +'<div class="rc-photo">'+photoHtml
+    +'<div class="rc-badges"><span class="rc-badge rc-badge-closed">&#10003; Closed</span>'
+    +(d.dealType?'<span class="'+typeBadgeCls+'">'+rcEscape(d.dealType)+'</span>':'')
+    +'</div></div>'
     +'<div class="rc-body">'
-    +'<div class="rc-headline">'+headline+'</div>'
-    +(story?'<div class="rc-story">'+rcEscape(story)+'</div>':'')
-    +'<div class="rc-outcomes">'+outcomes.join('')+'</div>'
+    +(loc?'<div class="rc-headline">'+rcEscape(loc)+'</div>':'')
+    +(when?'<div class="rc-story" style="-webkit-line-clamp:1;color:var(--text-light);font-size:12px;">Closed '+rcEscape(when)+'</div>':'')
     +'</div>'
     +'</a>';
 }
@@ -1294,43 +1245,12 @@ function renderRecentlyClosed(deals){
   var all=(deals||[]).filter(function(d){return(String(d.dealStatus||'').toLowerCase().trim())==='closed';})
     .filter(function(d){return !isNaN(Date.parse(d.dateFunded||''));})
     .sort(function(a,b){return String(b.dateFunded||'').localeCompare(String(a.dateFunded||''));});
-  // 12-month set for stat tiles
+  // 12-month set for the creative % stat tile
   var yearDeals=all.filter(function(d){return Date.parse(d.dateFunded)>=(now-365*86400000);});
-  // 120-day + under-20-days-to-close set for card grid
-  var showcase=all.filter(function(d){
-    if(Date.parse(d.dateFunded)<(now-120*86400000))return false;
-    var dd=rcDaysToAssignment(d);
-    return dd!==null&&dd<20;
-  }).slice(0,4);
+  // 120-day set for the card grid (no speed gate — show all recent closings)
+  var showcase=all.filter(function(d){return Date.parse(d.dateFunded)>=(now-120*86400000);}).slice(0,4);
   if(!yearDeals.length&&!showcase.length){sec.style.display='none';return;}
-  // Stat 1: deals closed (12mo)
-  var cntEl=document.getElementById('rc-stat-count');
-  if(cntEl)cntEl.textContent=yearDeals.length;
-  // Stat 2: assignments paid + avg
-  var totalFunded=0,fundedCount=0;
-  yearDeals.forEach(function(d){var v=+d.amountFunded||0;if(v>0){totalFunded+=v;fundedCount++;}});
-  var volEl=document.getElementById('rc-stat-volume');
-  var volWrap=document.getElementById('rc-stat-volume-wrap');
-  var avgEl=document.getElementById('rc-stat-avg');
-  if(totalFunded>0){
-    if(volEl)volEl.textContent=rcFmtK(totalFunded);
-    if(fundedCount&&avgEl){
-      var avg=Math.round(totalFunded/fundedCount);
-      avgEl.textContent='Avg '+rcFmtK(avg)+' per JV partner.';
-    }
-    if(volWrap)volWrap.style.display='';
-  }
-  // Stat 3: avg days to assignment
-  var dayTotals=[];
-  yearDeals.forEach(function(d){var n=rcDaysToAssignment(d);if(n)dayTotals.push(n);});
-  var daysWrap=document.getElementById('rc-stat-days-wrap');
-  if(dayTotals.length){
-    var avgDays=dayTotals.reduce(function(a,b){return a+b;},0)/dayTotals.length;
-    var dEl=document.getElementById('rc-stat-days');
-    if(dEl)dEl.textContent=avgDays.toFixed(1);
-    if(daysWrap)daysWrap.style.display='';
-  }
-  // Stat 4: % creative
+  // % creative (only stat shown per Brooke's ask)
   var crWrap=document.getElementById('rc-stat-creative-wrap');
   if(yearDeals.length){
     var creativeCnt=yearDeals.filter(function(d){return rcIsCreative(d.dealType);}).length;
@@ -1339,7 +1259,6 @@ function renderRecentlyClosed(deals){
     if(cEl)cEl.textContent=pct+'%';
     if(crWrap)crWrap.style.display='';
   }
-  // Cards
   if(showcase.length){
     grid.innerHTML=showcase.map(rcMakeCard).join('');
     grid.style.display='';

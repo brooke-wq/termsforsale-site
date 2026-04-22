@@ -337,8 +337,8 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .closed-eyebrow{font-size:13px;font-weight:700;color:#10B981;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
 .closed-title{font-size:38px;font-weight:900;color:var(--navy);line-height:1.15;letter-spacing:-.3px;margin-bottom:10px;max-width:900px}
 .closed-sub{font-size:15px;color:var(--text-mid);margin-bottom:32px;max-width:820px;line-height:1.55}
-.closed-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px}
-.closed-stat{background:linear-gradient(180deg,#F0FDF4,#ECFDF5);border:1px solid #BBF7D0;border-radius:14px;padding:18px 20px}
+.closed-stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:40px}
+.closed-stat{background:linear-gradient(180deg,#F0FDF4,#ECFDF5);border:1px solid #BBF7D0;border-radius:14px;padding:18px 22px;min-width:220px}
 .closed-stat-num{font-size:28px;font-weight:900;color:#059669;line-height:1}
 .closed-stat-lbl{font-size:11px;color:#065F46;font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.4px}
 .closed-stat-sub{font-size:11px;color:#047857;margin-top:6px;font-style:italic;line-height:1.35}
@@ -856,21 +856,6 @@ footer{background:var(--navy);padding:52px 55px 0}
     <h2 class="closed-title">Deals Our Buyers Closed Through Terms For Sale</h2>
     <p class="closed-sub">Here's a sample of contracts our JV partners brought us that turned into real checks for them and real properties for our buyers. All closed with creative / investor-friendly terms &mdash; no banks required.</p>
     <div class="closed-stats">
-      <div class="closed-stat">
-        <div class="closed-stat-num" id="cs-stat-count">0</div>
-        <div class="closed-stat-lbl">Deals Closed</div>
-        <div class="closed-stat-sub">Contracts we turned into checks.</div>
-      </div>
-      <div class="closed-stat" id="cs-stat-volume-wrap" style="display:none">
-        <div class="closed-stat-num" id="cs-stat-volume">&mdash;</div>
-        <div class="closed-stat-lbl">In Assignments Paid</div>
-        <div class="closed-stat-sub" id="cs-stat-avg">&nbsp;</div>
-      </div>
-      <div class="closed-stat" id="cs-stat-days-wrap" style="display:none">
-        <div class="closed-stat-num" id="cs-stat-days">&mdash;</div>
-        <div class="closed-stat-lbl">Avg Days to Assignment</div>
-        <div class="closed-stat-sub">From ready-to-market to under contract.</div>
-      </div>
       <div class="closed-stat" id="cs-stat-creative-wrap" style="display:none">
         <div class="closed-stat-num" id="cs-stat-creative">&mdash;</div>
         <div class="closed-stat-lbl">Creative / Terms Deals</div>
@@ -1743,89 +1728,40 @@ function csCashflow(d){
   if(!rent||!pay)return 0;
   return Math.round(rent-pay);
 }
+function csFmtDate(s){if(!s)return'';var t=Date.parse(s);if(isNaN(t))return'';var dt=new Date(t);return dt.toLocaleString('en-US',{month:'short',year:'numeric'});}
 function csMakeCard(d){
   var img=csImgSrc(d);
   var loc=[d.city,d.state].filter(Boolean).join(', ');
-  var entry=csFmtPrice(d.entryFee||d.askingPrice);
-  var bedsBaths=(d.beds&&d.baths)?(d.beds+'/'+d.baths):'';
-  var days=csDaysToAssignment(d);
   var creative=csIsCreative(d.dealType);
-  var cashflow=csCashflow(d);
-  // Headline line: "$18K Entry — 3/2 in City, State"
-  var head=[];
-  if(entry)head.push(entry+' Entry');
-  if(bedsBaths)head.push(bedsBaths);
-  var headline=head.join(' &mdash; ');
-  if(loc)headline+=(headline?' in ':'')+csEscape(loc);
-  // Story (from Description or Details)
-  var story=String(d.description||d.details||'').trim();
-  // Badges
-  var badges=[];
-  if(days)badges.push('<span class="cs-badge cs-badge-closed">Closed in '+days+' days</span>');
-  else badges.push('<span class="cs-badge cs-badge-closed">&#10003; Closed</span>');
-  if(d.dealType){
-    var cls=creative?'cs-badge cs-badge-creative':'cs-badge cs-badge-cash';
-    badges.push('<span class="'+cls+'">'+csEscape(d.dealType)+'</span>');
-  }
+  var when=csFmtDate(d.dateFunded);
   var photoHtml=img
     ?'<img src="'+csEscape(img)+'" alt="Closed property in '+csEscape(loc)+'" loading="lazy" onerror="this.remove()">'
     :'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
-  // Outcomes row
-  var outcomes=[];
-  outcomes.push('<div class="cs-outcome"><span class="cs-outcome-icon">&#9679;</span><span><strong>Dispo strategy:</strong> '+(creative?'Matched to a creative-finance buyer from our list.':'Cash buyer, no financing contingency.')+'</span></div>');
-  if(cashflow>0){
-    outcomes.push('<div class="cs-outcome"><span class="cs-outcome-icon">&#9679;</span><span><strong>Buyer cash flow:</strong> ~$'+cashflow.toLocaleString()+'/mo projected (rent minus PITI).</span></div>');
-  }
+  var typeBadgeCls=creative?'cs-badge cs-badge-creative':'cs-badge cs-badge-cash';
   return'<a class="cs-card" href="/deal.html?id='+csEscape(d.id)+'">'
-    +'<div class="cs-photo">'+photoHtml+'<div class="cs-badges">'+badges.join('')+'</div></div>'
+    +'<div class="cs-photo">'+photoHtml
+    +'<div class="cs-badges"><span class="cs-badge cs-badge-closed">&#10003; Closed</span>'
+    +(d.dealType?'<span class="'+typeBadgeCls+'">'+csEscape(d.dealType)+'</span>':'')
+    +'</div></div>'
     +'<div class="cs-body">'
-    +'<div class="cs-headline">'+headline+'</div>'
-    +(story?'<div class="cs-story">'+csEscape(story)+'</div>':'')
-    +'<div class="cs-outcomes">'+outcomes.join('')+'</div>'
+    +(loc?'<div class="cs-headline">'+csEscape(loc)+'</div>':'')
+    +(when?'<div class="cs-story" style="-webkit-line-clamp:1;color:var(--text-light);font-size:12px;">Closed '+csEscape(when)+'</div>':'')
     +'</div>'
     +'</a>';
 }
 function renderClosedSection(){
   const sec=document.getElementById('closed-section');
   if(!sec)return;
-  // 12-month window for the stat tiles
+  // 12-month window used only for the % creative stat tile
   var yearCutoff=Date.now()-(365*86400000);
   var yearDeals=(CLOSED_DEALS_12MO||[]).filter(function(d){
     var t=Date.parse(d.dateFunded||'');
     return!isNaN(t)&&t>=yearCutoff;
   });
-  // Hide section entirely if nothing to show in either window
+  // Hide the whole section if there's nothing to show anywhere
   if(!CLOSED_DEALS.length&&!yearDeals.length){sec.style.display='none';return;}
   sec.style.display='';
-  // Stat 1: deals closed (12mo)
-  var cnt=yearDeals.length;
-  var cntEl=document.getElementById('cs-stat-count');
-  if(cntEl)cntEl.textContent=cnt;
-  // Stat 2: total assignments paid + avg per partner
-  var totalFunded=0,fundedCount=0;
-  yearDeals.forEach(function(d){var v=+d.amountFunded||0;if(v>0){totalFunded+=v;fundedCount++;}});
-  var volEl=document.getElementById('cs-stat-volume');
-  var volWrap=document.getElementById('cs-stat-volume-wrap');
-  var avgEl=document.getElementById('cs-stat-avg');
-  if(totalFunded>0){
-    if(volEl)volEl.textContent=csFmtK(totalFunded);
-    if(fundedCount&&avgEl){
-      var avg=Math.round(totalFunded/fundedCount);
-      avgEl.textContent='Avg '+csFmtK(avg)+' per JV partner.';
-    }
-    if(volWrap)volWrap.style.display='';
-  } else if(volWrap){volWrap.style.display='none';}
-  // Stat 3: avg days from started marketing to assignment
-  var dayTotals=[];
-  yearDeals.forEach(function(d){var n=csDaysToAssignment(d);if(n)dayTotals.push(n);});
-  var daysWrap=document.getElementById('cs-stat-days-wrap');
-  if(dayTotals.length){
-    var avgDays=dayTotals.reduce(function(a,b){return a+b;},0)/dayTotals.length;
-    var dEl=document.getElementById('cs-stat-days');
-    if(dEl)dEl.textContent=avgDays.toFixed(1);
-    if(daysWrap)daysWrap.style.display='';
-  } else if(daysWrap){daysWrap.style.display='none';}
-  // Stat 4: % creative/terms deals
+  // % creative/terms deals (only stat shown per Brooke's ask)
   var crWrap=document.getElementById('cs-stat-creative-wrap');
   if(yearDeals.length){
     var creativeCnt=yearDeals.filter(function(d){return csIsCreative(d.dealType);}).length;
@@ -1874,13 +1810,9 @@ async function loadDealsFromSheet(){
     CLOSED_DEALS_12MO=allClosed.filter(function(d){
       return (Date.parse(d.dateFunded||'')>=(now-365*86400000));
     });
-    // Card grid: last 120 days AND ready-to-market -> under-contract in
-    // under 20 days. Showcases speed; slower deals still count toward
-    // the 12-month stat tiles but don't get a card.
+    // Card grid: last 120 days (any closed deal inside that window shows).
     CLOSED_DEALS=allClosed.filter(function(d){
-      if(Date.parse(d.dateFunded||'')<(now-120*86400000))return false;
-      var dd=csDaysToAssignment(d);
-      return dd!==null&&dd<20;
+      return Date.parse(d.dateFunded||'')>=(now-120*86400000);
     });
     console.log('Loaded '+ALL_DEALS.length+' active/pending, '+CLOSED_DEALS.length+' closed (120d), '+CLOSED_DEALS_12MO.length+' closed (12mo) from Notion');
     renderClosedSection();
