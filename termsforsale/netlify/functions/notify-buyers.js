@@ -713,6 +713,10 @@ function matchesBuyBox(contact, deal) {
 
 async function fetchAllBuyers(apiKey, locationId) {
   var allBuyers = [];
+  var seenIds = Object.create(null); // GHL pagination can return the same
+                                      // contact twice if contacts are modified
+                                      // mid-scan; dedup at the source so we
+                                      // never process the same buyer twice.
   var hasMore = true;
   var startAfter = '';
   var startAfterId = '';
@@ -759,6 +763,8 @@ async function fetchAllBuyers(apiKey, locationId) {
         return String(t || '').trim().toLowerCase() === 'opt in';
       });
       if (!hasOptIn) return;
+      if (seenIds[contact.id]) return; // dedup across pages
+      seenIds[contact.id] = true;
       allBuyers.push(contact);
     });
 
@@ -965,13 +971,21 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     return 'skipped-optout-tag';
   }
 
-  // DEDUP CHECK 1: File-based dedup (Droplet — most reliable, zero API dependency)
+  // DEDUP CHECK 1: File-based dedup (Droplet — most reliable, zero API dependency).
+  // We check AND claim the slot atomically: if wasSent() returns false, we
+  // immediately call markSent() BEFORE any outbound send. This prevents
+  // concurrent invocations (overlapping cron ticks, cron + manual test)
+  // from both passing the check and double-sending. Trade-off: if the
+  // subsequent SMS/email send fails, we won't retry on the next cron —
+  // that's the correct behavior for messaging compliance (never retry-spam).
+  var dealIdShort = (deal.id || '').slice(0, 8);
   if (sentLog && sentLog.isDroplet()) {
-    var dealIdShort = (deal.id || '').slice(0, 8);
     if (sentLog.wasSent(contact.id, dealIdShort, 'alert')) {
       console.log('notify-buyers: SKIP ' + contact.name + ' — file dedup for deal ' + deal.id);
       return 'skipped-file-dedup';
     }
+    // Claim the dedup slot NOW so a parallel invocation can't race past it.
+    sentLog.markSent(contact.id, dealIdShort, 'alert');
   }
 
   // DEDUP CHECK 2: Tag-based dedup (GHL — works on Netlify too)
@@ -1225,10 +1239,8 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     }
   }
 
-  // Mark as sent in file-based dedup log
-  if (sentLog && sentLog.isDroplet()) {
-    sentLog.markSent(contact.id, (deal.id || '').slice(0, 8), 'alert');
-  }
+  // File-based dedup slot was claimed at the top of this function to
+  // prevent concurrent-invocation races. Nothing to mark here.
 
   return result.status;
 }
