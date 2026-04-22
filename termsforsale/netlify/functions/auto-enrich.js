@@ -40,6 +40,15 @@ function withTimeout(promise, ms) {
   });
 }
 
+// Claude sometimes returns bullet fields as arrays instead of \n-joined strings.
+// Normalize: array → join on \n, string → as-is, null/undefined/other → "".
+function toBulletStr(v) {
+  if (Array.isArray(v)) return v.map(x => String(x || '').trim()).filter(Boolean).join('\n');
+  if (typeof v === 'string') return v;
+  if (v == null) return '';
+  return String(v);
+}
+
 function prop(page, name) {
   const p = (page.properties || {})[name];
   if (!p) return null;
@@ -482,6 +491,12 @@ exports.handler = async (event) => {
         });
         narrative = claudeResult.text;
         claudeUsage = claudeResult.usage;
+        // Normalize bullet fields that Claude sometimes returns as arrays.
+        if (narrative && typeof narrative === 'object') {
+          narrative.strategies = toBulletStr(narrative.strategies);
+          narrative.redFlags = toBulletStr(narrative.redFlags);
+          narrative.buyerFitYes = toBulletStr(narrative.buyerFitYes);
+        }
         console.log('[auto-enrich] Claude narrative generated, confidence=' + (narrative && narrative.confidence));
       } catch (e) {
         console.error('[auto-enrich] Claude failed:', e.message);
@@ -565,10 +580,10 @@ exports.handler = async (event) => {
             loanBalance,
             interestRate,
             piti,
-            beds: (rcProp && rcProp.bedrooms) || existingBeds,
-            baths: (rcProp && rcProp.bathrooms) || existingBaths,
-            sqft: (rcProp && rcProp.squareFootage) || existingLivingArea,
-            yearBuilt: (rcProp && rcProp.yearBuilt) || existingYearBuilt,
+            beds: (rcProp && rcProp.bedrooms) || existingBeds || (attomProp && attomProp.building && attomProp.building.rooms && attomProp.building.rooms.beds),
+            baths: (rcProp && rcProp.bathrooms) || existingBaths || (attomProp && attomProp.building && attomProp.building.rooms && attomProp.building.rooms.bathstotal),
+            sqft: (rcProp && rcProp.squareFootage) || existingLivingArea || (attomProp && attomProp.building && attomProp.building.size && attomProp.building.size.livingsize),
+            yearBuilt: (rcProp && rcProp.yearBuilt) || existingYearBuilt || (attomProp && attomProp.summary && attomProp.summary.yearbuilt),
             arv: (rcAvm && rcAvm.price) || existingArv,
             estRent: (rcRent && rcRent.rent) || (hud && hud.ltr),
             hook: narrative && narrative.hook,
@@ -581,7 +596,8 @@ exports.handler = async (event) => {
             bestCashOnCash: compute && compute.verdict && compute.verdict.bestCashOnCash,
             maxSpreadPct: compute && compute.verdict && compute.verdict.maxSpreadPct
           },
-          compute: compute || null
+          compute: compute || null,
+          enriched: enriched || null
         };
 
         const renderRes = await withTimeout(fetch(renderUrl, {

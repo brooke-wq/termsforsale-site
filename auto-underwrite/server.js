@@ -35,9 +35,11 @@ app.post('/render', requireAuth, async (req, res) => {
   const body = req.body || {};
   const dealId = body.dealId || body.deal_id || `deal-${Date.now()}`;
   const deal = body.deal || body;
+  const compute = body.compute || null;
+  const enriched = body.enriched || null;
 
   try {
-    const { buffer, filename } = await generateDealDoc({ dealId, deal });
+    const { buffer, filename } = await generateDealDoc({ dealId, deal, compute, enriched });
     const uploaded = await uploadToDrive({
       filename,
       buffer,
