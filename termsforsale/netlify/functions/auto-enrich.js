@@ -510,7 +510,7 @@ exports.handler = async (event) => {
     let compute = null;
     try {
       compute = runCompute({
-        deal: { askingPrice, state, city, zip, dealType },
+        deal: { askingPrice, state, city, zip, dealType, entryFee, loanBalance, interestRate, piti },
         enriched,
         rehab: (narrative && narrative.rehab) || null
       });

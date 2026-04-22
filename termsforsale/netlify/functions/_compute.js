@@ -141,6 +141,189 @@ function computeReturns({ purchasePrice, rehab, arv, monthlyRent, annualTax, ann
   ];
 }
 
+// Normalize deal type strings to one of: 'subto', 'sf', 'hybrid', 'cash', 'other'.
+// Matches the loose strings seen in Notion: "Subject To", "SubTo", "Seller Finance",
+// "SF", "Hybrid", "Morby Method", "Cash", "Wrap", "Lease Option", etc.
+function normalizeDealType(raw) {
+  if (!raw) return 'other';
+  const s = String(raw).toLowerCase().replace(/[^a-z ]/g, '').trim();
+  if (/(subject to|sub to|subto)/.test(s)) return 'subto';
+  if (/(seller finance|seller financed|sf|owner finance|owner financed)/.test(s)) return 'sf';
+  if (/(hybrid|morby|stack|wrap)/.test(s)) return 'hybrid';
+  if (/cash/.test(s)) return 'cash';
+  return 'other';
+}
+
+// Scenario helper for SubTo (buyer takes over existing loan, pays entry fee).
+// Uses deal.piti if provided (total monthly housing payment). Otherwise computes
+// P+I from loanBalance and interestRate, then adds tax + insurance separately.
+function computeSubToScenario({ label, entryFee, rehabCost, loanBalance, interestRate, dealPiti, arv, monthlyRent, annualTax, annualInsurance, closingPct, vacancyPct, mgmtPct, maintPct, purchasePrice }) {
+  const entry = Number(entryFee) || 0;
+  const rehab = Number(rehabCost) || 0;
+  const arvN = Number(arv) || Number(purchasePrice) || 0;
+  const rent = Number(monthlyRent) || 0;
+  const ins = Number(annualInsurance) || DEFAULT_INSURANCE_ANNUAL;
+  const totalCostIn = entry + rehab;
+  const spreadDollars = arvN - (Number(purchasePrice) || arvN) - rehab;
+  const spreadPct = (Number(purchasePrice) || arvN) > 0 ? (spreadDollars / (Number(purchasePrice) + rehab)) * 100 : 0;
+
+  // Monthly PITI resolution: prefer deal.piti (includes tax+ins), else compute PI from loan balance
+  let monthlyPI = 0;
+  let monthlyTax = (Number(annualTax) || 0) / 12;
+  let monthlyIns = ins / 12;
+  let pitiNote;
+  if (dealPiti && Number(dealPiti) > 0) {
+    // deal.piti is total monthly housing (PI+T+I). Zero out separate tax/ins to avoid double-counting.
+    monthlyPI = Number(dealPiti);
+    monthlyTax = 0;
+    monthlyIns = 0;
+    pitiNote = 'PITI (inherited, from Notion)';
+  } else if (loanBalance && interestRate) {
+    const rate = Number(interestRate) > 1 ? Number(interestRate) / 100 : Number(interestRate); // accept 7.25 or 0.0725
+    monthlyPI = pmt(Number(loanBalance), rate, DEFAULT_LOAN_TERM_YEARS);
+    pitiNote = 'P+I from assumed loan balance × rate';
+  } else {
+    // Fallback: estimate with market SubTo rate on 80% of asking
+    const assumedLoan = Math.round((Number(purchasePrice) || arvN) * 0.80);
+    monthlyPI = pmt(assumedLoan, 0.055, DEFAULT_LOAN_TERM_YEARS);
+    pitiNote = 'PITI estimated (loan terms not provided — verify before close)';
+  }
+
+  const monthlyVacancy = rent * vacancyPct;
+  const monthlyMgmt = rent * mgmtPct;
+  const monthlyMaint = rent * maintPct;
+  const monthlyOpex = monthlyTax + monthlyIns + monthlyVacancy + monthlyMgmt + monthlyMaint;
+  const monthlyNoi = rent - monthlyOpex;
+  const annualNoi = monthlyNoi * 12;
+  const capRate = arvN > 0 ? (annualNoi / arvN) * 100 : 0;
+  const monthlyCashFlow = monthlyNoi - monthlyPI;
+  const annualCashFlow = monthlyCashFlow * 12;
+  const closing = (Number(purchasePrice) || 0) * (closingPct || DEFAULT_CLOSING_COSTS_PCT) * 0.30; // SubTo closing costs are much lower (~30% of conventional)
+  const cashRequired = entry + rehab + closing;
+  const cashOnCash = cashRequired > 0 ? (annualCashFlow / cashRequired) * 100 : 0;
+
+  return {
+    label,
+    purchasePrice: Math.round(Number(purchasePrice) || 0),
+    entryFee: Math.round(entry),
+    rehabCost: Math.round(rehab),
+    totalCostIn: Math.round(totalCostIn),
+    arv: Math.round(arvN),
+    spreadDollars: Math.round(spreadDollars),
+    spreadPct: Number(spreadPct.toFixed(1)),
+    monthlyRent: Math.round(rent),
+    monthlyPI: Math.round(monthlyPI),
+    monthlyTax: Math.round(monthlyTax),
+    monthlyInsurance: Math.round(monthlyIns),
+    monthlyOpex: Math.round(monthlyOpex),
+    monthlyCashFlow: Math.round(monthlyCashFlow),
+    annualCashFlow: Math.round(annualCashFlow),
+    capRate: Number(capRate.toFixed(2)),
+    cashRequired: Math.round(cashRequired),
+    cashOnCash: Number(cashOnCash.toFixed(2)),
+    pitiNote
+  };
+}
+
+// Scenario helper for Seller Finance (seller carries the note).
+function computeSfScenario({ label, purchasePrice, entryFee, rehabCost, interestRate, arv, monthlyRent, annualTax, annualInsurance, closingPct, vacancyPct, mgmtPct, maintPct, sfYears }) {
+  const pp = Number(purchasePrice) || 0;
+  const down = Number(entryFee) || Math.round(pp * 0.10); // default 10% down if no entry fee given
+  const rehab = Number(rehabCost) || 0;
+  const arvN = Number(arv) || pp;
+  const rent = Number(monthlyRent) || 0;
+  const tax = Number(annualTax) || 0;
+  const ins = Number(annualInsurance) || DEFAULT_INSURANCE_ANNUAL;
+  const loanAmount = pp - down;
+  const rate = interestRate ? (Number(interestRate) > 1 ? Number(interestRate) / 100 : Number(interestRate)) : 0.065;
+  const years = sfYears || DEFAULT_LOAN_TERM_YEARS;
+  const monthlyPI = pmt(loanAmount, rate, years);
+  const monthlyTax = tax / 12;
+  const monthlyIns = ins / 12;
+  const monthlyVacancy = rent * vacancyPct;
+  const monthlyMgmt = rent * mgmtPct;
+  const monthlyMaint = rent * maintPct;
+  const monthlyOpex = monthlyTax + monthlyIns + monthlyVacancy + monthlyMgmt + monthlyMaint;
+  const monthlyNoi = rent - monthlyOpex;
+  const annualNoi = monthlyNoi * 12;
+  const capRate = arvN > 0 ? (annualNoi / arvN) * 100 : 0;
+  const monthlyCashFlow = monthlyNoi - monthlyPI;
+  const annualCashFlow = monthlyCashFlow * 12;
+  const closing = pp * (closingPct || DEFAULT_CLOSING_COSTS_PCT) * 0.50; // SF closing typically 50% of conventional
+  const cashRequired = down + rehab + closing;
+  const cashOnCash = cashRequired > 0 ? (annualCashFlow / cashRequired) * 100 : 0;
+  const totalCostIn = pp + rehab;
+  const spreadDollars = arvN - totalCostIn;
+  const spreadPct = totalCostIn > 0 ? (spreadDollars / totalCostIn) * 100 : 0;
+
+  return {
+    label,
+    purchasePrice: Math.round(pp),
+    entryFee: Math.round(down),
+    rehabCost: Math.round(rehab),
+    totalCostIn: Math.round(totalCostIn),
+    arv: Math.round(arvN),
+    spreadDollars: Math.round(spreadDollars),
+    spreadPct: Number(spreadPct.toFixed(1)),
+    monthlyRent: Math.round(rent),
+    monthlyPI: Math.round(monthlyPI),
+    monthlyTax: Math.round(monthlyTax),
+    monthlyInsurance: Math.round(monthlyIns),
+    monthlyOpex: Math.round(monthlyOpex),
+    monthlyCashFlow: Math.round(monthlyCashFlow),
+    annualCashFlow: Math.round(annualCashFlow),
+    capRate: Number(capRate.toFixed(2)),
+    cashRequired: Math.round(cashRequired),
+    cashOnCash: Number(cashOnCash.toFixed(2))
+  };
+}
+
+// Build scenarios appropriate to the deal type.
+function buildScenariosByDealType({ dealType, purchasePrice, entryFee, loanBalance, interestRate, dealPiti, rehab, arv, monthlyRent, annualTax, annualInsurance }) {
+  const type = normalizeDealType(dealType);
+  const common = { arv, monthlyRent, annualTax, annualInsurance,
+    closingPct: DEFAULT_CLOSING_COSTS_PCT, vacancyPct: DEFAULT_VACANCY_PCT,
+    mgmtPct: DEFAULT_MGMT_PCT, maintPct: DEFAULT_MAINTENANCE_PCT };
+  const rehabLight = (rehab && rehab.light && rehab.light.total) || 0;
+  const rehabMod = (rehab && rehab.moderate && rehab.moderate.total) || 0;
+  const rehabSub = (rehab && rehab.substantial && rehab.substantial.total) || 0;
+
+  if (type === 'subto') {
+    const base = { entryFee, loanBalance, interestRate, dealPiti, purchasePrice, ...common };
+    const entryN = Number(entryFee) || 0;
+    const negEntry = Math.round(entryN * 0.5);
+    return [
+      computeSubToScenario({ label: 'SubTo + Light Rehab', rehabCost: rehabLight, ...base }),
+      computeSubToScenario({ label: 'SubTo + Moderate Rehab', rehabCost: rehabMod, ...base }),
+      computeSubToScenario({ label: 'SubTo + Substantial Rehab', rehabCost: rehabSub, ...base }),
+      computeSubToScenario({ label: 'Negotiated Entry (-50%, Moderate)', rehabCost: rehabMod, ...base, entryFee: negEntry })
+    ];
+  }
+
+  if (type === 'sf') {
+    const base = { purchasePrice, entryFee, interestRate, ...common };
+    return [
+      computeSfScenario({ label: 'Seller Finance + Light Rehab', rehabCost: rehabLight, ...base }),
+      computeSfScenario({ label: 'Seller Finance + Moderate Rehab', rehabCost: rehabMod, ...base }),
+      computeSfScenario({ label: 'Seller Finance + Substantial Rehab', rehabCost: rehabSub, ...base }),
+      computeSfScenario({ label: 'Negotiated Rate (-1%, Moderate)', rehabCost: rehabMod, ...base, interestRate: (Number(interestRate) > 1 ? Number(interestRate) - 1 : Number(interestRate) - 0.01) })
+    ];
+  }
+
+  if (type === 'cash') {
+    const base = { purchasePrice, ...common, rate: DEFAULT_MORTGAGE_RATE, years: DEFAULT_LOAN_TERM_YEARS, downPct: DEFAULT_DOWN_PAYMENT_PCT };
+    return [
+      computeOneScenario({ label: 'All-Cash + Light Rehab', rehabCost: rehabLight, isAllCash: true, ...base }),
+      computeOneScenario({ label: 'All-Cash + Moderate Rehab', rehabCost: rehabMod, isAllCash: true, ...base }),
+      computeOneScenario({ label: 'All-Cash + Substantial Rehab', rehabCost: rehabSub, isAllCash: true, ...base }),
+      computeOneScenario({ label: 'Conventional Financed (Moderate)', rehabCost: rehabMod, isAllCash: false, ...base })
+    ];
+  }
+
+  // Fallback — hybrid/morby/wrap/unknown: use conventional financing assumption
+  return computeReturns({ purchasePrice, rehab, arv, monthlyRent, annualTax, annualInsurance });
+}
+
 // Flood-zone severity classifier. FEMA zones that start with A* or V* are Special Flood Hazard Areas.
 function classifyFloodRisk(zone) {
   if (!zone) return { tier: 'unknown', sfha: false };
@@ -227,8 +410,13 @@ function runCompute({ deal, enriched, rehab }) {
     state: deal.state
   });
 
-  const scenarios = computeReturns({
+  const scenarios = buildScenariosByDealType({
+    dealType: deal.dealType,
     purchasePrice,
+    entryFee: deal.entryFee,
+    loanBalance: deal.loanBalance,
+    interestRate: deal.interestRate,
+    dealPiti: deal.piti,
     rehab,
     arv,
     monthlyRent,
@@ -269,5 +457,9 @@ module.exports = {
   computeReturns,
   classifyFloodRisk,
   computeVerdict,
-  runCompute
+  runCompute,
+  normalizeDealType,
+  computeSubToScenario,
+  computeSfScenario,
+  buildScenariosByDealType
 };
