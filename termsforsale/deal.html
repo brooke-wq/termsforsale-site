@@ -106,7 +106,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .tag-orange{background:#FFF3E0;color:#c05621;border-color:#f5cba7}
 
 /* DESCRIPTION */
-.deal-desc{background:var(--white);border:1px solid var(--border-light);border-radius:var(--r);padding:18px 20px;margin-bottom:24px}
+.deal-desc{background:var(--white);border:1px solid var(--border-light);border-radius:var(--r);padding:18px 20px;margin-top:20px}
 .deal-desc-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .deal-desc-body{font-size:14px;color:var(--text-mid);line-height:1.65;white-space:pre-wrap}
 
@@ -991,8 +991,6 @@ function renderDeal(d,allDeals){
 
       <div class="tags-row">${tagsHtml}</div>
 
-      ${descHtml}
-
       <div class="tabs">
         <div class="tabs-inner">
           <button class="tab-btn on" onclick="switchTab(this,'terms')">Terms</button>
@@ -1031,6 +1029,7 @@ function renderDeal(d,allDeals){
             </div>
           </div>
         </div>
+        ${descHtml}
       </div>
 
       <div id="tab-highlights" class="tab-panel">${hlHtml||'<p style="color:var(--text-light);font-size:13px">No highlights added for this deal.</p>'}</div>

@@ -303,6 +303,45 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 22 2026 Deal Page Description Reformat
+
+Branch: `claude/reformat-deal-description-sWnzq`.
+
+Brooke asked to reformat the "About This Deal" description on the deal
+page so it's visually connected to the Terms section rather than
+sitting above the tabs and pushing the terms table down the page.
+
+### Files shipped
+
+- **`termsforsale/deal.html`**:
+  - Removed `${descHtml}` from its old position between `.tags-row`
+    and `.tabs` (so the description no longer blocks the tabs + terms
+    table from being visible above the fold).
+  - Inserted `${descHtml}` inside the `#tab-terms` panel, directly
+    below the `.terms-map-grid` closing div so it renders underneath
+    the terms table + map grid as a full-width block.
+  - `.deal-desc` CSS: swapped `margin-bottom:24px` → `margin-top:20px`
+    to match its new position (below the terms/map grid instead of
+    above the tabs).
+
+### Behavior
+
+- Terms tab (default view) now shows: terms table (left) + map (right)
+  at the top, then the "About This Deal" description below. Much
+  cleaner visual hierarchy — buyers see the numbers first, then the
+  context/highlights.
+- Highlights / Analysis / Buy Process tabs are unchanged.
+- Empty-description deals still render no card (existing
+  `descText?...:''` guard preserved).
+
+### Verified
+
+- Tag balance on `deal.html`: 267/267 div, 5/5 script, 35/35 button,
+  0/0 section — all balanced.
+- No backend changes.
+
+---
+
 ## Completed — April 22 2026 Recently Closed — Mini Case-Study Reframe
 
 Branch: `claude/add-closed-deals-showcase-9mDMO`.
