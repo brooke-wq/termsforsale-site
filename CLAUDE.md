@@ -303,6 +303,150 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 22 2026 Recently Closed — Mini Case-Study Reframe
+
+Branch: `claude/add-closed-deals-showcase-9mDMO`.
+
+Second-pass rework of the Recently Closed sections on `/` and
+`/deals.html` per $100M Playbook / $100M Offers feedback. Ships on
+top of the initial 120-day showcase (earlier entry below).
+
+### Framing rewrite
+
+- **Eyebrow**: "Closed Deals · Last 12 Months"
+- **Headline**: "Deals Our Buyers Closed Through Terms For Sale"
+- **Subhead**: "Contracts our JV partners brought us that turned into
+  real checks for them and real properties for our buyers — all
+  closed with creative / investor-friendly terms, no banks required."
+
+### 4 stat tiles (computed live from Notion, 12-month window)
+
+Each tile auto-hides if the underlying data is empty:
+
+| Tile | Source field(s) | Computation |
+|---|---|---|
+| Deals Closed | `Deal Status = Closed` + `Date Funded` | count within 365 days |
+| In Assignments Paid | `Amount Funded` | sum; sub-label shows avg per partner |
+| Avg Days to Assignment | `Started Marketing` → `Date Assigned` (fallback `Date Funded`) | average across deals with both dates |
+| Creative / Terms Deals | `Deal Type` | % where type !== "Cash" |
+
+### Card grid — mini case studies (120-day window + under-20-days-to-close gate)
+
+Per Brooke's follow-up: the card grid now ONLY shows closed deals
+where ready-to-market → under-contract happened in **under 20 days**,
+AND funded within the last 120 days. Slower deals still count toward
+the 12-month stat tiles but don't get a card. Requires `Started
+Marketing` on the Notion page — if it's missing, the deal is
+excluded.
+
+Each card is a mini case study:
+
+- **Photo + badge overlay** (top-left corner, stacked):
+  1. Navy/green "Closed in X days" (primary badge)
+  2. Orange "Creative Finance" type (Subto/SF/Hybrid) or green "Cash"
+- **Headline line**: "$18K Entry — 3/2 in City, State" (entry fee or
+  asking, beds/baths, city+state only — no street per visibility
+  rules)
+- **Story**: pulls from Notion `Description` field (or `Details`
+  fallback). 3-line clamped. Skipped entirely if empty — Brooke can
+  add short 1-2 sentence stories on closed deals as she goes.
+- **Outcomes row** (dashed border, bullet list):
+  - "Dispo strategy:" — "Matched to a creative-finance buyer" (creative)
+    or "Cash buyer, no financing contingency" (cash)
+  - "Buyer cash flow: ~$X/mo projected" — shown only when both
+    `LTR Market Rent` and `PITI` (or `SF Payment`) are populated
+  - Deliberately does NOT show per-deal assignment fee publicly
+    (exposed only in the aggregate "In Assignments Paid" stat tile).
+    JV partner identity is NOT shown (per Brooke — that's a Dispo
+    Buddy-side concern; public Terms For Sale cards stay anonymous).
+
+### Dual CTA bar under the grid
+
+Navy gradient card, split 50/50:
+
+| Side | Label | Button |
+|---|---|---|
+| Left | "Want deals like these?" / "Join the VIP buyer list — first access…" | **Apply as VIP Buyer** → `/buying-criteria.html` |
+| Right | "Sitting on a contract you can't move?" / "Bring it to our buyer network…" | **Submit My JV Deal** → `https://dispobuddy.com/submit-deal.html` |
+
+Stacks to single column on screens <960px.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/deals.js`** — added
+  `startedMarketing` field to every deal in the API response.
+  Required for the "Closed in X days" badge + avg-days stat tile +
+  under-20-days filter.
+- **`termsforsale/deals.html`**:
+  - New `.cs-*` (case-study) CSS namespace alongside existing
+    `.closed-*` wrapper styles — handles card photo/badges/headline/
+    story/outcomes + the navy dual-CTA footer block.
+  - Stat tiles rewired from 2 → 4 (deals, assignments, days,
+    creative %). Each `#cs-stat-*-wrap` is `display:none` by default
+    and only reveals when the data is present.
+  - Recently Closed markup rewritten — eyebrow/title/subhead copy,
+    new stat tile IDs, dual-CTA footer.
+  - `renderClosedSection()` rewritten: computes 12-month stats from
+    `CLOSED_DEALS_12MO`, renders card grid from `CLOSED_DEALS`
+    (120-day + under-20d-to-close) via new `csMakeCard()` helper.
+  - New state variable `CLOSED_DEALS_12MO` populated in init.
+  - `CLOSED_DEALS` (card set) now filtered to
+    `csDaysToAssignment(d) < 20` in addition to the 120-day window.
+- **`termsforsale/index.html`**:
+  - `.rc-*` CSS namespace expanded to match the deals.html
+    case-study layout (stats grid, badges, outcomes, dual CTA).
+  - Markup rewritten to include the 4 stat tiles + dual CTA
+    alongside the 4-card strip.
+  - `renderRecentlyClosed()` rewritten to mirror
+    `renderClosedSection()` — 12-month stats + 120-day + under-20d
+    card filter.
+
+### Data dependencies (what Brooke needs in Notion)
+
+| Field | Required for | What happens if blank |
+|---|---|---|
+| `Deal Status = Closed` | everything | deal excluded entirely |
+| `Date Funded` | 12-month stat window + sort | deal excluded from stats AND cards |
+| `Started Marketing` | "Closed in X days" badge + avg-days stat + under-20d filter | deal excluded from card grid (still counts toward closed-count + funded stats) |
+| `Date Assigned` | "Closed in X days" badge preferred source | falls back to `Date Funded` |
+| `Amount Funded` | assignments-paid stat + avg-per-partner | stat tile hides if nothing populated |
+| `Description` | per-card story line | line omitted from that card |
+| `LTR Market Rent` + `PITI` (or `SF Payment`) | buyer cash-flow outcome line | line omitted from that card |
+| `Entry Fee` | card headline "$X Entry" | falls back to `Asking Price` |
+| `Beds` + `Baths` | card headline "3/2" | omitted (headline still shows entry + city) |
+| `Cover photo` / Google Drive link | card thumbnail | shows muted house icon on green gradient |
+
+### Verified
+
+- 9-case filter harness: under-20-days filter shows correctly for 5/9
+  cases (5d / 11d / 19d / 12d-no-dateAssigned / boundary exact 20d
+  hides / 25d hides / 45d hides / missing-startedMarketing hides /
+  6mo-old hides).
+- Tag balance: deals.html 5/5 section, 341/341 div, 13/13 script;
+  index.html 6/6 section, 213/213 div, 8/8 script.
+- JS parse: all 8 inline JS blocks on deals.html + 5 on index.html
+  compile (only JSON-LD "failures" expected).
+
+### Known caveats
+
+- The under-20-days filter can be strict. If Notion's `Started
+  Marketing` isn't populated on closed deals, the card grid will
+  render empty while the stat tiles still show (since those use a
+  looser window). Brooke should backfill `Started Marketing` on her
+  8-12 favorite closed deals to seed the showcase.
+- Card stories are empty by default — the `Description` field on
+  closed deals is rarely filled in. Brooke can add 1-2 sentence
+  "mini-pitch" stories on her top closed deals to get the "wholesaler
+  sat on this 45 days, we brought 9 buyers, closed in 11" case-study
+  feel. Without stories, the cards still show the headline + badges +
+  outcomes which is a decent minimum.
+- Assignment fee is NOT shown per-card (only in aggregate via the
+  "In Assignments Paid" stat). If Brooke wants per-card fees later,
+  flip a simple flag in `csMakeCard()` (and on the homepage
+  `rcMakeCard()`).
+
+---
+
 ## Completed — April 22 2026 Recently Closed Showcase (Homepage + 4-Month Window)
 
 Branch: `claude/add-closed-deals-showcase-9mDMO`.

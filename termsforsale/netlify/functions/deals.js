@@ -291,6 +291,7 @@ exports.handler = async function(event) {
         parking: prop(page, 'Parking'),
         dateFunded: prop(page, 'Date Funded'),
         dateAssigned: prop(page, 'Date Assigned'),
+        startedMarketing: prop(page, 'Started Marketing'),
         amountFunded: +prop(page, 'Amount Funded') || 0,
         lastEdited: page.last_edited_time
       };
