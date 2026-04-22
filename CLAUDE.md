@@ -3627,10 +3627,14 @@ blog page).
      4. Uploads results to Drive `/Deal Marketing/{DealID}/` folder.
      5. Posts Slack message (or GHL internal SMS to Brooke) with review links. One-click approve = GHL workflow posts to IG + sends email blast + FB group cross-post.
    - **Format decisions needed (bring to tomorrow):**
-     - Template service: Creatomate vs Shotstack for video; Bannerbear for static (recommended because API-first, JSON-driven, Brooke can iterate templates visually without code changes).
+     - Template service: **Canva Connect API with Autofill (Brooke's preferred)** — Brooke designs templates visually in Canva, placeholders filled from JSON per deal, exports MP4 + PNG. Requires Canva Teams/Enterprise tier. Fallback if tier doesn't work: Creatomate (video) + Bannerbear (static).
      - Video duration: 15-sec Reel (hook-heavy) vs 30-sec long-form (more numbers visible).
      - Voiceover source: silent with text overlays (simplest) vs AI voice (ElevenLabs, ~$5/mo, sounds pro) vs Brooke records once per deal (highest touch).
      - Brand kit codification: nail down exact fonts, color hex, logo lockup variants before template creation.
+   - **🔥 BROOKE PREREQ CHECKS BEFORE TOMORROW:**
+     1. **Canva plan tier** — log into Canva → Settings → Account → Billing. Need **Teams** (~$10/user/mo) or **Enterprise**. Canva Free and Canva Pro do NOT include the Autofill API. If on Pro, upgrading to Teams unlocks it.
+     2. **Canva Connect developer portal access** — visit https://www.canva.com/developers and confirm you can register a "Connect app" under the account. Success = developer portal loads and you can click "Create an integration". That means programmatic access is available.
+     3. If either check fails → fallback plan = Creatomate ($25/mo) + Bannerbear ($29/mo) for API-driven rendering.
    - **Build sequence (per Brooke's notes):**
      - Week 1: Master buyer packet template + 3 most-used exit modules (Co-Living, LTR, Flip) → map to compute scenarios.
      - Week 2: Remaining 5 exit modules + underwriting intake form audit.
