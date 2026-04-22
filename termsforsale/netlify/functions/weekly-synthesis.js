@@ -13,7 +13,8 @@ const { postNote, sendSMS, searchContacts } = require('./_ghl');
 var sentLog;
 try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
 
-exports.config = { schedule: '0 15 * * 1' };
+// Scheduled execution lives on the DigitalOcean Droplet (Mondays 15:00 UTC).
+// This function still deploys so it can be invoked ad-hoc via HTTP.
 
 // ─── Notion helpers ───────────────────────────────────────────
 

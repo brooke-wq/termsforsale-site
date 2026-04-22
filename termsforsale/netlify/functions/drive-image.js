@@ -71,7 +71,9 @@ exports.handler = async function(event) {
       statusCode: 200,
       headers: {
         'Content-Type': imgResult.contentType,
-        'Cache-Control': 'public, max-age=86400',
+        // Drive file IDs are immutable, so repeat views can be served from
+        // browser + CDN cache without re-invoking this function.
+        'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
         'Access-Control-Allow-Origin': '*'
       },
       body: imgResult.body.toString('base64'),

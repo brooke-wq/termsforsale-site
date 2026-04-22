@@ -41,10 +41,9 @@ Be encouraging to bird dog students — they're learning. Give constructive feed
 
 Output valid JSON only.`;
 
-// Can be called as Netlify scheduled function OR standalone Node script
+// Scheduled execution lives on the DigitalOcean Droplet (hourly). This
+// function still deploys so it can be invoked ad-hoc via HTTP.
 if (typeof exports !== 'undefined') {
-  exports.config = { schedule: '0 * * * *' };
-
   exports.handler = async () => {
     return run();
   };

@@ -17,11 +17,8 @@
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
 // ─── Scheduled trigger ────────────────────────────────────────
-// Netlify runs this every 15 minutes automatically.
-// No package install needed — Netlify supports this config export natively.
-exports.config = {
-  schedule: '*/15 * * * *',
-};
+// Scheduled execution lives on the DigitalOcean Droplet (*/15 * * * *).
+// This function still deploys so it can be invoked ad-hoc via HTTP.
 
 // ─── SYSTEM PROMPT (same as underwriting.js) ─────────────────
 
