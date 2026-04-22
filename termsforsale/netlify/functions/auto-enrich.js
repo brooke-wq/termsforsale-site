@@ -467,7 +467,7 @@ exports.handler = async (event) => {
         baseFloodElevation: floodBfe === -9999 ? null : floodBfe,
         isSpecialFloodHazardArea: floodSfha,
         source: 'nfhl'
-      } : (femaFloodRaw ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area', source: 'nfhl' } : null)),
+      } : ((latitude && longitude) ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area (assumed)', source: 'default' } : null)),
       femaDisasters: uniqueDisasters,
       hud: hud ? {
         ltr: hud.ltr,
