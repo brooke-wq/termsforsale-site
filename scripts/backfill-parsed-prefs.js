@@ -222,7 +222,26 @@ function getCustomFieldValue(contact, fieldId) {
     var buyBox = buyBoxFieldId ? String(getCustomFieldValue(c, buyBoxFieldId) || '') : '';
     var tags = c.tags || [];
 
-    var existingPrefsRaw = getCustomFieldValue(c, parsedPrefsFieldId);
+    // IMPORTANT: GHL's /contacts/search endpoint does NOT return customFields
+    // in the response. We must GET the full contact to see existing
+    // parsed_prefs (otherwise every run re-parses every buyer, wasting money).
+    var fullContact = c;
+    try {
+      var fullRes = await ghl('GET', '/contacts/' + c.id);
+      if (fullRes.status >= 200 && fullRes.status < 300 && fullRes.body && fullRes.body.contact) {
+        fullContact = fullRes.body.contact;
+        // Also refresh buy_box from the full record — search may have returned stale
+        if (buyBoxFieldId) {
+          var freshBuyBox = getCustomFieldValue(fullContact, buyBoxFieldId);
+          if (freshBuyBox != null) buyBox = String(freshBuyBox);
+        }
+        if (Array.isArray(fullContact.tags)) tags = fullContact.tags;
+      }
+    } catch (e) {
+      // Fall through with the search-result version of the contact
+    }
+
+    var existingPrefsRaw = getCustomFieldValue(fullContact, parsedPrefsFieldId);
     var existingPrefs = null;
     try { if (existingPrefsRaw) existingPrefs = JSON.parse(existingPrefsRaw); } catch (e) { existingPrefs = null; }
 
