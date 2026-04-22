@@ -3606,6 +3606,18 @@ blog page).
 
 ## TODO — Next Session
 
+00. **🔥 FIRST — diagnose "nothing happened" on 607 N Bowie St deal.** Brooke flipped this deal to Ready to Underwrite and nothing fired (no SMS, no email, no Drive doc). Run this manual curl to isolate whether n8n or the Netlify function is the broken layer:
+   ```bash
+   TOKEN='928c85007d6270ef91d0a3563d6bd9b9829122db7d60f42c436c7e7fe310fc86'
+   curl -sS -X POST https://termsforsale.com/api/auto-enrich \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"pageId":"343090d675e78017b40fe24095623194"}' | jq '{success, error, dealId, fullAddress, notionPatched, driveLink}'
+   ```
+   - If it returns `success: true` with `driveLink`: the function works → n8n is broken (likely workflow not Active on n8n Cloud, OR Notion filter shape stale after a property-type change). Go to n8n Cloud → "Auto-Enrichment" workflow → check Active toggle and run history.
+   - If it returns `error: "..."`: the Netlify function is throwing. Common causes: missing Street Address on the Notion page, missing required env var, Claude/ATTOM/RentCast API outage. Paste the error and debug.
+   - Page URL: https://www.notion.so/607-N-Bowie-St-343090d675e78017b40fe24095623194
+
 0a. **🔥 Ping the JV partner who called about the Dispo Buddy submission failure** — the `GHL_API_KEY` rotation is done and submissions work again, but their earlier attempts never wrote anything to GHL or Notion. They need to re-submit. See "Dispo Buddy Submission Triage (PR #103)" session log above for context.
 
 0b. **Cross-site env var sync audit.** The Dispo Buddy Netlify site and the Terms For Sale Netlify site each maintain separate copies of `GHL_API_KEY`. When we rotated the Dispo Buddy side on April 21, the Terms For Sale side was untouched — but nothing guarantees both stay in sync going forward. Consider either (a) a recurring ops-audit check that hits a cheap GHL auth endpoint from each deployed function to catch 401s proactively, or (b) a shared env-var store (Netlify Team Environment Variables) so a single rotation pushes to both sites. Same concern applies to any other secret duplicated across sites (`NOTION_TOKEN`, `ANTHROPIC_API_KEY`, etc.).
