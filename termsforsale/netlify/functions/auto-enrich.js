@@ -280,7 +280,8 @@ exports.handler = async (event) => {
       attomKey && streetAddress ? withTimeout(fetchAttomProperty(attomKey, streetAddress, city, state, zip), 8000) : Promise.reject(new Error('no attom key or address'))
     ]);
 
-    const rcProp = rcPropResult.status === 'fulfilled' ? rcPropResult.value : null;
+    const rcPropRaw = rcPropResult.status === 'fulfilled' ? rcPropResult.value : null;
+    const rcProp = Array.isArray(rcPropRaw) ? (rcPropRaw[0] || null) : rcPropRaw;
     const rcAvm  = rcAvmResult.status  === 'fulfilled' ? rcAvmResult.value  : null;
     const rcRent = rcRentResult.status === 'fulfilled' ? rcRentResult.value : null;
     const hud    = hudResult.status    === 'fulfilled' ? hudResult.value    : null;
@@ -466,7 +467,7 @@ exports.handler = async (event) => {
         baseFloodElevation: floodBfe === -9999 ? null : floodBfe,
         isSpecialFloodHazardArea: floodSfha,
         source: 'nfhl'
-      } : (femaFloodRaw ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area', source: 'nfhl' } : null)),
+      } : ((latitude && longitude) ? { zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area (assumed)', source: 'default' } : null)),
       femaDisasters: uniqueDisasters,
       hud: hud ? {
         ltr: hud.ltr,
@@ -509,7 +510,7 @@ exports.handler = async (event) => {
     let compute = null;
     try {
       compute = runCompute({
-        deal: { askingPrice, state, city, zip, dealType },
+        deal: { askingPrice, state, city, zip, dealType, entryFee, loanBalance, interestRate, piti },
         enriched,
         rehab: (narrative && narrative.rehab) || null
       });
