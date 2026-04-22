@@ -1,22 +1,27 @@
 // Shared Claude API helper — native fetch (Node 18+), no npm packages
 // Prefix _ means Netlify will NOT deploy this as a function (it's a private module)
 //
-// Default model: claude-sonnet-4-20250514 (Sonnet 4)
-// Pricing approx: $3.00/MTok input, $15.00/MTok output
+// Default model: claude-haiku-4-5-20251001 (Haiku 4.5)
+// Pricing approx: $1.00/MTok input, $5.00/MTok output
 //
-// Callers should pass { model: 'claude-haiku-4-5-20251001' } to use Haiku
-// (much cheaper) when output quality allows — see CLAUDE.md cost rules.
+// Callers that need higher-quality output can pass
+// { model: 'claude-sonnet-4-20250514' } — but per CLAUDE.md cost rules,
+// default to Haiku and only upgrade to Sonnet when output quality is
+// provably insufficient.
 //
 // Exports: complete(apiKey, { system, user, maxTokens, json, model })
 // Returns: { text, usage: { input_tokens, output_tokens, cost } }
 
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 
-// Approximate cost per token (USD) for the default model
-const COST_PER_INPUT_TOKEN  = 3.00 / 1_000_000;
-const COST_PER_OUTPUT_TOKEN = 15.00 / 1_000_000;
-const COST_WARN_THRESHOLD   = 0.15;
+// Approximate cost per token (USD) for non-Haiku (Sonnet) fallback calls.
+// Haiku rates are applied dynamically below via the isHaiku check.
+const COST_PER_INPUT_TOKEN_SONNET  = 3.00 / 1_000_000;
+const COST_PER_OUTPUT_TOKEN_SONNET = 15.00 / 1_000_000;
+const COST_PER_INPUT_TOKEN_HAIKU   = 1.00 / 1_000_000;
+const COST_PER_OUTPUT_TOKEN_HAIKU  = 5.00 / 1_000_000;
+const COST_WARN_THRESHOLD          = 0.15;
 
 /**
  * Call Claude API.
@@ -70,14 +75,14 @@ async function complete(apiKey, { system, user, maxTokens, json, model }) {
     throw new Error('Claude API error ' + res.status + ': ' + (data.error ? data.error.message : text.slice(0, 200)));
   }
 
-  // Calculate token usage and cost. Haiku is ~25x cheaper than Sonnet; use
-  // the cheaper rates when a Haiku model is in play so the cost log is honest.
+  // Calculate token usage and cost. Haiku is ~25x cheaper than Sonnet; pick
+  // the rate table by model family so the cost log is accurate either way.
   var usage = data.usage || {};
   var inputTokens  = usage.input_tokens  || 0;
   var outputTokens = usage.output_tokens || 0;
   var isHaiku = /haiku/i.test(theModel);
-  var inRate  = isHaiku ? (1.00 / 1_000_000) : COST_PER_INPUT_TOKEN;
-  var outRate = isHaiku ? (5.00 / 1_000_000) : COST_PER_OUTPUT_TOKEN;
+  var inRate  = isHaiku ? COST_PER_INPUT_TOKEN_HAIKU  : COST_PER_INPUT_TOKEN_SONNET;
+  var outRate = isHaiku ? COST_PER_OUTPUT_TOKEN_HAIKU : COST_PER_OUTPUT_TOKEN_SONNET;
   var cost = (inputTokens * inRate) + (outputTokens * outRate);
 
   console.log('[Claude] model=' + theModel +
