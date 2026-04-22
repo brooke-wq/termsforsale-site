@@ -38,6 +38,15 @@ async function ghlRequest(apiKey, method, path, body) {
 }
 
 exports.handler = async function(event) {
+  // 🚨 EMERGENCY MARKETING KILL SWITCH 🚨
+  // Hardcoded pause during duplicate-send audit. Remove only after safe.
+  console.warn('[deal-follow-up] EMERGENCY PAUSE — function is hard-disabled.');
+  return {
+    statusCode: 200,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ paused: true, reason: 'Emergency marketing pause', at: new Date().toISOString() })
+  };
+  // eslint-disable-next-line no-unreachable
   var apiKey = process.env.GHL_API_KEY;
   var locationId = process.env.GHL_LOCATION_ID;
   if (!apiKey || !locationId) {

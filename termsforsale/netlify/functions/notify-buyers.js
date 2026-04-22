@@ -1251,6 +1251,22 @@ exports.handler = async function(event) {
   var headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: headers, body: '' };
 
+  // 🚨 EMERGENCY MARKETING KILL SWITCH 🚨
+  // Hardcoded pause while we audit the duplicate-send issue. Remove this
+  // block ONLY after the duplicate sender outside this function has been
+  // identified and paused (GHL workflow / n8n flow). See CLAUDE.md session
+  // log "Emergency marketing pause" for context.
+  console.warn('[notify-buyers] EMERGENCY PAUSE — function is hard-disabled. No SMS or email will be sent.');
+  return {
+    statusCode: 200,
+    headers: headers,
+    body: JSON.stringify({
+      paused: true,
+      reason: 'Emergency marketing pause active — hardcoded in notify-buyers.js handler. Remove after duplicate-send audit completes.',
+      at: new Date().toISOString()
+    })
+  };
+
   var token = process.env.NOTION_TOKEN;
   var dbId = process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
   var apiKey = process.env.GHL_API_KEY;

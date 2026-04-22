@@ -33,6 +33,14 @@ var NUDGE_AFTER_DAYS = 7;
 var STALE_AFTER_DAYS = 14;
 
 exports.handler = async function(event) {
+  // 🚨 EMERGENCY MARKETING KILL SWITCH 🚨
+  console.warn('[follow-up-nudge] EMERGENCY PAUSE — function is hard-disabled.');
+  return {
+    statusCode: 200,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ paused: true, reason: 'Emergency marketing pause', at: new Date().toISOString() })
+  };
+  // eslint-disable-next-line no-unreachable
   if (event.httpMethod === 'OPTIONS') return respond(200, {});
   if (event.httpMethod !== 'POST') return respond(405, { error: 'POST only' });
 
