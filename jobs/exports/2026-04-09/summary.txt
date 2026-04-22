@@ -1,0 +1,16 @@
+Terms For Sale — Engagement Snapshot
+Generated: 2026-04-09T00:50:49.825Z
+
+Total contacts scanned:        17073
+Contacts with any engagement:  79
+
+── Old-format tags (pre-new-system) ──
+Total sent:<slug> applications:    1
+Unique deal slugs with sent tags:  1
+Total viewed:<short> applications: 116
+Unique short ids with viewed tags: 23
+
+── New-format tags (sent-/viewed-/alert-) ──
+sent-  tag applications:  0
+viewed- tag applications: 0
+alert- tag applications:  0
