@@ -1083,19 +1083,17 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     ]
   });
 
-  // HYBRID TIER ROUTER: hand off tag application + SMS send to the n8n
-  // "Hybrid Tier Router" workflow. It Waits per tier (A immediate, B +1h,
-  // C +4h), then applies tagsToAdd + sends SMS. This implements the
-  // A/B/C staggered-release design from the Team SOP + deck.
+  // SMS path.
   //
-  // Tier mapping: Netlify matcher assigns tier 1/2/3 from buy-box fit.
-  //   Tier 1 (city + all extras pass) → A  (immediate, VIP)
-  //   Tier 2 (city match, not all extras) → B  (+1 hour)
-  //   Tier 3 (state fallback only) → C  (+4 hours)
+  // The "hybrid tier router" handoff to n8n (gated by HYBRID_ROUTER_LIVE=true)
+  // implements the A/B/C staggered-release design, BUT it has a known
+  // duplicate-send failure mode: if the n8n webhook fires the SMS and then
+  // returns non-2xx or throws (timeout, flaky response), the direct fallback
+  // below ALSO fires the SMS — buyer gets the alert twice.
   //
-  // FALLBACK: if the router POST fails (network, n8n down), we fall back to
-  // the pre-hybrid direct path so a buyer still gets their alert — just
-  // without the tier stagger.
+  // Default path: apply tags + send SMS directly (pre-hybrid behavior).
+  // To re-enable the router once n8n is stable, set HYBRID_ROUTER_LIVE=true
+  // on the Droplet/Netlify env and verify with a single test blast.
   var tierLetter = ({ 1: 'A', 2: 'B', 3: 'C' })[contact.tier || contact._tier] || 'C';
   var smsMsg = 'New ' + deal.dealType + ' deal in ' + deal.city + ', ' + deal.state;
   if (price) smsMsg += ' — ' + price;
@@ -1104,7 +1102,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
   if (smsMsg.length > 160) smsMsg = smsMsg.slice(0, 157) + '...';
 
   var hybridRouted = false;
-  if (contact.phone && locationId) {
+  if (process.env.HYBRID_ROUTER_LIVE === 'true' && contact.phone && locationId) {
     try {
       var routerRes = await httpRequest('https://n8n.termsforsale.com/webhook/hybrid-tier-route', {
         method: 'POST',
@@ -1120,6 +1118,10 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
         hybridRouted = true;
         console.log('notify-buyers: posted to hybrid router — tier=' + tierLetter + ' contact=' + contact.name);
       } else {
+        // Router returned an error. We assume it did NOT send. Log loudly and
+        // fall through so the buyer still gets an alert. Accept the small
+        // duplicate-send risk in exchange for delivery reliability — the
+        // bigger ongoing risk was silent doubling for EVERY send.
         console.warn('notify-buyers: hybrid router returned ' + routerRes.status + ' for ' + contact.name + ' — falling back to direct send');
       }
     } catch (routerErr) {
@@ -1127,10 +1129,6 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
     }
   }
 
-  // FALLBACK: if hybrid router didn't accept the job, apply tags and send
-  // SMS directly (pre-hybrid behavior). Covers network failures + the
-  // no-phone case (router needs a phone; contacts without phones still get
-  // tags applied so the email workflow + dashboard tracking still work).
   if (!hybridRouted) {
     try {
       await httpRequest(tagUrl, {
@@ -1146,7 +1144,7 @@ async function triggerBuyerAlert(apiKey, locationId, contact, deal) {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey, 'Version': '2021-07-28', 'Content-Type': 'application/json' }
         }, { type: 'SMS', contactId: contact.id, message: smsMsg, fromNumber: '+14806373117' });
-        console.log('notify-buyers: SMS sent directly (fallback) to ' + contact.name);
+        console.log('notify-buyers: SMS sent to ' + contact.name);
       } catch (smsErr) {
         console.warn('notify-buyers: SMS failed for ' + contact.name + ': ' + smsErr.message);
       }
@@ -1344,8 +1342,24 @@ exports.handler = async function(event) {
       var testOnlyPhone = process.env.TEST_ONLY_PHONE || '';
 
       if (isLive) {
-        // LIVE MODE: Actually trigger GHL alerts + send SMS
+        // LIVE MODE: Actually trigger GHL alerts + send SMS.
+        // In-run dedup: GHL pagination can return the same contact on two
+        // pages if the contact is modified mid-scan, which would silently
+        // fire two alerts to the same buyer since file/tag dedup only kicks
+        // in AFTER the first full send completes. Track processed contact
+        // IDs per deal to guarantee each buyer is alerted at most once per
+        // invocation.
+        var seenContactIds = Object.create(null);
         for (var j = 0; j < buyers.length; j++) {
+          if (seenContactIds[buyers[j].id]) {
+            dealResult.alerts.push({
+              buyer: buyers[j].name,
+              status: 'skipped-duplicate-in-run',
+              sent: false
+            });
+            continue;
+          }
+          seenContactIds[buyers[j].id] = true;
           if (testOnlyPhone && buyers[j].phone !== testOnlyPhone) {
             dealResult.alerts.push({
               buyer: buyers[j].name,
