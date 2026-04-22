@@ -271,28 +271,28 @@
 
       <div>
         <div class="eyebrow" style="color:var(--gold);">Deal Analysis · Investor Memo</div>
-        <h1 class="slide-title" style="color:var(--ivory); font-size:96px;">4218 S&nbsp;Juniper&nbsp;Creek&nbsp;Dr.</h1>
-        <p style="font-family:'Manrope'; font-size:42px; font-weight:300; color:var(--slate-mist); margin-top:18px;">Tampa, Florida&nbsp;33611</p>
+        <h1 class="slide-title" style="color:var(--ivory); font-size:96px;">{{DEAL_ADDRESS}}</h1>
+        <p style="font-family:'Manrope'; font-size:42px; font-weight:300; color:var(--slate-mist); margin-top:18px;">{{CITY_STATE_ZIP}}</p>
 
         <div style="display:flex; gap:12px; margin-top:48px; flex-wrap:wrap;">
-          <span class="pill">Single Family · 3/2</span>
-          <span class="pill gold">Subject&#8209;To + Seller Finance</span>
-          <span class="pill">6 Viable Exits</span>
+          <span class="pill">{{PROPERTY_TYPE_BEDS_BATHS}}</span>
+          <span class="pill gold">{{DEAL_STRUCTURE}}</span>
+          <span class="pill">{{VIABLE_EXITS}}</span>
         </div>
       </div>
 
       <div class="row" style="gap:64px; padding-top:40px; border-top:1px solid rgba(255,255,255,0.15);">
         <div class="col">
           <div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--slate-mist); font-weight:500;">Prepared for</div>
-          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">Private Buyer List</div>
+          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">{{PREPARED_FOR}}</div>
         </div>
         <div class="col">
           <div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--slate-mist); font-weight:500;">Memo Date</div>
-          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">April 21, 2026</div>
+          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">{{MEMO_DATE}}</div>
         </div>
         <div class="col">
           <div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--slate-mist); font-weight:500;">Deal ID</div>
-          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">TFS&nbsp;&mdash;&nbsp;1042</div>
+          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">{{DEAL_ID}}</div>
         </div>
       </div>
     </div>
@@ -301,25 +301,25 @@
     <div style="padding:100px; background:var(--slate); display:flex; flex-direction:column; justify-content:center; gap:56px;">
       <div class="eyebrow" style="color:var(--gold); margin-bottom:0;">The Deal at a Glance</div>
       <div class="hero-stat">
-        <div class="num ivory" style="font-size:140px;">$387,000</div>
+        <div class="num ivory" style="font-size:140px;">{{PURCHASE_PRICE}}</div>
         <div class="lbl" style="color:var(--slate-mist);">Purchase Price</div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px 56px;">
         <div class="hero-stat">
-          <div class="num" style="color:var(--gold); font-size:72px;">2.875%</div>
+          <div class="num" style="color:var(--gold); font-size:72px;">{{EXISTING_RATE}}</div>
           <div class="lbl" style="color:var(--slate-mist);">Existing Rate (SubTo)</div>
         </div>
         <div class="hero-stat">
-          <div class="num ivory" style="font-size:72px;">$42K</div>
+          <div class="num ivory" style="font-size:72px;">{{CASH_TO_CLOSE_SHORT}}</div>
           <div class="lbl" style="color:var(--slate-mist);">Cash to Close</div>
         </div>
         <div class="hero-stat">
-          <div class="num" style="color:var(--gold); font-size:72px;">$1,890</div>
+          <div class="num" style="color:var(--gold); font-size:72px;">{{PITI}}</div>
           <div class="lbl" style="color:var(--slate-mist);">PITI / Mo</div>
         </div>
         <div class="hero-stat">
-          <div class="num ivory" style="font-size:72px;">$78K</div>
+          <div class="num ivory" style="font-size:72px;">{{DAY1_EQUITY_SHORT}}</div>
           <div class="lbl" style="color:var(--slate-mist);">Day&#8209;1 Equity</div>
         </div>
       </div>
@@ -333,11 +333,11 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Executive Summary</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Executive Summary</div>
     </div>
 
     <div class="eyebrow">01 · Executive Summary</div>
-    <h2 class="slide-title" style="max-width:1400px;">An assumable 2.875% loan, in-place cashflow,<br/>six viable exits.</h2>
+    <h2 class="slide-title" style="max-width:1400px;">{{EXEC_HEADLINE}}</h2>
 
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:60px; margin-top:72px;">
 
@@ -398,13 +398,13 @@
     <div style="padding:60px 100px; background:var(--paper); display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--rule);">
       <div>
         <div class="eyebrow" style="margin-bottom:10px;">02 · The Property</div>
-        <h2 style="font-size:64px;">4218 S Juniper Creek Dr.</h2>
+        <h2 style="font-size:64px;">{{DEAL_ADDRESS_PLAIN}}</h2>
       </div>
       <div class="row gap-12">
-        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Type</div><div style="font-family:'Manrope'; font-size:30px;">Single Family</div></div>
-        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Year Built</div><div style="font-family:'Manrope'; font-size:30px;">1998</div></div>
-        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Condition</div><div style="font-family:'Manrope'; font-size:30px;">Turn&#8209;Key</div></div>
-        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Occupancy</div><div style="font-family:'Manrope'; font-size:30px;">Vacant</div></div>
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Type</div><div style="font-family:'Manrope'; font-size:30px;">{{PROPERTY_TYPE}}</div></div>
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Year Built</div><div style="font-family:'Manrope'; font-size:30px;">{{YEAR_BUILT}}</div></div>
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Condition</div><div style="font-family:'Manrope'; font-size:30px;">{{CONDITION}}</div></div>
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Occupancy</div><div style="font-family:'Manrope'; font-size:30px;">{{OCCUPANCY}}</div></div>
       </div>
     </div>
   </div>
@@ -416,7 +416,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Specifications</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Specifications</div>
     </div>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:96px; flex:1;">
@@ -436,27 +436,27 @@
       <div class="col" style="justify-content:center;">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0;">
           <div class="hero-stat" style="padding:28px 0; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule); padding-right:32px;">
-            <div class="num slate" style="font-size:88px;">3</div>
+            <div class="num slate" style="font-size:88px;">{{BEDROOMS}}</div>
             <div class="lbl">Bedrooms</div>
           </div>
           <div class="hero-stat" style="padding:28px 0 28px 32px; border-bottom:1px solid var(--rule);">
-            <div class="num slate" style="font-size:88px;">2</div>
+            <div class="num slate" style="font-size:88px;">{{BATHROOMS}}</div>
             <div class="lbl">Bathrooms</div>
           </div>
           <div class="hero-stat" style="padding:28px 0; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule); padding-right:32px;">
-            <div class="num slate" style="font-size:88px;">1,784</div>
+            <div class="num slate" style="font-size:88px;">{{LIVING_SQFT}}</div>
             <div class="lbl">Sq Ft Living</div>
           </div>
           <div class="hero-stat" style="padding:28px 0 28px 32px; border-bottom:1px solid var(--rule);">
-            <div class="num slate" style="font-size:88px;">8,712</div>
+            <div class="num slate" style="font-size:88px;">{{LOT_SQFT}}</div>
             <div class="lbl">Lot Sq Ft</div>
           </div>
           <div class="hero-stat" style="padding:28px 0; border-right:1px solid var(--rule); padding-right:32px;">
-            <div class="num slate" style="font-size:88px;">1998</div>
+            <div class="num slate" style="font-size:88px;">{{YEAR_BUILT_2}}</div>
             <div class="lbl">Year Built</div>
           </div>
           <div class="hero-stat" style="padding:28px 0 28px 32px;">
-            <div class="num slate" style="font-size:88px;">2&#8209;car</div>
+            <div class="num slate" style="font-size:88px;">{{GARAGE}}</div>
             <div class="lbl">Garage</div>
           </div>
         </div>
@@ -508,8 +508,8 @@
 
     <div style="padding:100px; display:flex; flex-direction:column; background:var(--slate); color:var(--ivory);">
       <div class="eyebrow" style="color:var(--gold);">04 · Location & Market</div>
-      <h2 class="slide-title small" style="color:var(--ivory);">South Tampa · 33611</h2>
-      <p class="lede" style="color:var(--slate-mist); margin-top:20px;">Interbay peninsula. Walk to Ballast Point waterfront, 10 minutes to MacDill AFB, 15 minutes to downtown.</p>
+      <h2 class="slide-title small" style="color:var(--ivory);">{{SUBMARKET_NAME}}</h2>
+      <p class="lede" style="color:var(--slate-mist); margin-top:20px;">{{LOCATION_NARRATIVE}}</p>
 
       <div style="margin-top:52px; display:grid; grid-template-columns:1fr 1fr; gap:32px 60px;">
         <div class="hero-stat">
@@ -543,7 +543,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Sales Comps</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Sales Comps</div>
     </div>
 
     <div class="row" style="justify-content:space-between; align-items:baseline;">
@@ -599,7 +599,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Rent Comps</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Rent Comps</div>
     </div>
 
     <div class="eyebrow">06 · Rent Comparables</div>
@@ -666,7 +666,7 @@
   <div class="slide dark">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Structure</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Structure</div>
     </div>
 
     <div class="eyebrow">07 · Deal Structure</div>
@@ -725,7 +725,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Underlying Loan</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Underlying Loan</div>
     </div>
 
     <div class="eyebrow">08 · Existing Loan (SubTo)</div>
@@ -772,7 +772,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Sources & Uses</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Sources & Uses</div>
     </div>
 
     <div class="eyebrow">09 · Purchase Stack</div>
@@ -840,7 +840,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Scope & Budget</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Scope & Budget</div>
     </div>
 
     <div class="eyebrow">10 · Rehab & CapEx</div>
@@ -1417,7 +1417,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · All Exits</div>
+      <div>Deal {{DEAL_ID_SHORT}} · All Exits</div>
     </div>
 
     <div class="eyebrow">11 · Side&#8209;by&#8209;Side Comparison</div>
@@ -1470,7 +1470,7 @@
   <div class="slide dark">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Returns</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Returns</div>
     </div>
 
     <div class="eyebrow" style="color:var(--gold);">12 · Returns Summary</div>
@@ -1509,7 +1509,7 @@
   <div class="slide">
     <div class="page-header">
       <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
-      <div>Deal TFS&#8209;1042 · Risks</div>
+      <div>Deal {{DEAL_ID_SHORT}} · Risks</div>
     </div>
 
     <div class="eyebrow">13 · Risks &amp; Key Assumptions</div>
@@ -1565,7 +1565,7 @@
     <div style="padding:100px; display:flex; flex-direction:column; background:var(--slate-deep);">
       <div class="page-header" style="color:var(--slate-mist); border-bottom-color:rgba(255,255,255,0.15);">
         <div class="brand-mark"><span class="tfs-wordmark" style="color:var(--ivory);">Terms For Sale</span></div>
-        <div>Deal TFS&#8209;1042 · Next Steps</div>
+        <div>Deal {{DEAL_ID_SHORT}} · Next Steps</div>
       </div>
 
       <div class="eyebrow" style="color:var(--gold);">14 · Timeline to Close</div>
@@ -1600,17 +1600,17 @@
     <div style="padding:100px; background:var(--slate); display:flex; flex-direction:column; justify-content:center;">
       <div class="eyebrow" style="color:var(--gold);">Take the Deal</div>
       <h2 style="font-family:'Manrope'; font-weight:400; font-size:88px; line-height:1; color:var(--ivory); letter-spacing:-0.02em;">Lock your position.</h2>
-      <p style="font-family:'Manrope'; font-weight:300; font-size:32px; color:var(--slate-mist); margin-top:24px; line-height:1.35;">32 active deals this week. First qualified offer moves forward.</p>
+      <p style="font-family:'Manrope'; font-weight:300; font-size:32px; color:var(--slate-mist); margin-top:24px; line-height:1.35;">{{ACTIVE_DEAL_COUNT}} active deals this week. First qualified offer moves forward.</p>
 
       <div style="margin-top:56px; padding:44px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1);">
         <div class="eyebrow" style="color:var(--gold); margin:0 0 18px;">Deal Coordinator</div>
-        <div style="font-family:'Manrope'; font-size:40px; color:var(--ivory);">Jordan Avery</div>
-        <div style="font-family:'Inter Tight'; font-size:22px; color:var(--slate-mist); margin-top:4px;">Senior Acquisitions · Terms For Sale</div>
+        <div style="font-family:'Manrope'; font-size:40px; color:var(--ivory);">{{COORDINATOR_NAME}}</div>
+        <div style="font-family:'Inter Tight'; font-size:22px; color:var(--slate-mist); margin-top:4px;">{{COORDINATOR_TITLE}}</div>
 
         <div style="margin-top:32px; display:flex; flex-direction:column; gap:16px; font-family:'Inter Tight'; font-size:22px; color:var(--ivory);">
-          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Email</span><span>deals@termsforsale.com</span></div>
-          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Phone</span><span>(480) 637&#8209;3117</span></div>
-          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Web</span><span>termsforsale.com/deals/TFS-1042</span></div>
+          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Email</span><span>{{COORDINATOR_EMAIL}}</span></div>
+          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Phone</span><span>{{COORDINATOR_PHONE}}</span></div>
+          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Web</span><span>{{DEAL_URL}}</span></div>
         </div>
       </div>
 
