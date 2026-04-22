@@ -303,6 +303,96 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 22 2026 Recently Closed Showcase (Homepage + 4-Month Window)
+
+Branch: `claude/add-closed-deals-showcase-9mDMO`.
+
+User asked for a section on the website that showcases recently closed deals
+from Notion, capped at a 3-4 month span. A "Recently Closed" section already
+existed on `/deals.html` (added April 15) with no time cap and up to 8 cards.
+Shipped two changes:
+
+### What changed
+
+1. **`/deals.html` — added a 120-day (~4 month) rolling window** to the
+   existing Recently Closed section. Closed deals with `dateFunded` (or
+   `lastEdited` as fallback) older than 120 days now drop off the page so
+   the social-proof block stays fresh. Kept the existing 8-card cap, stat
+   tiles (Deals Closed / Total Funded), and card styling.
+2. **`/` (homepage) — new "Recently Closed" social-proof strip** placed
+   between the Streamlined section and the Testimonials block. Pulls from
+   the same `/api/deals` fetch already happening on page load (no extra
+   API call), applies the same 120-day filter, sorts newest-first, and
+   renders up to 4 cards in a responsive 4-col grid (2-col on tablet,
+   1-col on phones). Section is `display:none` by default and only reveals
+   if at least one closed deal falls inside the window — keeps the
+   homepage visually clean when the track record is empty. A
+   "See full track record →" link deep-links to the deals.html closed
+   section.
+
+### Files shipped
+
+- **`termsforsale/deals.html`** (init block at line 1700) — added the
+  `CLOSED_WINDOW_DAYS=120` cutoff filter before the existing sort.
+- **`termsforsale/index.html`**:
+  - New `.rc-*` CSS namespace (`.rc`, `.rc-inner`, `.rc-head`, `.rc-grid`,
+    `.rc-card`, `.rc-photo`, `.rc-badge`, `.rc-body`, `.rc-loc`, `.rc-type`,
+    `.rc-meta`, `.rc-price`, `.rc-date`) in the stylesheet — scoped so it
+    can't collide with the `.closed-*` styles on deals.html.
+  - New `<section class="rc" id="rc-section">` markup between Streamlined
+    and Testimonials.
+  - New JS: `renderRecentlyClosed(deals)` + helpers (`rcEscape`,
+    `rcFmtPrice`, `rcFmtDate`, `rcDriveId`, `rcImgSrc`). Called from the
+    existing init flow right after `updateStats(activeCount)` so it
+    reuses the already-fetched deals array.
+
+### Filter math verified
+
+Test harness against "today = 2026-04-22":
+- Funded today → SHOW
+- Funded 30 days ago → SHOW
+- Funded 119 days ago → SHOW
+- Funded 121 days ago → HIDE
+- Funded 12 months ago → HIDE
+- Closed, no `dateFunded`, edited 10 days ago → SHOW (falls back to
+  `lastEdited`)
+- Closed, no `dateFunded`, edited 200 days ago → HIDE
+- Active deals → correctly skipped by the status filter upstream
+
+Both files passed div/section/script tag-balance checks. All 5 real inline
+JS blocks on `index.html` parse cleanly (the 1 failure is the JSON-LD
+structured data block, which isn't JS — expected). `renderRecentlyClosed`
+compiles via `new Function(body)`.
+
+### Address visibility compliance
+
+Per CLAUDE.md "Street address visibility rules": the homepage cards show
+**city + state only** (no street address), regardless of login status. The
+deal-card link routes to `/deal.html?id=<notion-id>` where the existing
+address visibility rules apply (logged-in users see the full address;
+logged-out users still see city/state only).
+
+### Known caveats
+
+- Image thumbnails use the `coverPhoto` field from Notion, routed through
+  `/api/drive-thumb?id=<driveId>` when it's a Google Drive link. If
+  `coverPhoto` is empty, the card shows a muted house-icon placeholder on
+  a green gradient. No per-card lazy folder lookup on the homepage (that
+  path is only on `/deals.html` via `loadCardThumbnails()`) to keep the
+  homepage render fast.
+- Deal-type labels use whatever Notion's "Deal Type" select holds
+  verbatim ("Subject To", "Seller Finance", "Cash", etc.) — no
+  normalization. Consistent with the existing deals.html Recently Closed
+  cards.
+- Homepage only shows 4 cards, capped. If Brooke wants more on the
+  homepage, change the `.slice(0,4)` in `renderRecentlyClosed`.
+- The 120-day window is hardcoded as a const in both files
+  (`CLOSED_WINDOW_DAYS=120` in deals.html, `WINDOW_DAYS=120` inside
+  `renderRecentlyClosed` in index.html). If operations wants to tune it
+  later, they'd need to edit both — acceptable for now.
+
+---
+
 ## Completed — April 21 2026 Smarter Buyer Matching — Pre-Parsed Preferences (Option D)
 
 Branch: `claude/ghl-fields-tags-documentation-aux2c`.
