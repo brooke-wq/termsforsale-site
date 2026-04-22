@@ -8,7 +8,8 @@
 
 const { complete } = require('./_claude');
 
-exports.config = { schedule: '0 14 1 * *' };
+// Scheduled execution lives on the DigitalOcean Droplet (monthly, 1st at
+// 14:00 UTC). This function still deploys so it can be invoked ad-hoc via HTTP.
 
 // ─── Notion helpers ───────────────────────────────────────────
 

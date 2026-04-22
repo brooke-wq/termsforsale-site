@@ -16,9 +16,8 @@
 const { complete } = require('./_claude');
 const { cfMap, findByTag, getContact, postNote, swapTags } = require('./_ghl');
 
-exports.config = {
-  schedule: '*/15 * * * *',
-};
+// Scheduled execution lives on the DigitalOcean Droplet (*/15 * * * *).
+// This function still deploys so it can be invoked ad-hoc via HTTP.
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 

@@ -13,7 +13,9 @@ const { postNote, sendSMS, searchContacts } = require('./_ghl');
 var sentLog;
 try { sentLog = require('../../../jobs/sent-log'); } catch(e) { sentLog = null; }
 
-exports.config = { schedule: '0 14 * * *' };
+// Scheduled execution lives on the DigitalOcean Droplet (see CLAUDE.md cron
+// table). This function still deploys and still responds to HTTP POSTs at
+// /.netlify/functions/ceo-briefing for ad-hoc runs.
 
 // ─── Notion helpers ───────────────────────────────────────────
 

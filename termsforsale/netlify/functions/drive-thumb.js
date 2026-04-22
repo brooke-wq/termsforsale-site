@@ -25,9 +25,12 @@ function fetchUrl(url) {
 }
 
 exports.handler = async function(event) {
+  // Drive file IDs are immutable — replacing a file in Drive creates a new
+  // ID — so we can aggressively cache at the browser + CDN layer to keep
+  // repeat views from re-invoking this function.
   var headers = {
     'Access-Control-Allow-Origin': '*',
-    'Cache-Control': 'public, max-age=86400'
+    'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable'
   };
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };

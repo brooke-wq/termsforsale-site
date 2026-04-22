@@ -10,7 +10,8 @@
 const { complete } = require('./_claude');
 const { searchContacts } = require('./_ghl');
 
-exports.config = { schedule: '0 15 * * 5' };
+// Scheduled execution lives on the DigitalOcean Droplet (Fridays 15:00 UTC).
+// This function still deploys so it can be invoked ad-hoc via HTTP.
 
 // ─── Notion helpers ───────────────────────────────────────────
 
