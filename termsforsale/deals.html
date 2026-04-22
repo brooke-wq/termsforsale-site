@@ -1701,7 +1701,19 @@ async function loadDealsFromSheet(){
     var loaded=await loadDealsFromNotion();
     // Split loaded deals into active+pending (main list) and closed (social-proof section).
     ALL_DEALS=loaded.filter(function(d){return !isClosedStatus(d.dealStatus);});
+    // Recently Closed showcases a rolling 120-day (~4 month) window so the
+    // track record stays current. Deals older than that drop off. Uses
+    // dateFunded when available, falls back to lastEdited so deals that
+    // never got a Date Funded in Notion still qualify within the window.
+    var CLOSED_WINDOW_DAYS=120;
+    var cutoffMs=Date.now()-(CLOSED_WINDOW_DAYS*86400000);
     CLOSED_DEALS=loaded.filter(function(d){return isClosedStatus(d.dealStatus);})
+      .filter(function(d){
+        var key=d.dateFunded||d.lastEdited||'';
+        var t=Date.parse(key);
+        if(isNaN(t))return false;
+        return t>=cutoffMs;
+      })
       // Newest closed first — prefer dateFunded, fall back to lastEdited.
       .sort(function(a,b){
         var aKey=a.dateFunded||a.lastEdited||'';
