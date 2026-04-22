@@ -332,23 +332,57 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .deal-card-spec{display:flex;align-items:center;gap:5px}
 .deal-card-spec strong{color:#0D1F3C;font-weight:700;font-size:13px}
 /* ── RECENTLY CLOSED (social proof track record) ───── */
-.closed-section{background:#fff;padding:64px 55px;border-top:1px solid var(--border)}
+.closed-section{background:#fff;padding:72px 55px;border-top:1px solid var(--border)}
 .closed-inner{max-width:1330px;margin:0 auto}
 .closed-eyebrow{font-size:13px;font-weight:700;color:#10B981;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
-.closed-title{font-size:38px;font-weight:900;color:var(--navy);line-height:1.1;letter-spacing:-.3px;margin-bottom:8px}
-.closed-sub{font-size:15px;color:var(--text-mid);margin-bottom:28px;max-width:720px}
-.closed-stats{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:34px}
-.closed-stat{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:14px 22px;min-width:160px}
-.closed-stat-num{font-size:26px;font-weight:900;color:#059669;line-height:1}
-.closed-stat-lbl{font-size:11px;color:#047857;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
-.closed-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.closed-title{font-size:38px;font-weight:900;color:var(--navy);line-height:1.15;letter-spacing:-.3px;margin-bottom:10px;max-width:900px}
+.closed-sub{font-size:15px;color:var(--text-mid);margin-bottom:32px;max-width:820px;line-height:1.55}
+.closed-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px}
+.closed-stat{background:linear-gradient(180deg,#F0FDF4,#ECFDF5);border:1px solid #BBF7D0;border-radius:14px;padding:18px 20px}
+.closed-stat-num{font-size:28px;font-weight:900;color:#059669;line-height:1}
+.closed-stat-lbl{font-size:11px;color:#065F46;font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.4px}
+.closed-stat-sub{font-size:11px;color:#047857;margin-top:6px;font-style:italic;line-height:1.35}
+.closed-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
 .closed-empty{text-align:center;padding:28px 20px;color:var(--text-light);font-size:13px}
+/* Case-study card */
+.cs-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(29,51,64,.06);display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;text-decoration:none;color:inherit}
+.cs-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(29,51,64,.12)}
+.cs-photo{position:relative;width:100%;aspect-ratio:16/10;background:linear-gradient(135deg,#F0FDF4,#DCFCE7);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.cs-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.cs-photo svg{opacity:.35}
+.cs-badges{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px}
+.cs-badge{background:rgba(255,255,255,.96);color:var(--navy);font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.2px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.cs-badge.cs-badge-closed{background:#059669;color:#fff;box-shadow:0 2px 6px rgba(5,150,105,.35)}
+.cs-badge.cs-badge-creative{background:#F7941D;color:#fff;box-shadow:0 2px 6px rgba(247,148,29,.3)}
+.cs-badge.cs-badge-cash{background:#10B981;color:#fff;box-shadow:0 2px 6px rgba(16,185,129,.3)}
+.cs-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.cs-headline{font-size:16px;font-weight:800;color:var(--navy);line-height:1.3}
+.cs-story{font-size:13px;color:var(--text-mid);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cs-outcomes{margin-top:auto;padding-top:10px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:4px}
+.cs-outcome{font-size:12px;color:var(--text-mid);display:flex;align-items:flex-start;gap:6px}
+.cs-outcome-icon{color:#10B981;flex-shrink:0;line-height:1.4}
+.cs-outcome strong{color:var(--navy);font-weight:700}
+/* Dual CTA footer */
+.closed-cta{margin-top:44px;background:linear-gradient(135deg,#0D1F3C,#1a3560);border-radius:16px;padding:28px 32px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;box-shadow:0 8px 24px rgba(13,31,60,.18)}
+.closed-cta-half{display:flex;flex-direction:column;gap:10px}
+.closed-cta-half + .closed-cta-half{border-left:1px solid rgba(255,255,255,.15);padding-left:24px}
+.closed-cta-label{font-size:13px;font-weight:700;color:#93C5FD;letter-spacing:.3px;text-transform:uppercase}
+.closed-cta-head{font-size:17px;font-weight:700;color:#fff;line-height:1.35}
+.closed-cta-btn{display:inline-block;background:var(--blue);color:#fff;font-weight:700;padding:11px 20px;border-radius:10px;text-decoration:none;font-size:14px;width:fit-content;transition:background .15s,transform .15s}
+.closed-cta-btn:hover{background:var(--blue-dark);transform:translateY(-1px)}
+.closed-cta-btn.cta-orange{background:var(--orange)}
+.closed-cta-btn.cta-orange:hover{background:var(--orange-dark)}
+@media(max-width:900px){
+  .closed-stats{grid-template-columns:repeat(2,1fr)}
+  .closed-cta{grid-template-columns:1fr;padding:24px 22px}
+  .closed-cta-half + .closed-cta-half{border-left:none;border-top:1px solid rgba(255,255,255,.15);padding-left:0;padding-top:20px}
+}
 @media (max-width:700px){
   .closed-section{padding:48px 20px}
   .closed-title{font-size:26px}
-  .closed-stats{gap:12px}
-  .closed-stat{min-width:130px;padding:12px 16px}
-  .closed-stat-num{font-size:20px}
+  .closed-stats{gap:10px}
+  .closed-stat{padding:14px 16px}
+  .closed-stat-num{font-size:22px}
 }
 
 /* ── TESTIMONIALS ───────────────────────── */
@@ -818,20 +852,44 @@ footer{background:var(--navy);padding:52px 55px 0}
 <!-- RECENTLY CLOSED (social proof / track record) -->
 <section class="closed-section" id="closed-section" style="display:none">
   <div class="closed-inner">
-    <div class="closed-eyebrow">Recently Closed</div>
-    <div class="closed-title">Deals We've Already Closed On</div>
-    <p class="closed-sub">A snapshot of recent wins from our buyer network. These properties have funded and been handed off — shown here so new buyers can see our track record.</p>
+    <div class="closed-eyebrow">Closed Deals &middot; Last 12 Months</div>
+    <h2 class="closed-title">Deals Our Buyers Closed Through Terms For Sale</h2>
+    <p class="closed-sub">Here's a sample of contracts our JV partners brought us that turned into real checks for them and real properties for our buyers. All closed with creative / investor-friendly terms &mdash; no banks required.</p>
     <div class="closed-stats">
       <div class="closed-stat">
-        <div class="closed-stat-num" id="closed-count">0</div>
+        <div class="closed-stat-num" id="cs-stat-count">0</div>
         <div class="closed-stat-lbl">Deals Closed</div>
+        <div class="closed-stat-sub">Contracts we turned into checks.</div>
       </div>
-      <div class="closed-stat" id="closed-volume-wrap" style="display:none">
-        <div class="closed-stat-num" id="closed-volume">—</div>
-        <div class="closed-stat-lbl">Total Funded</div>
+      <div class="closed-stat" id="cs-stat-volume-wrap" style="display:none">
+        <div class="closed-stat-num" id="cs-stat-volume">&mdash;</div>
+        <div class="closed-stat-lbl">In Assignments Paid</div>
+        <div class="closed-stat-sub" id="cs-stat-avg">&nbsp;</div>
+      </div>
+      <div class="closed-stat" id="cs-stat-days-wrap" style="display:none">
+        <div class="closed-stat-num" id="cs-stat-days">&mdash;</div>
+        <div class="closed-stat-lbl">Avg Days to Assignment</div>
+        <div class="closed-stat-sub">From ready-to-market to under contract.</div>
+      </div>
+      <div class="closed-stat" id="cs-stat-creative-wrap" style="display:none">
+        <div class="closed-stat-num" id="cs-stat-creative">&mdash;</div>
+        <div class="closed-stat-lbl">Creative / Terms Deals</div>
+        <div class="closed-stat-sub">Subto, seller finance, hybrids.</div>
       </div>
     </div>
     <div class="closed-grid" id="closed-grid"></div>
+    <div class="closed-cta">
+      <div class="closed-cta-half">
+        <div class="closed-cta-label">Want deals like these?</div>
+        <div class="closed-cta-head">Join the VIP buyer list &mdash; first access before deals go public.</div>
+        <a href="/buying-criteria.html" class="closed-cta-btn">Apply as VIP Buyer</a>
+      </div>
+      <div class="closed-cta-half">
+        <div class="closed-cta-label">Sitting on a contract you can't move?</div>
+        <div class="closed-cta-head">Bring it to our buyer network. We move creative deals fast.</div>
+        <a href="https://dispobuddy.com/submit-deal.html" target="_blank" rel="noopener" class="closed-cta-btn cta-orange">Submit My JV Deal</a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1294,10 +1352,13 @@ function makeCard(d){
 // ─── STATE ────────────────────────────────────────────────────
 // ALL_DEALS = deals visible in the main marketplace list + map
 //   (Actively Marketing + Assignment Sent + Assigned with EMD).
-// CLOSED_DEALS = deals that have closed — shown in the "Recently Closed"
-//   social-proof section below, never in the main list or map.
+// CLOSED_DEALS = deals that have closed in the last 120 days — shown as
+//   mini case-study cards in the "Recently Closed" section below.
+// CLOSED_DEALS_12MO = all closed deals in the last 365 days — used for
+//   the stat tiles (deals closed, total funded, avg days, % creative).
 let ALL_DEALS=[];
 let CLOSED_DEALS=[];
+let CLOSED_DEALS_12MO=[];
 let _tab='';
 
 function isClosedStatus(s){return(String(s||'').toLowerCase().trim())==='closed';}
@@ -1649,32 +1710,135 @@ function updateNavAuth(user){
 }
 
 // ─── RENDER RECENTLY CLOSED SECTION ──────────────────────────
-// Renders the social-proof track-record of deals we've closed on. Each card
-// reuses makeCard() so styling stays consistent, but gets marked with an
-// is-closed class (dims the card slightly and removes the Save heart).
+// Stats tiles use a 12-month window (magnitude/social proof). Card grid
+// uses the tighter 120-day window (CLOSED_DEALS) so the showcase stays
+// fresh. CLOSED_DEALS_12MO is populated in init() from the full loaded
+// set.
+function csEscape(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+function csFmtPrice(n){var v=+n;if(!v)return'';return'$'+Math.round(v).toLocaleString();}
+function csFmtK(n){var v=+n;if(!v)return'';if(v>=1000)return'$'+Math.round(v/1000).toLocaleString()+'K';return'$'+v.toLocaleString();}
+function csDriveId(url){if(!url)return'';var m=String(url).match(/\/d\/([a-zA-Z0-9_-]{10,})/);return m?m[1]:'';}
+function csImgSrc(d){
+  var id=csDriveId(d.coverPhoto);
+  if(id)return'/api/drive-thumb?id='+encodeURIComponent(id)+'&sz=600';
+  if(d.coverPhoto&&/^https?:/.test(d.coverPhoto))return d.coverPhoto;
+  return'';
+}
+function csDaysBetween(a,b){
+  var ta=Date.parse(a||''),tb=Date.parse(b||'');
+  if(isNaN(ta)||isNaN(tb))return null;
+  return Math.max(1,Math.round((tb-ta)/86400000));
+}
+function csDaysToAssignment(d){
+  return csDaysBetween(d.startedMarketing,d.dateAssigned||d.dateFunded);
+}
+function csIsCreative(t){
+  var l=String(t||'').toLowerCase();
+  if(!l)return false;
+  return l.indexOf('cash')===-1;
+}
+function csCashflow(d){
+  var rent=+d.rentFinal,piti=+d.piti,sfPay=+d.sfPayment;
+  var pay=piti||sfPay;
+  if(!rent||!pay)return 0;
+  return Math.round(rent-pay);
+}
+function csMakeCard(d){
+  var img=csImgSrc(d);
+  var loc=[d.city,d.state].filter(Boolean).join(', ');
+  var entry=csFmtPrice(d.entryFee||d.askingPrice);
+  var bedsBaths=(d.beds&&d.baths)?(d.beds+'/'+d.baths):'';
+  var days=csDaysToAssignment(d);
+  var creative=csIsCreative(d.dealType);
+  var cashflow=csCashflow(d);
+  // Headline line: "$18K Entry — 3/2 in City, State"
+  var head=[];
+  if(entry)head.push(entry+' Entry');
+  if(bedsBaths)head.push(bedsBaths);
+  var headline=head.join(' &mdash; ');
+  if(loc)headline+=(headline?' in ':'')+csEscape(loc);
+  // Story (from Description or Details)
+  var story=String(d.description||d.details||'').trim();
+  // Badges
+  var badges=[];
+  if(days)badges.push('<span class="cs-badge cs-badge-closed">Closed in '+days+' days</span>');
+  else badges.push('<span class="cs-badge cs-badge-closed">&#10003; Closed</span>');
+  if(d.dealType){
+    var cls=creative?'cs-badge cs-badge-creative':'cs-badge cs-badge-cash';
+    badges.push('<span class="'+cls+'">'+csEscape(d.dealType)+'</span>');
+  }
+  var photoHtml=img
+    ?'<img src="'+csEscape(img)+'" alt="Closed property in '+csEscape(loc)+'" loading="lazy" onerror="this.remove()">'
+    :'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+  // Outcomes row
+  var outcomes=[];
+  outcomes.push('<div class="cs-outcome"><span class="cs-outcome-icon">&#9679;</span><span><strong>Dispo strategy:</strong> '+(creative?'Matched to a creative-finance buyer from our list.':'Cash buyer, no financing contingency.')+'</span></div>');
+  if(cashflow>0){
+    outcomes.push('<div class="cs-outcome"><span class="cs-outcome-icon">&#9679;</span><span><strong>Buyer cash flow:</strong> ~$'+cashflow.toLocaleString()+'/mo projected (rent minus PITI).</span></div>');
+  }
+  return'<a class="cs-card" href="/deal.html?id='+csEscape(d.id)+'">'
+    +'<div class="cs-photo">'+photoHtml+'<div class="cs-badges">'+badges.join('')+'</div></div>'
+    +'<div class="cs-body">'
+    +'<div class="cs-headline">'+headline+'</div>'
+    +(story?'<div class="cs-story">'+csEscape(story)+'</div>':'')
+    +'<div class="cs-outcomes">'+outcomes.join('')+'</div>'
+    +'</div>'
+    +'</a>';
+}
 function renderClosedSection(){
   const sec=document.getElementById('closed-section');
   if(!sec)return;
-  if(!CLOSED_DEALS.length){sec.style.display='none';return;}
+  // 12-month window for the stat tiles
+  var yearCutoff=Date.now()-(365*86400000);
+  var yearDeals=(CLOSED_DEALS_12MO||[]).filter(function(d){
+    var t=Date.parse(d.dateFunded||'');
+    return!isNaN(t)&&t>=yearCutoff;
+  });
+  // Hide section entirely if nothing to show in either window
+  if(!CLOSED_DEALS.length&&!yearDeals.length){sec.style.display='none';return;}
   sec.style.display='';
-  const countEl=document.getElementById('closed-count');
-  if(countEl)countEl.textContent=CLOSED_DEALS.length;
-  // Total funded volume (only populated if Amount Funded is set in Notion)
-  var totalFunded=0;
-  CLOSED_DEALS.forEach(function(d){totalFunded+=(+d.amountFunded||0);});
-  const volEl=document.getElementById('closed-volume');
-  const volWrap=document.getElementById('closed-volume-wrap');
-  if(volEl){
-    if(totalFunded>0){volEl.textContent='$'+Math.round(totalFunded/1000).toLocaleString()+'K';if(volWrap)volWrap.style.display='';}
-    else if(volWrap){volWrap.style.display='none';}
-  }
+  // Stat 1: deals closed (12mo)
+  var cnt=yearDeals.length;
+  var cntEl=document.getElementById('cs-stat-count');
+  if(cntEl)cntEl.textContent=cnt;
+  // Stat 2: total assignments paid + avg per partner
+  var totalFunded=0,fundedCount=0;
+  yearDeals.forEach(function(d){var v=+d.amountFunded||0;if(v>0){totalFunded+=v;fundedCount++;}});
+  var volEl=document.getElementById('cs-stat-volume');
+  var volWrap=document.getElementById('cs-stat-volume-wrap');
+  var avgEl=document.getElementById('cs-stat-avg');
+  if(totalFunded>0){
+    if(volEl)volEl.textContent=csFmtK(totalFunded);
+    if(fundedCount&&avgEl){
+      var avg=Math.round(totalFunded/fundedCount);
+      avgEl.textContent='Avg '+csFmtK(avg)+' per JV partner.';
+    }
+    if(volWrap)volWrap.style.display='';
+  } else if(volWrap){volWrap.style.display='none';}
+  // Stat 3: avg days from started marketing to assignment
+  var dayTotals=[];
+  yearDeals.forEach(function(d){var n=csDaysToAssignment(d);if(n)dayTotals.push(n);});
+  var daysWrap=document.getElementById('cs-stat-days-wrap');
+  if(dayTotals.length){
+    var avgDays=dayTotals.reduce(function(a,b){return a+b;},0)/dayTotals.length;
+    var dEl=document.getElementById('cs-stat-days');
+    if(dEl)dEl.textContent=avgDays.toFixed(1);
+    if(daysWrap)daysWrap.style.display='';
+  } else if(daysWrap){daysWrap.style.display='none';}
+  // Stat 4: % creative/terms deals
+  var crWrap=document.getElementById('cs-stat-creative-wrap');
+  if(yearDeals.length){
+    var creativeCnt=yearDeals.filter(function(d){return csIsCreative(d.dealType);}).length;
+    var pct=Math.round((creativeCnt/yearDeals.length)*100);
+    var cEl=document.getElementById('cs-stat-creative');
+    if(cEl)cEl.textContent=pct+'%';
+    if(crWrap)crWrap.style.display='';
+  } else if(crWrap){crWrap.style.display='none';}
+  // Card grid — cap at 8 most recent from the 120-day set
   const grid=document.getElementById('closed-grid');
   if(!grid)return;
-  // Cap at 8 most recent on first paint — keeps the section tight.
   const recent=CLOSED_DEALS.slice(0,8);
-  grid.innerHTML=recent.map(function(d){return makeCard(d);}).join('');
-  // Lazy-load Drive thumbnails for closed cards too
-  setTimeout(function(){loadCardThumbnails(recent);},100);
+  grid.innerHTML=recent.map(function(d){return csMakeCard(d);}).join('');
 }
 
 // ─── LOAD DEALS (Notion first, Google Sheets fallback) ───────
@@ -1699,28 +1863,26 @@ async function loadDealsFromSheet(){
   const u=getUser();if(u)updateNavAuth(u);
   try{
     var loaded=await loadDealsFromNotion();
-    // Split loaded deals into active+pending (main list) and closed (social-proof section).
     ALL_DEALS=loaded.filter(function(d){return !isClosedStatus(d.dealStatus);});
-    // Recently Closed showcases a rolling 120-day (~4 month) window so the
-    // track record stays current. Deals older than that drop off. Uses
-    // dateFunded when available, falls back to lastEdited so deals that
-    // never got a Date Funded in Notion still qualify within the window.
-    var CLOSED_WINDOW_DAYS=120;
-    var cutoffMs=Date.now()-(CLOSED_WINDOW_DAYS*86400000);
-    CLOSED_DEALS=loaded.filter(function(d){return isClosedStatus(d.dealStatus);})
-      .filter(function(d){
-        var key=d.dateFunded||d.lastEdited||'';
-        var t=Date.parse(key);
-        if(isNaN(t))return false;
-        return t>=cutoffMs;
-      })
-      // Newest closed first — prefer dateFunded, fall back to lastEdited.
-      .sort(function(a,b){
-        var aKey=a.dateFunded||a.lastEdited||'';
-        var bKey=b.dateFunded||b.lastEdited||'';
-        return bKey.localeCompare(aKey);
-      });
-    console.log('Loaded '+ALL_DEALS.length+' active/pending deals and '+CLOSED_DEALS.length+' closed deals from Notion');
+    // All closed deals in Notion (by dateFunded). We then slice two windows:
+    //   12-month for stat tiles (magnitude / social proof)
+    //   120-day (4-month) for the card grid (keeps showcase fresh)
+    var allClosed=loaded.filter(function(d){return isClosedStatus(d.dealStatus);})
+      .filter(function(d){return !isNaN(Date.parse(d.dateFunded||''));})
+      .sort(function(a,b){return String(b.dateFunded||'').localeCompare(String(a.dateFunded||''));});
+    var now=Date.now();
+    CLOSED_DEALS_12MO=allClosed.filter(function(d){
+      return (Date.parse(d.dateFunded||'')>=(now-365*86400000));
+    });
+    // Card grid: last 120 days AND ready-to-market -> under-contract in
+    // under 20 days. Showcases speed; slower deals still count toward
+    // the 12-month stat tiles but don't get a card.
+    CLOSED_DEALS=allClosed.filter(function(d){
+      if(Date.parse(d.dateFunded||'')<(now-120*86400000))return false;
+      var dd=csDaysToAssignment(d);
+      return dd!==null&&dd<20;
+    });
+    console.log('Loaded '+ALL_DEALS.length+' active/pending, '+CLOSED_DEALS.length+' closed (120d), '+CLOSED_DEALS_12MO.length+' closed (12mo) from Notion');
     renderClosedSection();
     if(ALL_DEALS.length){
       updateStats();

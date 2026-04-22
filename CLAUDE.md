@@ -303,6 +303,150 @@ All form submissions send confirmation SMS + email:
 
 ---
 
+## Completed — April 22 2026 Recently Closed — Mini Case-Study Reframe
+
+Branch: `claude/add-closed-deals-showcase-9mDMO`.
+
+Second-pass rework of the Recently Closed sections on `/` and
+`/deals.html` per $100M Playbook / $100M Offers feedback. Ships on
+top of the initial 120-day showcase (earlier entry below).
+
+### Framing rewrite
+
+- **Eyebrow**: "Closed Deals · Last 12 Months"
+- **Headline**: "Deals Our Buyers Closed Through Terms For Sale"
+- **Subhead**: "Contracts our JV partners brought us that turned into
+  real checks for them and real properties for our buyers — all
+  closed with creative / investor-friendly terms, no banks required."
+
+### 4 stat tiles (computed live from Notion, 12-month window)
+
+Each tile auto-hides if the underlying data is empty:
+
+| Tile | Source field(s) | Computation |
+|---|---|---|
+| Deals Closed | `Deal Status = Closed` + `Date Funded` | count within 365 days |
+| In Assignments Paid | `Amount Funded` | sum; sub-label shows avg per partner |
+| Avg Days to Assignment | `Started Marketing` → `Date Assigned` (fallback `Date Funded`) | average across deals with both dates |
+| Creative / Terms Deals | `Deal Type` | % where type !== "Cash" |
+
+### Card grid — mini case studies (120-day window + under-20-days-to-close gate)
+
+Per Brooke's follow-up: the card grid now ONLY shows closed deals
+where ready-to-market → under-contract happened in **under 20 days**,
+AND funded within the last 120 days. Slower deals still count toward
+the 12-month stat tiles but don't get a card. Requires `Started
+Marketing` on the Notion page — if it's missing, the deal is
+excluded.
+
+Each card is a mini case study:
+
+- **Photo + badge overlay** (top-left corner, stacked):
+  1. Navy/green "Closed in X days" (primary badge)
+  2. Orange "Creative Finance" type (Subto/SF/Hybrid) or green "Cash"
+- **Headline line**: "$18K Entry — 3/2 in City, State" (entry fee or
+  asking, beds/baths, city+state only — no street per visibility
+  rules)
+- **Story**: pulls from Notion `Description` field (or `Details`
+  fallback). 3-line clamped. Skipped entirely if empty — Brooke can
+  add short 1-2 sentence stories on closed deals as she goes.
+- **Outcomes row** (dashed border, bullet list):
+  - "Dispo strategy:" — "Matched to a creative-finance buyer" (creative)
+    or "Cash buyer, no financing contingency" (cash)
+  - "Buyer cash flow: ~$X/mo projected" — shown only when both
+    `LTR Market Rent` and `PITI` (or `SF Payment`) are populated
+  - Deliberately does NOT show per-deal assignment fee publicly
+    (exposed only in the aggregate "In Assignments Paid" stat tile).
+    JV partner identity is NOT shown (per Brooke — that's a Dispo
+    Buddy-side concern; public Terms For Sale cards stay anonymous).
+
+### Dual CTA bar under the grid
+
+Navy gradient card, split 50/50:
+
+| Side | Label | Button |
+|---|---|---|
+| Left | "Want deals like these?" / "Join the VIP buyer list — first access…" | **Apply as VIP Buyer** → `/buying-criteria.html` |
+| Right | "Sitting on a contract you can't move?" / "Bring it to our buyer network…" | **Submit My JV Deal** → `https://dispobuddy.com/submit-deal.html` |
+
+Stacks to single column on screens <960px.
+
+### Files shipped
+
+- **`termsforsale/netlify/functions/deals.js`** — added
+  `startedMarketing` field to every deal in the API response.
+  Required for the "Closed in X days" badge + avg-days stat tile +
+  under-20-days filter.
+- **`termsforsale/deals.html`**:
+  - New `.cs-*` (case-study) CSS namespace alongside existing
+    `.closed-*` wrapper styles — handles card photo/badges/headline/
+    story/outcomes + the navy dual-CTA footer block.
+  - Stat tiles rewired from 2 → 4 (deals, assignments, days,
+    creative %). Each `#cs-stat-*-wrap` is `display:none` by default
+    and only reveals when the data is present.
+  - Recently Closed markup rewritten — eyebrow/title/subhead copy,
+    new stat tile IDs, dual-CTA footer.
+  - `renderClosedSection()` rewritten: computes 12-month stats from
+    `CLOSED_DEALS_12MO`, renders card grid from `CLOSED_DEALS`
+    (120-day + under-20d-to-close) via new `csMakeCard()` helper.
+  - New state variable `CLOSED_DEALS_12MO` populated in init.
+  - `CLOSED_DEALS` (card set) now filtered to
+    `csDaysToAssignment(d) < 20` in addition to the 120-day window.
+- **`termsforsale/index.html`**:
+  - `.rc-*` CSS namespace expanded to match the deals.html
+    case-study layout (stats grid, badges, outcomes, dual CTA).
+  - Markup rewritten to include the 4 stat tiles + dual CTA
+    alongside the 4-card strip.
+  - `renderRecentlyClosed()` rewritten to mirror
+    `renderClosedSection()` — 12-month stats + 120-day + under-20d
+    card filter.
+
+### Data dependencies (what Brooke needs in Notion)
+
+| Field | Required for | What happens if blank |
+|---|---|---|
+| `Deal Status = Closed` | everything | deal excluded entirely |
+| `Date Funded` | 12-month stat window + sort | deal excluded from stats AND cards |
+| `Started Marketing` | "Closed in X days" badge + avg-days stat + under-20d filter | deal excluded from card grid (still counts toward closed-count + funded stats) |
+| `Date Assigned` | "Closed in X days" badge preferred source | falls back to `Date Funded` |
+| `Amount Funded` | assignments-paid stat + avg-per-partner | stat tile hides if nothing populated |
+| `Description` | per-card story line | line omitted from that card |
+| `LTR Market Rent` + `PITI` (or `SF Payment`) | buyer cash-flow outcome line | line omitted from that card |
+| `Entry Fee` | card headline "$X Entry" | falls back to `Asking Price` |
+| `Beds` + `Baths` | card headline "3/2" | omitted (headline still shows entry + city) |
+| `Cover photo` / Google Drive link | card thumbnail | shows muted house icon on green gradient |
+
+### Verified
+
+- 9-case filter harness: under-20-days filter shows correctly for 5/9
+  cases (5d / 11d / 19d / 12d-no-dateAssigned / boundary exact 20d
+  hides / 25d hides / 45d hides / missing-startedMarketing hides /
+  6mo-old hides).
+- Tag balance: deals.html 5/5 section, 341/341 div, 13/13 script;
+  index.html 6/6 section, 213/213 div, 8/8 script.
+- JS parse: all 8 inline JS blocks on deals.html + 5 on index.html
+  compile (only JSON-LD "failures" expected).
+
+### Known caveats
+
+- The under-20-days filter can be strict. If Notion's `Started
+  Marketing` isn't populated on closed deals, the card grid will
+  render empty while the stat tiles still show (since those use a
+  looser window). Brooke should backfill `Started Marketing` on her
+  8-12 favorite closed deals to seed the showcase.
+- Card stories are empty by default — the `Description` field on
+  closed deals is rarely filled in. Brooke can add 1-2 sentence
+  "mini-pitch" stories on her top closed deals to get the "wholesaler
+  sat on this 45 days, we brought 9 buyers, closed in 11" case-study
+  feel. Without stories, the cards still show the headline + badges +
+  outcomes which is a decent minimum.
+- Assignment fee is NOT shown per-card (only in aggregate via the
+  "In Assignments Paid" stat). If Brooke wants per-card fees later,
+  flip a simple flag in `csMakeCard()` (and on the homepage
+  `rcMakeCard()`).
+
+---
+
 ## Completed — April 22 2026 Recently Closed Showcase (Homepage + 4-Month Window)
 
 Branch: `claude/add-closed-deals-showcase-9mDMO`.
@@ -354,9 +498,9 @@ Test harness against "today = 2026-04-22":
 - Funded 119 days ago → SHOW
 - Funded 121 days ago → HIDE
 - Funded 12 months ago → HIDE
-- Closed, no `dateFunded`, edited 10 days ago → SHOW (falls back to
-  `lastEdited`)
-- Closed, no `dateFunded`, edited 200 days ago → HIDE
+- Closed with no `Date Funded` in Notion → HIDE (Date Funded is now
+  required; previously fell back to `last_edited_time` but Brooke flagged
+  that as too imprecise)
 - Active deals → correctly skipped by the status filter upstream
 
 Both files passed div/section/script tag-balance checks. All 5 real inline
@@ -492,116 +636,6 @@ pm2 logs parsed-prefs-nightly --lines 50    # verify first run
 ### Team brief
 
 User-facing explainer at `docs/smart-matching-team-brief.md` — share with ops team to explain how the Parsed Preferences (AI) field works, why low-confidence scores = call opportunities, and how adding a note auto-updates prefs overnight.
-
----
-
-## Completed — April 22 2026 Auto-Enrichment Go-Live (Phase 3 9-Section Report)
-
-Follow-up to Phase 3 render service. Took the 9-section institutional report from "code complete" to "fully live end-to-end in production" and shook out five bugs that surfaced during live testing.
-
-### What went live
-- **Phase 3 generator merged to main** — 9-section report (cover / property overview / price & tax history / comparable sales & rentals / flood & risk / rehab budget / 4-scenario returns / verdict / deal narrative) is now the default output for every auto-enrich call.
-- **End-to-end verified on SAN-02** (13420 Homestead Way, San Antonio, TX). Fresh curl returned fully-populated doc with beds/baths/sqft/yearBuilt, lot size, APN, 4 sale comps, 4 rent comps, tax reset math, 3-tier rehab (light $10.8k / moderate $40.2k / substantial $76.4k), 4-scenario underwriting, PASS/PROCEED verdict, and Claude narrative.
-- **Final state on main:** `c6c4f3e` — deal-type-aware scenarios live in production.
-
-### Bugs fixed in order
-
-1. **`WidthType.PERCENTAGE` in docx v8 uses fifths-of-percent** — code was passing `size: 38` expecting 38% but OOXML interpreted as 0.76%. Every table column was ~1 character wide. Fixed by switching all table widths to `WidthType.DXA` with `PAGE_WIDTH = 9360` (letter page, 1" margins) and adding explicit `columnWidths` arrays to every `new Table({})`. 11 table declarations touched. (commit `228dbc9`)
-
-2. **`rsync` deploy.sh shipped stale code from Mac** — Mac had a failed rebase so its local `generate_pdf.js` was the broken pre-DXA version. Bypassed Mac entirely: on the droplet used `git show origin/branch:file > dest` to pull directly from GitHub. Remember going forward: `deploy.sh` is only as good as the Mac's git state.
-
-3. **Claude sometimes returns `strategies` / `redFlags` / `buyerFitYes` as arrays** instead of `\n`-joined strings — `.replace()` throws `is not a function` on arrays, which killed the email-send step and bubbled up as `{error: "..."}` response. Added `toBulletStr()` normalization helper that accepts array (joins on `\n`), string (as-is), or other (coerces). Applied to all three fields right after the Claude response in auto-enrich.js. (commit `44668f1`)
-
-4. **RentCast `/properties` returns an array, not an object** — `rcProp.bedrooms` was always undefined because `rcProp` was `[{...}]`. Response showed `rcProperty: {}` (empty object with all-undefined fields). Unwrapped at the fetch-result boundary: `rcProp = Array.isArray(rcPropRaw) ? rcPropRaw[0] : rcPropRaw`. Fixed the rest of the beds/baths/sqft/yearBuilt/lotSize/propertyType/APN gaps in Property Overview. (commit `28ec705`)
-
-5. **Droplet's `server.js` was stale** — when Phase 3 was deployed, `generate_pdf.js` was manually synced via `git show` but `server.js` was missed. Old server.js didn't extract `body.compute` or `body.enriched`, so the renderer was receiving only the `deal` object. That's why Comparable Sales said "No data available", Rehab Budget said "No rehab budget data available", and 4-Scenario section said "No scenario data available" — compute + enriched were null on arrival even though auto-enrich.js was sending them. Fix: on droplet, `git show origin/main:auto-underwrite/server.js > /home/brooke/pdf-render-service/server.js && pm2 reload pdf-render-service`.
-
-6. **FEMA flood zone fell through to null for parcels outside mapped hazard areas** — when both ATTOM `area.siteinffloodzone` and FEMA NFHL returned nothing, the response was `femaFlood: null`. Now defaults to `{zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area (assumed)', source: 'default'}` when lat/long is known. (commit `bd67f93`)
-
-7. **Scenarios were using conventional-financing math for every deal type** — a SubTo deal was rendering 4 scenarios all assuming a new 30-yr @ 7.25% mortgage with 20% down. User correctly flagged: SubTo buyers assume the existing loan; cash-in is entry fee, not down payment. Rebuilt the scenario generator with deal-type dispatch (`buildScenariosByDealType`):
-   - **SubTo:** 4 scenarios (Light Rehab / Moderate Rehab / Substantial Rehab / Negotiated Entry -50%). Cash-in = entry fee + rehab + low closing (~30% of conventional). PITI prefers `deal.piti`, falls back to `pmt(loanBalance, interestRate, 30)`, falls back to estimated PITI at 5.5% on 80% of asking with a "verify before close" note.
-   - **Seller Finance:** 4 scenarios (3 rehab tiers + Negotiated Rate -1%). Down = entry fee (or 10% default). P+I from (asking - entry) at seller's rate. Closing ~50% of conventional.
-   - **Cash:** 4 scenarios (3 rehab tiers all-cash + 1 conventional-financed moderate for cash-out refi scenario).
-   - **Hybrid / Morby / Wrap:** falls back to existing 4-scenario logic (conventional financing assumption — will refine in a later pass when we have real hybrid examples).
-   - **Other / empty:** same fallback.
-   New exports from `_compute.js`: `normalizeDealType`, `computeSubToScenario`, `computeSfScenario`, `buildScenariosByDealType`. (commit `c6c4f3e`)
-
-### Files shipped (all on `main`)
-
-- **`termsforsale/netlify/functions/auto-enrich.js`** — `toBulletStr()` helper, RentCast array unwrap, flood-zone lat/long fallback, passes entryFee + loanBalance + interestRate + piti into `runCompute`.
-- **`termsforsale/netlify/functions/_compute.js`** — deal-type dispatch, SubTo + SF scenario builders, normalization helper.
-- **`auto-underwrite/generate_pdf.js`** — DXA widths + `columnWidths` on every table; 9-section report (Phase 3).
-- **`auto-underwrite/server.js`** — extracts `compute` + `enriched` from request body and forwards to `generateDealDoc`.
-
-### How it works live (end-to-end flow)
-
-1. Operator sets a Notion deal's `Deal Status` → `Ready to Underwrite`.
-2. n8n workflow (`auto-underwrite/n8n/auto-enrichment.workflow.json`) runs every 5 min on n8n Cloud, queries Notion for deals in that status, extracts `pageId`s.
-3. For each deal, n8n POSTs to `https://termsforsale.com/api/auto-enrich` with `{pageId}` and `Authorization: Bearer $AUTOENRICH_AUTH_TOKEN`.
-4. Netlify function does (in parallel via `Promise.allSettled` with 8s timeout each): RentCast `/properties`, RentCast AVM value, RentCast AVM rent, RentCast listings, HUD FMR, ATTOM expanded profile. Then wave-2: FEMA NFHL flood zone (if ATTOM didn't return one) + FEMA disaster declarations.
-5. Claude Haiku generates narrative + 3-tier rehab JSON (~1200 input / 300 output tokens, ~$0.003/deal).
-6. `runCompute()` builds tax-reset math, 4 deal-type-aware scenarios, flood-risk classifier, and PASS/PROCEED verdict.
-7. Netlify smart-patches Notion (`LTR Market Rent`, `Enriched at`, `ARV`, `Description`, `Beds/Baths/Living Area/Year Built`) with schema-drop retry loop.
-8. Netlify POSTs to paperclip render service `http://64.23.204.220:3001/render` with `{dealId, deal, compute, enriched}` and `X-Auth-Token` header.
-9. Paperclip's pm2-managed `pdf-render-service` builds the 9-section .docx via `generateDealDoc()` and uploads to Google Drive `/Deal Analyses/` via OAuth refresh token.
-10. Netlify posts a GHL note + SMS + email to Brooke with the Drive link.
-
-Total round-trip: ~12-18 seconds per deal. Cost per deal: ~$0.003 (Claude) + RentCast + ATTOM counts (both on monthly subscription quotas).
-
-### Prerequisites / env vars (all set in production)
-
-| Where | Var | Value / Notes |
-|---|---|---|
-| Netlify (TFS site) | `AUTOENRICH_AUTH_TOKEN` | Set — shared with n8n |
-| Netlify | `ANTHROPIC_API_KEY` | Set |
-| Netlify | `RENTCAST_API_KEY` | Set (same key as Dispo Buddy) |
-| Netlify | `ATTOM_API_KEY` | Set |
-| Netlify | `NOTION_TOKEN`, `NOTION_DB_ID` | Set |
-| Netlify | `RENDER_SERVICE_URL` | `http://64.23.204.220:3001/render` |
-| Netlify | `RENDER_SERVICE_TOKEN` | Matches paperclip `/home/brooke/pdf-render-service/.env` `AUTH_TOKEN` |
-| Netlify | `BROOKE_CONTACT_ID` | `1HMBtAv9EuTlJa5EekAL` (Brooke's GHL contact, NOT the CEO Briefing one) |
-| Paperclip `.env` | `AUTH_TOKEN` | Matches Netlify `RENDER_SERVICE_TOKEN` |
-| Paperclip `.env` | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN` | OAuth for Drive uploads |
-| Paperclip `.env` | `DRIVE_FOLDER_ID` | ID of `/Deal Analyses/` Drive folder |
-| n8n Cloud Variables | `NOTION_TOKEN`, `AUTOENRICH_AUTH_TOKEN` | Set |
-
-### Team SOP — how operators trigger an auto-underwrite
-
-**Happy path (automated):**
-1. Operator creates/updates a deal in the Notion deals DB.
-2. Operator populates at minimum: Street Address, City, State, ZIP, Deal Type, Asking Price, Entry Fee. (For SubTo: also Loan Balance, Interest Rate, PITI if known. For SF: Interest Rate, SF Term.)
-3. Operator flips `Deal Status` to **Ready to Underwrite**.
-4. Within 5 minutes, n8n picks it up. Within ~20 seconds of pickup, Brooke receives SMS + email with a Google Drive link to the `.docx`.
-5. `Enriched at` timestamp is stamped on the Notion page when the pipeline finishes.
-
-**Manual trigger (one-off, skips n8n):**
-```bash
-# On any machine with curl:
-TOKEN='<paste AUTOENRICH_AUTH_TOKEN from Netlify env vars>'
-NOTION_PAGE_ID='<copy from Notion page URL — the last 32-char hex segment>'
-curl -sS -X POST https://termsforsale.com/api/auto-enrich \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"pageId\":\"$NOTION_PAGE_ID\"}" | jq '.driveLink, .notionPatched'
-```
-
-**Check status / diagnose failures:**
-- Netlify function logs: https://app.netlify.com/sites/termsforsale/logs/functions (search for `[auto-enrich]`)
-- Render service logs on paperclip: `pm2 logs pdf-render-service`
-- Render service health: `curl http://64.23.204.220:3001/health`
-- Drive folder: Google Drive → `/Deal Analyses/`
-- n8n Cloud execution history: sign in and look at the "Auto-Enrichment" workflow's runs
-
-**If a deal gets skipped:** re-set its `Deal Status` from "Ready to Underwrite" → any other status → back to "Ready to Underwrite" to re-trigger the n8n pickup. (The function is idempotent — re-running produces a fresh doc.)
-
-**If numbers look off:** the compute layer writes everything to `compute.*` in the response. For quick debugging, run the manual curl above and pipe to `jq '.compute'` to see the raw math.
-
-### Known caveats / follow-ups
-
-- **Hybrid / Morby / Wrap deals still use conventional-financing scenario math** — placeholder. When we get a real Hybrid/Morby deal through the pipeline, we'll build a proper "SubTo + SF gap" scenario builder. Until then the 4 scenarios shown for these types assume a 30-yr conventional loan which isn't how those deals actually close — the verdict is directionally correct but specific numbers should be treated as rough.
-- **SubTo without loan data:** when Notion doesn't have Loan Balance + Interest Rate + PITI filled in, scenarios fall back to an estimated PITI at 5.5% on 80% of asking. Labeled with "PITI estimated — verify before close". Fix by filling those 3 Notion fields on the deal.
-- **Claude rehab JSON is occasionally conservative** — if sqft comes in as null (rare now that RentCast + ATTOM both fill it), Claude assumes 1500 sqft. Spot-check rehab budgets on deals with unusual footprints.
-- **ATTOM tax history** — currently only current-year tax populated. For multi-year history, we'd need a separate ATTOM endpoint call (`/propertyapi/v1.0.0/property/history`); deferred.
 
 ---
 
@@ -3606,54 +3640,9 @@ blog page).
 
 ## TODO — Next Session
 
-00. **🔥 FIRST — diagnose "nothing happened" on 607 N Bowie St deal.** Brooke flipped this deal to Ready to Underwrite and nothing fired (no SMS, no email, no Drive doc). Run this manual curl to isolate whether n8n or the Netlify function is the broken layer:
-   ```bash
-   TOKEN='928c85007d6270ef91d0a3563d6bd9b9829122db7d60f42c436c7e7fe310fc86'
-   curl -sS -X POST https://termsforsale.com/api/auto-enrich \
-     -H "Authorization: Bearer $TOKEN" \
-     -H "Content-Type: application/json" \
-     -d '{"pageId":"343090d675e78017b40fe24095623194"}' | jq '{success, error, dealId, fullAddress, notionPatched, driveLink}'
-   ```
-   - If it returns `success: true` with `driveLink`: the function works → n8n is broken (likely workflow not Active on n8n Cloud, OR Notion filter shape stale after a property-type change). Go to n8n Cloud → "Auto-Enrichment" workflow → check Active toggle and run history.
-   - If it returns `error: "..."`: the Netlify function is throwing. Common causes: missing Street Address on the Notion page, missing required env var, Claude/ATTOM/RentCast API outage. Paste the error and debug.
-   - Page URL: https://www.notion.so/607-N-Bowie-St-343090d675e78017b40fe24095623194
-
 0a. **🔥 Ping the JV partner who called about the Dispo Buddy submission failure** — the `GHL_API_KEY` rotation is done and submissions work again, but their earlier attempts never wrote anything to GHL or Notion. They need to re-submit. See "Dispo Buddy Submission Triage (PR #103)" session log above for context.
 
 0b. **Cross-site env var sync audit.** The Dispo Buddy Netlify site and the Terms For Sale Netlify site each maintain separate copies of `GHL_API_KEY`. When we rotated the Dispo Buddy side on April 21, the Terms For Sale side was untouched — but nothing guarantees both stay in sync going forward. Consider either (a) a recurring ops-audit check that hits a cheap GHL auth endpoint from each deployed function to catch 401s proactively, or (b) a shared env-var store (Netlify Team Environment Variables) so a single rotation pushes to both sites. Same concern applies to any other secret duplicated across sites (`NOTION_TOKEN`, `ANTHROPIC_API_KEY`, etc.).
-
-0c. **Auto-enrich deal-type-aware verification pass.** As of `8975262` the 4-scenario block branches on Deal Type. Test coverage tomorrow:
-   - Run a **SubTo with full loan data** (Notion fields: Loan Balance, Interest Rate, PITI all populated) — verify PITI uses `deal.piti` rather than falling back to the 5.5%/80% estimate (check the response `compute.scenarios[0].pitiNote` says "PITI (inherited, from Notion)").
-   - Run a **Seller Finance deal** — verify scenarios are labeled "Seller Finance + …" and the P+I uses the seller's rate from Notion, not 7.25%.
-   - Run a **Cash deal** — verify 3 all-cash rehab tiers + 1 conventional-financed moderate.
-   - Run a **Hybrid/Morby deal** (if any exist in pipeline) — currently falls back to conventional math; decide whether to build proper SubTo+SF gap math now or defer.
-
-0d. **🎬 NEW PROJECT — Deal Marketing Video + Social Asset Pipeline.** For deals moving from "Ready to Underwrite" → "Actively Marketing" (approved), auto-generate social media assets that showcase the deal for investors. Reuses the same enriched+compute JSON that feeds the .docx render service. Reference: Brooke's "3-Layer System" notes (Intake → Packet → Distribution).
-   - **Layer 1 (Intake) — DONE** — auto-enrich pulls everything needed (narrative hook, property overview, comps, tax math, 4 scenarios per deal type, rehab tiers).
-   - **Layer 2 (Buyer Packet) — DONE** — Phase 3 9-section .docx is this layer. Gaps vs. Brooke's target: no property photos embedded yet, no QR code to book-a-call, "Possible Exit Strategies" section currently shows 4 compute-driven scenarios (not the 8 human-facing modules: Fix&Flip, BRRRR, LTR, STR, MTR, Co-Living, SubTo Hold, Wrap Resale). Next pass: map compute scenarios to the 8-module naming + add photo grid + QR code.
-   - **Layer 3 (Distribution) — TO BUILD** — THIS is the new project.
-   - **Proposed architecture:**
-     1. New trigger: Notion `Deal Status` = "Actively Marketing" fires a new n8n workflow → `POST /api/generate-marketing-assets` on Netlify.
-     2. Netlify function pulls the **same** enrichment data the .docx used (could re-fetch or cache from last enrich run) + photo URLs from the Notion page.
-     3. POSTs to paperclip: `/render/carousel` (static 5-7 slide IG carousel via Bannerbear) + `/render/video` (15-30 sec 9:16 Reel via Creatomate or Shotstack).
-     4. Uploads results to Drive `/Deal Marketing/{DealID}/` folder.
-     5. Posts Slack message (or GHL internal SMS to Brooke) with review links. One-click approve = GHL workflow posts to IG + sends email blast + FB group cross-post.
-   - **Format decisions needed (bring to tomorrow):**
-     - Template service: **Canva Connect API with Autofill (Brooke's preferred)** — Brooke designs templates visually in Canva, placeholders filled from JSON per deal, exports MP4 + PNG. Requires Canva Teams/Enterprise tier. Fallback if tier doesn't work: Creatomate (video) + Bannerbear (static).
-     - Video duration: 15-sec Reel (hook-heavy) vs 30-sec long-form (more numbers visible).
-     - Voiceover source: silent with text overlays (simplest) vs AI voice (ElevenLabs, ~$5/mo, sounds pro) vs Brooke records once per deal (highest touch).
-     - Brand kit codification: nail down exact fonts, color hex, logo lockup variants before template creation.
-   - **🔥 BROOKE PREREQ CHECKS BEFORE TOMORROW:**
-     1. **Canva plan tier** — log into Canva → Settings → Account → Billing. Need **Teams** (~$10/user/mo) or **Enterprise**. Canva Free and Canva Pro do NOT include the Autofill API. If on Pro, upgrading to Teams unlocks it.
-     2. **Canva Connect developer portal access** — visit https://www.canva.com/developers and confirm you can register a "Connect app" under the account. Success = developer portal loads and you can click "Create an integration". That means programmatic access is available.
-     3. If either check fails → fallback plan = Creatomate ($25/mo) + Bannerbear ($29/mo) for API-driven rendering.
-   - **Build sequence (per Brooke's notes):**
-     - Week 1: Master buyer packet template + 3 most-used exit modules (Co-Living, LTR, Flip) → map to compute scenarios.
-     - Week 2: Remaining 5 exit modules + underwriting intake form audit.
-     - Week 3: IG carousel template set + caption library + video template.
-     - Week 4: GHL automation workflow + DM auto-responder ("Comment DEAL" → packet link + lead capture).
-   - **Legal framing (MUST enforce in template layer):** Every scenario/exit module carries "Possible Exit Strategy" or "Example Scenario" language — never "recommendation" or "projection." Per-page footer: "All numbers estimated. Buyer to verify." Section disclaimer: "Illustrative example of how operators have structured similar properties. Not investment, legal, tax, or financial advice." Add this verbatim to the packet + any social captions.
-   - **Cost estimate:** Bannerbear ($29/mo starter) + Creatomate ($25/mo starter, ~$0.05-0.20/video render) = ~$55/mo + ~$0.25/deal. At 5 deals/week = ~$60/mo total. Comfortably inside the paperclip operating budget.
 
 0. **🔥 FIRST — verify SMS + email landed after `69803b0` contact-ID fix.** Quick one:
    ```bash
