@@ -3610,6 +3610,35 @@ blog page).
 
 0b. **Cross-site env var sync audit.** The Dispo Buddy Netlify site and the Terms For Sale Netlify site each maintain separate copies of `GHL_API_KEY`. When we rotated the Dispo Buddy side on April 21, the Terms For Sale side was untouched — but nothing guarantees both stay in sync going forward. Consider either (a) a recurring ops-audit check that hits a cheap GHL auth endpoint from each deployed function to catch 401s proactively, or (b) a shared env-var store (Netlify Team Environment Variables) so a single rotation pushes to both sites. Same concern applies to any other secret duplicated across sites (`NOTION_TOKEN`, `ANTHROPIC_API_KEY`, etc.).
 
+0c. **Auto-enrich deal-type-aware verification pass.** As of `8975262` the 4-scenario block branches on Deal Type. Test coverage tomorrow:
+   - Run a **SubTo with full loan data** (Notion fields: Loan Balance, Interest Rate, PITI all populated) — verify PITI uses `deal.piti` rather than falling back to the 5.5%/80% estimate (check the response `compute.scenarios[0].pitiNote` says "PITI (inherited, from Notion)").
+   - Run a **Seller Finance deal** — verify scenarios are labeled "Seller Finance + …" and the P+I uses the seller's rate from Notion, not 7.25%.
+   - Run a **Cash deal** — verify 3 all-cash rehab tiers + 1 conventional-financed moderate.
+   - Run a **Hybrid/Morby deal** (if any exist in pipeline) — currently falls back to conventional math; decide whether to build proper SubTo+SF gap math now or defer.
+
+0d. **🎬 NEW PROJECT — Deal Marketing Video + Social Asset Pipeline.** For deals moving from "Ready to Underwrite" → "Actively Marketing" (approved), auto-generate social media assets that showcase the deal for investors. Reuses the same enriched+compute JSON that feeds the .docx render service. Reference: Brooke's "3-Layer System" notes (Intake → Packet → Distribution).
+   - **Layer 1 (Intake) — DONE** — auto-enrich pulls everything needed (narrative hook, property overview, comps, tax math, 4 scenarios per deal type, rehab tiers).
+   - **Layer 2 (Buyer Packet) — DONE** — Phase 3 9-section .docx is this layer. Gaps vs. Brooke's target: no property photos embedded yet, no QR code to book-a-call, "Possible Exit Strategies" section currently shows 4 compute-driven scenarios (not the 8 human-facing modules: Fix&Flip, BRRRR, LTR, STR, MTR, Co-Living, SubTo Hold, Wrap Resale). Next pass: map compute scenarios to the 8-module naming + add photo grid + QR code.
+   - **Layer 3 (Distribution) — TO BUILD** — THIS is the new project.
+   - **Proposed architecture:**
+     1. New trigger: Notion `Deal Status` = "Actively Marketing" fires a new n8n workflow → `POST /api/generate-marketing-assets` on Netlify.
+     2. Netlify function pulls the **same** enrichment data the .docx used (could re-fetch or cache from last enrich run) + photo URLs from the Notion page.
+     3. POSTs to paperclip: `/render/carousel` (static 5-7 slide IG carousel via Bannerbear) + `/render/video` (15-30 sec 9:16 Reel via Creatomate or Shotstack).
+     4. Uploads results to Drive `/Deal Marketing/{DealID}/` folder.
+     5. Posts Slack message (or GHL internal SMS to Brooke) with review links. One-click approve = GHL workflow posts to IG + sends email blast + FB group cross-post.
+   - **Format decisions needed (bring to tomorrow):**
+     - Template service: Creatomate vs Shotstack for video; Bannerbear for static (recommended because API-first, JSON-driven, Brooke can iterate templates visually without code changes).
+     - Video duration: 15-sec Reel (hook-heavy) vs 30-sec long-form (more numbers visible).
+     - Voiceover source: silent with text overlays (simplest) vs AI voice (ElevenLabs, ~$5/mo, sounds pro) vs Brooke records once per deal (highest touch).
+     - Brand kit codification: nail down exact fonts, color hex, logo lockup variants before template creation.
+   - **Build sequence (per Brooke's notes):**
+     - Week 1: Master buyer packet template + 3 most-used exit modules (Co-Living, LTR, Flip) → map to compute scenarios.
+     - Week 2: Remaining 5 exit modules + underwriting intake form audit.
+     - Week 3: IG carousel template set + caption library + video template.
+     - Week 4: GHL automation workflow + DM auto-responder ("Comment DEAL" → packet link + lead capture).
+   - **Legal framing (MUST enforce in template layer):** Every scenario/exit module carries "Possible Exit Strategy" or "Example Scenario" language — never "recommendation" or "projection." Per-page footer: "All numbers estimated. Buyer to verify." Section disclaimer: "Illustrative example of how operators have structured similar properties. Not investment, legal, tax, or financial advice." Add this verbatim to the packet + any social captions.
+   - **Cost estimate:** Bannerbear ($29/mo starter) + Creatomate ($25/mo starter, ~$0.05-0.20/video render) = ~$55/mo + ~$0.25/deal. At 5 deals/week = ~$60/mo total. Comfortably inside the paperclip operating budget.
+
 0. **🔥 FIRST — verify SMS + email landed after `69803b0` contact-ID fix.** Quick one:
    ```bash
    curl -sS --max-time 60 -X POST https://termsforsale.com/api/auto-enrich \
