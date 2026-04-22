@@ -495,6 +495,116 @@ User-facing explainer at `docs/smart-matching-team-brief.md` — share with ops 
 
 ---
 
+## Completed — April 22 2026 Auto-Enrichment Go-Live (Phase 3 9-Section Report)
+
+Follow-up to Phase 3 render service. Took the 9-section institutional report from "code complete" to "fully live end-to-end in production" and shook out five bugs that surfaced during live testing.
+
+### What went live
+- **Phase 3 generator merged to main** — 9-section report (cover / property overview / price & tax history / comparable sales & rentals / flood & risk / rehab budget / 4-scenario returns / verdict / deal narrative) is now the default output for every auto-enrich call.
+- **End-to-end verified on SAN-02** (13420 Homestead Way, San Antonio, TX). Fresh curl returned fully-populated doc with beds/baths/sqft/yearBuilt, lot size, APN, 4 sale comps, 4 rent comps, tax reset math, 3-tier rehab (light $10.8k / moderate $40.2k / substantial $76.4k), 4-scenario underwriting, PASS/PROCEED verdict, and Claude narrative.
+- **Final state on main:** `c6c4f3e` — deal-type-aware scenarios live in production.
+
+### Bugs fixed in order
+
+1. **`WidthType.PERCENTAGE` in docx v8 uses fifths-of-percent** — code was passing `size: 38` expecting 38% but OOXML interpreted as 0.76%. Every table column was ~1 character wide. Fixed by switching all table widths to `WidthType.DXA` with `PAGE_WIDTH = 9360` (letter page, 1" margins) and adding explicit `columnWidths` arrays to every `new Table({})`. 11 table declarations touched. (commit `228dbc9`)
+
+2. **`rsync` deploy.sh shipped stale code from Mac** — Mac had a failed rebase so its local `generate_pdf.js` was the broken pre-DXA version. Bypassed Mac entirely: on the droplet used `git show origin/branch:file > dest` to pull directly from GitHub. Remember going forward: `deploy.sh` is only as good as the Mac's git state.
+
+3. **Claude sometimes returns `strategies` / `redFlags` / `buyerFitYes` as arrays** instead of `\n`-joined strings — `.replace()` throws `is not a function` on arrays, which killed the email-send step and bubbled up as `{error: "..."}` response. Added `toBulletStr()` normalization helper that accepts array (joins on `\n`), string (as-is), or other (coerces). Applied to all three fields right after the Claude response in auto-enrich.js. (commit `44668f1`)
+
+4. **RentCast `/properties` returns an array, not an object** — `rcProp.bedrooms` was always undefined because `rcProp` was `[{...}]`. Response showed `rcProperty: {}` (empty object with all-undefined fields). Unwrapped at the fetch-result boundary: `rcProp = Array.isArray(rcPropRaw) ? rcPropRaw[0] : rcPropRaw`. Fixed the rest of the beds/baths/sqft/yearBuilt/lotSize/propertyType/APN gaps in Property Overview. (commit `28ec705`)
+
+5. **Droplet's `server.js` was stale** — when Phase 3 was deployed, `generate_pdf.js` was manually synced via `git show` but `server.js` was missed. Old server.js didn't extract `body.compute` or `body.enriched`, so the renderer was receiving only the `deal` object. That's why Comparable Sales said "No data available", Rehab Budget said "No rehab budget data available", and 4-Scenario section said "No scenario data available" — compute + enriched were null on arrival even though auto-enrich.js was sending them. Fix: on droplet, `git show origin/main:auto-underwrite/server.js > /home/brooke/pdf-render-service/server.js && pm2 reload pdf-render-service`.
+
+6. **FEMA flood zone fell through to null for parcels outside mapped hazard areas** — when both ATTOM `area.siteinffloodzone` and FEMA NFHL returned nothing, the response was `femaFlood: null`. Now defaults to `{zone: 'X', isSpecialFloodHazardArea: false, note: 'outside mapped hazard area (assumed)', source: 'default'}` when lat/long is known. (commit `bd67f93`)
+
+7. **Scenarios were using conventional-financing math for every deal type** — a SubTo deal was rendering 4 scenarios all assuming a new 30-yr @ 7.25% mortgage with 20% down. User correctly flagged: SubTo buyers assume the existing loan; cash-in is entry fee, not down payment. Rebuilt the scenario generator with deal-type dispatch (`buildScenariosByDealType`):
+   - **SubTo:** 4 scenarios (Light Rehab / Moderate Rehab / Substantial Rehab / Negotiated Entry -50%). Cash-in = entry fee + rehab + low closing (~30% of conventional). PITI prefers `deal.piti`, falls back to `pmt(loanBalance, interestRate, 30)`, falls back to estimated PITI at 5.5% on 80% of asking with a "verify before close" note.
+   - **Seller Finance:** 4 scenarios (3 rehab tiers + Negotiated Rate -1%). Down = entry fee (or 10% default). P+I from (asking - entry) at seller's rate. Closing ~50% of conventional.
+   - **Cash:** 4 scenarios (3 rehab tiers all-cash + 1 conventional-financed moderate for cash-out refi scenario).
+   - **Hybrid / Morby / Wrap:** falls back to existing 4-scenario logic (conventional financing assumption — will refine in a later pass when we have real hybrid examples).
+   - **Other / empty:** same fallback.
+   New exports from `_compute.js`: `normalizeDealType`, `computeSubToScenario`, `computeSfScenario`, `buildScenariosByDealType`. (commit `c6c4f3e`)
+
+### Files shipped (all on `main`)
+
+- **`termsforsale/netlify/functions/auto-enrich.js`** — `toBulletStr()` helper, RentCast array unwrap, flood-zone lat/long fallback, passes entryFee + loanBalance + interestRate + piti into `runCompute`.
+- **`termsforsale/netlify/functions/_compute.js`** — deal-type dispatch, SubTo + SF scenario builders, normalization helper.
+- **`auto-underwrite/generate_pdf.js`** — DXA widths + `columnWidths` on every table; 9-section report (Phase 3).
+- **`auto-underwrite/server.js`** — extracts `compute` + `enriched` from request body and forwards to `generateDealDoc`.
+
+### How it works live (end-to-end flow)
+
+1. Operator sets a Notion deal's `Deal Status` → `Ready to Underwrite`.
+2. n8n workflow (`auto-underwrite/n8n/auto-enrichment.workflow.json`) runs every 5 min on n8n Cloud, queries Notion for deals in that status, extracts `pageId`s.
+3. For each deal, n8n POSTs to `https://termsforsale.com/api/auto-enrich` with `{pageId}` and `Authorization: Bearer $AUTOENRICH_AUTH_TOKEN`.
+4. Netlify function does (in parallel via `Promise.allSettled` with 8s timeout each): RentCast `/properties`, RentCast AVM value, RentCast AVM rent, RentCast listings, HUD FMR, ATTOM expanded profile. Then wave-2: FEMA NFHL flood zone (if ATTOM didn't return one) + FEMA disaster declarations.
+5. Claude Haiku generates narrative + 3-tier rehab JSON (~1200 input / 300 output tokens, ~$0.003/deal).
+6. `runCompute()` builds tax-reset math, 4 deal-type-aware scenarios, flood-risk classifier, and PASS/PROCEED verdict.
+7. Netlify smart-patches Notion (`LTR Market Rent`, `Enriched at`, `ARV`, `Description`, `Beds/Baths/Living Area/Year Built`) with schema-drop retry loop.
+8. Netlify POSTs to paperclip render service `http://64.23.204.220:3001/render` with `{dealId, deal, compute, enriched}` and `X-Auth-Token` header.
+9. Paperclip's pm2-managed `pdf-render-service` builds the 9-section .docx via `generateDealDoc()` and uploads to Google Drive `/Deal Analyses/` via OAuth refresh token.
+10. Netlify posts a GHL note + SMS + email to Brooke with the Drive link.
+
+Total round-trip: ~12-18 seconds per deal. Cost per deal: ~$0.003 (Claude) + RentCast + ATTOM counts (both on monthly subscription quotas).
+
+### Prerequisites / env vars (all set in production)
+
+| Where | Var | Value / Notes |
+|---|---|---|
+| Netlify (TFS site) | `AUTOENRICH_AUTH_TOKEN` | Set — shared with n8n |
+| Netlify | `ANTHROPIC_API_KEY` | Set |
+| Netlify | `RENTCAST_API_KEY` | Set (same key as Dispo Buddy) |
+| Netlify | `ATTOM_API_KEY` | Set |
+| Netlify | `NOTION_TOKEN`, `NOTION_DB_ID` | Set |
+| Netlify | `RENDER_SERVICE_URL` | `http://64.23.204.220:3001/render` |
+| Netlify | `RENDER_SERVICE_TOKEN` | Matches paperclip `/home/brooke/pdf-render-service/.env` `AUTH_TOKEN` |
+| Netlify | `BROOKE_CONTACT_ID` | `1HMBtAv9EuTlJa5EekAL` (Brooke's GHL contact, NOT the CEO Briefing one) |
+| Paperclip `.env` | `AUTH_TOKEN` | Matches Netlify `RENDER_SERVICE_TOKEN` |
+| Paperclip `.env` | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN` | OAuth for Drive uploads |
+| Paperclip `.env` | `DRIVE_FOLDER_ID` | ID of `/Deal Analyses/` Drive folder |
+| n8n Cloud Variables | `NOTION_TOKEN`, `AUTOENRICH_AUTH_TOKEN` | Set |
+
+### Team SOP — how operators trigger an auto-underwrite
+
+**Happy path (automated):**
+1. Operator creates/updates a deal in the Notion deals DB.
+2. Operator populates at minimum: Street Address, City, State, ZIP, Deal Type, Asking Price, Entry Fee. (For SubTo: also Loan Balance, Interest Rate, PITI if known. For SF: Interest Rate, SF Term.)
+3. Operator flips `Deal Status` to **Ready to Underwrite**.
+4. Within 5 minutes, n8n picks it up. Within ~20 seconds of pickup, Brooke receives SMS + email with a Google Drive link to the `.docx`.
+5. `Enriched at` timestamp is stamped on the Notion page when the pipeline finishes.
+
+**Manual trigger (one-off, skips n8n):**
+```bash
+# On any machine with curl:
+TOKEN='<paste AUTOENRICH_AUTH_TOKEN from Netlify env vars>'
+NOTION_PAGE_ID='<copy from Notion page URL — the last 32-char hex segment>'
+curl -sS -X POST https://termsforsale.com/api/auto-enrich \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"pageId\":\"$NOTION_PAGE_ID\"}" | jq '.driveLink, .notionPatched'
+```
+
+**Check status / diagnose failures:**
+- Netlify function logs: https://app.netlify.com/sites/termsforsale/logs/functions (search for `[auto-enrich]`)
+- Render service logs on paperclip: `pm2 logs pdf-render-service`
+- Render service health: `curl http://64.23.204.220:3001/health`
+- Drive folder: Google Drive → `/Deal Analyses/`
+- n8n Cloud execution history: sign in and look at the "Auto-Enrichment" workflow's runs
+
+**If a deal gets skipped:** re-set its `Deal Status` from "Ready to Underwrite" → any other status → back to "Ready to Underwrite" to re-trigger the n8n pickup. (The function is idempotent — re-running produces a fresh doc.)
+
+**If numbers look off:** the compute layer writes everything to `compute.*` in the response. For quick debugging, run the manual curl above and pipe to `jq '.compute'` to see the raw math.
+
+### Known caveats / follow-ups
+
+- **Hybrid / Morby / Wrap deals still use conventional-financing scenario math** — placeholder. When we get a real Hybrid/Morby deal through the pipeline, we'll build a proper "SubTo + SF gap" scenario builder. Until then the 4 scenarios shown for these types assume a 30-yr conventional loan which isn't how those deals actually close — the verdict is directionally correct but specific numbers should be treated as rough.
+- **SubTo without loan data:** when Notion doesn't have Loan Balance + Interest Rate + PITI filled in, scenarios fall back to an estimated PITI at 5.5% on 80% of asking. Labeled with "PITI estimated — verify before close". Fix by filling those 3 Notion fields on the deal.
+- **Claude rehab JSON is occasionally conservative** — if sqft comes in as null (rare now that RentCast + ATTOM both fill it), Claude assumes 1500 sqft. Spot-check rehab budgets on deals with unusual footprints.
+- **ATTOM tax history** — currently only current-year tax populated. For multi-year history, we'd need a separate ATTOM endpoint call (`/propertyapi/v1.0.0/property/history`); deferred.
+
+---
+
 ## Completed — April 21 2026 GoHighLevel Reference Documentation (CSV Format)
 
 Branch: `claude/ghl-fields-tags-documentation-aux2c`. Commit `5b09c48`.
