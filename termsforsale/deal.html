@@ -24,12 +24,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* NAV */
 nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
-.nav-left{display:flex;align-items:center;gap:28px}
-.nav-left a{color:var(--text-mid);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+.nav-left{flex:1;display:flex;align-items:center;gap:28px;justify-content:flex-start;min-width:0}
+.nav-left a{color:var(--text-mid);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s;white-space:nowrap}
 .nav-left a:hover{color:var(--blue)}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
 .nav-logo-name{font-size:15px;font-weight:700;color:var(--navy)}
-.nav-right{display:flex;align-items:center;gap:16px}
+.nav-right{flex:1;display:flex;align-items:center;gap:16px;justify-content:flex-end;min-width:0;flex-wrap:nowrap}
 .nav-right a{color:var(--text-mid);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s}
 .nav-right a:hover{color:var(--blue)}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:50px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;border:none;white-space:nowrap}
@@ -94,7 +94,12 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .deal-spec{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-mid);font-weight:500}
 .deal-spec svg{color:var(--text-light)}
 .deal-spec strong{font-weight:700;color:var(--text)}
-.deal-addr{font-size:13px;color:var(--text-light)}
+.deal-addr{font-size:13px;color:var(--text-light);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.deal-addr svg{color:var(--blue);flex-shrink:0}
+.deal-addr-locked{color:var(--text-mid)}
+.view-full-addr-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;text-decoration:none;line-height:1}
+.view-full-addr-btn:hover{background:var(--blue);color:#fff}
+.view-full-addr-btn svg{color:currentColor}
 .deal-refi-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--blue-light);border-radius:8px;font-size:12px;color:var(--blue-dark);margin-bottom:16px;font-weight:500}
 .deal-refi-bar svg{color:var(--blue);flex-shrink:0}
 
@@ -733,7 +738,7 @@ async function loadDealPhotos(d){
       thumbsHtml+=`</div>`;
     });
   }else if(!loggedIn&&(coverSrc||photoIds.length)){
-    thumbsHtml+=`<div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Log in for all photos</span><button class="photo-unlock-btn" onclick="openAuth('login')">Log In</button></div></div>`;
+    thumbsHtml+=`<div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="font-size:11px;font-weight:600">Sign up for all photos</span><button class="photo-unlock-btn" onclick="openAuth('signup')">Sign Up</button></div></div>`;
     thumbsHtml+=`<div class="photo-thumb"><div class="photo-thumb-lock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div></div>`;
   }
   // Pad with empty thumbs if needed
@@ -981,7 +986,13 @@ function renderDeal(d,allDeals){
           ${d.baths?`<div class="deal-spec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"/><path d="M3 7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><strong>${d.baths}</strong> baths</div>`:''}
           ${d.sqft?`<div class="deal-spec"><strong>${(()=>{const n=parseInt(String(d.sqft).replace(/[^0-9]/g,''));return isNaN(n)?d.sqft:n.toLocaleString();})()}</strong> sqft</div>`:''}
         </div>
-        <div class="deal-addr">${loggedIn && d.streetAddress ? d.streetAddress+', '+d.city+', '+d.state+(d.zip?' '+d.zip:'') : d.city+', '+d.state+(d.zip?' '+d.zip:'')}</div>
+        <div class="deal-addr">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${loggedIn && d.streetAddress
+            ? `<span>${d.streetAddress+', '+d.city+', '+d.state+(d.zip?' '+d.zip:'')}</span>`
+            : `<span class="deal-addr-locked">${d.city+', '+d.state+(d.zip?' '+d.zip:'')}</span><button class="view-full-addr-btn" onclick="openAuth('signup')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>View full address</button>`
+          }
+        </div>
         ${d.piti?`<div class="deal-refi-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Est. PITI payment: <strong>${fc(d.piti)}/mo</strong> (existing loan)</div>`:''}
       </div>
 
