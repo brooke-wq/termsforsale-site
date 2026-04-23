@@ -803,6 +803,12 @@ function renderDeal(d,allDeals){
   const arv=+d.compsArv||+d.aiArvBase||0;
   const entry=+d.entryFee||0;
   const dtl=(d.dealType||'').toLowerCase().trim();
+  // Deal status — used by the hero CTA, the status banner, and the sidebar copy below.
+  // Must be declared here (not inline at first use) so the Stack hero block, which runs
+  // before the banner block, can reference these without hitting the TDZ.
+  const dsRaw=(d.dealStatus||'').toLowerCase().trim();
+  const dsIsPending=dsRaw==='assigned with emd';
+  const dsIsClosed=dsRaw==='closed';
   // Stack / Morby Method: senior DSCR loan + second-position seller carry. Rendered in
   // its own dedicated block below with DSCR-specific fields, so suppress the generic
   // SubTo/SF sections to avoid duplication.
@@ -1051,10 +1057,8 @@ function renderDeal(d,allDeals){
   // freely accepting offers. Actively Marketing + Assignment Sent show no
   // banner (treated as "active"). Assigned with EMD shows an orange Pending
   // banner (deal still visible but under EMD). Closed shows a green Closed
-  // banner with the funded date when available.
-  const dsRaw=(d.dealStatus||'').toLowerCase().trim();
-  const dsIsPending=dsRaw==='assigned with emd';
-  const dsIsClosed =dsRaw==='closed';
+  // banner with the funded date when available. (dsRaw/dsIsPending/dsIsClosed
+  // are declared at the top of renderDeal so the Stack hero can use them.)
   // Cash vs Creative — the only dealType that's "Cash" is literally "Cash".
   // Everything else (Subject To, Seller Finance, Hybrid, Morby, Wrap, etc.) is Creative.
   const dtIsCash=/^cash$/i.test((d.dealType||'').trim());
