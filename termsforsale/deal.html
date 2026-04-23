@@ -24,12 +24,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* NAV */
 nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
-.nav-left{display:flex;align-items:center;gap:28px}
-.nav-left a{color:var(--text-mid);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+.nav-left{flex:1;display:flex;align-items:center;gap:28px;justify-content:flex-start;min-width:0}
+.nav-left a{color:var(--text-mid);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s;white-space:nowrap}
 .nav-left a:hover{color:var(--blue)}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
 .nav-logo-name{font-size:15px;font-weight:700;color:var(--navy)}
-.nav-right{display:flex;align-items:center;gap:16px}
+.nav-right{flex:1;display:flex;align-items:center;gap:16px;justify-content:flex-end;min-width:0;flex-wrap:nowrap}
 .nav-right a{color:var(--text-mid);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s}
 .nav-right a:hover{color:var(--blue)}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:50px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;border:none;white-space:nowrap}
