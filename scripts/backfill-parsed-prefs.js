@@ -166,6 +166,40 @@ function getCustomFieldValue(contact, fieldId) {
   var fieldMap = await fetchCustomFieldMap();
   var parsedPrefsFieldId = fieldMap['contact.parsed_prefs'];
   var buyBoxFieldId = fieldMap['contact.buy_box'];
+
+  // Structured fields the match engine reads — these participate in the
+  // checksum so manual GHL edits to any of them trigger a re-parse on next
+  // nightly run. fieldKey → canonical parsed_prefs input name.
+  var STRUCTURED_FIELD_KEYS = {
+    'contact.deal_structure':           'deal_structures',
+    'contact.exits':                    'exit_strategies',
+    'contact.property_type_new':        'property_types',
+    'contact.target_zips':              'target_zips',
+    'contact.states_buying_in':         'target_states',
+    'contact.target_location':          'target_cities',
+    'contact.max_price':                'max_price',
+    'contact.max_down':                 'max_entry_fee',
+    'contact.max_monthly':              'max_monthly_piti',
+    'contact.target_monthly_cashflow':  'min_cashflow',
+    'contact.max_rate_':                'max_interest_rate',
+    'contact.arv':                      'min_arv',
+    'contact.bedrooms_min':             'min_beds',
+    'contact.baths_min':                'min_baths',
+    'contact.min_sqft':                 'min_sqft',
+    'contact.min_year_build':           'min_year_built',
+    'contact.remodel_level':            'remodel_level',
+    'contact.hoa_tolerance':            'hoa_tolerance',
+    'contact.pool':                     'pool',
+    'contact.purchase_timeline':        'purchase_timeline',
+    'contact.max_repair_budget':        'max_repair_budget',
+    'contact.occupancy_preference':     'occupancy_pref'
+  };
+  var structuredFieldResolved = {};
+  Object.keys(STRUCTURED_FIELD_KEYS).forEach(function (k) {
+    if (fieldMap[k]) structuredFieldResolved[STRUCTURED_FIELD_KEYS[k]] = fieldMap[k];
+  });
+  console.log('  resolved ' + Object.keys(structuredFieldResolved).length + '/' +
+    Object.keys(STRUCTURED_FIELD_KEYS).length + ' structured fields for checksum');
   if (!parsedPrefsFieldId) {
     console.error('  ✗ contact.parsed_prefs field NOT FOUND in GHL.');
     console.error('    Create it first: GHL UI → Settings → Custom Fields → Contacts');
@@ -248,10 +282,20 @@ function getCustomFieldValue(contact, fieldId) {
     // Fetch notes (costs 1 GHL API call per contact — unavoidable)
     var notes = await fetchContactNotes(c.id);
 
+    // Extract current structured field values so manual GHL edits participate
+    // in the idempotency checksum. No extra API calls — fullContact is already
+    // in memory from the GET above.
+    var structuredFields = {};
+    Object.keys(structuredFieldResolved).forEach(function (canonicalName) {
+      var fieldId = structuredFieldResolved[canonicalName];
+      var val = getCustomFieldValue(fullContact, fieldId);
+      if (val != null && val !== '') structuredFields[canonicalName] = val;
+    });
+
     // Quick idempotency check — skip if source hasn't changed
     if (!FORCE_REPARSE && existingPrefs && existingPrefs.source_checksum) {
       var parsePrefsMod = require(path.join(__dirname, '..', 'termsforsale', 'netlify', 'functions', '_parse-preferences'));
-      var currentChecksum = parsePrefsMod.computeChecksum(buyBox, notes, tags);
+      var currentChecksum = parsePrefsMod.computeChecksum(buyBox, notes, tags, structuredFields);
       if (currentChecksum === existingPrefs.source_checksum) {
         stats.skipped_unchanged++;
         continue;
@@ -269,7 +313,7 @@ function getCustomFieldValue(contact, fieldId) {
         buyBox: buyBox,
         notes: notes,
         tags: tags,
-        structuredFields: {}
+        structuredFields: structuredFields
       });
       if (!parsed) {
         stats.failed++;

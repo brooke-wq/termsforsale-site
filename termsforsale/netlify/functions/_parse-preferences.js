@@ -36,17 +36,26 @@ const PARSED_PREFS_VERSION = 1;
 
 // ─── Source checksum — so we can detect stale parses ──────────
 //
-// If buy_box text, notes, or tags change, the checksum changes. The backfill
-// script can skip contacts whose parsed_prefs.source_checksum matches the
-// current inputs (idempotent re-runs cost nothing).
+// If buy_box text, notes, tags, OR any structured field the match engine
+// reads changes, the checksum changes. The backfill script can skip contacts
+// whose parsed_prefs.source_checksum matches the current inputs (idempotent
+// re-runs cost nothing).
 
-function computeChecksum(buyBox, notes, tags) {
+function computeChecksum(buyBox, notes, tags, structuredFields) {
   var h = crypto.createHash('sha256');
   h.update(String(buyBox || ''));
   h.update('|');
   h.update((notes || []).map(function (n) { return String(n.body || ''); }).join('||'));
   h.update('|');
   h.update((tags || []).slice().sort().join(','));
+  h.update('|');
+  if (structuredFields && typeof structuredFields === 'object') {
+    Object.keys(structuredFields).sort().forEach(function (k) {
+      var v = structuredFields[k];
+      if (v == null || v === '') return;
+      h.update(k + '=' + (Array.isArray(v) ? v.slice().sort().join(',') : String(v)) + ';');
+    });
+  }
   return h.digest('hex').slice(0, 16);
 }
 
@@ -205,7 +214,7 @@ async function parsePreferences(claudeKey, { buyBox, notes, tags, structuredFiel
     return null;
   }
 
-  var checksum = computeChecksum(buyBox, notes, tags);
+  var checksum = computeChecksum(buyBox, notes, tags, structuredFields);
 
   // If there's literally nothing to parse, don't pay for an API call.
   var hasAnyInput = (buyBox && buyBox.trim()) ||
