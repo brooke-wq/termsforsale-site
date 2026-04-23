@@ -44,14 +44,19 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return respond(400, { error: 'Invalid JSON' }); }
 
-  const { firstName, lastName, email, phone, password, deal_structure, deal_structures, max_entry_fee, source } = body;
+  const { firstName, lastName, email, phone, password, strategy, deal_structure, deal_structures, max_entry_fee, source } = body;
 
-  if (!firstName || !email || !phone || !password) {
-    return respond(400, { error: 'Missing required fields: firstName, email, phone, password' });
+  if (!firstName || !email || !phone) {
+    return respond(400, { error: 'Missing required fields: firstName, email, phone' });
   }
-  if (password.length < 6) {
+  if (password && password.length < 6) {
     return respond(400, { error: 'Password must be at least 6 characters' });
   }
+
+  // Frictionless signup flow: if no password supplied, auto-generate one so the
+  // contact still has a hash on file. Returning users can set their own via the
+  // "Forgot password" reset flow.
+  const effectivePassword = password || crypto.randomBytes(24).toString('hex');
 
   const headers = {
     'Authorization': `Bearer ${apiKey}`,
@@ -99,8 +104,9 @@ exports.handler = async (event) => {
       field_value: ['Buyer'],
     });
 
-    // Deal structures — multi-select from signup form or single from legacy
-    var structureValue = deal_structures || deal_structure || '';
+    // Deal structures — multi-select from signup form or single from legacy.
+    // `strategy` is the frictionless portal-gate signup field (flip/rental/creative).
+    var structureValue = deal_structures || deal_structure || strategy || '';
     if (structureValue) {
       contactPayload.customFields.push({
         key: 'deal_structure',
@@ -115,7 +121,7 @@ exports.handler = async (event) => {
     }
 
     // Hash password and store on contact
-    var hashedPw = hashPassword(password);
+    var hashedPw = hashPassword(effectivePassword);
     contactPayload.customFields.push({
       key: 'tfs_password_hash',
       field_value: hashedPw,
@@ -139,7 +145,7 @@ exports.handler = async (event) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName, lastName: lastName || '', email, phone, password,
+          firstName, lastName: lastName || '', email, phone, password: effectivePassword,
           deal_structure: structureValue || '',
           max_entry_fee: max_entry_fee || '',
           source: source || 'TFS Website - Signup',
