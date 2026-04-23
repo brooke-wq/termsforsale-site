@@ -40,6 +40,7 @@ const JOB_CONFIG = {
   'equity-exit-intake':     { type: 'tag-scan', file: 'equity-exit-intake', tag: 'equity-exit-inquiry', locationEnv: 'GHL_LOCATION_ID' },
   'follow-up-nudge':        { type: 'self-contained', file: 'follow-up-nudge' },
   'deal-follow-up':         { type: 'self-contained', file: 'deal-follow-up' },
+  'buyer-deal-alerts':      { type: 'self-contained', file: 'buyer-deal-alerts' },
   'partner-scorecard':      { type: 'self-contained', file: 'partner-scorecard' },
   'revenue-tracker':        { type: 'self-contained', file: 'revenue-tracker' },
 };

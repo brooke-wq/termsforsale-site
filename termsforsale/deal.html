@@ -353,6 +353,7 @@ footer{background:var(--navy);padding:44px 40px 0}
     <a href="/deals.html">Buy</a>
     <a href="https://dispobuddy.com" target="_blank">Sell</a>
     <a href="https://dispobuddy.com" target="_blank">Dispo My Deal</a>
+    <a href="/blog/">Learn</a>
   </div>
   <a href="/" class="nav-logo">
     <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:44px;width:auto">
@@ -411,9 +412,13 @@ footer{background:var(--navy);padding:44px 40px 0}
       <div id="ap-signup" style="display:none">
         <div class="a-err" id="a-su-err"></div>
         <div class="a-ok" id="a-su-ok"></div>
-        <div class="a-field"><input class="a-input" id="su-fn" placeholder="First name"></div>
+        <div class="a-row" style="margin-bottom:10px">
+          <input class="a-input" id="su-fn" placeholder="First name">
+          <input class="a-input" id="su-ln" placeholder="Last name">
+        </div>
         <div class="a-field"><input class="a-input" id="su-email" type="email" placeholder="Email address"></div>
         <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
+        <div class="a-field"><input class="a-input" id="su-pass" type="password" placeholder="Create password (6+ characters)"></div>
         <div class="a-field">
           <select class="a-input" id="su-strategy">
             <option value="">Strategy (flip / rental / creative)</option>
@@ -459,7 +464,7 @@ footer{background:var(--navy);padding:44px 40px 0}
   <span class="sticky-bar-text">Interested in this deal?</span>
   <button class="sb-primary" onclick="if(!getUser()){openAuth('signup');return;}const rf=document.getElementById('req-form');if(rf)rf.style.display='block';document.getElementById('request-form').scrollIntoView({behavior:'smooth'});">Request Info</button>
   <a href="/deals.html" class="sb-secondary">Browse All Deals</a>
-  <a href="/blog/" class="sb-secondary">Blog</a>
+  <a href="/blog/?tab=education" class="sb-secondary">Learn Creative Finance</a>
 </div>
 
 <!-- FOOTER -->
@@ -611,15 +616,19 @@ async function doLogin(){
 }
 async function doSignup(){
   var fn=(document.getElementById('su-fn')||{}).value||'';fn=fn.trim();
+  var ln=(document.getElementById('su-ln')||{}).value||'';ln=ln.trim();
   var email=(document.getElementById('su-email')||{}).value||'';email=email.trim();
   var phone=(document.getElementById('su-phone')||{}).value||'';phone=phone.trim();
+  var pass=(document.getElementById('su-pass')||{}).value||'';pass=pass.trim();
   var strategy=(document.getElementById('su-strategy')||{}).value||'';
   var err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
   err.style.display='none';ok.style.display='none';
-  if(!fn||!email||!phone||!strategy){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
+  if(!fn||!ln||!email||!phone||!pass||!strategy){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Please enter a valid email address.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   var btn=event.target.closest('button')||event.target;btn.disabled=true;btn.textContent='Unlocking…';
   try{
-    var res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,email:email,phone:phone,strategy:strategy,source:'TFS Website - Signup'})});
+    var res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email:email,phone:phone,password:pass,strategy:strategy,source:'TFS Website - Signup'})});
     const data=await res.json();
     if(!res.ok||!data.success){
       err.textContent=data.error||'Signup failed. Please try again.';err.style.display='block';
