@@ -298,9 +298,34 @@ footer{background:var(--navy);padding:44px 40px 0}
 .sticky-bar .sb-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
 .sticky-bar .sb-secondary:hover{background:rgba(255,255,255,.2)}
 
+/* STACK / MORBY METHOD HERO CARD — photo on the left, key-metrics card on the right */
+.stack-hero{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:16px;align-items:stretch}
+.stack-hero .photo-grid{height:auto;min-height:380px;margin-bottom:0;grid-template-columns:1fr;grid-template-rows:1fr}
+.stack-hero .photo-grid .photo-main{grid-row:auto;grid-column:auto}
+.stack-hero .photo-grid .photo-thumb{display:none}
+.stack-hero-card{background:linear-gradient(155deg,#0D1F3C 0%,#14284a 100%);color:#fff;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:14px;border:1px solid rgba(255,255,255,.08)}
+.shc-badges{display:flex;gap:6px;flex-wrap:wrap}
+.shc-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}
+.shc-badge-available{background:rgba(16,185,129,.15);color:#6EE7B7;border:1px solid rgba(16,185,129,.35)}
+.shc-badge-pending{background:rgba(245,158,11,.15);color:#FCD34D;border:1px solid rgba(245,158,11,.35)}
+.shc-badge-closed{background:rgba(100,116,139,.2);color:#CBD5E1;border:1px solid rgba(100,116,139,.45)}
+.shc-badge-type{background:rgba(255,255,255,.06);color:#CBD5E1;border:1px solid rgba(255,255,255,.15)}
+.shc-addr{font-size:22px;font-weight:800;margin:0;line-height:1.15;font-family:'Domine',serif;letter-spacing:.2px}
+.shc-sub{font-size:13px;color:#94A3B8}
+.shc-sub .shc-lock-btn{margin-left:6px;background:transparent;border:0;color:#29ABE2;font-size:12px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.shc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
+.shc-metric{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px}
+.shc-metric-label{font-size:9px;font-weight:700;color:#94A3B8;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+.shc-metric-value{font-size:18px;font-weight:800;color:#fff;line-height:1.1}
+.shc-metric-value.green{color:#6EE7B7}
+.shc-metric-value.muted{color:#64748B;font-size:15px}
+.shc-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:#29ABE2;color:#fff;border:none;padding:13px 20px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s;margin-top:auto;font-family:var(--font)}
+.shc-cta:hover{background:#1E90C0}
+
 /* RESPONSIVE */
 @media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px}.deal-sidebar{position:static}.similar-grid{gap:12px}}
-@media(max-width:768px){nav{padding:0 16px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 16px}.photo-grid{height:260px;grid-template-columns:1fr;grid-template-rows:1fr}.photo-main{grid-row:auto;grid-column:auto}.photo-thumb{display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.terms-map-grid{grid-template-columns:1fr!important}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 16px 0}
+@media(max-width:900px){.stack-hero{grid-template-columns:1fr}.stack-hero .photo-grid{min-height:260px;height:260px}}
+@media(max-width:768px){nav{padding:0 16px}.nav-left .d-links{display:none}.breadcrumb{padding:10px 16px}.photo-grid{height:260px;grid-template-columns:1fr;grid-template-rows:1fr}.photo-main{grid-row:auto;grid-column:auto}.photo-thumb{display:none}.sim-card{min-width:200px}.terms-grid{grid-template-columns:1fr}.terms-map-grid{grid-template-columns:1fr!important}.footer-top{grid-template-columns:1fr 1fr;gap:24px}footer{padding:36px 16px 0}.shc-addr{font-size:19px}.shc-metric-value{font-size:16px}
   .auth-modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0}
   .auth-overlay{align-items:flex-end}
   .calc-grid{grid-template-columns:1fr 1fr}
@@ -630,6 +655,7 @@ function updateNavAuth(user){
 }
 
 function fc(n){if(!n&&n!==0)return'—';const v=+n;if(isNaN(v)||v===0)return'—';return'$'+v.toLocaleString()}
+function fcK(n){if(!n&&n!==0)return'—';const v=+n;if(isNaN(v)||v===0)return'—';if(v>=1e6)return'$'+(v/1e6).toFixed(v%1e6?1:0)+'M';if(v>=1000)return'$'+Math.round(v/1000)+'K';return'$'+v.toLocaleString()}
 function fmtRate(r){if(!r&&r!==0)return'—';const v=+r;if(isNaN(v)||v===0)return r||'—';return v<1?(v*100).toFixed(2)+'%':v+'%'}
 function daysLeft(d){if(!d)return null;return Math.ceil((new Date(d)-new Date())/864e5)}
 function typeInfo(t){const m={Cash:{cls:'b-cash',label:'Cash Deal'},SubTo:{cls:'b-subto',label:'Subject To'},'Seller Finance':{cls:'b-sf',label:'Seller Finance'},Hybrid:{cls:'b-hybrid',label:'Hybrid'},'Morby Method':{cls:'b-hybrid',label:'Morby Method'},'Morby/Stack Method':{cls:'b-hybrid',label:'Stack Method'},Wrap:{cls:'b-wrap',label:'Wrap'}};return m[t]||{cls:'b-cash',label:t||'Cash Deal'}}
@@ -768,8 +794,12 @@ function renderDeal(d,allDeals){
   const arv=+d.compsArv||+d.aiArvBase||0;
   const entry=+d.entryFee||0;
   const dtl=(d.dealType||'').toLowerCase().trim();
-  const isSubTo=dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl.includes('morby')||dtl==='wrap';
-  const isSF=dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl.includes('morby')||dtl==='wrap';
+  // Stack / Morby Method: senior DSCR loan + second-position seller carry. Rendered in
+  // its own dedicated block below with DSCR-specific fields, so suppress the generic
+  // SubTo/SF sections to avoid duplication.
+  const isStack=dtl.includes('stack')||dtl.includes('morby');
+  const isSubTo=!isStack&&(dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl==='wrap');
+  const isSF=!isStack&&(dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl==='wrap');
   const loggedIn=!!getUser();
 
   // PHOTO GRID — placeholder, filled by loadDealPhotos() after render
@@ -895,6 +925,110 @@ function renderDeal(d,allDeals){
   if(solarPaddedRows.length%2!==0) solarPaddedRows.push({l:'',v:''});
   const solarTableHtml=solarRows.length?`<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>${solarHeading}</div><div class="terms-grid">${solarPaddedRows.map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div></div>`:'';
 
+  // STACK / MORBY METHOD — senior DSCR loan stacked with a second-position seller carry.
+  // The DSCR side (new bank debt) lives in its own Notion fields; the seller-carry side
+  // reuses the SF* fields. Rendered only when isStack so Cash/SubTo/SF deals are untouched.
+  var stackStructureHtml='';
+  var cashFlowHtml='';
+  if(isStack){
+    var stackRows=[];
+    if(d.askingPrice) stackRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    if(d.cashToSeller){
+      var cashPct=d.askingPrice?' ('+Math.round((+d.cashToSeller/+d.askingPrice)*100)+'%)':'';
+      stackRows.push({l:'Cash to Seller',v:fc(d.cashToSeller)+cashPct});
+    }
+    if(d.dscrLoanAmount){
+      var ltvSuffix=d.dscrLtv?' ('+fmtRate(d.dscrLtv)+' LTV)':'';
+      stackRows.push({l:'DSCR Loan',v:fc(d.dscrLoanAmount)+ltvSuffix});
+    }
+    if(d.sfLoanAmount){
+      var carrySuffix=d.sfRate?' at '+fmtRate(d.sfRate)+' IO':'';
+      stackRows.push({l:'Seller Carry (2nd Position)',v:fc(d.sfLoanAmount)+carrySuffix});
+    }
+    if(d.sfPayment) stackRows.push({l:'Monthly Seller Payment',v:fc(d.sfPayment)+'/mo'});
+    if(d.sfBalloon && d.sfBalloon!=='—') stackRows.push({l:'Balloon Term',v:d.sfBalloon});
+    if(entry) stackRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(d.netToBuyer) stackRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
+    if(stackRows.length%2!==0) stackRows.push({l:'',v:''});
+    if(stackRows.length){
+      stackStructureHtml='<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Stack Method Structure</div><div class="terms-grid">'+stackRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>';
+    }
+
+    var cfRows=[];
+    if(d.annualNoi) cfRows.push({l:'Annual NOI',v:fc(d.annualNoi)});
+    if(d.capRate){
+      var capNum=+d.capRate;
+      cfRows.push({l:'Cap Rate',v:(capNum<1?(capNum*100).toFixed(2):capNum.toFixed(2))+'%'});
+    }
+    if(d.dscrRatio){
+      var drNum=+d.dscrRatio;
+      cfRows.push({l:'DSCR Ratio',v:drNum.toFixed(2)});
+    }
+    if(d.netCashflow) cfRows.push({l:'True Net Cash Flow',v:fc(d.netCashflow)+'/mo'});
+    if(d.rentFinal) cfRows.push({l:'Gross Monthly Rents',v:fc(d.rentFinal)+'/mo'});
+    if(d.occupancy) cfRows.push({l:'Occupancy',v:d.occupancy});
+    if(cfRows.length%2!==0) cfRows.push({l:'',v:''});
+    if(cfRows.length){
+      cashFlowHtml='<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>Cash Flow Analysis</div><div class="terms-grid">'+cfRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>';
+    }
+  }
+
+  // STACK HERO CARD — photo on left, status/address/metrics/CTA card on right.
+  // Replaces the default photo-grid + deal-header + tags-row for Stack deals only.
+  var stackHeroHtml='';
+  if(isStack){
+    // Status badge — derived from Notion "Deal Status"
+    var statusLabel='AVAILABLE', statusCls='shc-badge-available';
+    if(dsIsPending){ statusLabel='PENDING'; statusCls='shc-badge-pending'; }
+    else if(dsIsClosed){ statusLabel='CLOSED'; statusCls='shc-badge-closed'; }
+    // Property-type badge — normalize to RESIDENTIAL / COMMERCIAL where possible
+    var ptRaw=(d.propertyType||'').toString();
+    var ptLower=ptRaw.toLowerCase();
+    var propTypeBadge=ptRaw;
+    if(/sfr|single|duplex|triplex|quadplex|fourplex|mfr|multi|condo|town|residential/.test(ptLower)) propTypeBadge='RESIDENTIAL';
+    else if(/commercial|retail|office|industrial|mixed/.test(ptLower)) propTypeBadge='COMMERCIAL';
+    else if(ptRaw) propTypeBadge=ptRaw.toUpperCase();
+
+    // Address — show street only when logged in, otherwise city/state (matches existing gate)
+    var addrLine1=(loggedIn&&d.streetAddress)?d.streetAddress:((d.city||'')+(d.state?', '+d.state:''));
+    var addrLine2=(loggedIn&&d.streetAddress)?((d.city||'')+(d.state?', '+d.state:'')+(d.zip?' '+d.zip:'')):(d.zip?d.zip:'');
+    var addrLockCta=(!loggedIn&&d.streetAddress)?'<button class="shc-lock-btn" onclick="openAuth(\'signup\')">Unlock full address</button>':'';
+
+    // Metric tiles — Stack structure numbers at a glance
+    var heroMetrics=[
+      {l:'Purchase Price', v:fcK(d.askingPrice)},
+      {l:'Assignment Fee', v:fcK(entry), cls:'green'},
+      {l:'Down Payment',   v:fcK(d.cashToSeller)},
+      {l:'Seller Carry',   v:fcK(d.sfLoanAmount)},
+      {l:'DSCR Ratio',     v:d.dscrRatio?(+d.dscrRatio).toFixed(2):'—', cls:d.dscrRatio&&+d.dscrRatio>=1.25?'green':''},
+      {l:'Deal Score',     v:'N/A', cls:'muted'}
+    ];
+    var metricsHtml=heroMetrics.map(function(m){
+      return '<div class="shc-metric"><div class="shc-metric-label">'+m.l+'</div><div class="shc-metric-value '+(m.cls||'')+'">'+m.v+'</div></div>';
+    }).join('');
+
+    // CTA — jump the user to the sidebar offer form, or to the inquiry form if offer tab is absent (pending deals)
+    var ctaOnclick="var s=document.getElementById('tab-offer');if(s){s.click();}var r=document.getElementById('request-form');if(r){r.scrollIntoView({behavior:'smooth',block:'start'});}";
+    var ctaDisabled=dsIsClosed;
+    var ctaLabel=dsIsClosed?'Deal Closed':'Express Interest';
+
+    stackHeroHtml=''
+      +'<div class="stack-hero">'
+      +  '<div class="photo-grid" id="photo-grid">'+photoHtml+'</div>'
+      +  '<div class="stack-hero-card">'
+      +    '<div class="shc-badges">'
+      +      '<span class="shc-badge '+statusCls+'">'+statusLabel+'</span>'
+      +      (propTypeBadge?'<span class="shc-badge shc-badge-type">'+propTypeBadge+'</span>':'')
+      +    '</div>'
+      +    '<div><h1 class="shc-addr">'+addrLine1+'</h1>'
+      +      (addrLine2?'<div class="shc-sub">'+addrLine2+addrLockCta+'</div>':(addrLockCta?'<div class="shc-sub">'+addrLockCta+'</div>':''))
+      +    '</div>'
+      +    '<div class="shc-metrics">'+metricsHtml+'</div>'
+      +    '<button class="shc-cta"'+(ctaDisabled?' disabled style="background:#64748B;cursor:not-allowed"':'')+' onclick="'+ctaOnclick+'">'+ctaLabel+'</button>'
+      +  '</div>'
+      +'</div>';
+  }
+
   // HIGHLIGHTS
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
   const hlHtml=hlItems.length?`<div class="highlights">${hlItems.map(h=>`<div class="hl-item"><div class="hl-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:13px;color:var(--text-mid);line-height:1.55">${h}</span></div>`).join('')}</div>`:'';
@@ -972,7 +1106,11 @@ function renderDeal(d,allDeals){
   document.getElementById('app').innerHTML=`
   <div class="main">
     <div class="deal-main">
-      <div class="photo-grid" id="photo-grid">${photoHtml}</div>
+      ${isStack ? `${stackHeroHtml}
+
+      ${statusBannerHtml}
+
+      <div class="tags-row">${tagsHtml}</div>` : `<div class="photo-grid" id="photo-grid">${photoHtml}</div>
 
       ${statusBannerHtml}
 
@@ -996,7 +1134,7 @@ function renderDeal(d,allDeals){
         ${d.piti?`<div class="deal-refi-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Est. PITI payment: <strong>${fc(d.piti)}/mo</strong> (existing loan)</div>`:''}
       </div>
 
-      <div class="tags-row">${tagsHtml}</div>
+      <div class="tags-row">${tagsHtml}</div>`}
 
       <div class="tabs">
         <div class="tabs-inner">
@@ -1011,6 +1149,8 @@ function renderDeal(d,allDeals){
       <div id="tab-terms" class="tab-panel on">
         <div class="terms-map-grid" style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
           <div>${termsTableHtml}
+            ${stackStructureHtml}
+            ${cashFlowHtml}
             ${solarTableHtml}
             <div id="insurance-quote" style="margin-top:12px;background:linear-gradient(135deg,#EBF8FF,#E6F9F0);border:1px solid #bee3f8;border-radius:var(--r);padding:16px;display:none">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
