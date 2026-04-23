@@ -319,8 +319,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 .shc-metric-value{font-size:18px;font-weight:800;color:#fff;line-height:1.1}
 .shc-metric-value.green{color:#6EE7B7}
 .shc-metric-value.muted{color:#64748B;font-size:15px}
-.shc-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:#29ABE2;color:#fff;border:none;padding:13px 20px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s;margin-top:auto;font-family:var(--font)}
-.shc-cta:hover{background:#1E90C0}
+.shc-metric:last-child:nth-child(odd){grid-column:1 / -1}
 
 /* RESPONSIVE */
 @media(max-width:1024px){.main{grid-template-columns:1fr;padding:20px}.deal-sidebar{position:static}.similar-grid{gap:12px}}
@@ -1015,17 +1014,11 @@ function renderDeal(d,allDeals){
       {l:'Assignment Fee', v:fcK(entry), cls:'green'},
       {l:'Down Payment',   v:fcK(d.cashToSeller)},
       {l:'Seller Carry',   v:fcK(d.sfLoanAmount)},
-      {l:'DSCR Ratio',     v:d.dscrRatio?(+d.dscrRatio).toFixed(2):'—', cls:d.dscrRatio&&+d.dscrRatio>=1.25?'green':''},
-      {l:'Deal Score',     v:'N/A', cls:'muted'}
+      {l:'DSCR Ratio',     v:d.dscrRatio?(+d.dscrRatio).toFixed(2):'—', cls:d.dscrRatio&&+d.dscrRatio>=1.25?'green':''}
     ];
     var metricsHtml=heroMetrics.map(function(m){
       return '<div class="shc-metric"><div class="shc-metric-label">'+m.l+'</div><div class="shc-metric-value '+(m.cls||'')+'">'+m.v+'</div></div>';
     }).join('');
-
-    // CTA — jump the user to the sidebar offer form, or to the inquiry form if offer tab is absent (pending deals)
-    var ctaOnclick="var s=document.getElementById('tab-offer');if(s){s.click();}var r=document.getElementById('request-form');if(r){r.scrollIntoView({behavior:'smooth',block:'start'});}";
-    var ctaDisabled=dsIsClosed;
-    var ctaLabel=dsIsClosed?'Deal Closed':'Express Interest';
 
     stackHeroHtml=''
       +'<div class="stack-hero">'
@@ -1039,7 +1032,6 @@ function renderDeal(d,allDeals){
       +      (addrLine2?'<div class="shc-sub">'+addrLine2+addrLockCta+'</div>':(addrLockCta?'<div class="shc-sub">'+addrLockCta+'</div>':''))
       +    '</div>'
       +    '<div class="shc-metrics">'+metricsHtml+'</div>'
-      +    '<button class="shc-cta"'+(ctaDisabled?' disabled style="background:#64748B;cursor:not-allowed"':'')+' onclick="'+ctaOnclick+'">'+ctaLabel+'</button>'
       +  '</div>'
       +'</div>';
   }
