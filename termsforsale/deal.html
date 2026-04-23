@@ -343,8 +343,8 @@ footer{background:var(--navy);padding:44px 40px 0}
   <div class="auth-modal">
     <div class="auth-head">
       <button class="auth-x" onclick="closeAuth()">&#215;</button>
-      <h2>Welcome to Terms For Sale</h2>
-      <p>Unlock addresses, photos and your buyer dashboard</p>
+      <h2>Unlock Full Details for This Deal + All Future Off&#8209;Market Deals</h2>
+      <p>Free investor access. We verify buyers and keep addresses gated to protect sellers and reduce spam.</p>
     </div>
     <div class="auth-body">
       <div class="auth-tabs">
@@ -379,21 +379,20 @@ footer{background:var(--navy);padding:44px 40px 0}
       </div>
       <!-- SIGNUP -->
       <div id="ap-signup" style="display:none">
-        <div class="a-perks">
-          <div class="a-perk">&#10003; Full address + photos unlocked</div>
-          <div class="a-perk">&#10003; Early access before public</div>
-          <div class="a-perk">&#10003; Buyer dashboard</div>
-        </div>
         <div class="a-err" id="a-su-err"></div>
         <div class="a-ok" id="a-su-ok"></div>
-        <div class="a-row" style="margin-bottom:10px">
-          <input class="a-input" id="su-fn" placeholder="First name">
-          <input class="a-input" id="su-ln" placeholder="Last name">
-        </div>
+        <div class="a-field"><input class="a-input" id="su-fn" placeholder="First name"></div>
         <div class="a-field"><input class="a-input" id="su-email" type="email" placeholder="Email address"></div>
         <div class="a-field"><input class="a-input" id="su-phone" type="tel" placeholder="Phone number"></div>
-        <div class="a-field"><input class="a-input" id="su-pass" type="password" placeholder="Create password"></div>
-        <button class="btn-full-blue" onclick="doSignup()">Create Free Account</button>
+        <div class="a-field">
+          <select class="a-input" id="su-strategy">
+            <option value="">Strategy (flip / rental / creative)</option>
+            <option value="flip">Flip</option>
+            <option value="rental">Rental</option>
+            <option value="creative">Creative</option>
+          </select>
+        </div>
+        <button class="btn-full-blue" onclick="doSignup()">Unlock This Deal</button>
         <div class="a-note">By signing up you agree to receive SMS &amp; email alerts. Reply STOP to opt out.</div>
       </div>
     </div>
@@ -582,29 +581,26 @@ async function doLogin(){
 }
 async function doSignup(){
   var fn=(document.getElementById('su-fn')||{}).value||'';fn=fn.trim();
-  var ln=(document.getElementById('su-ln')||{}).value||'';ln=ln.trim();
   var email=(document.getElementById('su-email')||{}).value||'';email=email.trim();
   var phone=(document.getElementById('su-phone')||{}).value||'';phone=phone.trim();
-  var pass=(document.getElementById('su-pass')||{}).value||'';pass=pass.trim();
+  var strategy=(document.getElementById('su-strategy')||{}).value||'';
   var err=document.getElementById('a-su-err'),ok=document.getElementById('a-su-ok');
   err.style.display='none';ok.style.display='none';
-  if(!fn||!email||!phone||!pass){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
-  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
-  var btn=event.target.closest('button')||event.target;btn.disabled=true;btn.textContent='Creating…';
+  if(!fn||!email||!phone||!strategy){err.textContent='Please fill in all required fields.';err.style.display='block';return;}
+  var btn=event.target.closest('button')||event.target;btn.disabled=true;btn.textContent='Unlocking…';
   try{
-    var res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln,email:email,phone:phone,password:pass,source:'TFS Website - Signup'})});
+    var res=await fetch('/api/auth-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,email:email,phone:phone,strategy:strategy,source:'TFS Website - Signup'})});
     const data=await res.json();
     if(!res.ok||!data.success){
       err.textContent=data.error||'Signup failed. Please try again.';err.style.display='block';
-      btn.disabled=false;btn.textContent='Create Free Account';return;
+      btn.disabled=false;btn.textContent='Unlock This Deal';return;
     }
     const u=data.user;
-    const user={contactId:u.id,name:u.firstName||u.name||fn,email:u.email||email,phone:u.phone||phone,initials:u.initials||(fn[0]+(ln?ln[0]:'')).toUpperCase()};
+    const user={contactId:u.id,name:u.firstName||u.name||fn,email:u.email||email,phone:u.phone||phone,initials:u.initials||fn[0].toUpperCase()};
     setUser(user);updateNavAuth(user);
   }catch(e){console.error('Signup error:',e);}
-  ok.innerHTML='Account created! Welcome, '+fn+'!<br><strong>Next:</strong> Tell us what you\'re looking for so we send you the right deals.';ok.style.display='block';
-  btn.disabled=false;btn.textContent='Create Free Account';
-  setTimeout(()=>{closeAuth();window.location.href='/buying-criteria.html';},2000);
+  closeAuth();
+  location.reload();
 }
 function updateNavAuth(user){
   const el=document.getElementById('nav-right');
