@@ -234,23 +234,84 @@ function buildEmailSubject(deal) {
   return 'New ' + (deal.dealType || 'Deal') + ' in ' + deal.city + ', ' + deal.state + price;
 }
 
-// Plain-text fallback. TODO SESSION C (or later): port the branded HTML from
-// notify-buyers.js.DISABLED around line 1222+ if you want the richer email.
+// Branded HTML email template — ported from notify-buyers.js:1140-1220 with
+// additional body copy for deliverability (reduces spam-score penalty for
+// link-heavy emails with minimal text). New copy: personalized greeting,
+// intro paragraph, "why this matched" post-CTA paragraph, closing, CAN-SPAM
+// compliance footer with physical address + unsubscribe.
 function buildEmailBody(deal, contact) {
-  const lines = [
-    'A new ' + (deal.dealType || 'deal') + ' matching your criteria is live:',
-    '',
-    '  ' + [deal.streetAddress, deal.city, deal.state].filter(Boolean).join(', '),
-    deal.askingPrice ? '  Price: $' + deal.askingPrice.toLocaleString() : null,
-    deal.entryFee   ? '  Entry: $' + deal.entryFee.toLocaleString()   : null,
-    '',
-    'View the full package: ' + buildTrackedDealUrl(deal, contact.id),
-    '',
-    '—',
-    'Terms For Sale',
-    'Reply STOP to unsubscribe from SMS. Reply HELP for support.',
-  ].filter(Boolean);
-  return lines.join('\n');
+  const price   = deal.askingPrice ? '$' + deal.askingPrice.toLocaleString() : '';
+  const entry   = deal.entryFee   ? '$' + deal.entryFee.toLocaleString()   : '';
+  const arvStr  = deal.arv ? '$' + deal.arv.toLocaleString() : '';
+  const rentStr = deal.rentFinal ? '$' + deal.rentFinal.toLocaleString() + '/mo' : '';
+  const trackUrl = buildTrackedDealUrl(deal, contact.id);
+  const firstName = (contact.firstName || '').trim();
+  const greeting  = firstName ? 'Hi ' + firstName + ',' : 'Hi there,';
+  const dealTypeLower = (deal.dealType || 'deal').toLowerCase();
+
+  // Cover photo extracted from Google Drive share link in deal.coverPhoto
+  let coverImg = '';
+  const photoMatch = (deal.coverPhoto || '').match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  if (photoMatch) coverImg = 'https://termsforsale.com/api/drive-image?id=' + photoMatch[1] + '&sz=800';
+
+  const specs = [
+    deal.beds ? deal.beds + ' Beds' : '',
+    deal.baths ? deal.baths + ' Baths' : '',
+    deal.sqft ? deal.sqft.toLocaleString() + ' Sqft' : '',
+    deal.yearBuilt ? 'Built ' + deal.yearBuilt : '',
+  ].filter(Boolean).join(' · ');
+
+  const highlights = [deal.highlight1, deal.highlight2, deal.highlight3].filter(Boolean);
+
+  let html = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff">'
+    // Header
+    + '<div style="background:#0D1F3C;padding:20px 32px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between">'
+    + '<img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="height:32px">'
+    + '<span style="color:rgba(255,255,255,.5);font-size:11px;font-weight:600">NEW DEAL ALERT</span>'
+    + '</div>'
+    // Photo
+    + (coverImg ? '<a href="' + trackUrl + '" style="display:block;width:100%;max-height:300px;overflow:hidden"><img src="' + coverImg + '" alt="' + (deal.streetAddress || deal.city || 'Property') + '" style="width:100%;display:block"></a>' : '')
+    // Body
+    + '<div style="padding:28px 32px">'
+    // NEW — personalized greeting + intro paragraph (adds readable text to reduce spam score)
+    + '<p style="color:#0D1F3C;font-size:15px;margin:0 0 12px;font-weight:600">' + greeting + '</p>'
+    + '<p style="color:#4A5568;font-size:14px;line-height:1.55;margin:0 0 20px">A new ' + (deal.dealType || 'deal') + ' just dropped in <strong>' + deal.city + ', ' + deal.state + '</strong> that matches your buying criteria. The full package is live now — here\'s the quick snapshot:</p>'
+    // Deal type pill + location
+    + '<div style="display:inline-block;padding:4px 12px;border-radius:20px;background:#EBF8FF;color:#1a8bbf;font-size:12px;font-weight:700;margin-bottom:12px">' + (deal.dealType || 'Deal') + '</div>'
+    + '<h2 style="color:#0D1F3C;font-size:22px;margin:0 0 4px">' + deal.city + ', ' + deal.state + '</h2>'
+    + '<p style="color:#718096;font-size:13px;margin:0 0 20px">' + (specs || '') + '</p>'
+    // Numbers grid
+    + '<table style="width:100%;border-collapse:collapse;margin:0 0 20px">'
+    + (price   ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Asking Price</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:16px;font-weight:800;text-align:right">' + price + '</td></tr>' : '')
+    + (entry   ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Entry Fee</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:16px;font-weight:800;text-align:right">' + entry + '</td></tr>' : '')
+    + (arvStr  ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">ARV</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#0D1F3C;font-size:16px;font-weight:800;text-align:right">' + arvStr + '</td></tr>' : '')
+    + (rentStr ? '<tr><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#718096;font-size:13px;font-weight:600">Est. Rent</td><td style="padding:10px 0;border-bottom:1px solid #EDF2F7;color:#10B981;font-size:16px;font-weight:800;text-align:right">' + rentStr + '</td></tr>' : '')
+    + '</table>'
+    // Highlights
+    + (highlights.length ? '<div style="background:#F7FAFC;border-radius:8px;padding:14px 16px;margin-bottom:20px">' + highlights.map((h) => '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px"><span style="color:#10B981;font-size:14px;line-height:1">&#10003;</span><span style="color:#4A5568;font-size:13px;line-height:1.4">' + h + '</span></div>').join('') + '</div>' : '')
+    // CTA
+    + '<a href="' + trackUrl + '" style="display:block;text-align:center;padding:16px 32px;background:#29ABE2;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px">View Full Deal Details &rarr;</a>'
+    // NEW — "why this matched" + urgency context (adds readable text to reduce spam score)
+    + '<p style="color:#4A5568;font-size:14px;line-height:1.55;margin:20px 0 0">Deals with ' + dealTypeLower + ' terms don\'t usually sit long — most get claimed within 48-72 hours of going live. If these numbers fit your buy box, tap above for the full package: photos, financials, seller notes, and our inspection summary.</p>'
+    + '<p style="color:#4A5568;font-size:14px;line-height:1.55;margin:12px 0 20px">Questions about the property or want to adjust what we send you? Reply directly to this email — your message comes to a real person on our team, not a black hole.</p>'
+    // Signature
+    + '<p style="color:#0D1F3C;font-size:14px;line-height:1.55;margin:0 0 4px;font-weight:600">— The Terms For Sale Team</p>'
+    + '<p style="color:#718096;font-size:12px;line-height:1.55;margin:0 0 20px">Deal Pros LLC</p>'
+    // Landlord insurance promo
+    + '<div style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;margin-top:16px;text-align:center">'
+    + '<span style="font-size:12px;color:#718096">Need landlord insurance? </span>'
+    + '<a href="https://dealpros.steadilypartner.com/" target="_blank" style="color:#29ABE2;font-size:12px;font-weight:700">Get an instant quote &rarr;</a>'
+    + '</div>'
+    + '<p style="color:#718096;font-size:12px;margin-top:20px;text-align:center">This deal matched your buying criteria. <a href="https://termsforsale.com/buying-criteria.html" style="color:#29ABE2">Update your buy box</a> anytime.</p>'
+    + '</div>'
+    // CAN-SPAM compliance footer (required by law — physical address + unsubscribe + sender identity)
+    + '<div style="background:#F4F6F9;padding:16px 32px;border-radius:0 0 12px 12px;text-align:center">'
+    + '<p style="color:#718096;font-size:11px;margin:0 0 6px">You\'re receiving this because you signed up for deal alerts at termsforsale.com.</p>'
+    + '<p style="color:#718096;font-size:11px;margin:0 0 6px"><a href="https://termsforsale.com/unsubscribe?c=' + contact.id + '" style="color:#29ABE2">Unsubscribe</a> &middot; <a href="https://termsforsale.com/buying-criteria.html" style="color:#29ABE2">Update preferences</a> &middot; <a href="https://termsforsale.com/privacy.html" style="color:#29ABE2">Privacy</a></p>'
+    + '<p style="color:#A0AEC0;font-size:11px;margin:0">Terms For Sale &middot; Deal Pros LLC &middot; <a href="https://termsforsale.com" style="color:#29ABE2">termsforsale.com</a></p>'
+    + '</div></div>';
+
+  return html;
 }
 
 // ─── GHL SEND ───────────────────────────────────────────────────────────
@@ -276,7 +337,7 @@ async function ghlSendEmail(apiKey, contactId, subject, body) {
     contactId,
     subject,
     emailFrom: EMAIL_FROM_ADDRESS,
-    html: '<p>' + body.replace(/\n/g, '<br>') + '</p>',
+    html: body,  // body is already the full branded HTML from buildEmailBody()
   });
 }
 
@@ -329,14 +390,14 @@ async function sendToBuyer(apiKey, contact, deal, dryRun) {
     return { sent: false, reason: 'already-sent' };
   }
 
-  // File-based dedup backstop (droplet only)
+  // File-based dedup CHECK (backstop for when GHL idempotency field isn't set).
+  // We only READ here. The atomic claim (markSent) happens AFTER the dry-run
+  // gate below, so dry-runs don't pollute sent-log.json.
   const dealIdShort = (deal.id || deal.dealCode || '').slice(0, 8);
-  if (sentLog && sentLog.isDroplet && sentLog.isDroplet()) {
-    if (sentLog.wasSent(contact.id, dealIdShort, 'alert')) {
-      log('Skipped ' + contact.id + ' — file dedup');
-      return { sent: false, reason: 'file-dedup' };
-    }
-    sentLog.markSent(contact.id, dealIdShort, 'alert');
+  const isDropletEnv = !!(sentLog && sentLog.isDroplet && sentLog.isDroplet());
+  if (isDropletEnv && sentLog.wasSent(contact.id, dealIdShort, 'alert')) {
+    log('Skipped ' + contact.id + ' — file dedup');
+    return { sent: false, reason: 'file-dedup' };
   }
 
   // TEST_ONLY_PHONE — safe-test gate
@@ -346,12 +407,19 @@ async function sendToBuyer(apiKey, contact, deal, dryRun) {
     return { sent: false, reason: 'test-only-phone' };
   }
 
-  // Rule 9 — dry-run mode. Does NOT call recordSend() — dry-run sends nothing,
-  // so it shouldn't count toward the rate alarm. Otherwise a dry-run of a big
-  // buyer list would trigger the alarm and give a false "aborted" signal.
+  // Rule 9 — dry-run mode. Returns BEFORE any side-effect writes (no markSent,
+  // no recordSend, no writeLastDealSent, no actual sends). Safe to run at any
+  // volume without polluting state.
   if (dryRun) {
     log('DRY-RUN would send to ' + contact.id + ' deal=' + (deal.dealCode || deal.id));
     return { sent: true, reason: 'dry-run' };
+  }
+
+  // Atomic claim the sent-log slot NOW so a concurrent invocation can't race
+  // past the wasSent() check and double-send. Trade-off: if SMS/Email fails
+  // after this point, we DON'T retry on the next cron (no retry-spam).
+  if (isDropletEnv) {
+    sentLog.markSent(contact.id, dealIdShort, 'alert');
   }
 
   // SMS (independent failure)
@@ -427,6 +495,60 @@ exports.handler = async function (event) {
     if (!deals.length) {
       log('No deals to process');
       return { statusCode: 200, headers, body: JSON.stringify({ message: 'no deals' }) };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // TEST BYPASS: env TEST_TO_CONTACT=<contactId>
+    // Forces ONE send to ONE contact for the FIRST matched deal. Bypasses
+    // the match logic entirely. Purpose: live-send validation (Session C)
+    // without needing the test contact to satisfy buy-box match criteria.
+    // Unset the env var to return to normal multi-buyer broadcast behavior.
+    // ═══════════════════════════════════════════════════════════════════
+    if (process.env.TEST_TO_CONTACT) {
+      const testContactId = process.env.TEST_TO_CONTACT.trim();
+      const testDeal = deals[0];
+      log('TEST_TO_CONTACT bypass ACTIVE — forcing send to contact=' + testContactId
+          + ' deal=' + (testDeal.dealCode || testDeal.id));
+      try {
+        const res = await httpRequest(GHL_BASE + '/contacts/' + testContactId, {
+          method: 'GET',
+          headers: ghlHeaders(apiKey),
+        });
+        if (res.status !== 200) {
+          err('TEST_TO_CONTACT fetch failed: HTTP ' + res.status + ' ' + res.body.slice(0, 200));
+          return { statusCode: 404, headers, body: JSON.stringify({
+            error: 'test contact fetch failed',
+            status: res.status,
+            contactId: testContactId,
+          })};
+        }
+        const parsed = JSON.parse(res.body);
+        const testContact = parsed.contact || parsed;
+
+        // Best-effort Notion URL sync (same as normal path)
+        try { await setDealWebsiteLink(token, testDeal); }
+        catch (e) { warn('URL sync failed: ' + e.message); }
+
+        // Run through the same sendToBuyer flow — compliance, idempotency,
+        // rate alarm, throttle, and (if live) the actual sends all run.
+        const result = await sendToBuyer(apiKey, testContact, testDeal, dryRun);
+        log('TEST_TO_CONTACT result: ' + JSON.stringify(result));
+
+        return { statusCode: 200, headers, body: JSON.stringify({
+          testMode: 'TEST_TO_CONTACT',
+          dealCode: testDeal.dealCode || testDeal.id,
+          contactId: testContact.id,
+          contactPhone: testContact.phone,
+          contactTags: (testContact.tags || []).slice(0, 20),
+          result,
+        }, null, 2)};
+      } catch (e) {
+        err('TEST_TO_CONTACT bypass error: ' + e.message + '\n' + (e.stack || ''));
+        return { statusCode: 500, headers, body: JSON.stringify({
+          error: e.message,
+          mode: 'TEST_TO_CONTACT',
+        })};
+      }
     }
 
     const summary = { dealsProcessed: 0, totalSent: 0, totalSkipped: 0, byDeal: [] };
