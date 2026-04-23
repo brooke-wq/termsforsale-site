@@ -1567,6 +1567,15 @@ function updateNavAuth(user){
       CURRENT_FILTER=btn.dataset.filter;
       renderBlog();
     });
+    // Deep-link support: /blog/?tab=education lands on the Education filter
+    // (used by the "Learn Creative Finance" sticky-bar CTAs on deal pages).
+    const urlTab=new URLSearchParams(window.location.search).get('tab');
+    const deepBtn=urlTab&&tabs.querySelector('.blog-tab[data-filter="'+urlTab.replace(/[^a-z]/gi,'')+'"]');
+    if(deepBtn){
+      tabs.querySelectorAll('.blog-tab').forEach(b=>b.classList.remove('on'));
+      deepBtn.classList.add('on');
+      CURRENT_FILTER=deepBtn.dataset.filter;
+    }
   }
 
   if(searchInput){
