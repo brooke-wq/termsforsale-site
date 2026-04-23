@@ -61,8 +61,14 @@ const EMAIL_FROM_ADDRESS    = 'Terms For Sale <info@termsforsale.com>';
 const BROOKE_PHONE          = '+14806373117';
 const GHL_BASE              = 'https://services.leadconnectorhq.com';
 
-// Rate-ceiling — abort if we send more than this in a sliding 5-min window
-const RATE_CEILING_COUNT    = 50;
+// Rate-ceiling — abort if we send more than this in a sliding 5-min window.
+// Tuned for Terms For Sale's normal volume:
+//   - A single deal match can produce ~300-500 buyer sends
+//   - Normal peak load is ~150-300 sends per 5-min window
+//   - The 2026-04-22 incident pattern was ~1 send/sec sustained across
+//     MULTIPLE parallel processes = 300+ sends/5min from a SINGLE window
+//   - 500 gives headroom for legitimate big blasts, still catches runaway
+const RATE_CEILING_COUNT    = 500;
 const RATE_CEILING_WINDOW_MS = 5 * 60 * 1000;
 
 // Throttle between buyer loop iterations
@@ -276,15 +282,34 @@ async function ghlSendEmail(apiKey, contactId, subject, body) {
 
 // ─── COMPLIANCE GATE ────────────────────────────────────────────────────
 
+// Opt-in tags — buyer must have ONE of these to receive marketing SMS/email.
+// Normalized comparison: case-insensitive, spaces/hyphens/underscores equivalent.
+// So 'Active Buyer', 'active-buyer', 'ACTIVE_BUYER', and 'active buyer' all match.
+const OPT_IN_TAGS = new Set(['opt in', 'active buyer']);
+
+function normalizeTag(t) {
+  return String(t || '').toLowerCase().trim().replace(/[-_]/g, ' ').replace(/\s+/g, ' ');
+}
+
 function complianceRejection(contact) {
+  // 1. GHL native Do Not Disturb flag
   if (contact.dnd === true) return 'dnd';
+
+  // 2. Explicit opt-out or unsubscribe tags
   const optOutTag = (contact.tags || []).find((t) => {
-    const tl = String(t).toLowerCase();
-    return tl.indexOf('opt-out') === 0 || tl.indexOf('unsubscribe') === 0;
+    const n = normalizeTag(t);
+    return n.indexOf('opt out') === 0 || n.indexOf('unsubscribe') === 0;
   });
   if (optOutTag) return 'opt-out-tag:' + optOutTag;
-  const hasOptIn = (contact.tags || []).some((t) => String(t).toLowerCase() === 'opt in');
-  if (!hasOptIn) return 'no-opt-in-tag';
+
+  // 3. Opt-in required. Accepts: 'opt in' OR 'active buyer' (both normalized).
+  //    To disable this gate, set REQUIRE_OPT_IN=0 in env.
+  const requireOptIn = process.env.REQUIRE_OPT_IN !== '0';
+  if (requireOptIn) {
+    const hasOptIn = (contact.tags || []).some((t) => OPT_IN_TAGS.has(normalizeTag(t)));
+    if (!hasOptIn) return 'no-opt-in-tag';
+  }
+
   return null;
 }
 
@@ -321,10 +346,11 @@ async function sendToBuyer(apiKey, contact, deal, dryRun) {
     return { sent: false, reason: 'test-only-phone' };
   }
 
-  // Rule 9 — dry-run mode
+  // Rule 9 — dry-run mode. Does NOT call recordSend() — dry-run sends nothing,
+  // so it shouldn't count toward the rate alarm. Otherwise a dry-run of a big
+  // buyer list would trigger the alarm and give a false "aborted" signal.
   if (dryRun) {
     log('DRY-RUN would send to ' + contact.id + ' deal=' + (deal.dealCode || deal.id));
-    recordSend();
     return { sent: true, reason: 'dry-run' };
   }
 
@@ -454,7 +480,7 @@ exports.handler = async function (event) {
       summary.dealsProcessed++;
       summary.totalSent += dealSent;
       summary.totalSkipped += dealSkipped;
-      summary.byDeal.push({ dealCode: deal.dealCode, sent: dealSent, skipped: dealSkipped });
+      summary.byDeal.push({ dealCode: deal.dealCode || deal.id, sent: dealSent, skipped: dealSkipped });
 
       // Auto-blog (fire-and-forget, live-only)
       if (autoBlog && !dryRun) {

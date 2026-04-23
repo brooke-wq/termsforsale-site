@@ -903,7 +903,10 @@ async function findMatchingBuyers(apiKey, locationId, deal) {
       score: (r.reasons || []).length,
       tier: r.tier,
       matchReasons: r.reasons,
-      matchReason: r.reasons.join(' | ')
+      matchReason: r.reasons.join(' | '),
+      tags: contact.tags || [],
+      dnd: contact.dnd,
+      customFields: contact.customFields || []
     };
     buyersByContact[contact.id] = { contact: contact, entry: entry };
     if (r.tier === 1) tier1.push(entry);
