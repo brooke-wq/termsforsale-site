@@ -216,6 +216,31 @@ function alreadyBlasted(contact, deal) {
   return String(existing || '').trim() === idempotencyValueFor(deal);
 }
 
+// ─── DEAL-LEVEL BROADCAST GUARD (2026-04-23) ────────────────────────────
+// Per operator rule: "no more sending deals that were already sent. Only
+// NEW deals moving forward." If ANY buyer has been sent this deal in the
+// past (as recorded in jobs/sent-log.json), we skip the whole deal on
+// future cron runs. This prevents re-broadcasting old deals when new
+// buyers opt in.
+function dealHasBeenBroadcast(dealIdShort) {
+  if (!dealIdShort) return false;
+  try {
+    const fs = require('fs');
+    const path = '/root/termsforsale-site/jobs/sent-log.json';
+    if (!fs.existsSync(path)) return false;
+    const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+    // sent-log key format: "contactId-dealIdShort-type"
+    // Scan for any key containing `-<dealIdShort>-`
+    const marker = '-' + dealIdShort + '-';
+    for (const k of Object.keys(data)) {
+      if (k.indexOf(marker) > 0) return true;
+    }
+  } catch (e) {
+    warn('dealHasBeenBroadcast scan error for ' + dealIdShort + ': ' + e.message);
+  }
+  return false;
+}
+
 // ─── MESSAGE TEMPLATES (ported verbatim from notify-buyers.js:1112+) ────
 
 function buildSmsText(deal, contact) {
@@ -556,6 +581,22 @@ exports.handler = async function (event) {
     for (const deal of deals) {
       // Best-effort Notion URL sync
       try { await setDealWebsiteLink(token, deal); } catch (e) { warn('URL sync failed: ' + e.message); }
+
+      // ═ DEAL-LEVEL BROADCAST GUARD ═
+      // Skip the entire deal if it's been broadcast to ANY buyer previously.
+      // Rule from operator 2026-04-23: only NEW deals moving forward — no
+      // re-blasts of deals already in the system.
+      const dealIdShort = (deal.id || deal.dealCode || '').slice(0, 8);
+      if (dealHasBeenBroadcast(dealIdShort)) {
+        log('Deal ' + (deal.dealCode || deal.id) + ' (' + dealIdShort + ') already broadcast previously — skipping entire deal');
+        summary.byDeal.push({
+          dealCode: deal.dealCode || deal.id,
+          sent: 0,
+          skipped: 0,
+          skippedDeal: 'already-broadcast',
+        });
+        continue;
+      }
 
       // Use the legacy tiered match — returns sorted array of buyers with .tier + .matchReasons
       const matched = await findMatchingBuyers(apiKey, locationId, deal);
