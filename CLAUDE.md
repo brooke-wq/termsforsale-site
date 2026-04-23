@@ -402,6 +402,24 @@ pm2 logs parsed-prefs-nightly --lines 50    # verify first run
 
 User-facing explainer at `docs/smart-matching-team-brief.md` — share with ops team to explain how the Parsed Preferences (AI) field works, why low-confidence scores = call opportunities, and how adding a note auto-updates prefs overnight.
 
+### Backfill completion (April 23, 2026)
+
+Full backfill completed on Droplet (PID 108713). Final run stats:
+
+| Metric | Count |
+|---|---|
+| Contacts scanned | 10,001 |
+| Parsed this run | 1,203 |
+| Skipped (unchanged, idempotent) | 8,775 |
+| Failed | 19 (0.19%) |
+| Test contacts filtered | 4 |
+| Elapsed | 1h 51min |
+| Cost this run | $1.20 |
+
+**Idempotency fix (commit `92ac86c`) proven in production** — 8,775 already-parsed buyers were silently skipped via SHA256 `source_checksum` match. Without the fix (which pulls full contact via `GET /contacts/{id}` before checksum compare — GHL's `/contacts/search` doesn't return customFields), all 10,001 would have been re-parsed at ~$30 total. Actual marginal cost was $1.20.
+
+Total cumulative backfill cost across all runs: ~$27 (close to original $27 estimate in CLAUDE.md prior section). System is now fully seeded — nightly cron at 3am AZ picks up buyer changes going forward; matching uses pre-parsed JSON with zero AI cost at match time.
+
 ### Next-up project: GHL Conversation AI (deferred)
 
 Use GHL's native Conversation AI + AI Employee features for the conversational/per-contact layer (what they're actually good at), while keeping our Option D build for batch matching (what we're good at). Three phases ranked by ROI:
