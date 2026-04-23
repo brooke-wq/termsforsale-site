@@ -190,8 +190,21 @@ async function handlePartnerOnboarding(body, headers, locationId) {
 // CONTACT FORM HANDLER
 // ─────────────────────────────────────────────────────────────
 async function handleContactForm(body, headers, locationId) {
-  if (!body.name || !body.email) {
-    return respond(400, { error: 'Missing required fields: name, email' });
+  if (!body.name || !body.email || !body.message) {
+    return respond(400, { error: 'Missing required fields: name, email, message' });
+  }
+
+  // Honeypot: real users never fill this hidden field
+  if (body.website && String(body.website).trim() !== '') {
+    console.log('Contact form honeypot triggered — dropping submission');
+    return respond(200, { success: true });
+  }
+
+  if (looksLikeSpam(body)) {
+    console.log('Contact form spam-filtered:', JSON.stringify({
+      name: body.name, email: body.email,
+    }));
+    return respond(200, { success: true });
   }
 
   try {
@@ -542,6 +555,24 @@ async function addNote(contactId, headers, body) {
 // ─────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────
+
+function looksLikeSpam(body) {
+  return isGarbageString(body.name) || isGarbageString(body.message);
+}
+
+// A single alphanumeric run of 14+ chars with vowel ratio under 25% — real
+// names and sentences have ~35-40% vowels, random bot strings don't.
+function isGarbageString(s) {
+  const str = (s == null ? '' : String(s)).trim();
+  if (!str) return false;
+  const firstWord = str.split(/\s+/)[0];
+  if (firstWord.length < 14 || !/^[A-Za-z0-9]+$/.test(firstWord)) return false;
+  const letters = (firstWord.match(/[A-Za-z]/g) || []).length;
+  if (letters === 0) return false;
+  const vowels = (firstWord.match(/[aeiouAEIOU]/g) || []).length;
+  return vowels / letters < 0.25;
+}
+
 async function ghlFetch(url, method, payload, headers) {
   const opts = { method, headers };
   if (payload && method !== 'GET') opts.body = JSON.stringify(payload);

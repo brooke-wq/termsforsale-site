@@ -281,6 +281,10 @@ a{text-decoration:none;color:inherit}
           <label>Message <span class="req">*</span></label>
           <textarea name="message" required placeholder="How can we help?"></textarea>
         </div>
+        <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+          <label>Leave this field empty</label>
+          <input type="text" name="website" tabindex="-1" autocomplete="off">
+        </div>
         <button type="submit" class="btn-submit" id="submitBtn">
           <span class="btn-text">Send Message</span>
           <span class="spinner"></span>
@@ -349,14 +353,24 @@ a{text-decoration:none;color:inherit}
     btn.classList.add('loading');
     btn.disabled=true;
 
+    var fd=new FormData(form);
     var data={
       formType:'contact',
-      name:form.name.value.trim(),
-      email:form.email.value.trim(),
-      phone:form.phone.value.trim(),
-      subject:form.subject.value,
-      message:form.message.value.trim()
+      name:(fd.get('name')||'').toString().trim(),
+      email:(fd.get('email')||'').toString().trim(),
+      phone:(fd.get('phone')||'').toString().trim(),
+      subject:(fd.get('subject')||'').toString(),
+      message:(fd.get('message')||'').toString().trim(),
+      website:(fd.get('website')||'').toString()
     };
+
+    if(!data.name||!data.email||!data.message){
+      errorEl.textContent='Please fill in your name, email, and message.';
+      errorEl.classList.add('show');
+      btn.classList.remove('loading');
+      btn.disabled=false;
+      return;
+    }
 
     try{
       var res=await fetch('/.netlify/functions/partner-onboard',{
