@@ -337,6 +337,7 @@ table.t tbody tr.is-open td:first-child{box-shadow:inset 3px 0 0 var(--blue)}
 </aside>
 
 <script src="/admin/admin.js"></script>
+<script src="/deal-url.js"></script>
 <script>
 AdminShell.renderShell('deals');
 
@@ -493,7 +494,7 @@ function renderList() {
 
   var rows = list.map(function (d, i) {
     var slug = AdminShell.slugifyAddress(d.streetAddress + ' ' + d.city + ' ' + d.state);
-    var dealUrl = '/deal.html?id=' + encodeURIComponent(d.id || d.dealCode || slug);
+    var dealUrl = buildDealPath(d);
     var openClass = CURRENT_DRAWER_SLUG === slug ? ' is-open' : '';
 
     return '<tr class="deal-row' + openClass + '" data-deal-idx="' + i + '" title="Click to see buyers sent this deal">'

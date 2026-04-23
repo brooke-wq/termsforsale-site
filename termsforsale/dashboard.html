@@ -146,6 +146,7 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:68px;display:fl
 </div>
 
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script src="/deal-url.js"></script>
 <script>
 var SHEET_ID = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
 var GHL_WEBHOOK = 'https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/1fd6be66-9022-4375-b17a-d7ec2cabe593';
@@ -316,7 +317,7 @@ function dealList(deals,showRemove){
       if(fid)thumb='<img src="https://drive.google.com/thumbnail?id='+fid+'&sz=w200" alt="'+escAttr(d.city)+'" loading="lazy" onerror="this.style.display=\'none\'">';
     }
     var entry=d.entryFee||d.askingPrice;
-    return '<a class="deal-row" href="/deal.html?id='+encodeURIComponent(d.id)+'">'
+    return '<a class="deal-row" href="'+buildDealPath(d)+'">'
       +'<div class="deal-row-thumb">'+thumb+'</div>'
       +'<div class="deal-row-info">'
         +'<div class="deal-row-title">'+(d.nearestMetro||d.city+', '+d.state)+'</div>'

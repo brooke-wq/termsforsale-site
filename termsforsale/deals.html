@@ -1010,6 +1010,7 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </footer>
 
+<script src="/deal-url.js"></script>
 <script>
 // ─── CONFIG ────────────────────────────────────────────────────
 const SHEET_ID  = '1WOB61XBRGlypbtYZYogSRo1sVS3XUagppsTitTwyJsg';
@@ -1239,7 +1240,7 @@ function toggleSave(e,id,el){
 }
 const DEAL_STORE={};
 function storeDeal(d){DEAL_STORE[d.id]=d;}
-function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href='deal.html?id='+encodeURIComponent(id);}
+function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href=d?buildDealPath(d):'/deal.html?id='+encodeURIComponent(id);}
 
 // ─── CARD HTML ─────────────────────────────────────────────────
 function makeCard(d){
@@ -1739,7 +1740,7 @@ function csMakeCard(d){
     ?'<img src="'+csEscape(img)+'" alt="Closed property in '+csEscape(loc)+'" loading="lazy" onerror="this.remove()">'
     :'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
   var typeBadgeCls=creative?'cs-badge cs-badge-creative':'cs-badge cs-badge-cash';
-  return'<a class="cs-card" href="/deal.html?id='+csEscape(d.id)+'">'
+  return'<a class="cs-card" href="'+buildDealPath(d)+'">'
     +'<div class="cs-photo">'+photoHtml
     +'<div class="cs-badges"><span class="cs-badge cs-badge-closed">&#10003; Closed</span>'
     +(d.dealType?'<span class="'+typeBadgeCls+'">'+csEscape(d.dealType)+'</span>':'')
@@ -1962,7 +1963,7 @@ function makeMarkerIcon(deal){
 function makePopup(deal){
   var color=markerColor(deal.dealType);
   var entry=deal.entryFee||deal.askingPrice;
-  var dealUrl=DEAL_BASE+'/deal.html?id='+encodeURIComponent(deal.id);
+  var dealUrl=DEAL_BASE+buildDealPath(deal);
   var loggedIn=!!getUser();
   var dsLower=(deal.dealStatus||'').toLowerCase().trim();
   var pendingChip=dsLower==='assigned with emd'?'<div style="display:inline-block;margin-left:6px;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800;background:#F59E0B;color:#fff;text-transform:uppercase;letter-spacing:.3px">Pending</div>':'';
