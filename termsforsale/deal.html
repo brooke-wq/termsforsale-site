@@ -768,8 +768,12 @@ function renderDeal(d,allDeals){
   const arv=+d.compsArv||+d.aiArvBase||0;
   const entry=+d.entryFee||0;
   const dtl=(d.dealType||'').toLowerCase().trim();
-  const isSubTo=dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl.includes('morby')||dtl==='wrap';
-  const isSF=dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl.includes('morby')||dtl==='wrap';
+  // Stack / Morby Method: senior DSCR loan + second-position seller carry. Rendered in
+  // its own dedicated block below with DSCR-specific fields, so suppress the generic
+  // SubTo/SF sections to avoid duplication.
+  const isStack=dtl.includes('stack')||dtl.includes('morby');
+  const isSubTo=!isStack&&(dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl==='wrap');
+  const isSF=!isStack&&(dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl==='wrap');
   const loggedIn=!!getUser();
 
   // PHOTO GRID — placeholder, filled by loadDealPhotos() after render
@@ -895,6 +899,54 @@ function renderDeal(d,allDeals){
   if(solarPaddedRows.length%2!==0) solarPaddedRows.push({l:'',v:''});
   const solarTableHtml=solarRows.length?`<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>${solarHeading}</div><div class="terms-grid">${solarPaddedRows.map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div></div>`:'';
 
+  // STACK / MORBY METHOD — senior DSCR loan stacked with a second-position seller carry.
+  // The DSCR side (new bank debt) lives in its own Notion fields; the seller-carry side
+  // reuses the SF* fields. Rendered only when isStack so Cash/SubTo/SF deals are untouched.
+  var stackStructureHtml='';
+  var cashFlowHtml='';
+  if(isStack){
+    var stackRows=[];
+    if(d.askingPrice) stackRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    if(d.cashToSeller){
+      var cashPct=d.askingPrice?' ('+Math.round((+d.cashToSeller/+d.askingPrice)*100)+'%)':'';
+      stackRows.push({l:'Cash to Seller',v:fc(d.cashToSeller)+cashPct});
+    }
+    if(d.dscrLoanAmount){
+      var ltvSuffix=d.dscrLtv?' ('+fmtRate(d.dscrLtv)+' LTV)':'';
+      stackRows.push({l:'DSCR Loan',v:fc(d.dscrLoanAmount)+ltvSuffix});
+    }
+    if(d.sfLoanAmount){
+      var carrySuffix=d.sfRate?' at '+fmtRate(d.sfRate)+' IO':'';
+      stackRows.push({l:'Seller Carry (2nd Position)',v:fc(d.sfLoanAmount)+carrySuffix});
+    }
+    if(d.sfPayment) stackRows.push({l:'Monthly Seller Payment',v:fc(d.sfPayment)+'/mo'});
+    if(d.sfBalloon && d.sfBalloon!=='—') stackRows.push({l:'Balloon Term',v:d.sfBalloon});
+    if(entry) stackRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(d.netToBuyer) stackRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
+    if(stackRows.length%2!==0) stackRows.push({l:'',v:''});
+    if(stackRows.length){
+      stackStructureHtml='<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Stack Method Structure</div><div class="terms-grid">'+stackRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>';
+    }
+
+    var cfRows=[];
+    if(d.annualNoi) cfRows.push({l:'Annual NOI',v:fc(d.annualNoi)});
+    if(d.capRate){
+      var capNum=+d.capRate;
+      cfRows.push({l:'Cap Rate',v:(capNum<1?(capNum*100).toFixed(2):capNum.toFixed(2))+'%'});
+    }
+    if(d.dscrRatio){
+      var drNum=+d.dscrRatio;
+      cfRows.push({l:'DSCR Ratio',v:drNum.toFixed(2)});
+    }
+    if(d.netCashflow) cfRows.push({l:'True Net Cash Flow',v:fc(d.netCashflow)+'/mo'});
+    if(d.rentFinal) cfRows.push({l:'Gross Monthly Rents',v:fc(d.rentFinal)+'/mo'});
+    if(d.occupancy) cfRows.push({l:'Occupancy',v:d.occupancy});
+    if(cfRows.length%2!==0) cfRows.push({l:'',v:''});
+    if(cfRows.length){
+      cashFlowHtml='<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>Cash Flow Analysis</div><div class="terms-grid">'+cfRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>';
+    }
+  }
+
   // HIGHLIGHTS
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
   const hlHtml=hlItems.length?`<div class="highlights">${hlItems.map(h=>`<div class="hl-item"><div class="hl-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:13px;color:var(--text-mid);line-height:1.55">${h}</span></div>`).join('')}</div>`:'';
@@ -1011,6 +1063,8 @@ function renderDeal(d,allDeals){
       <div id="tab-terms" class="tab-panel on">
         <div class="terms-map-grid" style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
           <div>${termsTableHtml}
+            ${stackStructureHtml}
+            ${cashFlowHtml}
             ${solarTableHtml}
             <div id="insurance-quote" style="margin-top:12px;background:linear-gradient(135deg,#EBF8FF,#E6F9F0);border:1px solid #bee3f8;border-radius:var(--r);padding:16px;display:none">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
