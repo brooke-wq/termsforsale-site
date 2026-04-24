@@ -298,7 +298,9 @@ footer{background:var(--navy);padding:44px 40px 0}
 .shc-badge-type{background:rgba(255,255,255,.06);color:#CBD5E1;border:1px solid rgba(255,255,255,.15)}
 .shc-addr{font-size:22px;font-weight:800;margin:0;line-height:1.15;font-family:'Domine',serif;letter-spacing:.2px}
 .shc-sub{font-size:13px;color:#94A3B8}
-.shc-sub .shc-lock-btn{margin-left:6px;background:transparent;border:0;color:#29ABE2;font-size:12px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.shc-lock-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--orange);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-family:var(--font);font-size:12px;font-weight:800;letter-spacing:.3px;cursor:pointer;box-shadow:0 3px 10px rgba(247,148,29,.35);transition:background .15s,transform .15s,box-shadow .15s}
+.shc-lock-btn:hover{background:var(--orange-dark);transform:translateY(-1px);box-shadow:0 5px 14px rgba(247,148,29,.45)}
+.shc-lock-btn svg{flex-shrink:0}
 .shc-specs{font-size:12px;color:#94A3B8;margin-top:4px}
 .shc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
 .shc-metric{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px}
@@ -1009,7 +1011,7 @@ function renderDeal(d,allDeals){
   else if(ptRaw) propTypeBadge=ptRaw.toUpperCase();
   var addrLine1=(loggedIn&&d.streetAddress)?d.streetAddress:((d.city||'')+(d.state?', '+d.state:''));
   var addrLine2=(loggedIn&&d.streetAddress)?((d.city||'')+(d.state?', '+d.state:'')+(d.zip?' '+d.zip:'')):(d.zip?d.zip:'');
-  var addrLockCta=(!loggedIn&&d.streetAddress)?'<button class="shc-lock-btn" onclick="openAuth(\'signup\')">Unlock full address</button>':'';
+  var addrLockCta=(!loggedIn&&d.streetAddress)?'<button class="shc-lock-btn" onclick="openAuth(\'signup\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Unlock Full Address</button>':'';
   var sqftNum=d.sqft?parseInt(String(d.sqft).replace(/[^0-9]/g,''),10):NaN;
   var specsParts=[];
   if(d.beds) specsParts.push(d.beds+' bd');
@@ -1079,8 +1081,9 @@ function renderDeal(d,allDeals){
     +      (propTypeBadge?'<span class="shc-badge shc-badge-type">'+propTypeBadge+'</span>':'')
     +    '</div>'
     +    '<div><h1 class="shc-addr">'+addrLine1+'</h1>'
-    +      (addrLine2?'<div class="shc-sub">'+addrLine2+addrLockCta+'</div>':(addrLockCta?'<div class="shc-sub">'+addrLockCta+'</div>':''))
+    +      (addrLine2?'<div class="shc-sub">'+addrLine2+'</div>':'')
     +      specsLine
+    +      addrLockCta
     +    '</div>'
     +    '<div class="shc-metrics">'+metricsHtml+'</div>'
     +  '</div>'
