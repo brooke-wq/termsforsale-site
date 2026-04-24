@@ -8,19 +8,23 @@
  * 2. Posts a note on the contact with the full inquiry details
  * 3. Tags the contact (Website Inquiry, Active Buyer, TFS Buyer,
  *    inquiry-[dealId])
- * 4. Sends SMS notification to the TFS main line (+14806373117)
- * 5. Sends internal notification email to info@termsforsale.com
- * 6. Sends confirmation email to the buyer with every submitted field
+ * 4. Creates a GHL opportunity in the "New Engaged Lead" stage of the
+ *    Buyer Inquiries pipeline (mirrors submit-offer.js behavior).
+ * 5. Sends SMS notification to the team line (+14807191175)
+ * 6. Sends internal notification email to info@termsforsale.com
+ * 7. Sends confirmation email to the buyer with every submitted field
  *
  * The response body includes a `diagnostic` block summarising what
  * actually happened so callers (browser Network tab, Netlify logs) can
  * see which steps succeeded and which were skipped.
  *
- * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, BROOKE_PHONE (optional override
- *           — defaults to the main TFS line)
+ * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, GHL_PIPELINE_ID_BUYER,
+ *           GHL_STAGE_NEW_ENGAGED_LEAD (optional — if unset, looked up
+ *           by name from the pipeline at runtime), BROOKE_PHONE
+ *           (optional override — defaults to the team line)
  */
 
-const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } = require('./_ghl');
+const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields, getStageIdByName } = require('./_ghl');
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
@@ -210,6 +214,7 @@ exports.handler = async (event) => {
     fieldsWritten: [],
     fieldsSkipped: [],
     customFieldsStatus: null,
+    opportunityStatus: null,
     smsStatus: null,
     internalEmailStatus: null,
     emailStatus: null,
@@ -319,6 +324,58 @@ exports.handler = async (event) => {
   } catch (e) {
     console.warn('[submit-inquiry] custom fields write failed:', e.message);
     diagnostic.errors.push('customFields: ' + e.message);
+  }
+
+  // 2c. Create GHL opportunity in the Buyer Inquiries pipeline at the
+  // "New Engaged Lead" stage. Mirrors submit-offer.js behavior. Stage
+  // ID can be provided via GHL_STAGE_NEW_ENGAGED_LEAD env var; if
+  // unset we look it up by name at runtime via getStageIdByName.
+  var pipelineId = process.env.GHL_PIPELINE_ID_BUYER;
+  if (pipelineId) {
+    try {
+      var stageId = process.env.GHL_STAGE_NEW_ENGAGED_LEAD;
+      if (!stageId) {
+        try {
+          stageId = await getStageIdByName(pipelineId, 'New Engaged Lead');
+        } catch (e) {
+          console.warn('[submit-inquiry] stage lookup failed:', e.message);
+          diagnostic.errors.push('stageLookup: ' + e.message);
+        }
+      }
+      if (stageId) {
+        var oppName = 'Inquiry — ' + fullAddress + ' — ' + buyerName;
+        if (dealType) oppName += ' (' + dealType + ')';
+        var oppBody = {
+          pipelineId: pipelineId,
+          pipelineStageId: stageId,
+          locationId: locationId,
+          contactId: contactId,
+          name: oppName,
+          status: 'open',
+          monetaryValue: 0,
+        };
+        var oppRes = await fetch(GHL_BASE + '/opportunities/', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + apiKey,
+            'Version': '2021-07-28',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(oppBody),
+        });
+        diagnostic.opportunityStatus = oppRes.status;
+        if (oppRes.status >= 400) {
+          var errText = await oppRes.text();
+          console.warn('[submit-inquiry] opportunity create -> ' + oppRes.status, errText);
+          diagnostic.errors.push('opportunity -> ' + oppRes.status);
+        } else {
+          console.log('[submit-inquiry] opportunity created for ' + buyerName + ' deal=' + dealId);
+        }
+      }
+    } catch (e) {
+      console.warn('[submit-inquiry] opportunity creation failed:', e.message);
+      diagnostic.errors.push('opportunity: ' + e.message);
+    }
   }
 
   // 3. SMS notification to the team line
