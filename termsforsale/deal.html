@@ -1060,13 +1060,10 @@ function renderDeal(d,allDeals){
       {l:'Wrap Rate',     v:d.sfRate?fmtRate(d.sfRate):'—'}
     ];
   } else { // Cash
-    var eqSpread=(arv && +d.askingPrice)?arv-+d.askingPrice:0;
     heroMetrics=[
       {l:'Purchase Price',v:fcK(d.askingPrice)},
-      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
       {l:'ARV',           v:fcK(arv)},
-      {l:'Est. Rent',     v:d.rentFinal?fcK(d.rentFinal)+'/mo':'—'},
-      {l:'Equity Spread', v:eqSpread>0?fcK(eqSpread):'—',cls:eqSpread>0?'green':''}
+      {l:'Est. Rent',     v:d.rentFinal?fcK(d.rentFinal)+'/mo':'—'}
     ];
   }
   var metricsHtml=heroMetrics.map(function(m){
