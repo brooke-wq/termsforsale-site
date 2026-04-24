@@ -118,6 +118,20 @@ exports.handler = async (event) => {
     return respond(400, { error: 'Missing contactId or dealId' });
   }
 
+  var diagnostic = {
+    contactId: contactId,
+    dealId: dealId,
+    noteStatus: null,
+    tagStatus: null,
+    fieldsWritten: [],
+    fieldsSkipped: [],
+    customFieldsStatus: null,
+    opportunityStatus: null,
+    smsStatus: null,
+    emailStatus: null,
+    errors: [],
+  };
+
   // Verify contact
   var contactRes = await getContact(apiKey, contactId);
   if (contactRes.status >= 400) return respond(401, { error: 'Invalid contact' });
@@ -160,11 +174,20 @@ exports.handler = async (event) => {
     'Source: Terms For Sale Website'
   ].filter(Boolean).join('\n');
 
-  // 2. Post note + add tags in parallel
-  await Promise.all([
-    postNote(apiKey, contactId, noteLines),
-    addTags(apiKey, contactId, ['Offer Submitted', 'Active Buyer', 'offer-' + dealId.substring(0, 8)])
-  ]);
+  // 2. Post note + add tags in parallel, capture statuses
+  try {
+    var ntResults = await Promise.all([
+      postNote(apiKey, contactId, noteLines),
+      addTags(apiKey, contactId, ['Offer Submitted', 'Active Buyer', 'offer-' + dealId.substring(0, 8)])
+    ]);
+    diagnostic.noteStatus = ntResults[0].status;
+    diagnostic.tagStatus  = ntResults[1].status;
+    if (ntResults[0].status >= 400) diagnostic.errors.push('postNote -> ' + ntResults[0].status);
+    if (ntResults[1].status >= 400) diagnostic.errors.push('addTags -> ' + ntResults[1].status);
+  } catch (e) {
+    console.warn('[submit-offer] note/tag failed:', e.message);
+    diagnostic.errors.push('note/tag: ' + e.message);
+  }
 
   // 2b. Write the 4 contact custom fields Brooke's templates expect
   // ({{contact.offer_amount}}, {{contact.type_of_deal}},
@@ -185,28 +208,31 @@ exports.handler = async (event) => {
       deal_id:                dealId        || '',   // Notion Deal ID (e.g. PHX-001)
     };
     var cfPayload = [];
-    var missing = [];
     OFFER_CUSTOM_FIELD_KEYS.forEach(function (k) {
       var id = cfMap[k];
       if (id) {
         cfPayload.push({ id: id, value: values[k] });
+        diagnostic.fieldsWritten.push(k);
       } else if (values[k]) {
-        missing.push(k);
+        diagnostic.fieldsSkipped.push(k);
       }
     });
     if (cfPayload.length) {
       var cfRes = await updateCustomFields(apiKey, contactId, cfPayload);
+      diagnostic.customFieldsStatus = cfRes.status;
       if (cfRes.status >= 400) {
         console.warn('[submit-offer] custom fields update -> ' + cfRes.status, JSON.stringify(cfRes.body));
+        diagnostic.errors.push('updateCustomFields -> ' + cfRes.status);
       } else {
         console.log('[submit-offer] wrote ' + cfPayload.length + ' custom fields to contact=' + contactId);
       }
     }
-    if (missing.length) {
-      console.warn('[submit-offer] custom-field keys not found on location, skipped:', missing.join(', '));
+    if (diagnostic.fieldsSkipped.length) {
+      console.warn('[submit-offer] custom-field keys not found on location, skipped:', diagnostic.fieldsSkipped.join(', '));
     }
   } catch (e) {
     console.warn('[submit-offer] custom fields write failed:', e.message);
+    diagnostic.errors.push('customFields: ' + e.message);
   }
 
   // 3. Create GHL opportunity (if pipeline is configured)
@@ -237,14 +263,17 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify(oppBody)
       });
+      diagnostic.opportunityStatus = oppRes.status;
       if (oppRes.status >= 400) {
         var errText = await oppRes.text();
         console.warn('[submit-offer] opportunity create -> ' + oppRes.status, errText);
+        diagnostic.errors.push('opportunity -> ' + oppRes.status);
       } else {
         console.log('[submit-offer] opportunity created for ' + buyerName + ' amount=' + (amount || 'n/a'));
       }
     } catch (e) {
       console.warn('[submit-offer] opportunity creation failed:', e.message);
+      diagnostic.errors.push('opportunity: ' + e.message);
     }
   }
 
@@ -258,9 +287,11 @@ exports.handler = async (event) => {
     if (coe) sms += ', close ' + coe;
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
-      await sendSMS(apiKey, locationId, brookePhone, sms);
+      var smsRes = await sendSMS(apiKey, locationId, brookePhone, sms);
+      diagnostic.smsStatus = smsRes && smsRes.status ? smsRes.status : 'sent';
     } catch (e) {
       console.warn('[submit-offer] Brooke SMS failed:', e.message);
+      diagnostic.errors.push('brookeSMS: ' + e.message);
     }
   }
 
@@ -304,21 +335,25 @@ exports.handler = async (event) => {
         + '</div></div>';
 
       var emailRes = await sendEmail(apiKey, contactId, 'Offer received — ' + location, html);
+      diagnostic.emailStatus = emailRes.status;
       if (emailRes.status >= 400) {
         console.warn('[submit-offer] buyer email -> ' + emailRes.status, JSON.stringify(emailRes.body));
+        diagnostic.errors.push('buyerEmail -> ' + emailRes.status);
       } else {
         console.log('[submit-offer] confirmation email sent to ' + buyerEmail);
       }
     } catch (e) {
       console.warn('[submit-offer] buyer email failed:', e.message);
+      diagnostic.errors.push('buyerEmail: ' + e.message);
     }
   } else {
     console.warn('[submit-offer] no buyer email on contact — skipping confirmation send');
+    diagnostic.emailStatus = 'skipped-no-email';
   }
 
-  console.log('[submit-offer] contact=' + contactId + ' deal=' + dealId + ' amount=' + amount + ' type=' + typeOfDeal + ' entry=' + entryFee + ' coe=' + coe);
+  console.log('[submit-offer] contact=' + contactId + ' deal=' + dealId + ' amount=' + amount + ' type=' + typeOfDeal + ' entry=' + entryFee + ' coe=' + coe + ' diagnostic=' + JSON.stringify(diagnostic));
 
-  return respond(200, { ok: true });
+  return respond(200, { ok: diagnostic.errors.length === 0, diagnostic: diagnostic });
 };
 
 function row(label, value) {
