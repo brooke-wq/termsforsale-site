@@ -87,21 +87,6 @@ nav{background:var(--white);border-bottom:1px solid var(--border);height:70px;di
 .lb-strip img.on{opacity:1;border-color:var(--blue)}
 
 /* DEAL HEADER */
-.deal-header{margin-bottom:20px}
-.deal-price-row{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:4px}
-.deal-price{font-size:32px;font-weight:800;color:var(--text)}
-.deal-specs-row{display:flex;align-items:center;gap:20px;margin-bottom:6px;flex-wrap:wrap}
-.deal-spec{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-mid);font-weight:500}
-.deal-spec svg{color:var(--text-light)}
-.deal-spec strong{font-weight:700;color:var(--text)}
-.deal-addr{font-size:13px;color:var(--text-light);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.deal-addr svg{color:var(--blue);flex-shrink:0}
-.deal-addr-locked{color:var(--text-mid)}
-.view-full-addr-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;text-decoration:none;line-height:1}
-.view-full-addr-btn:hover{background:var(--blue);color:#fff}
-.view-full-addr-btn svg{color:currentColor}
-.deal-refi-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--blue-light);border-radius:8px;font-size:12px;color:var(--blue-dark);margin-bottom:16px;font-weight:500}
-.deal-refi-bar svg{color:var(--blue);flex-shrink:0}
 
 /* TAGS ROW */
 .tags-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
@@ -313,6 +298,7 @@ footer{background:var(--navy);padding:44px 40px 0}
 .shc-addr{font-size:22px;font-weight:800;margin:0;line-height:1.15;font-family:'Domine',serif;letter-spacing:.2px}
 .shc-sub{font-size:13px;color:#94A3B8}
 .shc-sub .shc-lock-btn{margin-left:6px;background:transparent;border:0;color:#29ABE2;font-size:12px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.shc-specs{font-size:12px;color:#94A3B8;margin-top:4px}
 .shc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
 .shc-metric{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px}
 .shc-metric-label{font-size:9px;font-weight:700;color:#94A3B8;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
@@ -808,12 +794,14 @@ function renderDeal(d,allDeals){
   const dsRaw=(d.dealStatus||'').toLowerCase().trim();
   const dsIsPending=dsRaw==='assigned with emd';
   const dsIsClosed=dsRaw==='closed';
-  // Stack / Morby Method: senior DSCR loan + second-position seller carry. Rendered in
-  // its own dedicated block below with DSCR-specific fields, so suppress the generic
-  // SubTo/SF sections to avoid duplication.
+  // Deal-type flags — mutually exclusive. Stack/Morby first (it's a named variant
+  // of Hybrid), then everything else. isCash is the default when nothing else matches.
   const isStack=dtl.includes('stack')||dtl.includes('morby');
-  const isSubTo=!isStack&&(dtl==='subto'||dtl==='subject to'||dtl==='sub-to'||dtl==='hybrid'||dtl==='wrap');
-  const isSF=!isStack&&(dtl==='seller finance'||dtl==='seller financing'||dtl==='sf'||dtl==='hybrid'||dtl==='wrap');
+  const isHybrid=!isStack&&dtl==='hybrid';
+  const isWrap=!isStack&&!isHybrid&&dtl==='wrap';
+  const isSubTo=!isStack&&!isHybrid&&!isWrap&&(dtl==='subto'||dtl==='subject to'||dtl==='sub-to');
+  const isSF=!isStack&&!isHybrid&&!isWrap&&!isSubTo&&(dtl==='seller finance'||dtl==='seller financing'||dtl==='sf');
+  const isCash=!isStack&&!isHybrid&&!isWrap&&!isSubTo&&!isSF;
   const loggedIn=!!getUser();
 
   // PHOTO GRID — placeholder, filled by loadDealPhotos() after render
@@ -832,33 +820,6 @@ function renderDeal(d,allDeals){
   ].filter(Boolean);
 
   const tagsHtml=tagItems.map(t=>`<span class="tag ${t.cls||''}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg>${t.label}</span>`).join('');
-
-  // TERMS TABLE — structured for investor readability
-  const termRows=[];
-
-  // Deal overview: what you're buying and what it costs to get in
-  termRows.push({l:'Asking Price',v:fc(d.askingPrice)});
-  termRows.push({l:'Deal Type',v:d.dealType||'—'});
-  termRows.push({l:'Entry Fee',v:entry?fc(entry)+' + CC/TC':'—'});
-  if(arv) termRows.push({l:'ARV',v:fc(arv)});
-
-  // SubTo section — existing mortgage being taken over
-  if(isSubTo){
-    if(d.subtoLoanBalance) termRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
-    if(d.piti) termRows.push({l:'PITI (est)',v:fc(d.piti)+'/mo'});
-    if(d.subtoRate) termRows.push({l:'APR',v:fmtRate(d.subtoRate)});
-    if(d.subtoLoanMaturity) termRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity});
-    if(d.subToBalloon && d.subToBalloon!=='—') termRows.push({l:'Balloon',v:d.subToBalloon});
-  }
-
-  // Seller Finance section — new financing from seller
-  if(isSF){
-    if(d.sfLoanAmount) termRows.push({l:'Seller Finance Amount',v:fc(d.sfLoanAmount)});
-    if(d.sfPayment) termRows.push({l:'Principal & Interest',v:fc(d.sfPayment)+'/mo'});
-    if(d.sfRate) termRows.push({l:'Interest Rate',v:fmtRate(d.sfRate)});
-    if(d.sfTerm) termRows.push({l:'Term',v:d.sfTerm});
-    if(d.sfBalloon && d.sfBalloon!=='—') termRows.push({l:'Balloon',v:d.sfBalloon});
-  }
 
   // Solar section — solar lien / loan / lease shown as a SEPARATE block
   // below the main loan terms so the existing-loan and solar details don't
@@ -927,11 +888,6 @@ function renderDeal(d,allDeals){
     }
   }
 
-  // Pad to even number for 2-column grid
-  if(termRows.length%2!==0) termRows.push({l:'',v:''});
-
-  const termsTableHtml=`<div class="terms-grid">${termRows.filter(r=>r.l||r.v).map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}${termRows.length%2!==0?'<div class="term-item empty-cell"></div>':''}</div>`;
-
   // Solar block — rendered as its own grid with a heading so it doesn't blend
   // with the existing-loan rows above. Only appears when solarRows has entries.
   var solarHeading=solarKind?'Solar '+solarKind:'Solar';
@@ -939,102 +895,199 @@ function renderDeal(d,allDeals){
   if(solarPaddedRows.length%2!==0) solarPaddedRows.push({l:'',v:''});
   const solarTableHtml=solarRows.length?`<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>${solarHeading}</div><div class="terms-grid">${solarPaddedRows.map(r=>`<div class="term-item${!r.l?' empty-cell':''}"><div class="term-label">${r.l}</div><div class="term-value ${r.v==='—'?'empty':''}">${r.v}</div></div>`).join('')}</div></div>`:'';
 
-  // STACK / MORBY METHOD — senior DSCR loan stacked with a second-position seller carry.
-  // The DSCR side (new bank debt) lives in its own Notion fields; the seller-carry side
-  // reuses the SF* fields. Rendered only when isStack so Cash/SubTo/SF deals are untouched.
-  var stackStructureHtml='';
-  var cashFlowHtml='';
+  // STRUCTURE BLOCK — per-deal-type breakdown of the numbers. Header + rows vary
+  // by type. Fields the type doesn't use are simply omitted.
+  var structureRows=[];
+  var structureHeading='Deal Structure';
   if(isStack){
-    var stackRows=[];
-    if(d.askingPrice) stackRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    structureHeading='Stack Method Structure';
+    if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
     if(d.cashToSeller){
       var cashPct=d.askingPrice?' ('+Math.round((+d.cashToSeller/+d.askingPrice)*100)+'%)':'';
-      stackRows.push({l:'Cash to Seller',v:fc(d.cashToSeller)+cashPct});
+      structureRows.push({l:'Cash to Seller',v:fc(d.cashToSeller)+cashPct});
     }
     if(d.dscrLoanAmount){
       var ltvSuffix=d.dscrLtv?' ('+fmtRate(d.dscrLtv)+' LTV)':'';
-      stackRows.push({l:'DSCR Loan',v:fc(d.dscrLoanAmount)+ltvSuffix});
+      structureRows.push({l:'DSCR Loan',v:fc(d.dscrLoanAmount)+ltvSuffix});
     }
     if(d.sfLoanAmount){
       var carrySuffix=d.sfRate?' at '+fmtRate(d.sfRate)+' IO':'';
-      stackRows.push({l:'Seller Carry (2nd Position)',v:fc(d.sfLoanAmount)+carrySuffix});
+      structureRows.push({l:'Seller Carry (2nd Position)',v:fc(d.sfLoanAmount)+carrySuffix});
     }
-    if(d.sfPayment) stackRows.push({l:'Monthly Seller Payment',v:fc(d.sfPayment)+'/mo'});
-    if(d.sfBalloon && d.sfBalloon!=='—') stackRows.push({l:'Balloon Term',v:d.sfBalloon});
-    if(entry) stackRows.push({l:'Assignment Fee',v:fc(entry)});
-    if(d.netToBuyer) stackRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
-    if(stackRows.length%2!==0) stackRows.push({l:'',v:''});
-    if(stackRows.length){
-      stackStructureHtml='<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Stack Method Structure</div><div class="terms-grid">'+stackRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>';
+    if(d.sfPayment) structureRows.push({l:'Monthly Seller Payment',v:fc(d.sfPayment)+'/mo'});
+    if(d.sfBalloon && d.sfBalloon!=='—') structureRows.push({l:'Balloon Term',v:d.sfBalloon});
+    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
+  } else if(isSubTo){
+    structureHeading='Subject To Structure';
+    if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)+' + CC/TC'});
+    if(d.subtoLoanBalance) structureRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
+    if(d.piti) structureRows.push({l:'PITI',v:fc(d.piti)+'/mo'});
+    if(d.subtoRate) structureRows.push({l:'Interest Rate',v:fmtRate(d.subtoRate)});
+    if(d.subtoLoanMaturity) structureRows.push({l:'Loan Maturity',v:d.subtoLoanMaturity});
+    if(d.subToBalloon && d.subToBalloon!=='—') structureRows.push({l:'Balloon',v:d.subToBalloon});
+  } else if(isSF){
+    structureHeading='Seller Finance Structure';
+    if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    if(d.cashToSeller) structureRows.push({l:'Down Payment',v:fc(d.cashToSeller)});
+    if(d.sfLoanAmount) structureRows.push({l:'SF Loan Amount',v:fc(d.sfLoanAmount)});
+    if(d.sfRate) structureRows.push({l:'Interest Rate',v:fmtRate(d.sfRate)});
+    if(d.sfTerm) structureRows.push({l:'Term',v:d.sfTerm});
+    if(d.sfPayment) structureRows.push({l:'Monthly Payment',v:fc(d.sfPayment)+'/mo'});
+    if(d.sfBalloon && d.sfBalloon!=='—') structureRows.push({l:'Balloon',v:d.sfBalloon});
+    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
+  } else if(isHybrid){
+    structureHeading='Hybrid Structure';
+    if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(d.subtoLoanBalance) structureRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
+    if(d.piti) structureRows.push({l:'PITI',v:fc(d.piti)+'/mo'});
+    if(d.subtoRate) structureRows.push({l:'SubTo Rate',v:fmtRate(d.subtoRate)});
+    if(d.subToBalloon && d.subToBalloon!=='—') structureRows.push({l:'SubTo Balloon',v:d.subToBalloon});
+    if(d.sfLoanAmount) structureRows.push({l:'Seller Carry',v:fc(d.sfLoanAmount)});
+    if(d.sfRate) structureRows.push({l:'Carry Rate',v:fmtRate(d.sfRate)});
+    if(d.sfTerm) structureRows.push({l:'Carry Term',v:d.sfTerm});
+    if(d.sfPayment) structureRows.push({l:'Carry Payment',v:fc(d.sfPayment)+'/mo'});
+    if(d.sfBalloon && d.sfBalloon!=='—') structureRows.push({l:'Carry Balloon',v:d.sfBalloon});
+    if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
+  } else if(isWrap){
+    structureHeading='Wrap Structure';
+    if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(d.subtoLoanBalance) structureRows.push({l:'Existing Loan (Wrapped)',v:fc(d.subtoLoanBalance)});
+    if(d.piti) structureRows.push({l:'Underlying PITI',v:fc(d.piti)+'/mo'});
+    if(d.subtoRate) structureRows.push({l:'Underlying Rate',v:fmtRate(d.subtoRate)});
+    if(d.sfLoanAmount) structureRows.push({l:'Wrap Note Amount',v:fc(d.sfLoanAmount)});
+    if(d.sfRate) structureRows.push({l:'Wrap Rate',v:fmtRate(d.sfRate)});
+    if(d.sfPayment) structureRows.push({l:'Wrap Payment',v:fc(d.sfPayment)+'/mo'});
+    if(d.sfBalloon && d.sfBalloon!=='—') structureRows.push({l:'Balloon',v:d.sfBalloon});
+    if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
+  } else { // Cash
+    structureHeading='Cash Deal Summary';
+    if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
+    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)+' + CC/TC'});
+    if(arv) structureRows.push({l:'ARV',v:fc(arv)});
+    if(arv && d.askingPrice){
+      var eqAmt=arv-+d.askingPrice;
+      if(eqAmt>0) structureRows.push({l:'Equity',v:fc(eqAmt)});
     }
-
-    var cfRows=[];
-    if(d.annualNoi) cfRows.push({l:'Annual NOI',v:fc(d.annualNoi)});
-    if(d.capRate){
-      var capNum=+d.capRate;
-      cfRows.push({l:'Cap Rate',v:(capNum<1?(capNum*100).toFixed(2):capNum.toFixed(2))+'%'});
-    }
-    if(d.dscrRatio){
-      var drNum=+d.dscrRatio;
-      cfRows.push({l:'DSCR Ratio',v:drNum.toFixed(2)});
-    }
-    if(d.netCashflow) cfRows.push({l:'True Net Cash Flow',v:fc(d.netCashflow)+'/mo'});
-    if(d.rentFinal) cfRows.push({l:'Gross Monthly Rents',v:fc(d.rentFinal)+'/mo'});
-    if(d.occupancy) cfRows.push({l:'Occupancy',v:d.occupancy});
-    if(cfRows.length%2!==0) cfRows.push({l:'',v:''});
-    if(cfRows.length){
-      cashFlowHtml='<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>Cash Flow Analysis</div><div class="terms-grid">'+cfRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>';
-    }
+    if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
   }
+  if(structureRows.length%2!==0) structureRows.push({l:'',v:''});
+  var structureHtml=structureRows.filter(function(r){return r.l||r.v;}).length?'<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>'+structureHeading+'</div><div class="terms-grid">'+structureRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>':'';
 
-  // STACK HERO CARD — photo on left, status/address/metrics/CTA card on right.
-  // Replaces the default photo-grid + deal-header + tags-row for Stack deals only.
-  var stackHeroHtml='';
+  // CASH FLOW ANALYSIS — renders whenever any of these fields are populated.
+  // Works for Stack (NOI/Cap/DSCR/etc.) and for any deal that has rent + occupancy data.
+  var cfRows=[];
+  if(d.annualNoi) cfRows.push({l:'Annual NOI',v:fc(d.annualNoi)});
+  if(d.capRate){
+    var capNum=+d.capRate;
+    cfRows.push({l:'Cap Rate',v:(capNum<1?(capNum*100).toFixed(2):capNum.toFixed(2))+'%'});
+  }
+  if(d.dscrRatio){
+    var drNum=+d.dscrRatio;
+    cfRows.push({l:'DSCR Ratio',v:drNum.toFixed(2)});
+  }
+  if(d.netCashflow) cfRows.push({l:'True Net Cash Flow',v:fc(d.netCashflow)+'/mo'});
+  if(d.rentFinal) cfRows.push({l:'Gross Monthly Rents',v:fc(d.rentFinal)+'/mo'});
+  if(d.occupancy) cfRows.push({l:'Occupancy',v:d.occupancy});
+  if(cfRows.length%2!==0) cfRows.push({l:'',v:''});
+  var cashFlowHtml=cfRows.length?'<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>Cash Flow Analysis</div><div class="terms-grid">'+cfRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>':'';
+
+  // HERO CARD — photo on left, navy card on right with status + address + 5 metric tiles.
+  // Universal for every deal type; metric mix varies.
+  var statusLabel='AVAILABLE', statusCls='shc-badge-available';
+  if(dsIsPending){ statusLabel='PENDING'; statusCls='shc-badge-pending'; }
+  else if(dsIsClosed){ statusLabel='CLOSED'; statusCls='shc-badge-closed'; }
+  var ptRaw=(d.propertyType||'').toString();
+  var ptLower=ptRaw.toLowerCase();
+  var propTypeBadge=ptRaw;
+  if(/sfr|single|duplex|triplex|quadplex|fourplex|mfr|multi|condo|town|residential/.test(ptLower)) propTypeBadge='RESIDENTIAL';
+  else if(/commercial|retail|office|industrial|mixed/.test(ptLower)) propTypeBadge='COMMERCIAL';
+  else if(ptRaw) propTypeBadge=ptRaw.toUpperCase();
+  var addrLine1=(loggedIn&&d.streetAddress)?d.streetAddress:((d.city||'')+(d.state?', '+d.state:''));
+  var addrLine2=(loggedIn&&d.streetAddress)?((d.city||'')+(d.state?', '+d.state:'')+(d.zip?' '+d.zip:'')):(d.zip?d.zip:'');
+  var addrLockCta=(!loggedIn&&d.streetAddress)?'<button class="shc-lock-btn" onclick="openAuth(\'signup\')">Unlock full address</button>':'';
+  var sqftNum=d.sqft?parseInt(String(d.sqft).replace(/[^0-9]/g,''),10):NaN;
+  var specsParts=[];
+  if(d.beds) specsParts.push(d.beds+' bd');
+  if(d.baths) specsParts.push(d.baths+' ba');
+  if(!isNaN(sqftNum)) specsParts.push(sqftNum.toLocaleString()+' sqft');
+  var specsLine=specsParts.length?'<div class="shc-specs">'+specsParts.join(' · ')+'</div>':'';
+
+  var heroMetrics;
   if(isStack){
-    // Status badge — derived from Notion "Deal Status"
-    var statusLabel='AVAILABLE', statusCls='shc-badge-available';
-    if(dsIsPending){ statusLabel='PENDING'; statusCls='shc-badge-pending'; }
-    else if(dsIsClosed){ statusLabel='CLOSED'; statusCls='shc-badge-closed'; }
-    // Property-type badge — normalize to RESIDENTIAL / COMMERCIAL where possible
-    var ptRaw=(d.propertyType||'').toString();
-    var ptLower=ptRaw.toLowerCase();
-    var propTypeBadge=ptRaw;
-    if(/sfr|single|duplex|triplex|quadplex|fourplex|mfr|multi|condo|town|residential/.test(ptLower)) propTypeBadge='RESIDENTIAL';
-    else if(/commercial|retail|office|industrial|mixed/.test(ptLower)) propTypeBadge='COMMERCIAL';
-    else if(ptRaw) propTypeBadge=ptRaw.toUpperCase();
-
-    // Address — show street only when logged in, otherwise city/state (matches existing gate)
-    var addrLine1=(loggedIn&&d.streetAddress)?d.streetAddress:((d.city||'')+(d.state?', '+d.state:''));
-    var addrLine2=(loggedIn&&d.streetAddress)?((d.city||'')+(d.state?', '+d.state:'')+(d.zip?' '+d.zip:'')):(d.zip?d.zip:'');
-    var addrLockCta=(!loggedIn&&d.streetAddress)?'<button class="shc-lock-btn" onclick="openAuth(\'signup\')">Unlock full address</button>':'';
-
-    // Metric tiles — Stack structure numbers at a glance
-    var heroMetrics=[
-      {l:'Purchase Price', v:fcK(d.askingPrice)},
-      {l:'Assignment Fee', v:fcK(entry), cls:'green'},
-      {l:'Down Payment',   v:fcK(d.cashToSeller)},
-      {l:'Seller Carry',   v:fcK(d.sfLoanAmount)},
-      {l:'DSCR Ratio',     v:d.dscrRatio?(+d.dscrRatio).toFixed(2):'—', cls:d.dscrRatio&&+d.dscrRatio>=1.25?'green':''}
+    heroMetrics=[
+      {l:'Purchase Price',v:fcK(d.askingPrice)},
+      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Down Payment',  v:fcK(d.cashToSeller)},
+      {l:'Seller Carry',  v:fcK(d.sfLoanAmount)},
+      {l:'DSCR Ratio',    v:d.dscrRatio?(+d.dscrRatio).toFixed(2):'—',cls:d.dscrRatio&&+d.dscrRatio>=1.25?'green':''}
     ];
-    var metricsHtml=heroMetrics.map(function(m){
-      return '<div class="shc-metric"><div class="shc-metric-label">'+m.l+'</div><div class="shc-metric-value '+(m.cls||'')+'">'+m.v+'</div></div>';
-    }).join('');
-
-    stackHeroHtml=''
-      +'<div class="stack-hero">'
-      +  '<div class="photo-grid" id="photo-grid">'+photoHtml+'</div>'
-      +  '<div class="stack-hero-card">'
-      +    '<div class="shc-badges">'
-      +      '<span class="shc-badge '+statusCls+'">'+statusLabel+'</span>'
-      +      (propTypeBadge?'<span class="shc-badge shc-badge-type">'+propTypeBadge+'</span>':'')
-      +    '</div>'
-      +    '<div><h1 class="shc-addr">'+addrLine1+'</h1>'
-      +      (addrLine2?'<div class="shc-sub">'+addrLine2+addrLockCta+'</div>':(addrLockCta?'<div class="shc-sub">'+addrLockCta+'</div>':''))
-      +    '</div>'
-      +    '<div class="shc-metrics">'+metricsHtml+'</div>'
-      +  '</div>'
-      +'</div>';
+  } else if(isSubTo){
+    heroMetrics=[
+      {l:'Purchase Price',v:fcK(d.askingPrice)},
+      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Existing Loan', v:fcK(d.subtoLoanBalance)},
+      {l:'PITI',          v:d.piti?fcK(d.piti)+'/mo':'—'},
+      {l:'Interest Rate', v:d.subtoRate?fmtRate(d.subtoRate):'—'}
+    ];
+  } else if(isSF){
+    heroMetrics=[
+      {l:'Purchase Price',v:fcK(d.askingPrice)},
+      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Down Payment',  v:fcK(d.cashToSeller)},
+      {l:'SF Amount',     v:fcK(d.sfLoanAmount)},
+      {l:'Monthly Pmt',   v:d.sfPayment?fcK(d.sfPayment)+'/mo':'—'}
+    ];
+  } else if(isHybrid){
+    var hybridMonthly=(+d.piti||0)+(+d.sfPayment||0);
+    heroMetrics=[
+      {l:'Purchase Price',v:fcK(d.askingPrice)},
+      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Existing Loan', v:fcK(d.subtoLoanBalance)},
+      {l:'Seller Carry',  v:fcK(d.sfLoanAmount)},
+      {l:'Monthly Pmt',   v:hybridMonthly?fcK(hybridMonthly)+'/mo':'—'}
+    ];
+  } else if(isWrap){
+    heroMetrics=[
+      {l:'Purchase Price',v:fcK(d.askingPrice)},
+      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Existing Loan', v:fcK(d.subtoLoanBalance)},
+      {l:'Wrap Amount',   v:fcK(d.sfLoanAmount)},
+      {l:'Wrap Rate',     v:d.sfRate?fmtRate(d.sfRate):'—'}
+    ];
+  } else { // Cash
+    var eqSpread=(arv && +d.askingPrice)?arv-+d.askingPrice:0;
+    heroMetrics=[
+      {l:'Purchase Price',v:fcK(d.askingPrice)},
+      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'ARV',           v:fcK(arv)},
+      {l:'Est. Rent',     v:d.rentFinal?fcK(d.rentFinal)+'/mo':'—'},
+      {l:'Equity Spread', v:eqSpread>0?fcK(eqSpread):'—',cls:eqSpread>0?'green':''}
+    ];
   }
+  var metricsHtml=heroMetrics.map(function(m){
+    return '<div class="shc-metric"><div class="shc-metric-label">'+m.l+'</div><div class="shc-metric-value '+(m.cls||'')+'">'+m.v+'</div></div>';
+  }).join('');
+
+  var heroHtml=''
+    +'<div class="stack-hero">'
+    +  '<div class="photo-grid" id="photo-grid">'+photoHtml+'</div>'
+    +  '<div class="stack-hero-card">'
+    +    '<div class="shc-badges">'
+    +      '<span class="shc-badge '+statusCls+'">'+statusLabel+'</span>'
+    +      (propTypeBadge?'<span class="shc-badge shc-badge-type">'+propTypeBadge+'</span>':'')
+    +    '</div>'
+    +    '<div><h1 class="shc-addr">'+addrLine1+'</h1>'
+    +      (addrLine2?'<div class="shc-sub">'+addrLine2+addrLockCta+'</div>':(addrLockCta?'<div class="shc-sub">'+addrLockCta+'</div>':''))
+    +      specsLine
+    +    '</div>'
+    +    '<div class="shc-metrics">'+metricsHtml+'</div>'
+    +  '</div>'
+    +'</div>';
 
   // HIGHLIGHTS
   const hlItems=[d.highlight1,d.highlight2,d.highlight3].filter(Boolean);
@@ -1111,35 +1164,11 @@ function renderDeal(d,allDeals){
   document.getElementById('app').innerHTML=`
   <div class="main">
     <div class="deal-main">
-      ${isStack ? `${stackHeroHtml}
+      ${heroHtml}
 
       ${statusBannerHtml}
 
-      <div class="tags-row">${tagsHtml}</div>` : `<div class="photo-grid" id="photo-grid">${photoHtml}</div>
-
-      ${statusBannerHtml}
-
-      <div class="deal-header">
-        <div class="deal-price-row">
-          <span class="deal-price">${fc(entry||+d.askingPrice)}</span>
-          ${entry&&entry!==+d.askingPrice?`<span style="font-size:16px;font-weight:600;color:var(--orange)">${fc(d.askingPrice)} asking</span>`:''}
-        </div>
-        <div class="deal-specs-row">
-          ${d.beds?`<div class="deal-spec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/></svg><strong>${d.beds}</strong> beds</div>`:''}
-          ${d.baths?`<div class="deal-spec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"/><path d="M3 7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><strong>${d.baths}</strong> baths</div>`:''}
-          ${d.sqft?`<div class="deal-spec"><strong>${(()=>{const n=parseInt(String(d.sqft).replace(/[^0-9]/g,''));return isNaN(n)?d.sqft:n.toLocaleString();})()}</strong> sqft</div>`:''}
-        </div>
-        <div class="deal-addr">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${loggedIn && d.streetAddress
-            ? `<span>${d.streetAddress+', '+d.city+', '+d.state+(d.zip?' '+d.zip:'')}</span>`
-            : `<span class="deal-addr-locked">${d.city+', '+d.state+(d.zip?' '+d.zip:'')}</span><button class="view-full-addr-btn" onclick="openAuth('signup')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>View full address</button>`
-          }
-        </div>
-        ${d.piti?`<div class="deal-refi-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Est. PITI payment: <strong>${fc(d.piti)}/mo</strong> (existing loan)</div>`:''}
-      </div>
-
-      <div class="tags-row">${tagsHtml}</div>`}
+      <div class="tags-row">${tagsHtml}</div>
 
       <div class="tabs">
         <div class="tabs-inner">
@@ -1153,8 +1182,7 @@ function renderDeal(d,allDeals){
 
       <div id="tab-terms" class="tab-panel on">
         <div class="terms-map-grid" style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
-          <div>${termsTableHtml}
-            ${stackStructureHtml}
+          <div>${structureHtml}
             ${cashFlowHtml}
             ${solarTableHtml}
             <div id="insurance-quote" style="margin-top:12px;background:linear-gradient(135deg,#EBF8FF,#E6F9F0);border:1px solid #bee3f8;border-radius:var(--r);padding:16px;display:none">
