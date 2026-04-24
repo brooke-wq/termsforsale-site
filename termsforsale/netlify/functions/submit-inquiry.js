@@ -2,15 +2,71 @@
  * Submit Inquiry — POST /.netlify/functions/submit-inquiry
  *
  * When a logged-in buyer clicks "Request Info" on a deal page:
- * 1. Posts a note on the contact with the full inquiry details
- * 2. Tags the contact (Website Inquiry, Active Buyer, inquiry-[dealId])
- * 3. Sends SMS notification to Brooke
- * 4. Sends confirmation email to the buyer with every submitted field
+ * 1. Writes deal context (deal_id, property address/city/state) to the
+ *    contact as custom fields so Brooke's GHL notification template can
+ *    render them via {{contact.*}} merge tags.
+ * 2. Posts a note on the contact with the full inquiry details
+ * 3. Tags the contact (Website Inquiry, Active Buyer, TFS Buyer,
+ *    inquiry-[dealId])
+ * 4. Sends SMS notification to Brooke
+ * 5. Sends confirmation email to the buyer with every submitted field
+ *
+ * The response body now includes a `diagnostic` block summarising what
+ * actually happened so callers (browser Network tab, Netlify logs) can
+ * see which steps succeeded and which were skipped.
  *
  * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, BROOKE_PHONE
  */
 
-const { getContact, postNote, addTags, sendSMS, sendEmail } = require('./_ghl');
+const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } = require('./_ghl');
+
+const GHL_BASE = 'https://services.leadconnectorhq.com';
+
+// Inquiry-relevant contact custom fields. Keys match the live GHL schema
+// (Settings → Custom Fields → Contact). Offer-specific keys (offer_amount,
+// type_of_deal, close_date_target, offer__entry_fee, offer_notes) are NOT
+// written here — inquiries shouldn't clobber offer data if the same buyer
+// submits an offer later.
+const INQUIRY_CUSTOM_FIELD_KEYS = [
+  'property_address',
+  'offer__property_city',
+  'offer__property_state',
+  'deal_id',
+];
+
+let CF_MAP_CACHE = null;
+
+async function getLocationCustomFieldMap(apiKey, locationId) {
+  if (CF_MAP_CACHE) return CF_MAP_CACHE;
+  var map = {};
+  try {
+    var res = await fetch(GHL_BASE + '/locations/' + locationId + '/customFields', {
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Accept': 'application/json',
+      },
+    });
+    if (res.status >= 400) {
+      console.warn('[submit-inquiry] custom-field map fetch -> ' + res.status);
+      return map;
+    }
+    var data = await res.json().catch(function () { return {}; });
+    var fields = data.customFields || data.fields || [];
+    fields.forEach(function (f) {
+      var key = f.fieldKey || f.key || f.name;
+      if (key && f.id) {
+        var bare = String(key).replace(/^contact\./, '');
+        map[bare] = f.id;
+        map[key] = f.id;
+      }
+    });
+    CF_MAP_CACHE = map;
+  } catch (e) {
+    console.warn('[submit-inquiry] custom-field map error:', e.message);
+  }
+  return map;
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -37,20 +93,36 @@ exports.handler = async (event) => {
   var dealType     = body.dealType || '';
   var streetAddress= body.streetAddress || '';
   var notes        = body.notes || '';
-  // Form-level buyer info overrides
   var firstName    = (body.firstName || '').trim();
   var lastName     = (body.lastName || '').trim();
   var phone        = (body.phone || '').trim();
   var email        = (body.email || '').trim();
 
+  var diagnostic = {
+    contactId: contactId || null,
+    dealId: dealId || null,
+    noteStatus: null,
+    tagStatus: null,
+    fieldsWritten: [],
+    fieldsSkipped: [],
+    customFieldsStatus: null,
+    smsStatus: null,
+    emailStatus: null,
+    errors: [],
+  };
+
   if (!contactId || !dealId) {
     console.warn('[submit-inquiry] missing required fields:', { contactId: !!contactId, dealId: !!dealId });
-    return respond(400, { error: 'Missing contactId or dealId' });
+    diagnostic.errors.push('Missing contactId or dealId');
+    return respond(400, { error: 'Missing contactId or dealId', diagnostic: diagnostic });
   }
 
   // Verify contact + pull existing fields
   var contactRes = await getContact(apiKey, contactId);
-  if (contactRes.status >= 400) return respond(401, { error: 'Invalid contact' });
+  if (contactRes.status >= 400) {
+    diagnostic.errors.push('getContact -> ' + contactRes.status);
+    return respond(401, { error: 'Invalid contact', diagnostic: diagnostic });
+  }
   var contact = contactRes.body && contactRes.body.contact;
   var ghlFirst = contact ? (contact.firstName || '') : '';
   var ghlLast  = contact ? (contact.lastName  || '') : '';
@@ -84,16 +156,65 @@ exports.handler = async (event) => {
     'Source: Terms For Sale Website'
   ].filter(Boolean).join('\n');
 
-  // 2. Post note + tag in parallel
-  await Promise.all([
-    postNote(apiKey, contactId, noteLines),
-    addTags(apiKey, contactId, [
-      'Website Inquiry',
-      'Active Buyer',
-      'TFS Buyer',
-      'inquiry-' + String(dealId).substring(0, 8)
-    ])
-  ]);
+  // 2. Post note + tag in parallel, capture status of each
+  try {
+    var results = await Promise.all([
+      postNote(apiKey, contactId, noteLines),
+      addTags(apiKey, contactId, [
+        'Website Inquiry',
+        'Active Buyer',
+        'TFS Buyer',
+        'inquiry-' + String(dealId).substring(0, 8)
+      ]),
+    ]);
+    diagnostic.noteStatus = results[0].status;
+    diagnostic.tagStatus  = results[1].status;
+    if (results[0].status >= 400) diagnostic.errors.push('postNote -> ' + results[0].status);
+    if (results[1].status >= 400) diagnostic.errors.push('addTags -> ' + results[1].status);
+  } catch (e) {
+    console.warn('[submit-inquiry] note/tag failed:', e.message);
+    diagnostic.errors.push('note/tag: ' + e.message);
+  }
+
+  // 2b. Write the contact custom fields Brooke's inquiry-notification
+  // template merges. We only write the fields that apply to both
+  // inquiries and offers so inquiry submissions don't overwrite
+  // offer-specific data (offer_amount / type_of_deal / etc.).
+  try {
+    var cfMap = await getLocationCustomFieldMap(apiKey, locationId);
+    var values = {
+      property_address:       streetAddress || '',
+      offer__property_city:   city          || '',
+      offer__property_state:  state         || '',
+      deal_id:                dealId        || '',
+    };
+    var cfPayload = [];
+    INQUIRY_CUSTOM_FIELD_KEYS.forEach(function (k) {
+      var id = cfMap[k];
+      if (id) {
+        cfPayload.push({ id: id, value: values[k] });
+        diagnostic.fieldsWritten.push(k);
+      } else if (values[k]) {
+        diagnostic.fieldsSkipped.push(k);
+      }
+    });
+    if (cfPayload.length) {
+      var cfRes = await updateCustomFields(apiKey, contactId, cfPayload);
+      diagnostic.customFieldsStatus = cfRes.status;
+      if (cfRes.status >= 400) {
+        console.warn('[submit-inquiry] custom fields update -> ' + cfRes.status, JSON.stringify(cfRes.body));
+        diagnostic.errors.push('updateCustomFields -> ' + cfRes.status);
+      } else {
+        console.log('[submit-inquiry] wrote ' + cfPayload.length + ' custom fields to contact=' + contactId);
+      }
+    }
+    if (diagnostic.fieldsSkipped.length) {
+      console.warn('[submit-inquiry] custom-field keys not found on location, skipped:', diagnostic.fieldsSkipped.join(', '));
+    }
+  } catch (e) {
+    console.warn('[submit-inquiry] custom fields write failed:', e.message);
+    diagnostic.errors.push('customFields: ' + e.message);
+  }
 
   // 3. Notify Brooke via SMS
   var brookePhone = process.env.BROOKE_PHONE || '+15167120113';
@@ -103,9 +224,11 @@ exports.handler = async (event) => {
     if (notes) sms += ' — "' + notes.slice(0, 120) + '"';
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
-      await sendSMS(apiKey, locationId, brookePhone, sms);
+      var smsRes = await sendSMS(apiKey, locationId, brookePhone, sms);
+      diagnostic.smsStatus = smsRes && smsRes.status ? smsRes.status : 'sent';
     } catch (e) {
       console.warn('[submit-inquiry] Brooke SMS failed:', e.message);
+      diagnostic.errors.push('brookeSMS: ' + e.message);
     }
   }
 
@@ -140,21 +263,25 @@ exports.handler = async (event) => {
         + '</div></div>';
 
       var emailRes = await sendEmail(apiKey, contactId, 'Inquiry received — ' + location, html);
+      diagnostic.emailStatus = emailRes.status;
       if (emailRes.status >= 400) {
         console.warn('[submit-inquiry] buyer email -> ' + emailRes.status, JSON.stringify(emailRes.body));
+        diagnostic.errors.push('buyerEmail -> ' + emailRes.status);
       } else {
         console.log('[submit-inquiry] confirmation email sent to ' + buyerEmail);
       }
     } catch (e) {
       console.warn('[submit-inquiry] buyer email failed:', e.message);
+      diagnostic.errors.push('buyerEmail: ' + e.message);
     }
   } else {
     console.warn('[submit-inquiry] no buyer email on contact — skipping confirmation send');
+    diagnostic.emailStatus = 'skipped-no-email';
   }
 
-  console.log('[submit-inquiry] contact=' + contactId + ' deal=' + dealId + ' notes.len=' + notes.length);
+  console.log('[submit-inquiry] contact=' + contactId + ' deal=' + dealId + ' notes.len=' + notes.length + ' diagnostic=' + JSON.stringify(diagnostic));
 
-  return respond(200, { ok: true });
+  return respond(200, { ok: diagnostic.errors.length === 0, diagnostic: diagnostic });
 };
 
 function row(label, value) {

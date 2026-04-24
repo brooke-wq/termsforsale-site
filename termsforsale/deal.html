@@ -1581,9 +1581,12 @@ async function submitRequest(dealId){
       // Logged-in: route through our Netlify function so we control email/note/SMS
       await fetch('/api/submit-inquiry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:user.contactId,dealId:dealId,city:deal.city||'',state:deal.state||'',dealType:deal.dealType||'',streetAddress:deal.streetAddress||'',firstName:fname,lastName:lname||'',phone:phone,email:email||'',notes:notes})});
     } else {
-      // Logged-out fallback: GHL webhook (legacy path)
+      // Logged-out fallback: POST to GHL webhook with every field at the
+      // TOP level of the payload so the Inquiry workflow's {{contact.*}}
+      // merge tags resolve. Field keys match the live contact custom
+      // field keys exactly (offer__ prefixes intentional).
       var utms=getUTMs();
-      var payload=Object.assign({firstName:fname,lastName:lname||'',phone,email:email||'',tags:['TFS Buyer','Website Inquiry','consent:sms'],source:'TFS Deal Page - Inquiry',pipeline_name:'Inquiry Setter',pipeline_stage:'New Lead',customFields:{current_deal_interest:dealId||'',buy_box_notes:notes||'',property_city:deal.city||'',property_state:deal.state||'',asset_type:deal.dealType||''}},utms);
+      var payload=Object.assign({firstName:fname,lastName:lname||'',phone:phone,email:email||'',deal_id:dealId||'',property_address:deal.streetAddress||'',offer__property_city:deal.city||'',offer__property_state:deal.state||'',inquiry_notes:notes||'',tags:['TFS Buyer','Website Inquiry','consent:sms'],source:'TFS Deal Page - Inquiry',pipeline_name:'Inquiry Setter',pipeline_stage:'New Lead'},utms);
       await fetch('https://services.leadconnectorhq.com/hooks/7IyUgu1zpi38MDYpSDTs/webhook-trigger/933e8621-3b0c-4b36-9248-197bddc2e4c1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     }
   }catch(err){console.error('Inquiry error:',err);}
