@@ -95,9 +95,12 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .nav-dropdown a:hover,.nav-dropdown button:hover{background:var(--bg);color:var(--text)}
 .nav-dropdown hr{border:none;border-top:1px solid var(--border);margin:4px 0}
 
-/* ── SPLIT SCREEN LAYOUT ───────────────── */
-.split-app{display:flex;height:calc(100vh - 72px);margin-top:72px;overflow:hidden;position:relative}
-.split-sidebar{width:480px;min-width:380px;max-width:520px;display:flex;flex-direction:column;background:#fff;border-right:1px solid var(--border);z-index:10;flex-shrink:0}
+/* ── SPLIT SCREEN LAYOUT ─────────────────
+   55/45 — map on the left (sticky), cards on the right (scrollable 2-col grid).
+   Below 1200px the right panel collapses to 1-col so cards aren't cramped.
+   Below 900px we stack vertically (existing mobile map-toggle behavior). */
+.split-app{display:grid;grid-template-columns:55% 45%;height:calc(100vh - 72px);margin-top:72px;overflow:hidden;position:relative}
+.split-sidebar{display:flex;flex-direction:column;background:#fff;border-left:1px solid var(--border);z-index:10;min-width:0}
 .split-toolbar{padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff}
 .split-toolbar-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .split-toolbar-top h2{font-size:18px;font-weight:800;color:var(--navy);white-space:nowrap}
@@ -118,29 +121,35 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .split-tab:not(:first-child){border-left:none}
 .split-tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .split-count{font-size:12px;font-weight:600;color:var(--text-light);margin-left:auto;white-space:nowrap}
-.split-cards{flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:thin}
+.split-cards{flex:1;overflow-y:auto;padding:18px 20px 24px;scrollbar-width:thin}
 .split-cards::-webkit-scrollbar{width:5px}
 .split-cards::-webkit-scrollbar-track{background:var(--bg)}
 .split-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.split-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-/* Compact card overrides for split view */
-.split-cards .deal-card{border-radius:10px}
-.split-cards .deal-card-photo{height:150px}
-.split-cards .deal-card-body{padding:12px 14px 14px}
-.split-cards .deal-card-price{font-size:19px}
-.split-cards .deal-card-loc{font-size:11px;margin-bottom:8px}
-.split-cards .deal-card-specs{font-size:11px}
-.split-cards .deal-card-spec strong{font-size:12px}
-.split-cards .deal-card-arv{font-size:11px;margin-bottom:6px}
+.split-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+/* Card sizing inside the wider 45% panel — bigger photos, more breathing room */
+.split-cards .deal-card{border-radius:12px}
+.split-cards .deal-card-photo{height:220px}
+.split-cards .deal-card-body{padding:14px 16px 16px}
+.split-cards .deal-card-price{font-size:22px}
+.split-cards .deal-card-loc{font-size:12px;margin-bottom:10px}
+.split-cards .deal-card-specs{font-size:12px}
+.split-cards .deal-card-spec strong{font-size:13px}
+.split-cards .deal-card-arv{font-size:12px;margin-bottom:8px}
 /* Highlighted card when hovering on map */
 .split-cards .deal-card.map-highlight{box-shadow:0 0 0 2px var(--blue),0 8px 24px rgba(41,171,226,.2);transform:translateY(-2px)}
 
 /* MAP PANEL */
-.split-map{flex:1;position:relative;z-index:1}
+.split-map{position:relative;z-index:1;min-width:0}
 #map{width:100%;height:100%}
 .leaflet-popup-content-wrapper{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.12);border:none;padding:0;overflow:hidden;min-width:220px}
 .leaflet-popup-content{margin:0;font-family:var(--font)}
 .leaflet-popup-tip-container{display:none}
+
+/* PRICE PIN — pill-shaped, color-coded by deal type, shows price + type chip */
+.dp-pin{display:inline-flex;align-items:center;gap:0;padding:5px 10px;border-radius:14px;color:#fff;font-family:var(--font);font-size:12px;font-weight:800;box-shadow:0 2px 10px rgba(0,0,0,.25);border:2px solid #fff;white-space:nowrap;line-height:1;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.dp-pin:hover{transform:scale(1.1);box-shadow:0 4px 16px rgba(0,0,0,.35);z-index:1000}
+.dp-pin-price{letter-spacing:-.3px}
+.dp-pin-type{margin-left:6px;padding-left:6px;border-left:1px solid rgba(255,255,255,.4);font-size:10px;font-weight:700;opacity:.92;letter-spacing:.3px}
 
 /* MAP LEGEND */
 .map-legend-float{position:absolute;bottom:24px;right:24px;background:rgba(255,255,255,.96);border-radius:10px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,.1);z-index:500;font-size:11px}
@@ -156,14 +165,20 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .below-fold{position:relative;z-index:5}
 
 /* MOBILE */
+@media(max-width:1200px){
+  /* Tighter desktops — 45% panel too narrow for 2 cards, drop to 1-col */
+  .split-cards-grid{grid-template-columns:1fr;gap:14px}
+  .split-cards .deal-card-photo{height:200px}
+}
 @media(max-width:900px){
-  .split-app{flex-direction:column;height:auto;min-height:100vh}
-  .split-sidebar{width:100%;max-width:100%;min-width:0;height:auto;flex:1;flex-shrink:0;overflow:visible}
+  .split-app{grid-template-columns:1fr;height:auto;min-height:100vh}
+  .split-sidebar{width:100%;height:auto;min-width:0;overflow:visible;border-left:none;border-top:1px solid var(--border)}
   .split-sidebar.map-mode{display:none}
-  .split-map{height:50vh;flex:none}
+  .split-map{height:50vh}
   .split-map.list-mode{display:none}
   .split-cards{overflow:visible;max-height:none}
   .split-cards-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .split-cards .deal-card-photo{height:170px}
   .view-toggle{display:block}
   .map-legend-float{bottom:70px;right:12px}
 }
@@ -697,10 +712,22 @@ footer{background:var(--navy);padding:52px 55px 0}
   </div>
 </div>
 
-<!-- SPLIT-SCREEN MAP HOMEPAGE -->
+<!-- SPLIT-SCREEN MAP HOMEPAGE — map on the left, card grid on the right -->
 <div class="split-app" id="split-app">
 
-  <!-- LEFT PANEL: DEAL CARDS -->
+  <!-- LEFT PANEL: MAP -->
+  <div class="split-map" id="split-map">
+    <div id="map"></div>
+    <div class="map-legend-float">
+      <h4>Deal Type</h4>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#10B981"></div>Cash</div>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#29ABE2"></div>Subject To</div>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#F7941D"></div>Seller Finance</div>
+      <div class="mleg-item"><div class="mleg-dot" style="background:#8B5CF6"></div>Hybrid / Other</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: DEAL CARDS -->
   <div class="split-sidebar" id="split-sidebar">
     <div class="split-toolbar">
       <div class="split-toolbar-top">
@@ -743,18 +770,6 @@ footer{background:var(--navy);padding:52px 55px 0}
       <div class="split-cards-grid" id="deals-row">
         <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:12px"><div class="spinner"></div><p style="font-size:13px;font-weight:600;color:#718096">Loading deals&hellip;</p></div>
       </div>
-    </div>
-  </div>
-
-  <!-- RIGHT PANEL: MAP -->
-  <div class="split-map" id="split-map">
-    <div id="map"></div>
-    <div class="map-legend-float">
-      <h4>Deal Type</h4>
-      <div class="mleg-item"><div class="mleg-dot" style="background:#10B981"></div>Cash</div>
-      <div class="mleg-item"><div class="mleg-dot" style="background:#29ABE2"></div>Subject To</div>
-      <div class="mleg-item"><div class="mleg-dot" style="background:#F7941D"></div>Seller Finance</div>
-      <div class="mleg-item"><div class="mleg-dot" style="background:#8B5CF6"></div>Hybrid / Other</div>
     </div>
   </div>
 
@@ -1952,13 +1967,41 @@ function markerLabel(type){
   if(n==='novation')return'NV';
   return'HY';
 }
+// Pill-shaped price pin: "$449K · SubTo". Cash + Stack/Morby show asking price;
+// every other creative variant (SubTo, SF, Hybrid, Wrap, Lease, Novation) shows entry fee.
+// normType folds Morby/Stack into 'hybrid', so detect Stack by the raw dealType string.
+function pinPriceFor(deal){
+  var n=normType(deal.dealType);
+  var isStack=/stack|morby/i.test(deal.dealType||'');
+  var useAsking=(n==='cash')||isStack;
+  var amount=useAsking?(+deal.askingPrice||+deal.entryFee||0):(+deal.entryFee||+deal.askingPrice||0);
+  if(!amount)return'';
+  if(amount>=1e6)return'$'+(amount/1e6).toFixed(amount%1e6?1:0)+'M';
+  if(amount>=1000)return'$'+Math.round(amount/1000)+'K';
+  return'$'+amount;
+}
+function pinTypeLabel(type){
+  var n=normType(type);
+  if(/stack|morby/i.test(type||''))return'Stack';
+  if(n==='cash')return'Cash';
+  if(n==='subto')return'SubTo';
+  if(n==='sf')return'SF';
+  if(n==='hybrid')return'Hybrid';
+  if(n==='wrap')return'Wrap';
+  if(n==='lease')return'Lease';
+  if(n==='novation')return'Nov';
+  return'';
+}
 function makeMarkerIcon(deal){
   var color=markerColor(deal.dealType);
-  var label=markerLabel(deal.dealType);
-  var html='<div style="width:32px;height:32px;background:'+color+';border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s">'
-    +'<span style="transform:rotate(45deg);font-size:9px;font-weight:800;color:#fff;font-family:Poppins,sans-serif">'+label+'</span>'
+  var price=pinPriceFor(deal);
+  var typeLbl=pinTypeLabel(deal.dealType);
+  var html='<div class="dp-pin" style="background:'+color+'">'
+    +'<span class="dp-pin-price">'+(price||'—')+'</span>'
+    +(typeLbl?'<span class="dp-pin-type">'+typeLbl+'</span>':'')
     +'</div>';
-  return L.divIcon({html:html,className:'',iconSize:[32,32],iconAnchor:[16,32],popupAnchor:[0,-32]});
+  // Null iconSize/iconAnchor lets the pill auto-size; we anchor center via CSS.
+  return L.divIcon({html:html,className:'dp-pin-wrap',iconSize:null,iconAnchor:[40,14],popupAnchor:[0,-14]});
 }
 function makePopup(deal){
   var color=markerColor(deal.dealType);
