@@ -18,10 +18,10 @@ const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } 
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
-// TFS main line — receives SMS notification for every offer submission.
-// Kept as an env-var override (BROOKE_PHONE) for testing, but the default
-// is the company main per CLAUDE.md §6 (outbound identity).
-const DEFAULT_NOTIFICATION_PHONE = '+14806373117';
+// Team notification SMS target. MUST NOT equal CAMPAIGN_FROM_PHONE
+// (+14806373117) — Twilio/GHL silently drop SMS sent from a number to
+// itself. Kept as an env-var override (BROOKE_PHONE) for testing.
+const DEFAULT_NOTIFICATION_PHONE = '+14807191175';
 
 // Internal inbox that receives the offer notification email. We upsert
 // a contact for this address on first use so we can route through the
@@ -233,6 +233,8 @@ exports.handler = async (event) => {
   var diagnostic = {
     contactId: contactId,
     dealId: dealId,
+    notifyPhone: null,
+    inboxEmail: INTERNAL_NOTIFICATION_EMAIL,
     noteStatus: null,
     tagStatus: null,
     fieldsWritten: [],
@@ -390,8 +392,9 @@ exports.handler = async (event) => {
     }
   }
 
-  // 4. SMS notification to the TFS main line
+  // 4. SMS notification to the team line
   var notifyPhone = process.env.BROOKE_PHONE || DEFAULT_NOTIFICATION_PHONE;
+  diagnostic.notifyPhone = notifyPhone;
   if (notifyPhone && locationId) {
     var sms = 'New offer: ' + (buyerName || 'Buyer') + ' on ' + location;
     if (amount) sms += ' — ' + amountFmt;
