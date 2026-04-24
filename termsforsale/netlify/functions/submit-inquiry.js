@@ -24,8 +24,10 @@ const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } 
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 
-// TFS main line — receives SMS notification for every inquiry.
-const DEFAULT_NOTIFICATION_PHONE = '+14806373117';
+// Team notification SMS target. MUST NOT equal CAMPAIGN_FROM_PHONE
+// (+14806373117) — Twilio/GHL silently drop SMS sent from a number to
+// itself.
+const DEFAULT_NOTIFICATION_PHONE = '+14807191175';
 
 // Internal inbox that receives the inquiry notification email.
 const INTERNAL_NOTIFICATION_EMAIL = 'info@termsforsale.com';
@@ -201,6 +203,8 @@ exports.handler = async (event) => {
   var diagnostic = {
     contactId: contactId || null,
     dealId: dealId || null,
+    notifyPhone: null,
+    inboxEmail: INTERNAL_NOTIFICATION_EMAIL,
     noteStatus: null,
     tagStatus: null,
     fieldsWritten: [],
@@ -317,8 +321,9 @@ exports.handler = async (event) => {
     diagnostic.errors.push('customFields: ' + e.message);
   }
 
-  // 3. SMS notification to the TFS main line
+  // 3. SMS notification to the team line
   var notifyPhone = process.env.BROOKE_PHONE || DEFAULT_NOTIFICATION_PHONE;
+  diagnostic.notifyPhone = notifyPhone;
   if (notifyPhone && locationId) {
     var sms = 'New inquiry: ' + buyerName + ' on ' + location;
     if (dealType) sms += ' (' + dealType + ')';
