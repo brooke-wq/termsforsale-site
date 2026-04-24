@@ -141,7 +141,6 @@ function buildContactPayload(d, locationId) {
   cf('seller_asking_price', d.cashAskingPrice || d.sfAskingPrice);
   cf('estimated_arv', d.cashArv || d.subtoArv || d.sfArv);
   cf('estimated_repairs', d.cashRepairs);
-  cf('assignment_fee', d.assignmentFee);
   cf('emd_amount', d.emdAmount);
 
   // SubTo
