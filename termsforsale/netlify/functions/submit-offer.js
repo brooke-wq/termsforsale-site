@@ -119,6 +119,41 @@ async function getInternalContactId(apiKey, locationId, email) {
   }
 }
 
+// Ensure a GHL contact exists with the given phone number so sendSMS can
+// find it. sendSMS() searches /contacts/?query=<phone> and bails with
+// 404 when no match — which silently drops every notification SMS if
+// nobody has ever been created with that number. This upsert guarantees
+// the lookup succeeds.
+async function ensureNotificationPhoneContact(apiKey, locationId, phone) {
+  var key = 'phone:' + phone;
+  if (INTERNAL_CONTACT_CACHE[key]) return INTERNAL_CONTACT_CACHE[key];
+  try {
+    var res = await fetch(GHL_BASE + '/contacts/upsert', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        locationId: locationId,
+        phone: phone,
+        firstName: 'TFS',
+        lastName: 'Alerts',
+        tags: ['Internal Notification Inbox'],
+      }),
+    });
+    var data = await res.json().catch(function () { return {}; });
+    var id = (data.contact && data.contact.id) || data.id || null;
+    if (id) INTERNAL_CONTACT_CACHE[key] = id;
+    return id;
+  } catch (e) {
+    console.warn('[submit-offer] notification-phone contact upsert failed for ' + phone + ':', e.message);
+    return null;
+  }
+}
+
 function buildInternalOfferEmailHtml(ctx) {
   function row(label, value) {
     if (value === undefined || value === null || value === '') return '';
@@ -365,8 +400,15 @@ exports.handler = async (event) => {
     if (coe) sms += ', close ' + coe;
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
+      // Upsert a GHL contact with this phone first so sendSMS's lookup
+      // doesn't 404. sendSMS does contacts/?query=<phone>; without an
+      // existing contact it returns early and the SMS is silently dropped.
+      await ensureNotificationPhoneContact(apiKey, locationId, notifyPhone);
       var smsRes = await sendSMS(apiKey, locationId, notifyPhone, sms);
       diagnostic.smsStatus = smsRes && smsRes.status ? smsRes.status : 'sent';
+      if (smsRes && smsRes.status >= 400) {
+        diagnostic.errors.push('notifySMS -> ' + smsRes.status + ' ' + (smsRes.body && (smsRes.body.error || JSON.stringify(smsRes.body)) || ''));
+      }
     } catch (e) {
       console.warn('[submit-offer] notification SMS failed:', e.message);
       diagnostic.errors.push('notifySMS: ' + e.message);

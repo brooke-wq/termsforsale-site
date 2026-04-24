@@ -108,6 +108,39 @@ async function getInternalContactId(apiKey, locationId, email) {
   }
 }
 
+// Ensure a GHL contact exists with the given phone number so sendSMS can
+// find it. Mirrors the email upsert pattern — without an existing contact,
+// sendSMS returns 404 and the SMS is silently dropped.
+async function ensureNotificationPhoneContact(apiKey, locationId, phone) {
+  var key = 'phone:' + phone;
+  if (INTERNAL_CONTACT_CACHE[key]) return INTERNAL_CONTACT_CACHE[key];
+  try {
+    var res = await fetch(GHL_BASE + '/contacts/upsert', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        locationId: locationId,
+        phone: phone,
+        firstName: 'TFS',
+        lastName: 'Alerts',
+        tags: ['Internal Notification Inbox'],
+      }),
+    });
+    var data = await res.json().catch(function () { return {}; });
+    var id = (data.contact && data.contact.id) || data.id || null;
+    if (id) INTERNAL_CONTACT_CACHE[key] = id;
+    return id;
+  } catch (e) {
+    console.warn('[submit-inquiry] notification-phone contact upsert failed for ' + phone + ':', e.message);
+    return null;
+  }
+}
+
 function buildInternalInquiryEmailHtml(ctx) {
   function row(label, value) {
     if (value === undefined || value === null || value === '') return '';
@@ -292,8 +325,12 @@ exports.handler = async (event) => {
     if (notes) sms += ' — "' + notes.slice(0, 120) + '"';
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
+      await ensureNotificationPhoneContact(apiKey, locationId, notifyPhone);
       var smsRes = await sendSMS(apiKey, locationId, notifyPhone, sms);
       diagnostic.smsStatus = smsRes && smsRes.status ? smsRes.status : 'sent';
+      if (smsRes && smsRes.status >= 400) {
+        diagnostic.errors.push('notifySMS -> ' + smsRes.status + ' ' + (smsRes.body && (smsRes.body.error || JSON.stringify(smsRes.body)) || ''));
+      }
     } catch (e) {
       console.warn('[submit-inquiry] notification SMS failed:', e.message);
       diagnostic.errors.push('notifySMS: ' + e.message);
