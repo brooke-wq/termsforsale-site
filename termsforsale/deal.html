@@ -917,12 +917,12 @@ function renderDeal(d,allDeals){
     }
     if(d.sfPayment) structureRows.push({l:'Monthly Seller Payment',v:fc(d.sfPayment)+'/mo'});
     if(d.sfBalloon && d.sfBalloon!=='—') structureRows.push({l:'Balloon Term',v:d.sfBalloon});
-    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(entry) structureRows.push({l:'Entry Fee',v:fc(entry)});
     if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
   } else if(isSubTo){
     structureHeading='Subject To Structure';
     if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
-    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)+' + CC/TC'});
+    if(entry) structureRows.push({l:'Entry Fee',v:fc(entry)+' + CC/TC'});
     if(d.subtoLoanBalance) structureRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
     if(d.piti) structureRows.push({l:'PITI',v:fc(d.piti)+'/mo'});
     if(d.subtoRate) structureRows.push({l:'Interest Rate',v:fmtRate(d.subtoRate)});
@@ -937,12 +937,12 @@ function renderDeal(d,allDeals){
     if(d.sfTerm) structureRows.push({l:'Term',v:d.sfTerm});
     if(d.sfPayment) structureRows.push({l:'Monthly Payment',v:fc(d.sfPayment)+'/mo'});
     if(d.sfBalloon && d.sfBalloon!=='—') structureRows.push({l:'Balloon',v:d.sfBalloon});
-    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(entry) structureRows.push({l:'Entry Fee',v:fc(entry)});
     if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
   } else if(isHybrid){
     structureHeading='Hybrid Structure';
     if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
-    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(entry) structureRows.push({l:'Entry Fee',v:fc(entry)});
     if(d.subtoLoanBalance) structureRows.push({l:'Existing Loan Balance',v:fc(d.subtoLoanBalance)});
     if(d.piti) structureRows.push({l:'PITI',v:fc(d.piti)+'/mo'});
     if(d.subtoRate) structureRows.push({l:'SubTo Rate',v:fmtRate(d.subtoRate)});
@@ -956,7 +956,7 @@ function renderDeal(d,allDeals){
   } else if(isWrap){
     structureHeading='Wrap Structure';
     if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
-    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)});
+    if(entry) structureRows.push({l:'Entry Fee',v:fc(entry)});
     if(d.subtoLoanBalance) structureRows.push({l:'Existing Loan (Wrapped)',v:fc(d.subtoLoanBalance)});
     if(d.piti) structureRows.push({l:'Underlying PITI',v:fc(d.piti)+'/mo'});
     if(d.subtoRate) structureRows.push({l:'Underlying Rate',v:fmtRate(d.subtoRate)});
@@ -1021,7 +1021,7 @@ function renderDeal(d,allDeals){
   if(isStack){
     heroMetrics=[
       {l:'Purchase Price',v:fcK(d.askingPrice)},
-      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Entry Fee',v:fcK(entry),cls:'green'},
       {l:'Down Payment',  v:fcK(d.cashToSeller)},
       {l:'Seller Carry',  v:fcK(d.sfLoanAmount)},
       {l:'DSCR Ratio',    v:d.dscrRatio?(+d.dscrRatio).toFixed(2):'—',cls:d.dscrRatio&&+d.dscrRatio>=1.25?'green':''}
@@ -1029,7 +1029,7 @@ function renderDeal(d,allDeals){
   } else if(isSubTo){
     heroMetrics=[
       {l:'Purchase Price',v:fcK(d.askingPrice)},
-      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Entry Fee',v:fcK(entry),cls:'green'},
       {l:'Existing Loan', v:fcK(d.subtoLoanBalance)},
       {l:'PITI',          v:d.piti?fcK(d.piti)+'/mo':'—'},
       {l:'Interest Rate', v:d.subtoRate?fmtRate(d.subtoRate):'—'}
@@ -1037,7 +1037,7 @@ function renderDeal(d,allDeals){
   } else if(isSF){
     heroMetrics=[
       {l:'Purchase Price',v:fcK(d.askingPrice)},
-      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Entry Fee',v:fcK(entry),cls:'green'},
       {l:'Down Payment',  v:fcK(d.cashToSeller)},
       {l:'SF Amount',     v:fcK(d.sfLoanAmount)},
       {l:'Monthly Pmt',   v:d.sfPayment?fcK(d.sfPayment)+'/mo':'—'}
@@ -1046,7 +1046,7 @@ function renderDeal(d,allDeals){
     var hybridMonthly=(+d.piti||0)+(+d.sfPayment||0);
     heroMetrics=[
       {l:'Purchase Price',v:fcK(d.askingPrice)},
-      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Entry Fee',v:fcK(entry),cls:'green'},
       {l:'Existing Loan', v:fcK(d.subtoLoanBalance)},
       {l:'Seller Carry',  v:fcK(d.sfLoanAmount)},
       {l:'Monthly Pmt',   v:hybridMonthly?fcK(hybridMonthly)+'/mo':'—'}
@@ -1054,7 +1054,7 @@ function renderDeal(d,allDeals){
   } else if(isWrap){
     heroMetrics=[
       {l:'Purchase Price',v:fcK(d.askingPrice)},
-      {l:'Assignment Fee',v:fcK(entry),cls:'green'},
+      {l:'Entry Fee',v:fcK(entry),cls:'green'},
       {l:'Existing Loan', v:fcK(d.subtoLoanBalance)},
       {l:'Wrap Amount',   v:fcK(d.sfLoanAmount)},
       {l:'Wrap Rate',     v:d.sfRate?fmtRate(d.sfRate):'—'}

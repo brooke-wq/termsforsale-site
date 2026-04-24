@@ -695,10 +695,6 @@ footer{background:var(--navy);padding:28px 40px;text-align:center}
               <div class="fi-currency"><input class="fi" type="number" id="cashRepairs" placeholder="15,000" min="0" oninput="updateCalc()"></div>
             </div>
             <div class="field-group">
-              <label class="field-label">Your Assignment Fee</label>
-              <div class="fi-currency"><input class="fi" type="number" id="cashFee" placeholder="10,000" min="0"></div>
-            </div>
-            <div class="field-group">
               <label class="field-label">EMD Amount</label>
               <div class="fi-currency"><input class="fi" type="number" id="cashEmd" placeholder="1,000" min="0"></div>
             </div>
@@ -999,13 +995,13 @@ footer{background:var(--navy);padding:28px 40px;text-align:center}
         </div>
 
         <!-- JV Terms -->
-        <div class="sub-divider" style="margin-top:6px;margin-bottom:14px">Your JV / Assignment Terms</div>
+        <div class="sub-divider" style="margin-top:6px;margin-bottom:14px">Your JV Terms</div>
         <div class="field-grid cols-2">
           <div class="field-group">
             <label class="field-label">How do you want to be compensated? <span class="req">*</span></label>
             <select class="fi fi-select" id="jvCompType" onchange="toggleJvSplit(this.value)">
               <option value="">Select</option>
-              <option value="Assignment Fee">Assignment Fee (flat)</option>
+              <option value="Flat Fee">Flat Fee</option>
               <option value="JV Split">JV Split (% of profit)</option>
               <option value="Co-Wholesale">Co-Wholesale</option>
               <option value="Referral Fee">Referral Fee</option>
@@ -1014,7 +1010,7 @@ footer{background:var(--navy);padding:28px 40px;text-align:center}
             <div class="field-err" id="jvcomp-err">Required</div>
           </div>
           <div class="field-group">
-            <label class="field-label">Desired Assignment / JV Fee</label>
+            <label class="field-label">Desired JV Fee</label>
             <div class="fi-currency"><input class="fi" type="number" id="jvFee" placeholder="10,000" min="0"></div>
           </div>
           <div class="field-group" id="jvSplitWrap" style="display:none">
@@ -1470,7 +1466,6 @@ function gatherData() {
     cashAskingPrice: v('cashAskingPrice'),
     cashArv: v('cashArv'),
     cashRepairs: v('cashRepairs'),
-    assignmentFee: v('cashFee'),
     emdAmount: v('cashEmd'),
     compSource: v('cashCompSource'),
     // SubTo
