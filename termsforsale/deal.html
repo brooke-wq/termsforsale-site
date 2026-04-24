@@ -967,7 +967,6 @@ function renderDeal(d,allDeals){
   } else { // Cash
     structureHeading='Cash Deal Summary';
     if(d.askingPrice) structureRows.push({l:'Purchase Price',v:fc(d.askingPrice)});
-    if(entry) structureRows.push({l:'Assignment Fee',v:fc(entry)+' + CC/TC'});
     if(arv) structureRows.push({l:'ARV',v:fc(arv)});
     if(arv && d.askingPrice){
       var eqAmt=arv-+d.askingPrice;
