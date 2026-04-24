@@ -255,7 +255,7 @@ exports.handler = async function(event) {
         propertyType: prop(page, 'Property Type'),
         askingPrice: +prop(page, 'Asking Price') || 0,
         entryFee: +prop(page, 'Entry Fee') || 0,
-        compsArv: +prop(page, 'ARV') || +prop(page, 'Comps ARV') || 0,
+        compsArv: parseFloat(String(prop(page, 'ARV') || prop(page, 'Comps ARV') || '').replace(/[^0-9.]/g, '')) || 0,
         loanType: prop(page, 'Loan Type'),
         subtoLoanBalance: +prop(page, 'SubTo Loan Balance') || '',
         subtoRate: +prop(page, 'SubTo Rate (%)') || '',
