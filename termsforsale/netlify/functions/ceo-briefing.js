@@ -69,6 +69,11 @@ async function getAllDeals(token, dbId) {
 exports.handler = async function(event) {
   var headers = { 'Content-Type': 'application/json' };
 
+  // Disabled 2026-04-24 by owner request. Briefing was sending blank/near-blank
+  // content. Re-enable by removing this block after fixing content generation.
+  console.log('[ceo-briefing] disabled — aborting before send');
+  return { statusCode: 503, headers: headers, body: JSON.stringify({ disabled: true }) };
+
   var anthropicKey = process.env.ANTHROPIC_API_KEY;
   var notionToken  = process.env.NOTION_TOKEN;
   var notionDbId   = process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
