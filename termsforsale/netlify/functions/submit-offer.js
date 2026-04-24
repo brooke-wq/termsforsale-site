@@ -5,16 +5,28 @@
  * 1. Creates a GHL opportunity in the Buyer Inquiries pipeline
  * 2. Posts a note on the contact with offer details
  * 3. Tags the contact (Offer Submitted, Active Buyer)
- * 4. Sends SMS notification to Brooke
- * 5. Sends confirmation email to the buyer
+ * 4. Sends SMS notification to the TFS main line (+14806373117)
+ * 5. Sends internal notification email to offers@termsforsale.com
+ * 6. Sends confirmation email to the buyer
  *
  * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, GHL_PIPELINE_ID_BUYER,
- *           GHL_STAGE_OFFER_RECEIVED, BROOKE_PHONE
+ *           GHL_STAGE_OFFER_RECEIVED, BROOKE_PHONE (optional override —
+ *           defaults to the main TFS line)
  */
 
 const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } = require('./_ghl');
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
+
+// TFS main line — receives SMS notification for every offer submission.
+// Kept as an env-var override (BROOKE_PHONE) for testing, but the default
+// is the company main per CLAUDE.md §6 (outbound identity).
+const DEFAULT_NOTIFICATION_PHONE = '+14806373117';
+
+// Internal inbox that receives the offer notification email. We upsert
+// a contact for this address on first use so we can route through the
+// Conversations API.
+const INTERNAL_NOTIFICATION_EMAIL = 'offers@termsforsale.com';
 
 // 9 contact custom fields keyed exactly as they live in GHL → Settings →
 // Custom Fields → Contact (Offer Submitted folder). Writing these populates
@@ -36,8 +48,9 @@ const OFFER_CUSTOM_FIELD_KEYS = [
   'deal_id',
 ];
 
-// In-memory cache (per container invocation) of GHL location custom field map.
+// In-memory caches (per container invocation).
 let CF_MAP_CACHE = null;
+let INTERNAL_CONTACT_CACHE = {};
 
 async function getLocationCustomFieldMap(apiKey, locationId) {
   if (CF_MAP_CACHE) return CF_MAP_CACHE;
@@ -71,6 +84,70 @@ async function getLocationCustomFieldMap(apiKey, locationId) {
     console.warn('[submit-offer] custom-field map error:', e.message);
   }
   return map;
+}
+
+// Resolve (upsert) an internal notification inbox into a GHL contact ID
+// so we can send an email via the Conversations API. GHL's upsert is
+// idempotent on email, so repeated calls just return the existing
+// contact.
+async function getInternalContactId(apiKey, locationId, email) {
+  if (INTERNAL_CONTACT_CACHE[email]) return INTERNAL_CONTACT_CACHE[email];
+  try {
+    var res = await fetch(GHL_BASE + '/contacts/upsert', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        locationId: locationId,
+        email: email,
+        firstName: 'TFS',
+        lastName: 'Notifications',
+        tags: ['Internal Notification Inbox'],
+      }),
+    });
+    var data = await res.json().catch(function () { return {}; });
+    var id = (data.contact && data.contact.id) || data.id || null;
+    if (id) INTERNAL_CONTACT_CACHE[email] = id;
+    return id;
+  } catch (e) {
+    console.warn('[submit-offer] internal contact upsert failed for ' + email + ':', e.message);
+    return null;
+  }
+}
+
+function buildInternalOfferEmailHtml(ctx) {
+  function row(label, value) {
+    if (value === undefined || value === null || value === '') return '';
+    return '<tr><td style="padding:8px 14px;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;width:40%">' + label + '</td>'
+      + '<td style="padding:8px 14px;font-size:14px;color:#0D1F3C;font-weight:700;border-bottom:1px solid #E2E8F0">' + value + '</td></tr>';
+  }
+  var esc = function (s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  var rows = [
+    row('Buyer',        esc(ctx.buyerName)),
+    row('Phone',        esc(ctx.buyerPhone)),
+    row('Email',        esc(ctx.buyerEmail)),
+    row('Deal ID',      esc(ctx.dealId)),
+    row('Property',     esc(ctx.fullAddress)),
+    row('Asset Type',   esc(ctx.dealType)),
+    row('Offer Amount', esc(ctx.amountFmt)),
+    row('Type of Deal', esc(ctx.typeOfDeal)),
+    row('Entry Fee',    esc(ctx.entryFeeFmt)),
+    row('Target Close', esc(ctx.coe)),
+  ].join('');
+  var notesBlock = ctx.notes
+    ? '<div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:14px 16px;margin-top:16px"><div style="font-size:12px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Proposed Terms / Notes</div><div style="font-size:14px;color:#1F2937;white-space:pre-wrap">' + esc(ctx.notes) + '</div></div>'
+    : '';
+  return '<div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px">'
+    + '<h2 style="color:#0D1F3C;margin:0 0 8px">🔥 New Offer Received</h2>'
+    + '<p style="color:#4A5568;font-size:13px;margin:0 0 16px">Submitted ' + new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }) + ' MST</p>'
+    + '<table style="width:100%;border-collapse:collapse;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden"><tbody>' + rows + '</tbody></table>'
+    + notesBlock
+    + (ctx.contactId ? '<p style="margin-top:20px"><a href="https://app.gohighlevel.com/v2/location/' + esc(process.env.GHL_LOCATION_ID || '') + '/contacts/detail/' + esc(ctx.contactId) + '" style="background:#0D1F3C;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px">Open contact in GHL →</a></p>' : '')
+    + '</div>';
 }
 
 exports.handler = async (event) => {
@@ -128,6 +205,7 @@ exports.handler = async (event) => {
     customFieldsStatus: null,
     opportunityStatus: null,
     smsStatus: null,
+    internalEmailStatus: null,
     emailStatus: null,
     errors: [],
   };
@@ -277,9 +355,9 @@ exports.handler = async (event) => {
     }
   }
 
-  // 4. Notify Brooke via SMS — include buyer name, location, amount, funding
-  var brookePhone = process.env.BROOKE_PHONE || '+15167120113';
-  if (brookePhone && locationId) {
+  // 4. SMS notification to the TFS main line
+  var notifyPhone = process.env.BROOKE_PHONE || DEFAULT_NOTIFICATION_PHONE;
+  if (notifyPhone && locationId) {
     var sms = 'New offer: ' + (buyerName || 'Buyer') + ' on ' + location;
     if (amount) sms += ' — ' + amountFmt;
     if (typeOfDeal) sms += ' [' + typeOfDeal + ']';
@@ -287,12 +365,52 @@ exports.handler = async (event) => {
     if (coe) sms += ', close ' + coe;
     if (sms.length > 300) sms = sms.slice(0, 297) + '...';
     try {
-      var smsRes = await sendSMS(apiKey, locationId, brookePhone, sms);
+      var smsRes = await sendSMS(apiKey, locationId, notifyPhone, sms);
       diagnostic.smsStatus = smsRes && smsRes.status ? smsRes.status : 'sent';
     } catch (e) {
-      console.warn('[submit-offer] Brooke SMS failed:', e.message);
-      diagnostic.errors.push('brookeSMS: ' + e.message);
+      console.warn('[submit-offer] notification SMS failed:', e.message);
+      diagnostic.errors.push('notifySMS: ' + e.message);
     }
+  }
+
+  // 4b. Internal notification email to offers@termsforsale.com
+  try {
+    var internalId = await getInternalContactId(apiKey, locationId, INTERNAL_NOTIFICATION_EMAIL);
+    if (internalId) {
+      var subjectBits = ['🔥 New Offer — ' + (buyerName || 'Buyer')];
+      if (location) subjectBits.push(' on ' + location);
+      if (typeOfDeal) subjectBits.push(' (' + typeOfDeal + ')');
+      if (amount) subjectBits.push(' — ' + amountFmt);
+      var internalSubject = subjectBits.join('');
+      var internalHtml = buildInternalOfferEmailHtml({
+        buyerName: buyerName,
+        buyerPhone: buyerPhone,
+        buyerEmail: buyerEmail,
+        dealId: dealId,
+        fullAddress: fullAddress,
+        dealType: dealType,
+        amountFmt: amountFmt,
+        typeOfDeal: typeOfDeal,
+        entryFeeFmt: entryFeeFmt,
+        coe: coe,
+        notes: notes,
+        contactId: contactId,
+      });
+      var internalRes = await sendEmail(apiKey, internalId, internalSubject, internalHtml);
+      diagnostic.internalEmailStatus = internalRes.status;
+      if (internalRes.status >= 400) {
+        console.warn('[submit-offer] internal email -> ' + internalRes.status, JSON.stringify(internalRes.body));
+        diagnostic.errors.push('internalEmail -> ' + internalRes.status);
+      } else {
+        console.log('[submit-offer] internal notification email sent to ' + INTERNAL_NOTIFICATION_EMAIL);
+      }
+    } else {
+      diagnostic.internalEmailStatus = 'skipped-no-inbox-contact';
+      diagnostic.errors.push('internalEmail: could not resolve inbox contactId');
+    }
+  } catch (e) {
+    console.warn('[submit-offer] internal email failed:', e.message);
+    diagnostic.errors.push('internalEmail: ' + e.message);
   }
 
   // 5. Send buyer confirmation email — include EVERY submitted field
