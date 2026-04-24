@@ -80,42 +80,53 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:70px;display:fl
 </div>
 
 
-  <div style="background:#F4F6F9;padding:28px 24px;margin:0 0 32px">
-<svg width="100%" viewBox="0 0 680 200">
-<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+  <div style="background:#F4F6F9;padding:32px 24px;margin:0 0 32px;border-radius:10px">
+<svg width="100%" viewBox="0 0 680 240" style="max-width:680px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="#29ABE2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="#F7941D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
 <!-- Property (center top) -->
 <g>
-  <rect x="270" y="20" width="140" height="52" rx="10" fill="#1E3A5F" stroke="#29ABE2" stroke-width="0.5"/>
-  <text font-family="Poppins,sans-serif" font-size="13" font-weight="700" fill="#E2E8F0" text-anchor="middle" x="340" y="40" dominant-baseline="central">Property</text>
-  <text font-family="Poppins,sans-serif" font-size="11" fill="#93C5FD" text-anchor="middle" x="340" y="58" dominant-baseline="central">Free &amp; clear</text>
+  <rect x="265" y="20" width="150" height="64" rx="10" fill="#1E3A5F" stroke="#29ABE2" stroke-width="1.5"/>
+  <text font-family="Poppins,sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle" x="340" y="44" dominant-baseline="central">Property</text>
+  <text font-family="Poppins,sans-serif" font-size="11" font-weight="500" fill="#BFDBFE" text-anchor="middle" x="340" y="66" dominant-baseline="central">Free &amp; clear</text>
 </g>
-<!-- Seller (left) -->
+<!-- Seller (bottom left) -->
 <g>
-  <rect x="40" y="110" width="150" height="60" rx="10" fill="#3D2B00" stroke="#F7941D" stroke-width="0.5"/>
-  <text font-family="Poppins,sans-serif" font-size="13" font-weight="700" fill="#FDE68A" text-anchor="middle" x="115" y="133" dominant-baseline="central">Seller</text>
-  <text font-family="Poppins,sans-serif" font-size="11" fill="#FCA5A5" text-anchor="middle" x="115" y="152" dominant-baseline="central">Acts as the bank</text>
+  <rect x="30" y="156" width="170" height="68" rx="10" fill="#3D2B00" stroke="#F7941D" stroke-width="1.5"/>
+  <text font-family="Poppins,sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle" x="115" y="182" dominant-baseline="central">Seller</text>
+  <text font-family="Poppins,sans-serif" font-size="11" font-weight="500" fill="#FDE68A" text-anchor="middle" x="115" y="204" dominant-baseline="central">Acts as the bank</text>
 </g>
-<!-- Buyer (right) -->
+<!-- Buyer (bottom right) -->
 <g>
-  <rect x="490" y="110" width="150" height="60" rx="10" fill="#0F3524" stroke="#10B981" stroke-width="0.5"/>
-  <text font-family="Poppins,sans-serif" font-size="13" font-weight="700" fill="#A7F3D0" text-anchor="middle" x="565" y="133" dominant-baseline="central">Buyer</text>
-  <text font-family="Poppins,sans-serif" font-size="11" fill="#6EE7B7" text-anchor="middle" x="565" y="152" dominant-baseline="central">Gets deed at closing</text>
+  <rect x="480" y="156" width="170" height="68" rx="10" fill="#0F3524" stroke="#10B981" stroke-width="1.5"/>
+  <text font-family="Poppins,sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle" x="565" y="182" dominant-baseline="central">Buyer</text>
+  <text font-family="Poppins,sans-serif" font-size="11" font-weight="500" fill="#A7F3D0" text-anchor="middle" x="565" y="204" dominant-baseline="central">Gets deed at closing</text>
 </g>
-<!-- Down payment arrow seller→ -->
-<line x1="192" y1="135" x2="488" y2="135" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="4,3"/>
-<rect x="270" y="118" width="140" height="22" rx="5" fill="#0F3524" stroke="#10B981" stroke-width="0.5"/>
-<text font-family="Poppins,sans-serif" font-size="11" font-weight="700" fill="#6EE7B7" text-anchor="middle" x="340" y="129" dominant-baseline="central">Down payment at close</text>
-<!-- Monthly payment arrow ←seller -->
-<line x1="488" y1="157" x2="192" y2="157" stroke="#F7941D" stroke-width="1.5" marker-end="url(#arrow)"/>
-<rect x="268" y="158" width="144" height="22" rx="5" fill="#3D2B00" stroke="#F7941D" stroke-width="0.5"/>
-<text font-family="Poppins,sans-serif" font-size="11" font-weight="700" fill="#FDE68A" text-anchor="middle" x="340" y="169" dominant-baseline="central">Monthly payments</text>
 <!-- Property → Seller arrow -->
-<line x1="270" y1="56" x2="168" y2="110" stroke="#29ABE2" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="290" y1="84" x2="180" y2="156" stroke="#29ABE2" stroke-width="2" marker-end="url(#arrow-blue)"/>
 <!-- Property → Buyer arrow -->
-<line x1="410" y1="56" x2="492" y2="110" stroke="#29ABE2" stroke-width="1" marker-end="url(#arrow)"/>
-<text font-family="Poppins,sans-serif" font-size="11" fill="#29ABE2" text-anchor="middle" x="340" y="93">No bank needed</text>
+<line x1="390" y1="84" x2="500" y2="156" stroke="#29ABE2" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<rect x="270" y="98" width="140" height="28" rx="6" fill="#FFFFFF" stroke="#29ABE2" stroke-width="1.5"/>
+<text font-family="Poppins,sans-serif" font-size="12" font-weight="700" fill="#0369A1" text-anchor="middle" x="340" y="112" dominant-baseline="central">No bank needed</text>
+<!-- Down payment arrow seller→buyer (top) -->
+<line x1="205" y1="180" x2="475" y2="180" stroke="#10B981" stroke-width="2" marker-end="url(#arrow-green)" stroke-dasharray="6,4"/>
+<rect x="240" y="166" width="200" height="28" rx="6" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+<text font-family="Poppins,sans-serif" font-size="12" font-weight="700" fill="#047857" text-anchor="middle" x="340" y="180" dominant-baseline="central">Down payment at close</text>
+<!-- Monthly payment arrow buyer→seller (bottom) -->
+<line x1="475" y1="210" x2="205" y2="210" stroke="#F7941D" stroke-width="2" marker-end="url(#arrow-orange)"/>
+<rect x="245" y="196" width="190" height="28" rx="6" fill="#FFFFFF" stroke="#F7941D" stroke-width="1.5"/>
+<text font-family="Poppins,sans-serif" font-size="12" font-weight="700" fill="#B45309" text-anchor="middle" x="340" y="210" dominant-baseline="central">Monthly payments</text>
 </svg>
-<p style="text-align:center;font-size:11px;color:#718096;margin:8px 0 0;font-family:Poppins,sans-serif">Seller finance: the seller replaces the bank entirely</p>
+<p style="text-align:center;font-size:12px;color:#4A5568;margin:14px 0 0;font-family:Poppins,sans-serif;font-weight:500">Seller finance: the seller replaces the bank entirely</p>
 </div>
 
   <p>Seller financing — also called owner financing or seller carryback — is a transaction where the property seller acts as the lender instead of a bank. The buyer makes monthly payments directly to the seller based on agreed-upon terms: interest rate, loan amount, term length, and any balloon payment.</p>
