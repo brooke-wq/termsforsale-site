@@ -139,8 +139,10 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .split-cards .deal-card.map-highlight{box-shadow:0 0 0 2px var(--blue),0 8px 24px rgba(41,171,226,.2);transform:translateY(-2px)}
 
 /* MAP PANEL */
-.split-map{position:relative;z-index:1;min-width:0}
-#map{width:100%;height:100%}
+/* min-height:0 + absolutely-positioned #map keeps Leaflet from initializing
+   against a 0-height grid cell (caused intermittent gray-tile renders). */
+.split-map{position:relative;z-index:1;min-width:0;min-height:0;overflow:hidden}
+#map{position:absolute;inset:0;width:100%;height:100%}
 .leaflet-popup-content-wrapper{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.12);border:none;padding:0;overflow:hidden;min-width:220px}
 .leaflet-popup-content{margin:0;font-family:var(--font)}
 .leaflet-popup-tip-container{display:none}
@@ -1844,8 +1846,11 @@ async function loadDealsFromSheet(){
       applyFilters();
       const sbc=document.getElementById('sb-count');if(sbc)sbc.textContent=ALL_DEALS.length;
       const spc=document.getElementById('sp-count');if(spc)spc.textContent=ALL_DEALS.length+'+';
-      // Initialize map markers
+      // Initialize map markers. Leaflet's <script> tag loads after this IIFE,
+      // so on a fast Notion response _mapInitDeals may not exist yet — queue
+      // the deals and let the map IIFE drain them when it boots.
       if(window._mapInitDeals)window._mapInitDeals(ALL_DEALS);
+      else window._pendingMapDeals=ALL_DEALS;
     }else{
       document.getElementById('deals-row').innerHTML=`<div class="empty-deals"><p style="font-size:13px">No active deals found.</p></div>`;
     }
@@ -2133,8 +2138,13 @@ window.toggleMobileView=function(){
 
 // Resize map on window resize
 window.addEventListener('resize',function(){map.invalidateSize();},{passive:true});
-// Initial size fix after a tick
+// Initial size fix — once after first paint and again after layout settles, so
+// tiles are requested against the real container size even when Leaflet boots
+// before the grid cell has resolved its height.
+requestAnimationFrame(function(){map.invalidateSize();});
 setTimeout(function(){map.invalidateSize();},200);
+// Drain any deals queued by the loader IIFE that ran before this script.
+if(window._pendingMapDeals){window._mapInitDeals(window._pendingMapDeals);window._pendingMapDeals=null;}
 })();
 </script>
 
