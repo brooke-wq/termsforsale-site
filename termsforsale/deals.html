@@ -99,7 +99,7 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
    55/45 — map on the left (sticky), cards on the right (scrollable 2-col grid).
    Below 1200px the right panel collapses to 1-col so cards aren't cramped.
    Below 900px we stack vertically (existing mobile map-toggle behavior). */
-.split-app{display:grid;grid-template-columns:55% 45%;height:calc(100vh - 72px);margin-top:72px;overflow:hidden;position:relative}
+.split-app{display:grid;grid-template-columns:55% 45%;grid-template-rows:1fr;height:calc(100vh - 72px);margin-top:72px;overflow:hidden;position:relative}
 .split-sidebar{display:flex;flex-direction:column;background:#fff;border-left:1px solid var(--border);z-index:10;min-width:0}
 .split-toolbar{padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff}
 .split-toolbar-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -141,8 +141,8 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 /* MAP PANEL */
 /* min-height:0 + absolutely-positioned #map keeps Leaflet from initializing
    against a 0-height grid cell (caused intermittent gray-tile renders). */
-.split-map{position:relative;z-index:1;min-width:0;min-height:0;overflow:hidden}
-#map{position:absolute;inset:0;width:100%;height:100%}
+.split-map{position:relative;z-index:1;min-width:0;min-height:0;height:100%;overflow:hidden}
+#map{position:absolute;inset:0;width:100%;height:100%;background:#e5eef5}
 .leaflet-popup-content-wrapper{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.12);border:none;padding:0;overflow:hidden;min-width:220px}
 .leaflet-popup-content{margin:0;font-family:var(--font)}
 .leaflet-popup-tip-container{display:none}
@@ -1869,30 +1869,29 @@ async function loadDealsFromSheet(){
 'use strict';
 (function(){
 // ─── MAP INIT ──────────────────────────────────────────────────
-// Defer L.map() until #map has non-zero dimensions. On cached refresh the
-// inline scripts run before the grid layout settles, so initializing against
-// a 0-size container leaves the tile layer with empty bounds and it never
-// requests a single tile (gray panel, no network activity, no console error).
-var map; // hoisted so functions below close over it; assigned in initMap()
 var mapEl=document.getElementById('map');
-var initStart=Date.now();
-function whenSized(cb){
-  var rect=mapEl.getBoundingClientRect();
-  if(rect.width>0&&rect.height>0)return cb();
-  if(Date.now()-initStart>5000)return cb(); // give up after 5s and try anyway
-  requestAnimationFrame(function(){whenSized(cb);});
-}
-whenSized(function(){initMap();});
-function initMap(){
-map=L.map('map',{zoomControl:false,attributionControl:true}).setView([37.5,-96],4);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-  attribution:'&copy; <a href="https://carto.com/">CARTO</a>',
-  subdomains:'abcd',maxZoom:19
+var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([37.5,-96],4);
+// Primary tiles: OpenStreetMap (rarely blocked by ad/privacy extensions).
+// On any tile load failure, swap in CARTO as a fallback.
+var primary=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom:19,crossOrigin:true
 }).addTo(map);
+var fallbackTried=false;
+primary.on('tileerror',function(e){
+  if(fallbackTried)return;
+  fallbackTried=true;
+  console.warn('[map] OSM tile failed, falling back to CARTO',e&&e.tile&&e.tile.src);
+  map.removeLayer(primary);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd',maxZoom:19,crossOrigin:true
+  }).addTo(map);
+});
 L.control.zoom({position:'topright'}).addTo(map);
-// Observe future container resizes (window resize, mobile toggle, devtools
-// open/close, etc.) and re-sync Leaflet's internal size. invalidateSize()
-// also re-fires tile loading if the previous bounds were degenerate.
+// Resize observer: catches container size changes (grid resolution after
+// fonts load, devtools open/close, mobile toggle). Triggers tile loading
+// if the previous bounds were degenerate.
 if(window.ResizeObserver){
   new ResizeObserver(function(){map.invalidateSize();}).observe(mapEl);
 }
@@ -2075,9 +2074,6 @@ function placeMarker(deal,latlng){
 // ─── GEOCODE ALL DEALS & PLACE ON MAP ──────────────────────────
 window._mapReady=false;
 window._mapInitDeals=function(deals){
-  // initMap() defers until #map has dimensions, so deals can arrive before
-  // `map` is assigned. Re-queue and let initMap drain when it finishes.
-  if(!map){window._pendingMapDeals=deals;return;}
   if(window._mapReady)return;
   window._mapReady=true;
   var bounds=[];
@@ -2103,9 +2099,12 @@ window._mapInitDeals=function(deals){
   });
 };
 
-// Refresh sidebar list whenever the user pans / zooms the map. Registered
-// from inside initMap() (see bottom of IIFE) since `map` doesn't exist
-// until the container has been sized.
+// Refresh sidebar list whenever the user pans / zooms the map.
+map.on('moveend zoomend',function(){
+  if(window._isDealInBounds && typeof window.applyFilters==='function'){
+    window.applyFilters();
+  }
+});
 
 // ─── SYNC FILTERS WITH MAP ─────────────────────────────────────
 // Override applyFilters to also toggle markers
@@ -2157,18 +2156,15 @@ window.toggleMobileView=function(){
   }
 };
 
-// Refresh sidebar list whenever the user pans / zooms the map.
-map.on('moveend zoomend',function(){
-  if(window._isDealInBounds && typeof window.applyFilters==='function'){
-    window.applyFilters();
-  }
-});
 // Resize map on window resize (ResizeObserver above handles container-size
 // changes too — this stays for browsers without RO and for orientation flips)
 window.addEventListener('resize',function(){map.invalidateSize();},{passive:true});
+// Belt-and-suspenders: nudge Leaflet to recompute size after first paint
+// and again after fonts/CSS settle. Cheap, harmless if already correct.
+requestAnimationFrame(function(){map.invalidateSize();});
+setTimeout(function(){map.invalidateSize();},300);
 // Drain any deals queued by the loader IIFE that ran before this script.
 if(window._pendingMapDeals){window._mapInitDeals(window._pendingMapDeals);window._pendingMapDeals=null;}
-} // end initMap
 })();
 </script>
 
