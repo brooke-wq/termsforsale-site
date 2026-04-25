@@ -1,811 +1,1674 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>{{DEAL_ADDRESS}} — Investor Memo</title>
+<meta charset="utf-8">
+<title>Deal Analysis — Terms For Sale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="deck-stage.js"></script>
+
+<script type="application/json" id="speaker-notes">
+[
+  "Welcome. This is the deal snapshot — address, deal type, and the headline number. I'll walk you through why this one matters, what it takes to own it, and how multiple investor profiles can make money on it. Should take about fifteen minutes.",
+  "Three things to remember from this deck. One: we have a below-market loan we're taking over — rate and monthly payment investors can't get today. Two: the in-place numbers already cashflow — this is not a speculative play. Three: we've stress-tested six exit strategies so you can match it to your book.",
+  "Here's the property. Three-two single family in a path-of-growth submarket, built in the late nineties, fully turn-key except for cosmetic touch-ups. Photos coming through — tenant vacated last month so we have clean walkthroughs.",
+  "Quick specs. What matters here: the square footage supports three-bedroom rent comps in the area, the lot is large enough for an ADU if someone wants to play that angle, and the roof and HVAC are both recent. No deferred capex surprises.",
+  "Location matters on creative deals. Employment base, population growth, school ratings, and crime score all support a durable rental and resale thesis. We don't buy in markets we can't defend.",
+  "ARV backed by three recent closed comps within a half-mile, same bed-bath count, similar square footage, adjusted for condition. Conservative ARV is the lower-end figure we'll use across every exit.",
+  "Rent comps. Three active and three leased within ninety days. We price to the median, not the high.",
+  "Here is the deal structure — this is the creative finance piece. We're taking the loan subject-to, the seller is carrying a second, and you're bringing the down. Terms as shown.",
+  "The underlying loan. Fixed rate, fully amortizing, roughly twenty years remaining. PITI as shown. This is the rate investors can't replicate in today's market.",
+  "Full sources and uses. Your all-in cash, where it goes, and what you own on day one in equity.",
+  "Scope of work. If an exit requires rehab — flip or BRRRR — this is the budget with twenty percent contingency baked in. Turn-key exits skip this.",
+  "Six exit strategies, each underwritten independently. Not every deal supports every exit — the ones shown here are the viable options for this property.",
+  "Fix and Flip. Buy, renovate, resell. Timeline, budget, ARV, and projected margin after selling costs.",
+  "Long-term rental. Hold, lease at market, collect monthly cashflow. The subject-to rate is what makes this work versus a traditional acquisition.",
+  "Short-term rental. Airbnb or equivalent. Higher gross, higher opex, more management intensity. Numbers assume a sixty-five percent occupancy and market ADR.",
+  "BRRRR. Buy, rehab, rent, refinance, repeat. The exit here is the cash-out refi — how much of your capital you pull back out.",
+  "Coliving or PadSplit. Rent by the room. Highest gross yield of any long-term strategy, most management overhead.",
+  "Wrap or lease option. You hold the subject-to loan and sell the property on an owner-finance wrap at a higher rate and price. Passive spread.",
+  "Development. If there's a lot split, ADU, or redevelopment angle, this is where we quantify it. Not applicable to every deal.",
+  "Side-by-side. All exits on one page so you can pick the one that fits your capital and operational profile.",
+  "Returns summary. Cash-on-cash, monthly cashflow, NOI, and deal margin — the four numbers your investors care about most.",
+  "Risks and assumptions. Every number in this memo rests on these inputs. If any of them move materially, the thesis changes.",
+  "Timeline and next steps. What it takes to lock this one down, who to contact, and how fast we can close."
+]
+</script>
+
 <style>
-@page { size: letter landscape; margin: 0; }
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: #f5f5f5; color: #0D1F3C; font-family: 'Inter', 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-size: 11pt; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.slide { width: 11in; height: 8.5in; padding: 0.55in 0.7in 0.45in; background: #ffffff; page-break-after: always; position: relative; overflow: hidden; margin: 0 auto 16px; box-shadow: 0 4px 14px rgba(13,31,60,0.08); }
-.slide:last-child { page-break-after: auto; }
-@media print { body { background: #fff; } .slide { margin: 0; box-shadow: none; } }
-/* typography */
-h1, h2, h3, h4 { margin: 0; color: #0D1F3C; font-weight: 700; }
-.eyebrow { font-size: 9pt; letter-spacing: 2.5px; text-transform: uppercase; color: #29ABE2; font-weight: 600; }
-.dot { color: #F7941D; margin: 0 6px; }
-.title { font-size: 28pt; color: #0D1F3C; font-weight: 700; letter-spacing: -0.3px; }
-.title-underline { display: block; width: 64px; height: 4px; background: #F7941D; margin-top: 6px; border-radius: 2px; }
-.italic { font-style: italic; }
-.mono-num { font-variant-numeric: tabular-nums; }
-.muted { color: #6b7280; }
-.small { font-size: 9pt; }
-.tiny { font-size: 8pt; }
-/* tables */
-table.grid { width: 100%; border-collapse: collapse; font-size: 10pt; }
-table.grid th, table.grid td { padding: 7px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
-table.grid th { background: #0D1F3C; color: #fff; font-weight: 600; text-transform: uppercase; font-size: 8.5pt; letter-spacing: 0.5px; }
-table.grid tbody tr:nth-child(even) { background: #fafbfc; }
-table.grid td.num, table.grid th.num { text-align: right; font-variant-numeric: tabular-nums; }
-table.kv { width: 100%; border-collapse: collapse; font-size: 10pt; }
-table.kv td { padding: 5px 0; border-bottom: 1px dashed #e5e7eb; }
-table.kv td.k { color: #6b7280; text-transform: uppercase; font-size: 8.5pt; letter-spacing: 0.4px; width: 55%; }
-table.kv td.v { text-align: right; font-weight: 600; color: #0D1F3C; font-variant-numeric: tabular-nums; }
-/* stat tiles */
-.stat-row { display: flex; gap: 10px; }
-.stat { flex: 1; border: 1px solid #0D1F3C; border-radius: 4px; padding: 10px 12px; background: #fff; }
-.stat .label { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; margin-bottom: 4px; }
-.stat .val { font-size: 18pt; font-weight: 700; color: #0D1F3C; font-variant-numeric: tabular-nums; }
-.stat.accent { border-color: #F7941D; }
-.stat.accent .val { color: #F7941D; }
-.stat.blue { border-color: #29ABE2; }
-/* callouts */
-.callout { border-left: 4px solid #F7941D; background: #fff8ef; padding: 10px 14px; border-radius: 0 4px 4px 0; }
-.callout.blue { border-left-color: #29ABE2; background: #eef7fc; }
-.callout.navy { border-left-color: #0D1F3C; background: #f3f5f9; }
-.pill { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 8.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
-.pill.orange { background: #F7941D; color: #fff; }
-.pill.blue { background: #29ABE2; color: #fff; }
-.pill.navy { background: #0D1F3C; color: #fff; }
-.pill.outline { background: #fff; border: 1.5px solid #0D1F3C; color: #0D1F3C; }
-.badge-verdict { display: inline-block; padding: 6px 14px; border-radius: 4px; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-.badge-verdict.go { background: #10b981; color: #fff; }
-.badge-verdict.caution { background: #F7941D; color: #fff; }
-/* footer */
-.slide-footer { position: absolute; bottom: 0.35in; left: 0.7in; right: 0.7in; display: flex; justify-content: space-between; font-size: 8pt; color: #9ca3af; letter-spacing: 1px; text-transform: uppercase; border-top: 1px solid #e5e7eb; padding-top: 8px; }
-/* layouts */
-.row { display: flex; gap: 16px; }
-.col { flex: 1; }
-.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-.cols-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.cols-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-/* photos */
-.photo-grid { display: grid; grid-template-columns: 5.4in 1fr 1fr; grid-template-rows: 2.1in 2.1in; gap: 8px; }
-.photo-grid .hero { grid-row: 1 / span 2; }
-.photo-box { background: #e5e7eb; border-radius: 4px; overflow: hidden; min-height: 1.5in; display: flex; align-items: center; justify-content: center; }
-.photo-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.photo-box.empty::before { content: 'PHOTO'; color: #9ca3af; font-size: 9pt; letter-spacing: 2px; }
-.map-placeholder { background: #e5e7eb; border-radius: 4px; width: 100%; height: 5in; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 10pt; letter-spacing: 2px; }
-/* exit cards */
-.exit-num { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: #F7941D; color: #fff; font-weight: 700; font-size: 14pt; margin-right: 10px; }
-/* COVER */
-.cover-top { height: 2.2in; background: #0D1F3C; color: #fff; margin: -0.55in -0.7in 0; padding: 0.7in 0.7in 0.4in; position: relative; }
-.cover-top::after { content: ''; display: block; position: absolute; left: 0.7in; bottom: 0.3in; width: 80px; height: 4px; background: #F7941D; }
-.cover-top .brand { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: #29ABE2; margin-bottom: 10px; }
-.cover-top .addr { font-size: 34pt; font-weight: 800; line-height: 1.1; }
-.cover-top .city { font-size: 18pt; font-weight: 400; color: rgba(255,255,255,0.85); margin-top: 4px; }
-.cover-top .meta { margin-top: 14px; font-size: 10pt; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.75); }
-.cover-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 0.55in; }
-.cover-stats .s { text-align: center; border-top: 3px solid #F7941D; padding-top: 10px; }
-.cover-stats .s .l { font-size: 8pt; letter-spacing: 1.3px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
-.cover-stats .s .v { font-size: 22pt; font-weight: 700; color: #0D1F3C; font-variant-numeric: tabular-nums; }
-.cover-bottom { position: absolute; left: 0.7in; right: 0.7in; bottom: 0.55in; display: flex; justify-content: space-between; font-size: 10pt; color: #6b7280; letter-spacing: 1px; }
-.cover-bottom .left { }
-.cover-bottom .right { text-align: right; }
-/* divider slide 12 */
-.divider { background: #0D1F3C; margin: -0.55in -0.7in -0.45in; padding: 2.2in 1.2in; height: 8.5in; color: #fff; }
-.divider .section-label { color: #29ABE2; font-size: 11pt; letter-spacing: 4px; text-transform: uppercase; }
-.divider .big { font-size: 60pt; font-weight: 800; margin-top: 14px; letter-spacing: -1px; }
-.divider .rule { width: 100px; height: 4px; background: #F7941D; margin: 24px 0; }
-.divider .lead { font-size: 13pt; color: rgba(255,255,255,0.8); max-width: 7in; line-height: 1.6; }
-.divider .f { position: absolute; bottom: 0.35in; right: 1.2in; color: rgba(255,255,255,0.4); font-size: 8pt; letter-spacing: 1px; text-transform: uppercase; }
-/* bar chart */
-.bar-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 9pt; }
-.bar-row .bl { width: 1.3in; color: #0D1F3C; font-weight: 600; text-transform: uppercase; font-size: 8.5pt; letter-spacing: 0.3px; }
-.bar-row .bt { flex: 1; height: 16px; background: #f3f4f6; border-radius: 3px; position: relative; overflow: hidden; }
-.bar-row .bf { height: 100%; background: linear-gradient(90deg, #29ABE2, #0D1F3C); border-radius: 3px; }
-.bar-row .bv { width: 0.6in; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
-/* timeline */
-.timeline { display: flex; gap: 6px; margin: 14px 0; }
-.timeline .step { flex: 1; text-align: center; }
-.timeline .n { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: #0D1F3C; color: #fff; font-weight: 700; margin-bottom: 6px; }
-.timeline .l { font-size: 9pt; line-height: 1.3; color: #0D1F3C; }
-/* next-steps footer cards */
-.ns-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
-.ns-card { border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px 16px; }
-.ns-card h4 { font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; color: #29ABE2; margin-bottom: 8px; }
-.ns-card .line { margin: 4px 0; font-size: 10pt; }
-.brand-strip { position: absolute; left: 0; right: 0; bottom: 0; background: #F7941D; color: #fff; padding: 10px 0.7in; font-size: 9pt; letter-spacing: 2px; text-transform: uppercase; text-align: center; font-weight: 600; }
+  :root {
+    /* Terms For Sale brand */
+    --ink: #1A1F24;
+    --slate: #304D5D;          /* logo color */
+    --slate-deep: #1E3440;
+    --slate-mist: #8FA3AE;
+    --ivory: #F6F1E8;
+    --paper: #FBF8F2;
+    --rule: #D9CFBD;
+    --rule-strong: #3A4E5A;
+    --gold: #C8A24C;
+    --gold-deep: #9E7E34;
+    --muted: #6B7680;
+    --gain: #2F6B4F;
+    --loss: #B04545;
+  }
+
+  /* THEME SWAP — tweaks cycle classes on <body> */
+  /* Matches termsforsale.com — slate primary, warm neutrals, amber accent */
+  body.theme-editorial {
+    --ink: #0F1A22;
+    --slate: #304D5D;
+    --slate-deep: #1E3440;
+    --slate-mist: #8FA3AE;
+    --ivory: #FFFFFF;
+    --paper: #F7F5F0;
+    --rule: #E4DED2;
+    --rule-strong: #304D5D;
+    --gold: #D4A24C;
+    --gold-deep: #A47A2E;
+    --muted: #5B6973;
+  }
+  body.theme-institutional {
+    --ink: #0C1116;
+    --slate: #0C1116;
+    --slate-deep: #000000;
+    --slate-mist: #7A8691;
+    --ivory: #FFFFFF;
+    --paper: #F4F5F7;
+    --rule: #D6DBE0;
+    --gold: #B9853A;
+    --rule-strong: #0C1116;
+  }
+  body.theme-modern {
+    --ink: #101418;
+    --slate: #0F3D2E;       /* deep green */
+    --slate-deep: #082218;
+    --slate-mist: #6E9685;
+    --ivory: #FFFDF7;
+    --paper: #FBF9F1;
+    --rule: #D9D3C3;
+    --gold: #E08E3A;        /* warmer orange */
+    --rule-strong: #0F3D2E;
+  }
+
+  html, body { margin:0; padding:0; background:#0A0D10; color:var(--ink); font-family:"Inter Tight", system-ui, sans-serif; }
+  deck-stage { background:#0A0D10; }
+
+  /* ——— SLIDE BASE ——— */
+  .slide {
+    width:100%; height:100%;
+    background:var(--paper);
+    color:var(--ink);
+    padding:64px 88px 52px;
+    box-sizing:border-box;
+    display:flex; flex-direction:column;
+    position:relative;
+    overflow:hidden;
+  }
+  .slide.dark { background:var(--slate); color:var(--ivory); }
+  .slide.ink  { background:var(--ink); color:var(--ivory); }
+  .slide.ivory { background:var(--ivory); }
+
+  /* ——— HEADER / PAGE CHROME ——— */
+  .page-header {
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:"Inter Tight"; font-size:20px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--slate); font-weight:500;
+    padding-bottom:16px; border-bottom:1px solid var(--rule);
+    margin-bottom:32px;
+  }
+  .slide.dark .page-header, .slide.ink .page-header { color:var(--slate-mist); border-bottom-color:rgba(255,255,255,0.15); }
+  .page-header .brand-mark { display:flex; align-items:center; gap:14px; }
+  .page-header .brand-mark .tfs-wordmark { font-family:"Manrope", sans-serif; font-weight:700; letter-spacing:0.12em; font-size:16px; text-transform:uppercase; }
+  .page-footer {
+    margin-top:auto;
+    display:flex; justify-content:space-between; align-items:flex-end;
+    font-family:"Inter Tight"; font-size:18px; color:var(--muted);
+    padding-top:20px; border-top:1px solid var(--rule);
+  }
+  .slide.dark .page-footer, .slide.ink .page-footer { color:var(--slate-mist); border-top-color:rgba(255,255,255,0.15); }
+
+  /* ——— TYPOGRAPHY ——— */
+  .eyebrow { font-family:"Inter Tight"; font-size:22px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); margin:0 0 28px; }
+  .kicker { font-family:"Inter Tight"; font-size:20px; letter-spacing:0.18em; text-transform:uppercase; color:var(--slate); font-weight:500; }
+  h1, h2, h3 { font-family:"Manrope", "Inter Tight", sans-serif; font-weight:700; margin:0; color:var(--ink); letter-spacing:-0.025em; }
+  .slide.dark h1, .slide.dark h2, .slide.dark h3, .slide.ink h1, .slide.ink h2, .slide.ink h3 { color:var(--ivory); }
+  .slide-title { font-size:84px; line-height:0.98; font-weight:400; }
+  .slide-title.small { font-size:68px; }
+  .section-title { font-size:148px; line-height:0.9; font-weight:300; letter-spacing:-0.03em; }
+  p { font-size:26px; line-height:1.5; color:var(--ink); margin:0 0 14px; }
+  .slide.dark p, .slide.ink p { color:var(--ivory); }
+  .lede { font-family:"Manrope", sans-serif; font-weight:400; font-size:36px; line-height:1.35; letter-spacing:-0.01em; }
+
+  /* ——— LOGO ——— */
+  .tfs-logo { /* inline styles control layout */ }
+
+
+  /* ——— DATA BLOCKS ——— */
+  .kv-row { display:flex; justify-content:space-between; align-items:baseline; padding:12px 0; border-bottom:1px solid var(--rule); }
+  .kv-row:last-child { border-bottom:none; }
+  .kv-row .label { font-family:"Inter Tight"; font-size:22px; color:var(--muted); letter-spacing:0.02em; }
+  .kv-row .value { font-family:"Inter Tight"; font-size:28px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .slide.dark .kv-row, .slide.ink .kv-row { border-bottom-color:rgba(255,255,255,0.12); }
+  .slide.dark .kv-row .value, .slide.ink .kv-row .value { color:var(--ivory); }
+  .slide.dark .kv-row .label, .slide.ink .kv-row .label { color:var(--slate-mist); }
+
+  .hero-stat { display:flex; flex-direction:column; gap:8px; }
+  .hero-stat .num { font-family:"Manrope", sans-serif; font-weight:700; font-size:108px; line-height:0.95; letter-spacing:-0.03em; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .hero-stat .num.slate { color:var(--slate); }
+  .hero-stat .num.gold { color:var(--gold-deep); }
+  .hero-stat .num.gain { color:var(--gain); }
+  .hero-stat .num.ivory { color:var(--ivory); }
+  .hero-stat .lbl { font-family:"Inter Tight"; font-size:22px; letter-spacing:0.16em; text-transform:uppercase; font-weight:500; color:var(--muted); }
+  .slide.dark .hero-stat .lbl, .slide.ink .hero-stat .lbl { color:var(--slate-mist); }
+  .hero-stat .sub { font-family:"Inter Tight"; font-size:20px; color:var(--muted); }
+  .slide.dark .hero-stat .sub, .slide.ink .hero-stat .sub { color:var(--slate-mist); }
+
+  /* ——— TABLES ——— */
+  .data-table { width:100%; border-collapse:collapse; font-family:"Inter Tight"; font-variant-numeric:tabular-nums; }
+  .data-table th { text-align:left; font-size:17px; letter-spacing:0.14em; text-transform:uppercase; font-weight:500; color:var(--muted); padding:10px 16px 10px 0; border-bottom:1.5px solid var(--rule-strong); }
+  .data-table td { font-size:21px; padding:10px 16px 10px 0; border-bottom:1px solid var(--rule); color:var(--ink); }
+  .data-table td.num { text-align:right; font-weight:600; }
+  .data-table tr.emphasis td { font-weight:700; color:var(--slate); border-bottom:2px solid var(--slate); }
+  .data-table tr.total td { font-weight:700; font-size:24px; color:var(--slate); border-top:2px solid var(--slate); border-bottom:none; padding-top:14px; }
+  .slide.dark .data-table th, .slide.ink .data-table th { color:var(--slate-mist); border-bottom-color:rgba(255,255,255,0.3); }
+  .slide.dark .data-table td, .slide.ink .data-table td { color:var(--ivory); border-bottom-color:rgba(255,255,255,0.12); }
+  .slide.dark .data-table tr.total td, .slide.ink .data-table tr.total td { color:var(--gold); border-top-color:var(--gold); }
+
+  /* ——— PLACEHOLDERS ——— */
+  .photo-ph {
+    background: linear-gradient(135deg, #C4BFB3 0%, #A8A296 100%);
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0 2px, transparent 2px 18px),
+      linear-gradient(135deg, #96927f 0%, #6e6a5b 100%);
+    position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,0.55);
+    font-family:"Inter Tight"; font-size:18px; letter-spacing:0.3em; text-transform:uppercase;
+  }
+  .photo-ph::after {
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.15), transparent 40%),
+      radial-gradient(circle at 70% 80%, rgba(0,0,0,0.2), transparent 40%);
+  }
+  .photo-ph .cap { position:relative; z-index:1; }
+
+  .map-ph {
+    background: var(--ivory);
+    position:relative; overflow:hidden;
+    background-image:
+      linear-gradient(0deg, rgba(48,77,93,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(48,77,93,0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ——— STRATEGY CARD ——— */
+  .strategy-card {
+    padding:36px;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    display:flex; flex-direction:column; gap:14px;
+    position:relative;
+  }
+  .strategy-card.active { border:1.5px solid var(--slate); background:#fff; }
+  .strategy-card .ix { font-family:"Manrope", sans-serif; font-size:30px; color:var(--gold-deep); font-weight:700; }
+  .strategy-card .nm { font-family:"Manrope", sans-serif; font-size:32px; font-weight:700; color:var(--ink); line-height:1.05; letter-spacing:-0.02em; }
+  .strategy-card .metrics { display:grid; grid-template-columns:1fr 1fr; gap:16px 24px; margin-top:auto; padding-top:16px; border-top:1px solid var(--rule); }
+  .strategy-card .metrics .m { display:flex; flex-direction:column; gap:2px; }
+  .strategy-card .metrics .m .v { font-family:"Inter Tight"; font-size:28px; font-weight:700; color:var(--slate); font-variant-numeric:tabular-nums; }
+  .strategy-card .metrics .m .l { font-family:"Inter Tight"; font-size:15px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); font-weight:500; }
+
+  /* ——— BARS / CHARTS ——— */
+  .bar-track { height:8px; background:var(--rule); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; background:var(--slate); border-radius:4px; }
+  .bar-fill.gold { background:var(--gold); }
+  .bar-fill.gain { background:var(--gain); }
+
+  /* Utility */
+  .row { display:flex; }
+  .col { display:flex; flex-direction:column; }
+  .gap-4 { gap:16px; } .gap-6 { gap:24px; } .gap-8 { gap:32px; } .gap-10 { gap:40px; } .gap-12 { gap:48px; }
+  .grow { flex:1; }
+  .pill { display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid var(--rule-strong); border-radius:100px; font-family:"Inter Tight"; font-size:16px; letter-spacing:0.1em; text-transform:uppercase; color:var(--slate); font-weight:500; background:transparent; }
+  .pill.gold { border-color:var(--gold); color:var(--gold-deep); }
+  .pill.filled { background:var(--slate); color:var(--ivory); border-color:var(--slate); }
+  .slide.dark .pill, .slide.ink .pill { color:var(--ivory); border-color:rgba(255,255,255,0.3); }
+
+  .accent-line { width:60px; height:3px; background:var(--gold); }
+
+  /* Section title slide */
+  .section-slide { background:var(--slate); color:var(--ivory); padding:100px; display:flex; flex-direction:column; justify-content:space-between; }
+  .section-slide .num { font-family:"Manrope", sans-serif; font-weight:700; font-size:240px; line-height:0.9; color:var(--gold); letter-spacing:-0.05em; }
+
+  /* TWEAKS panel */
+  #tweaks { position:fixed; right:24px; bottom:24px; background:#12161A; color:#F6F1E8; padding:20px 22px; border-radius:14px; font-family:"Inter Tight"; font-size:14px; box-shadow:0 30px 60px rgba(0,0,0,0.5); z-index:9999; min-width:260px; border:1px solid rgba(255,255,255,0.08); display:none; }
+  #tweaks.on { display:block; }
+  #tweaks h4 { font-family:"Manrope", sans-serif; font-size:16px; margin:0 0 14px; font-weight:700; color:#fff; letter-spacing:0.02em; }
+  #tweaks .row { display:flex; gap:6px; margin-bottom:14px; }
+  #tweaks button { flex:1; padding:10px 8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#F6F1E8; border-radius:8px; font-family:"Inter Tight"; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+  #tweaks button:hover { background:rgba(255,255,255,0.12); }
+  #tweaks button.active { background:var(--gold); color:#1A1F24; border-color:var(--gold); font-weight:600; }
+  #tweaks label { display:block; margin-bottom:6px; color:#999; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; }
+
+  /* Print */
+  @media print { #tweaks { display:none !important; } }
 </style>
 </head>
-<body>
+<body class="theme-editorial">
 
-<!-- ==================== SLIDE 1 — COVER ==================== -->
-<section class="slide">
-  <div class="cover-top">
-    <div class="brand">Terms For Sale · Investor Memo</div>
-    <div class="addr">{{DEAL_ADDRESS}}</div>
-    <div class="city">{{CITY_STATE_ZIP}}</div>
-    <div class="meta">{{PROPERTY_TYPE_BEDS_BATHS}} <span class="dot">·</span> {{DEAL_STRUCTURE}} <span class="dot">·</span> {{VIABLE_EXITS}}</div>
+<deck-stage width="1920" height="1080">
+
+<!-- 01 COVER -->
+<section data-label="01 Cover">
+  <div class="slide ink" style="padding:0; display:grid; grid-template-columns:1.1fr 1fr; gap:0;">
+    <!-- Left: brand + meta -->
+    <div style="padding:100px; display:flex; flex-direction:column; justify-content:space-between; background:var(--slate-deep);">
+      <div class="tfs-logo" style="display:flex; align-items:center;">
+        <img src="assets/tfs-logo-white.png" alt="Terms For Sale" style="height:64px; width:auto; display:block;" />
+      </div>
+
+      <div>
+        <div class="eyebrow" style="color:var(--gold);">Deal Analysis · Investor Memo</div>
+        <h1 class="slide-title" style="color:var(--ivory); font-size:96px;">{{DEAL_ADDRESS}}</h1>
+        <p style="font-family:'Manrope'; font-size:42px; font-weight:300; color:var(--slate-mist); margin-top:18px;">{{CITY_STATE_ZIP}}</p>
+
+        <div style="display:flex; gap:12px; margin-top:48px; flex-wrap:wrap;">
+          <span class="pill">{{PROPERTY_TYPE_BEDS_BATHS}}</span>
+          <span class="pill gold">{{DEAL_STRUCTURE}}</span>
+          <span class="pill">{{VIABLE_EXITS}}</span>
+        </div>
+      </div>
+
+      <div class="row" style="gap:64px; padding-top:40px; border-top:1px solid rgba(255,255,255,0.15);">
+        <div class="col">
+          <div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--slate-mist); font-weight:500;">Prepared for</div>
+          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">{{PREPARED_FOR}}</div>
+        </div>
+        <div class="col">
+          <div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--slate-mist); font-weight:500;">Memo Date</div>
+          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">{{MEMO_DATE}}</div>
+        </div>
+        <div class="col">
+          <div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--slate-mist); font-weight:500;">Deal ID</div>
+          <div style="font-family:'Manrope'; font-size:28px; color:var(--ivory); margin-top:6px;">{{DEAL_ID}}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: headline stats -->
+    <div style="padding:100px; background:var(--slate); display:flex; flex-direction:column; justify-content:center; gap:56px;">
+      <div class="eyebrow" style="color:var(--gold); margin-bottom:0;">The Deal at a Glance</div>
+      <div class="hero-stat">
+        <div class="num ivory" style="font-size:140px;">{{PURCHASE_PRICE}}</div>
+        <div class="lbl" style="color:var(--slate-mist);">Purchase Price</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px 56px;">
+        <div class="hero-stat">
+          <div class="num" style="color:var(--gold); font-size:72px;">{{EXISTING_RATE}}</div>
+          <div class="lbl" style="color:var(--slate-mist);">Existing Rate (SubTo)</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num ivory" style="font-size:72px;">{{CASH_TO_CLOSE_SHORT}}</div>
+          <div class="lbl" style="color:var(--slate-mist);">Cash to Close</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" style="color:var(--gold); font-size:72px;">{{PITI}}</div>
+          <div class="lbl" style="color:var(--slate-mist);">PITI / Mo</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num ivory" style="font-size:72px;">{{DAY1_EQUITY_SHORT}}</div>
+          <div class="lbl" style="color:var(--slate-mist);">Day&#8209;1 Equity</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="cover-stats">
-    <div class="s"><div class="l">Purchase Price</div><div class="v">{{PURCHASE_PRICE}}</div></div>
-    <div class="s"><div class="l">Existing Rate</div><div class="v">{{EXISTING_RATE}}</div></div>
-    <div class="s"><div class="l">Cash to Close</div><div class="v">{{CASH_TO_CLOSE}}</div></div>
-    <div class="s"><div class="l">Day-1 Equity</div><div class="v">{{DAY1_EQUITY}}</div></div>
-  </div>
-  <div class="cover-bottom">
-    <div class="left">Memo Date: {{MEMO_DATE}}</div>
-    <div class="right">Deal ID: {{DEAL_ID}}</div>
-  </div>
-  <div class="slide-footer"><span>Terms For Sale · Investor Memo</span><span>01 / 23</span></div>
 </section>
 
-<!-- ==================== SLIDE 2 — EXECUTIVE SUMMARY ==================== -->
-<section class="slide">
-  <div class="eyebrow">Section I</div>
-  <h1 class="title">Executive Summary<span class="title-underline"></span></h1>
-  <div class="callout" style="margin-top:18px;"><span class="italic" style="font-size:15pt;">{{EXEC_HOOK}}</span></div>
-  <div class="cols-3" style="margin-top:22px;">
-    <div>
-      <div class="eyebrow" style="color:#29ABE2;">Below-Market Debt</div>
-      <p style="margin-top:8px; font-size:10.5pt;">{{BELOW_MARKET_DEBT_NARRATIVE}}</p>
+
+<!-- 02 EXECUTIVE SUMMARY -->
+<section data-label="02 Executive Summary">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Executive Summary</div>
     </div>
-    <div>
-      <div class="eyebrow" style="color:#29ABE2;">In-Place Cashflow</div>
-      <p style="margin-top:8px; font-size:10.5pt;">{{INPLACE_CASHFLOW_NARRATIVE}}</p>
+
+    <div class="eyebrow">01 · Executive Summary</div>
+    <h2 class="slide-title" style="max-width:1400px;">{{EXEC_HEADLINE}}</h2>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:60px; margin-top:72px;">
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">01 · Below&#8209;Market Debt</div>
+        <p style="font-size:22px; line-height:1.55;">We're taking over a <b>$309K principal balance</b> at a fixed <b>2.875% rate</b>, 21 years of amortization remaining. PITI of $1,890/mo — a rate and payment no investor can originate today.</p>
+      </div>
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">02 · In&#8209;Place Cashflow</div>
+        <p style="font-size:22px; line-height:1.55;">Rent comps support <b>$2,650/mo</b> at market on a straight long-term lease. <b>$510/mo</b> of cashflow from day one before reserves — before considering higher-yield exits.</p>
+      </div>
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">03 · Stress&#8209;Tested Exits</div>
+        <p style="font-size:22px; line-height:1.55;">Six underwritten exit paths — <b>flip, LTR, STR, BRRRR, PadSplit, and wrap</b> — let the buyer match the property to their book. Full pro forma for each inside.</p>
+      </div>
     </div>
-    <div>
-      <div class="eyebrow" style="color:#29ABE2;">Stress-Tested Exits</div>
-      <p style="margin-top:8px; font-size:10.5pt;">{{STRESS_TESTED_EXITS_NARRATIVE}}</p>
+
+    <!-- Summary strip -->
+    <div style="margin-top:auto; display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1.5px solid var(--rule-strong); border-bottom:1.5px solid var(--rule-strong); padding:32px 0;">
+      <div class="hero-stat">
+        <div class="num slate" style="font-size:72px;">18.4%</div>
+        <div class="lbl">Best&#8209;Case CoC</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num slate" style="font-size:72px;">$2,140</div>
+        <div class="lbl">Peak Monthly Cashflow</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num slate" style="font-size:72px;">$78K</div>
+        <div class="lbl">Day&#8209;1 Equity</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num slate" style="font-size:72px;">7–21 d</div>
+        <div class="lbl">Time to Close</div>
+      </div>
     </div>
+
+    <div class="page-footer"><div>02 / 23</div><div>Confidential · Not a securities offering</div></div>
   </div>
-  <div class="stat-row" style="position:absolute; left:0.7in; right:0.7in; bottom:0.9in;">
-    <div class="stat accent"><div class="label">Best-Case COC</div><div class="val">{{BEST_CASE_COC}}</div></div>
-    <div class="stat"><div class="label">Peak Monthly CF</div><div class="val">{{PEAK_MONTHLY_CASHFLOW}}</div></div>
-    <div class="stat"><div class="label">Day-1 Equity</div><div class="val">{{DAY1_EQUITY}}</div></div>
-    <div class="stat blue"><div class="label">Time to Close</div><div class="val">{{TIME_TO_CLOSE}}</div></div>
-  </div>
-  <div class="slide-footer"><span>Executive Summary</span><span>02 / 23</span></div>
 </section>
 
-<!-- ==================== SLIDE 3 — PROPERTY PHOTOS ==================== -->
-<section class="slide">
-  <h1 class="title">Property<span class="title-underline"></span></h1>
-  <div class="photo-grid" style="margin-top:16px;">
-    <div class="photo-box hero empty"><img src="{{PHOTO_FRONT}}" alt="Front of property"></div>
-    <div class="photo-box empty"><img src="{{PHOTO_KITCHEN}}" alt="Kitchen"></div>
-    <div class="photo-box empty"><img src="{{PHOTO_LIVING}}" alt="Living room"></div>
-    <div class="photo-box empty"><img src="{{PHOTO_BACKYARD}}" alt="Backyard"></div>
-    <div class="photo-box empty"><img src="{{PHOTO_PRIMARY_BED}}" alt="Primary bedroom"></div>
+
+<!-- 03 THE PROPERTY -->
+<section data-label="03 The Property">
+  <div class="slide" style="padding:0; display:grid; grid-template-rows: 1fr auto; gap:0;">
+    <div style="display:grid; grid-template-columns: 1.6fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap:4px; height:100%;">
+      <div class="photo-ph" style="grid-row:1/3;"><span class="cap">FRONT ELEVATION</span></div>
+      <div class="photo-ph"><span class="cap">KITCHEN</span></div>
+      <div class="photo-ph"><span class="cap">LIVING</span></div>
+      <div class="photo-ph"><span class="cap">BACKYARD</span></div>
+      <div class="photo-ph"><span class="cap">PRIMARY BED</span></div>
+    </div>
+    <div style="padding:60px 100px; background:var(--paper); display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--rule);">
+      <div>
+        <div class="eyebrow" style="margin-bottom:10px;">02 · The Property</div>
+        <h2 style="font-size:64px;">{{DEAL_ADDRESS_PLAIN}}</h2>
+      </div>
+      <div class="row gap-12">
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Type</div><div style="font-family:'Manrope'; font-size:30px;">{{PROPERTY_TYPE}}</div></div>
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Year Built</div><div style="font-family:'Manrope'; font-size:30px;">{{YEAR_BUILT}}</div></div>
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Condition</div><div style="font-family:'Manrope'; font-size:30px;">{{CONDITION}}</div></div>
+        <div class="col"><div class="lbl" style="font-family:'Inter Tight'; font-size:16px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);">Occupancy</div><div style="font-family:'Manrope'; font-size:30px;">{{OCCUPANCY}}</div></div>
+      </div>
+    </div>
   </div>
-  <div style="margin-top:18px; display:flex; gap:8px; flex-wrap:wrap;">
-    <span class="pill navy">{{DEAL_ADDRESS_SHORT}}</span>
-    <span class="pill outline">{{PROPERTY_TYPE}}</span>
-    <span class="pill outline">Built {{YEAR_BUILT}}</span>
-    <span class="pill outline">{{CONDITION}}</span>
-    <span class="pill blue">{{OCCUPANCY}}</span>
-  </div>
-  <div class="slide-footer"><span>Property · Visual Overview</span><span>03 / 23</span></div>
 </section>
 
-<!-- ==================== SLIDE 4 — SPECIFICATIONS ==================== -->
-<section class="slide">
-  <h1 class="title">Specifications<span class="title-underline"></span></h1>
-  <div class="callout" style="margin-top:16px;"><span class="italic" style="font-size:13pt;">{{SPECS_HOOK}}</span></div>
-  <div class="cols-4" style="margin-top:22px;">
-    <div class="stat accent" style="text-align:center;"><div class="val" style="font-size:12pt;">{{FEATURE_1}}</div></div>
-    <div class="stat accent" style="text-align:center;"><div class="val" style="font-size:12pt;">{{FEATURE_2}}</div></div>
-    <div class="stat accent" style="text-align:center;"><div class="val" style="font-size:12pt;">{{FEATURE_3}}</div></div>
-    <div class="stat accent" style="text-align:center;"><div class="val" style="font-size:12pt;">{{FEATURE_4}}</div></div>
+
+<!-- 04 PROPERTY SPECS -->
+<section data-label="04 Property Specs">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Specifications</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:96px; flex:1;">
+      <div>
+        <div class="eyebrow">03 · Property Specifications</div>
+        <h2 class="slide-title small">Built for investor math.</h2>
+        <p style="font-size:26px; line-height:1.5; max-width:640px; margin-top:28px; color:var(--muted);">Three&#8209;bed, two&#8209;bath with recent roof and HVAC. Square footage and layout support rent comps at the median and resale comps at conservative ARV. No deferred capex.</p>
+
+        <div class="row gap-4" style="flex-wrap:wrap; margin-top:44px;">
+          <span class="pill">Recent Roof (2022)</span>
+          <span class="pill">HVAC (2021)</span>
+          <span class="pill">No HOA</span>
+          <span class="pill gold">ADU&#8209;eligible Lot</span>
+        </div>
+      </div>
+
+      <div class="col" style="justify-content:center;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0;">
+          <div class="hero-stat" style="padding:28px 0; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule); padding-right:32px;">
+            <div class="num slate" style="font-size:88px;">{{BEDROOMS}}</div>
+            <div class="lbl">Bedrooms</div>
+          </div>
+          <div class="hero-stat" style="padding:28px 0 28px 32px; border-bottom:1px solid var(--rule);">
+            <div class="num slate" style="font-size:88px;">{{BATHROOMS}}</div>
+            <div class="lbl">Bathrooms</div>
+          </div>
+          <div class="hero-stat" style="padding:28px 0; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule); padding-right:32px;">
+            <div class="num slate" style="font-size:88px;">{{LIVING_SQFT}}</div>
+            <div class="lbl">Sq Ft Living</div>
+          </div>
+          <div class="hero-stat" style="padding:28px 0 28px 32px; border-bottom:1px solid var(--rule);">
+            <div class="num slate" style="font-size:88px;">{{LOT_SQFT}}</div>
+            <div class="lbl">Lot Sq Ft</div>
+          </div>
+          <div class="hero-stat" style="padding:28px 0; border-right:1px solid var(--rule); padding-right:32px;">
+            <div class="num slate" style="font-size:88px;">{{YEAR_BUILT_2}}</div>
+            <div class="lbl">Year Built</div>
+          </div>
+          <div class="hero-stat" style="padding:28px 0 28px 32px;">
+            <div class="num slate" style="font-size:88px;">{{GARAGE}}</div>
+            <div class="lbl">Garage</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer"><div>04 / 23</div><div>Terms For Sale · Deal Analysis</div></div>
   </div>
-  <div class="cols-2" style="margin-top:26px;">
-    <table class="kv">
-      <tr><td class="k">Bedrooms</td><td class="v">{{BEDROOMS}}</td></tr>
-      <tr><td class="k">Bathrooms</td><td class="v">{{BATHROOMS}}</td></tr>
-      <tr><td class="k">Living Sqft</td><td class="v">{{LIVING_SQFT}}</td></tr>
+</section>
+
+
+<!-- 05 LOCATION & MARKET -->
+<section data-label="05 Location & Market">
+  <div class="slide" style="padding:0; display:grid; grid-template-columns:1.1fr 1fr;">
+    <div class="map-ph" style="position:relative;">
+      <!-- Faux map -->
+      <svg viewBox="0 0 800 1080" style="position:absolute; inset:0; width:100%; height:100%;" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+            <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgba(48,77,93,0.08)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="800" height="1080" fill="url(#grid)"/>
+        <!-- roads -->
+        <path d="M 0 420 Q 200 380 400 440 T 800 460" stroke="rgba(48,77,93,0.25)" stroke-width="10" fill="none"/>
+        <path d="M 0 640 L 800 620" stroke="rgba(48,77,93,0.2)" stroke-width="6" fill="none"/>
+        <path d="M 420 0 L 380 1080" stroke="rgba(48,77,93,0.22)" stroke-width="8" fill="none"/>
+        <path d="M 620 0 L 660 1080" stroke="rgba(48,77,93,0.15)" stroke-width="4" fill="none"/>
+        <!-- water -->
+        <path d="M 0 820 Q 300 780 500 850 T 800 900 L 800 1080 L 0 1080 Z" fill="rgba(48,77,93,0.08)"/>
+        <!-- subject pin -->
+        <circle cx="400" cy="500" r="24" fill="#C8A24C"/>
+        <circle cx="400" cy="500" r="10" fill="#fff"/>
+        <circle cx="400" cy="500" r="60" fill="none" stroke="#C8A24C" stroke-width="2" opacity="0.3"/>
+        <circle cx="400" cy="500" r="120" fill="none" stroke="#C8A24C" stroke-width="1" opacity="0.2"/>
+        <!-- comps -->
+        <circle cx="280" cy="420" r="9" fill="#304D5D"/>
+        <circle cx="520" cy="580" r="9" fill="#304D5D"/>
+        <circle cx="340" cy="640" r="9" fill="#304D5D"/>
+        <circle cx="480" cy="380" r="9" fill="#304D5D"/>
+        <!-- labels -->
+        <text x="420" y="496" font-family="Inter Tight" font-size="18" fill="#304D5D" font-weight="600">SUBJECT</text>
+      </svg>
+      <div style="position:absolute; bottom:40px; left:40px; background:#fff; padding:16px 22px; border:1px solid var(--rule); font-family:'Inter Tight'; font-size:18px;">
+        <div style="display:flex; align-items:center; gap:12px;"><span style="width:14px; height:14px; background:#C8A24C; border-radius:50%;"></span>Subject</div>
+        <div style="display:flex; align-items:center; gap:12px; margin-top:8px;"><span style="width:14px; height:14px; background:#304D5D; border-radius:50%;"></span>Closed comps</div>
+      </div>
+    </div>
+
+    <div style="padding:100px; display:flex; flex-direction:column; background:var(--slate); color:var(--ivory);">
+      <div class="eyebrow" style="color:var(--gold);">04 · Location & Market</div>
+      <h2 class="slide-title small" style="color:var(--ivory);">{{SUBMARKET_NAME}}</h2>
+      <p class="lede" style="color:var(--slate-mist); margin-top:20px;">{{LOCATION_NARRATIVE}}</p>
+
+      <div style="margin-top:52px; display:grid; grid-template-columns:1fr 1fr; gap:32px 60px;">
+        <div class="hero-stat">
+          <div class="num ivory" style="font-size:64px;">+4.2%</div>
+          <div class="lbl" style="color:var(--slate-mist);">Annual Pop. Growth</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num ivory" style="font-size:64px;">$82K</div>
+          <div class="lbl" style="color:var(--slate-mist);">Median HH Income</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num ivory" style="font-size:64px;">8 / 10</div>
+          <div class="lbl" style="color:var(--slate-mist);">Schools (GreatSchools)</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num ivory" style="font-size:64px;">2.1%</div>
+          <div class="lbl" style="color:var(--slate-mist);">Rental Vacancy</div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto; padding-top:40px; border-top:1px solid rgba(255,255,255,0.15); font-family:'Inter Tight'; font-size:18px; color:var(--slate-mist);">
+        Major employers within 10 mi: MacDill AFB · Tampa General · USF Health · Raymond James
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- 06 COMPARABLE SALES -->
+<section data-label="06 Comparable Sales (ARV)">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Sales Comps</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">05 · Comparable Sales</div>
+        <h2 class="slide-title small">ARV supported at $465,000.</h2>
+      </div>
+      <div class="hero-stat" style="text-align:right;">
+        <div class="num gold" style="font-size:84px;">$465,000</div>
+        <div class="lbl" style="text-align:right;">Conservative ARV</div>
+      </div>
+    </div>
+
+    <table class="data-table" style="margin-top:56px;">
+      <thead>
+        <tr>
+          <th>Address</th>
+          <th>Distance</th>
+          <th>Beds / Baths</th>
+          <th>Sq Ft</th>
+          <th>Closed</th>
+          <th style="text-align:right;">Sale Price</th>
+          <th style="text-align:right;">$ / Sq Ft</th>
+          <th style="text-align:right;">Adj. Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>3912 S Cedar Ln</td><td>0.3 mi</td><td>3 / 2</td><td>1,810</td><td>Feb 2026</td><td class="num">$478,000</td><td class="num">$264</td><td class="num">$471,000</td></tr>
+        <tr><td>4404 W Barrow Ave</td><td>0.5 mi</td><td>3 / 2</td><td>1,732</td><td>Jan 2026</td><td class="num">$452,000</td><td class="num">$261</td><td class="num">$463,000</td></tr>
+        <tr><td>3728 S Manhattan</td><td>0.4 mi</td><td>3 / 2.5</td><td>1,860</td><td>Dec 2025</td><td class="num">$491,000</td><td class="num">$264</td><td class="num">$461,000</td></tr>
+        <tr class="emphasis"><td colspan="7">Subject Property — 1,784 sq ft · 3/2 · Turn-Key</td><td class="num">$465,000</td></tr>
+      </tbody>
     </table>
-    <table class="kv">
-      <tr><td class="k">Lot Sqft</td><td class="v">{{LOT_SQFT}}</td></tr>
-      <tr><td class="k">Year Built</td><td class="v">{{YEAR_BUILT_2}}</td></tr>
-      <tr><td class="k">Garage</td><td class="v">{{GARAGE}}</td></tr>
+
+    <div style="margin-top:40px; padding:28px 32px; background:var(--ivory); border-left:3px solid var(--gold); display:flex; gap:40px;">
+      <div class="col gap-4" style="flex:1;">
+        <div class="kicker" style="font-size:16px;">Method</div>
+        <p style="font-size:20px; margin:0;">Adjusted $/sqft, weighted toward closest comp. Excludes outliers > 2 std dev from median.</p>
+      </div>
+      <div class="col gap-4" style="flex:1;">
+        <div class="kicker" style="font-size:16px;">Spread to Purchase</div>
+        <p style="font-size:20px; margin:0;"><b>$78,000 day-one equity</b> · 16.8% instant margin before any value-add work.</p>
+      </div>
+    </div>
+
+    <div class="page-footer"><div>06 / 23</div><div>Comps pulled 4/18/26 · MLS + public records</div></div>
+  </div>
+</section>
+
+
+<!-- 07 RENT COMPS -->
+<section data-label="07 Rent Comps">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Rent Comps</div>
+    </div>
+
+    <div class="eyebrow">06 · Rent Comparables</div>
+    <h2 class="slide-title small">Market rent at $2,650 · STR ADR at $214.</h2>
+
+    <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <!-- Table -->
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Address</th>
+            <th>Status</th>
+            <th>Beds</th>
+            <th>Sq Ft</th>
+            <th style="text-align:right;">Rent / Mo</th>
+            <th style="text-align:right;">$ / Sq Ft</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>3912 S Cedar Ln</td><td>Leased Mar'26</td><td>3</td><td>1,810</td><td class="num">$2,695</td><td class="num">$1.49</td></tr>
+          <tr><td>4301 W Barrow</td><td>Leased Jan'26</td><td>3</td><td>1,750</td><td class="num">$2,600</td><td class="num">$1.49</td></tr>
+          <tr><td>3822 S Manhattan</td><td>Active</td><td>3</td><td>1,890</td><td class="num">$2,750</td><td class="num">$1.46</td></tr>
+          <tr><td>4110 W Gray St</td><td>Active</td><td>3</td><td>1,720</td><td class="num">$2,595</td><td class="num">$1.51</td></tr>
+          <tr class="emphasis"><td colspan="4">Subject — pro forma market rent</td><td class="num">$2,650</td><td class="num">$1.49</td></tr>
+        </tbody>
+      </table>
+
+      <!-- STR comps card -->
+      <div class="col gap-6" style="background:var(--slate); color:var(--ivory); padding:44px; margin-top:-12px;">
+        <div class="eyebrow" style="color:var(--gold); margin:0;">STR Market (AirDNA)</div>
+        <h3 style="font-size:44px; color:var(--ivory); font-weight:500;">3BR pocket averages</h3>
+        <div class="col gap-6" style="margin-top:20px;">
+          <div class="kv-row">
+            <span class="label">Median ADR</span>
+            <span class="value">$214</span>
+          </div>
+          <div class="kv-row">
+            <span class="label">Occupancy (12mo)</span>
+            <span class="value">68%</span>
+          </div>
+          <div class="kv-row">
+            <span class="label">RevPAR</span>
+            <span class="value">$145</span>
+          </div>
+          <div class="kv-row">
+            <span class="label">Pro forma gross</span>
+            <span class="value">$4,415 / mo</span>
+          </div>
+          <div class="kv-row">
+            <span class="label">Seasonality skew</span>
+            <span class="value">Q1 peak</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer"><div>07 / 23</div><div>Zillow Rental + AirDNA · 90-day trailing</div></div>
+  </div>
+</section>
+
+
+<!-- 08 DEAL STRUCTURE -->
+<section data-label="08 Deal Structure">
+  <div class="slide dark">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Structure</div>
+    </div>
+
+    <div class="eyebrow">07 · Deal Structure</div>
+    <h2 class="slide-title small" style="color:var(--ivory);">Hybrid — Subject&#8209;To + Seller Finance.</h2>
+    <p style="color:var(--slate-mist); max-width:1000px; margin-top:20px;">Buyer takes the existing 1st lien subject&#8209;to. Seller carries a 2nd for the equity gap. Minimal cash in, maximum preservation of the below&#8209;market rate.</p>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:28px; margin-top:72px;">
+      <!-- Layer 1 -->
+      <div style="background:rgba(255,255,255,0.06); padding:40px; border-top:4px solid var(--gold);">
+        <div class="eyebrow" style="color:var(--gold); margin-bottom:18px;">Layer 1 · Subject&#8209;To</div>
+        <div class="hero-stat">
+          <div class="num" style="color:var(--ivory); font-size:72px;">$309K</div>
+          <div class="lbl" style="color:var(--slate-mist);">Existing 1st Lien Balance</div>
+        </div>
+        <div style="margin-top:28px;">
+          <div class="kv-row"><span class="label">Rate</span><span class="value">2.875% fixed</span></div>
+          <div class="kv-row"><span class="label">Remaining term</span><span class="value">21 yrs</span></div>
+          <div class="kv-row"><span class="label">PITI</span><span class="value">$1,890 / mo</span></div>
+        </div>
+      </div>
+      <!-- Layer 2 -->
+      <div style="background:rgba(255,255,255,0.06); padding:40px; border-top:4px solid var(--gold);">
+        <div class="eyebrow" style="color:var(--gold); margin-bottom:18px;">Layer 2 · Seller Finance</div>
+        <div class="hero-stat">
+          <div class="num" style="color:var(--ivory); font-size:72px;">$36K</div>
+          <div class="lbl" style="color:var(--slate-mist);">Seller-Carried 2nd</div>
+        </div>
+        <div style="margin-top:28px;">
+          <div class="kv-row"><span class="label">Rate</span><span class="value">0% interest</span></div>
+          <div class="kv-row"><span class="label">Term</span><span class="value">60-mo balloon</span></div>
+          <div class="kv-row"><span class="label">Payment</span><span class="value">$600 / mo</span></div>
+        </div>
+      </div>
+      <!-- Layer 3 -->
+      <div style="background:rgba(200,162,76,0.12); padding:40px; border-top:4px solid var(--gold);">
+        <div class="eyebrow" style="color:var(--gold); margin-bottom:18px;">Layer 3 · Buyer Cash</div>
+        <div class="hero-stat">
+          <div class="num" style="color:var(--gold); font-size:72px;">$42K</div>
+          <div class="lbl" style="color:var(--slate-mist);">Total Cash to Close</div>
+        </div>
+        <div style="margin-top:28px;">
+          <div class="kv-row"><span class="label">Down to seller</span><span class="value">$30,000</span></div>
+          <div class="kv-row"><span class="label">Closing costs</span><span class="value">$4,200</span></div>
+          <div class="kv-row"><span class="label">Reserves (3 mo)</span><span class="value">$7,800</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer"><div>08 / 23</div><div>Subject to due-on-sale risk · see Risks slide</div></div>
+  </div>
+</section>
+
+
+<!-- 09 EXISTING LOAN -->
+<section data-label="09 Existing Loan">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Underlying Loan</div>
+    </div>
+
+    <div class="eyebrow">08 · Existing Loan (SubTo)</div>
+    <h2 class="slide-title small">The loan you're taking over.</h2>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:80px; margin-top:64px; flex:1;">
+      <div class="col">
+        <div class="kv-row"><span class="label">Lender</span><span class="value">Rocket Mortgage</span></div>
+        <div class="kv-row"><span class="label">Loan type</span><span class="value">30-yr fixed, conventional</span></div>
+        <div class="kv-row"><span class="label">Original amount</span><span class="value">$344,000</span></div>
+        <div class="kv-row"><span class="label">Current balance</span><span class="value">$309,140</span></div>
+        <div class="kv-row"><span class="label">Interest rate</span><span class="value" style="color:var(--gold-deep);">2.875% fixed</span></div>
+        <div class="kv-row"><span class="label">Origination</span><span class="value">Aug 2020</span></div>
+        <div class="kv-row"><span class="label">Remaining term</span><span class="value">21 yr · 4 mo</span></div>
+        <div class="kv-row"><span class="label">Escrow</span><span class="value">Impounded</span></div>
+        <div class="kv-row"><span class="label">Assumability clause</span><span class="value">Due-on-sale (DOS)</span></div>
+      </div>
+
+      <div class="col gap-6" style="background:var(--slate); color:var(--ivory); padding:48px;">
+        <div class="eyebrow" style="color:var(--gold); margin:0;">Monthly PITI Breakdown</div>
+        <div class="hero-stat">
+          <div class="num ivory" style="font-size:108px;">$1,890</div>
+          <div class="lbl" style="color:var(--slate-mist);">Total PITI / mo</div>
+        </div>
+        <div class="col" style="margin-top:24px;">
+          <div class="kv-row"><span class="label">Principal + Interest</span><span class="value">$1,428</span></div>
+          <div class="kv-row"><span class="label">Property tax (impound)</span><span class="value">$318</span></div>
+          <div class="kv-row"><span class="label">Hazard insurance</span><span class="value">$144</span></div>
+          <div class="kv-row"><span class="label">PMI</span><span class="value">Removed Q3 '24</span></div>
+        </div>
+        <div style="margin-top:auto; padding-top:24px; border-top:1px solid rgba(255,255,255,0.15); font-family:'Inter Tight'; font-size:18px; color:var(--slate-mist);">
+          Today's 30-yr rate environment: <b style="color:var(--ivory);">~6.85%</b>. You're inheriting a ~400bps spread.
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer"><div>09 / 23</div><div>Loan details verified via seller authorization letter</div></div>
+  </div>
+</section>
+
+
+<!-- 10 PURCHASE & SOURCES/USES -->
+<section data-label="10 Sources & Uses">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Sources & Uses</div>
+    </div>
+
+    <div class="eyebrow">09 · Purchase Stack</div>
+    <h2 class="slide-title small">$387,000 purchase · $42,000 cash in.</h2>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <!-- SOURCES -->
+      <div>
+        <div class="kicker" style="font-size:18px; margin-bottom:24px;">Sources of Capital</div>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Existing 1st lien (SubTo)</td><td class="num">$309,140</td></tr>
+            <tr><td>Seller-carried 2nd</td><td class="num">$36,000</td></tr>
+            <tr><td>Buyer cash down</td><td class="num">$30,000</td></tr>
+            <tr><td>Buyer closing + reserves</td><td class="num">$12,000</td></tr>
+            <tr class="total"><td>Total sources</td><td class="num">$387,140</td></tr>
+          </tbody>
+        </table>
+
+        <!-- Pie of sources -->
+        <div style="margin-top:40px; display:flex; align-items:center; gap:32px;">
+          <svg viewBox="0 0 120 120" width="140" height="140">
+            <circle r="54" cx="60" cy="60" fill="transparent" stroke="#304D5D" stroke-width="16" stroke-dasharray="271 339" transform="rotate(-90 60 60)"/>
+            <circle r="54" cx="60" cy="60" fill="transparent" stroke="#C8A24C" stroke-width="16" stroke-dasharray="31.5 339" stroke-dashoffset="-271" transform="rotate(-90 60 60)"/>
+            <circle r="54" cx="60" cy="60" fill="transparent" stroke="#8FA3AE" stroke-width="16" stroke-dasharray="26 339" stroke-dashoffset="-302.5" transform="rotate(-90 60 60)"/>
+            <circle r="54" cx="60" cy="60" fill="transparent" stroke="#1E3440" stroke-width="16" stroke-dasharray="10.5 339" stroke-dashoffset="-328.5" transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="col gap-4">
+            <div style="display:flex; align-items:center; gap:12px; font-size:18px;"><span style="width:14px;height:14px;background:#304D5D;"></span>1st lien · 80%</div>
+            <div style="display:flex; align-items:center; gap:12px; font-size:18px;"><span style="width:14px;height:14px;background:#C8A24C;"></span>Seller 2nd · 9%</div>
+            <div style="display:flex; align-items:center; gap:12px; font-size:18px;"><span style="width:14px;height:14px;background:#8FA3AE;"></span>Cash down · 8%</div>
+            <div style="display:flex; align-items:center; gap:12px; font-size:18px;"><span style="width:14px;height:14px;background:#1E3440;"></span>Closing/reserves · 3%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USES -->
+      <div>
+        <div class="kicker" style="font-size:18px; margin-bottom:24px;">Uses of Capital</div>
+        <table class="data-table">
+          <tbody>
+            <tr><td>Purchase price</td><td class="num">$387,000</td></tr>
+            <tr><td>Title / escrow</td><td class="num">$2,400</td></tr>
+            <tr><td>Attorney review</td><td class="num">$1,200</td></tr>
+            <tr><td>Recording + transfer</td><td class="num">$600</td></tr>
+            <tr><td>Insurance (1 yr)</td><td class="num">$1,728</td></tr>
+            <tr><td>Holdback / reserves</td><td class="num">$7,800</td></tr>
+            <tr><td>Inspection + due diligence</td><td class="num">$412</td></tr>
+            <tr class="total"><td>Total uses</td><td class="num">$401,140</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:28px; padding:24px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:20px;">
+          Day&#8209;1 equity: <b style="color:var(--slate); font-size:24px;">$77,860</b> (ARV $465K − purchase $387K + $0 rehab at turn&#8209;key).
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer"><div>10 / 23</div><div>Cash-in position holds across Flip, BRRRR, Hold</div></div>
+  </div>
+</section>
+
+
+<!-- 11 REHAB -->
+<section data-label="11 Rehab Budget">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Scope & Budget</div>
+    </div>
+
+    <div class="eyebrow">10 · Rehab & CapEx</div>
+    <h2 class="slide-title small">Optional — scope depends on exit.</h2>
+    <p style="font-size:24px; color:var(--muted); max-width:1000px; margin-top:18px;">Turn&#8209;key today. Flip &amp; BRRRR exits assume light cosmetic scope to lift ARV; hold exits skip the rehab entirely.</p>
+
+    <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <table class="data-table">
+        <thead>
+          <tr><th>Scope Item</th><th style="text-align:right;">Qty / Scope</th><th style="text-align:right;">Budget</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Interior paint (whole house)</td><td class="num">1,784 sq ft</td><td class="num">$4,800</td></tr>
+          <tr><td>LVP flooring — bedrooms</td><td class="num">540 sq ft</td><td class="num">$3,780</td></tr>
+          <tr><td>Kitchen cosmetic refresh</td><td class="num">paint cabs + hardware</td><td class="num">$2,400</td></tr>
+          <tr><td>Bathroom vanities (2)</td><td class="num">replace both</td><td class="num">$2,100</td></tr>
+          <tr><td>Lighting + fixtures</td><td class="num">whole house</td><td class="num">$1,600</td></tr>
+          <tr><td>Landscaping / curb appeal</td><td class="num">full</td><td class="num">$2,800</td></tr>
+          <tr><td>Punch list + cleaning</td><td class="num">&mdash;</td><td class="num">$1,200</td></tr>
+          <tr><td>Contingency (20%)</td><td class="num">&mdash;</td><td class="num">$3,736</td></tr>
+          <tr class="total"><td>Flip / BRRRR budget</td><td></td><td class="num">$22,416</td></tr>
+        </tbody>
+      </table>
+
+      <div class="col gap-6">
+        <div style="background:var(--slate); color:var(--ivory); padding:36px;">
+          <div class="eyebrow" style="color:var(--gold); margin:0 0 14px;">Timeline</div>
+          <div class="kv-row"><span class="label">Start</span><span class="value">Week 1 post-close</span></div>
+          <div class="kv-row"><span class="label">Duration</span><span class="value">21 days</span></div>
+          <div class="kv-row"><span class="label">GC model</span><span class="value">Single GC, firm bid</span></div>
+          <div class="kv-row"><span class="label">Draw schedule</span><span class="value">3 draws</span></div>
+        </div>
+        <div style="padding:28px 32px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:20px;">
+          Hold exits (LTR, STR, Wrap) can skip scope entirely — roll in day&#8209;one rent from current condition.
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer"><div>11 / 23</div><div>GC: Meridian Renovations · bid dated 4/19/26</div></div>
+  </div>
+</section>
+
+
+<!-- 12 EXIT OVERVIEW -->
+<section data-label="12 Exit Strategies">
+  <div class="section-slide">
+    <div class="page-header" style="border-bottom-color:rgba(255,255,255,0.15); color:var(--slate-mist);">
+      <div class="brand-mark"><span class="tfs-wordmark" style="color:var(--ivory);">Terms For Sale</span></div>
+      <div>Section Two</div>
+    </div>
+
+    <div style="flex:1; display:flex; align-items:center;">
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:80px; align-items:center; width:100%;">
+        <div class="num">II</div>
+        <div>
+          <div class="eyebrow" style="color:var(--gold);">Six exit paths underwritten</div>
+          <h2 class="section-title" style="color:var(--ivory); max-width:1100px; font-size:110px;">Exit Strategy Analysis</h2>
+          <p style="color:var(--slate-mist); font-family:'Manrope'; font-size:34px; font-weight:300; max-width:900px; margin-top:32px; line-height:1.35;">Each exit is underwritten on its own merits. Match the property to your capital stack and operational bandwidth.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="gap:16px; flex-wrap:wrap; margin-top:20px;">
+      <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.3);">01 · Fix &amp; Flip</span>
+      <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.3);">02 · Long&#8209;Term Rental</span>
+      <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.3);">03 · Short&#8209;Term Rental</span>
+      <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.3);">04 · BRRRR</span>
+      <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.3);">05 · Coliving / PadSplit</span>
+      <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.3);">06 · Wrap / Lease Option</span>
+      <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.3);">07 · Development</span>
+    </div>
+  </div>
+</section>
+
+<!-- EXIT STRATEGY SLIDES — reuse a common layout -->
+
+<!-- 13 FIX & FLIP -->
+<section data-label="13 Exit · Fix & Flip">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Exit 1 of 7 · Fix &amp; Flip</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">Exit Strategy 01</div>
+        <h2 class="slide-title small">Fix &amp; Flip</h2>
+      </div>
+      <div class="pill gold">Hold ≈ 4 months</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <!-- PRO FORMA -->
+      <table class="data-table">
+        <thead><tr><th>Line Item</th><th style="text-align:right;">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>After-Repair Value (ARV)</td><td class="num">$465,000</td></tr>
+          <tr><td>Less: selling costs (6%)</td><td class="num">($27,900)</td></tr>
+          <tr><td>Less: holding costs (4 mo)</td><td class="num">($7,560)</td></tr>
+          <tr><td>Less: rehab budget</td><td class="num">($22,416)</td></tr>
+          <tr><td>Less: purchase price</td><td class="num">($387,000)</td></tr>
+          <tr class="total"><td>Net profit</td><td class="num">$20,124</td></tr>
+        </tbody>
+      </table>
+
+      <!-- HERO METRICS -->
+      <div class="col gap-10" style="justify-content:center;">
+        <div class="hero-stat">
+          <div class="num gain" style="font-size:128px;">$20,124</div>
+          <div class="lbl">Projected Net Profit</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; padding-top:32px; border-top:1px solid var(--rule);">
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">31.2%</div>
+            <div class="lbl">CoC Return</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">4.3%</div>
+            <div class="lbl">Margin on ARV</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">4 mo</div>
+            <div class="lbl">Time to exit</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$64.4K</div>
+            <div class="lbl">Total capital in</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:18px; color:var(--muted);">
+      <b style="color:var(--ink);">Verdict:</b> Thinnest-margin exit. DOS-risk exposure is shortest here. Only recommended if buyer already has a flip crew on deck.
+    </div>
+
+    <div class="page-footer"><div>13 / 23</div><div>Assumes FSBO + investor buyer · no agent on sell side</div></div>
+  </div>
+</section>
+
+
+<!-- 14 LTR -->
+<section data-label="14 Exit · Long-Term Rental">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Exit 2 of 7 · Long-Term Rental</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">Exit Strategy 02</div>
+        <h2 class="slide-title small">Long&#8209;Term Rental</h2>
+      </div>
+      <div class="pill gold">Indefinite hold</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <table class="data-table">
+        <thead><tr><th>Line Item</th><th style="text-align:right;">Monthly</th><th style="text-align:right;">Annual</th></tr></thead>
+        <tbody>
+          <tr><td>Gross rent</td><td class="num">$2,650</td><td class="num">$31,800</td></tr>
+          <tr><td>Vacancy (5%)</td><td class="num">($133)</td><td class="num">($1,590)</td></tr>
+          <tr><td>Effective gross income</td><td class="num">$2,517</td><td class="num">$30,210</td></tr>
+          <tr><td>Property mgmt (8%)</td><td class="num">($212)</td><td class="num">($2,544)</td></tr>
+          <tr><td>Maintenance reserve</td><td class="num">($150)</td><td class="num">($1,800)</td></tr>
+          <tr><td>CapEx reserve</td><td class="num">($125)</td><td class="num">($1,500)</td></tr>
+          <tr class="emphasis"><td>Net Operating Income</td><td class="num">$2,030</td><td class="num">$24,366</td></tr>
+          <tr><td>Debt service (1st + 2nd)</td><td class="num">($2,490)</td><td class="num">($29,880)</td></tr>
+          <tr><td colspan="3" style="font-size:16px; color:var(--muted); padding:4px 0 0;">2nd lien retires month 60 → PITI drops to $1,890</td></tr>
+          <tr class="total"><td>Yr&#8209;1 cashflow (post 2nd)</td><td class="num">($460)</td><td class="num">($5,514)</td></tr>
+          <tr class="total"><td>Yr&#8209;6+ cashflow (2nd paid)</td><td class="num">$140</td><td class="num">$1,680</td></tr>
+        </tbody>
+      </table>
+
+      <div class="col gap-10" style="justify-content:center;">
+        <div class="hero-stat">
+          <div class="num slate" style="font-size:112px;">5.79%</div>
+          <div class="lbl">Cap Rate (on purchase)</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; padding-top:32px; border-top:1px solid var(--rule);">
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$2,030</div>
+            <div class="lbl">Monthly NOI</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$140</div>
+            <div class="lbl">Yr&#8209;6 Cashflow</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">3.3%</div>
+            <div class="lbl">Yr&#8209;1 CoC (neg)</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">9.1%</div>
+            <div class="lbl">Yr&#8209;6 CoC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:18px; color:var(--muted);">
+      <b style="color:var(--ink);">Verdict:</b> Slight negative Yr&#8209;1 on the hybrid stack — flips strongly positive once the seller 2nd retires. Compensating strength: principal paydown + 2.875% locked in.
+    </div>
+
+    <div class="page-footer"><div>14 / 23</div><div>Rent per pro forma comps · mgmt at 8% market</div></div>
+  </div>
+</section>
+
+
+<!-- 15 STR -->
+<section data-label="15 Exit · Short-Term Rental">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Exit 3 of 7 · Short-Term Rental</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">Exit Strategy 03</div>
+        <h2 class="slide-title small">Short&#8209;Term Rental</h2>
+      </div>
+      <div class="pill gold">High yield · Mgmt-intensive</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <table class="data-table">
+        <thead><tr><th>Line Item</th><th style="text-align:right;">Monthly</th><th style="text-align:right;">Annual</th></tr></thead>
+        <tbody>
+          <tr><td>ADR × occupancy ($214 × 65%)</td><td class="num">$4,227</td><td class="num">$50,724</td></tr>
+          <tr><td>Cleaning fees (pass-through)</td><td class="num">$188</td><td class="num">$2,256</td></tr>
+          <tr><td>Effective gross</td><td class="num">$4,415</td><td class="num">$52,980</td></tr>
+          <tr><td>Platform fees (3%)</td><td class="num">($132)</td><td class="num">($1,589)</td></tr>
+          <tr><td>Cleaning cost</td><td class="num">($320)</td><td class="num">($3,840)</td></tr>
+          <tr><td>Utilities + internet</td><td class="num">($340)</td><td class="num">($4,080)</td></tr>
+          <tr><td>STR mgmt (20%)</td><td class="num">($883)</td><td class="num">($10,596)</td></tr>
+          <tr><td>Supplies + maint</td><td class="num">($240)</td><td class="num">($2,880)</td></tr>
+          <tr class="emphasis"><td>NOI</td><td class="num">$2,500</td><td class="num">$29,995</td></tr>
+          <tr><td>Debt service</td><td class="num">($2,490)</td><td class="num">($29,880)</td></tr>
+          <tr><td>STR furnishing amortized</td><td class="num">($208)</td><td class="num">($2,500)</td></tr>
+          <tr class="total"><td>Yr&#8209;1 cashflow · Yr&#8209;6+</td><td class="num">($198) · $402</td><td class="num">&mdash;</td></tr>
+        </tbody>
+      </table>
+
+      <div class="col gap-10" style="justify-content:center;">
+        <div class="hero-stat">
+          <div class="num slate" style="font-size:112px;">$29.9K</div>
+          <div class="lbl">Annual NOI</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; padding-top:32px; border-top:1px solid var(--rule);">
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">65%</div>
+            <div class="lbl">Pro Forma Occ.</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$214</div>
+            <div class="lbl">Pro Forma ADR</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">7.74%</div>
+            <div class="lbl">Cap (Yr&#8209;1)</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">8.6%</div>
+            <div class="lbl">Yr&#8209;6 CoC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:18px; color:var(--muted);">
+      <b style="color:var(--ink);">Verdict:</b> Highest gross of the hold exits. Verify Tampa STR ordinance permits non&#8209;owner&#8209;occupied rentals &lt; 30 days. Furnishing ~$25K additional cap.
+    </div>
+
+    <div class="page-footer"><div>15 / 23</div><div>AirDNA 3BR pocket · 12-mo trailing</div></div>
+  </div>
+</section>
+
+
+<!-- 16 BRRRR -->
+<section data-label="16 Exit · BRRRR">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Exit 4 of 7 · BRRRR</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">Exit Strategy 04</div>
+        <h2 class="slide-title small">BRRRR · Cash&#8209;Out Refinance</h2>
+      </div>
+      <div class="pill gold">Capital recycle in 6–8 mo</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <div class="col gap-8">
+        <div>
+          <div class="kicker" style="font-size:18px; margin-bottom:18px;">Phase 1 · Acquisition &amp; Rehab</div>
+          <table class="data-table">
+            <tbody>
+              <tr><td>Acquisition (SubTo stack)</td><td class="num">$42,000 cash</td></tr>
+              <tr><td>Rehab budget</td><td class="num">$22,416</td></tr>
+              <tr><td>Holding (6 mo seasoning)</td><td class="num">$11,340</td></tr>
+              <tr class="emphasis"><td>Total capital deployed</td><td class="num">$75,756</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="kicker" style="font-size:18px; margin-bottom:18px;">Phase 2 · Refinance</div>
+          <table class="data-table">
+            <tbody>
+              <tr><td>Post-rehab appraisal</td><td class="num">$475,000</td></tr>
+              <tr><td>DSCR refi (75% LTV @ 7.25%)</td><td class="num">$356,250</td></tr>
+              <tr><td>Payoff: 1st + 2nd liens</td><td class="num">($345,140)</td></tr>
+              <tr><td>Refi closing costs</td><td class="num">($7,125)</td></tr>
+              <tr class="total"><td>Cash back to buyer</td><td class="num">$3,985</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col gap-10" style="justify-content:center;">
+        <div class="hero-stat">
+          <div class="num slate" style="font-size:112px;">94.7%</div>
+          <div class="lbl">Capital Returned</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; padding-top:32px; border-top:1px solid var(--rule);">
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$71.8K</div>
+            <div class="lbl">Pulled out at refi</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$3,985</div>
+            <div class="lbl">Net cash in (post-refi)</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">$310</div>
+            <div class="lbl">Monthly CF (DSCR)</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">93.4%</div>
+            <div class="lbl">Post-refi CoC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:18px; color:var(--muted);">
+      <b style="color:var(--ink);">Verdict:</b> Refi trades the 2.875% rate for ~7.25% but recycles nearly all the capital. Best for buyers who want to scale.
+    </div>
+
+    <div class="page-footer"><div>16 / 23</div><div>Refi terms: 30-yr DSCR · IO available · 6-mo seasoning</div></div>
+  </div>
+</section>
+
+
+<!-- 17 COLIVING -->
+<section data-label="17 Exit · Coliving / PadSplit">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Exit 5 of 7 · Coliving / PadSplit</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">Exit Strategy 05</div>
+        <h2 class="slide-title small">Coliving / PadSplit</h2>
+      </div>
+      <div class="pill gold">Rent&#8209;by&#8209;the&#8209;room</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <table class="data-table">
+        <thead><tr><th>Line Item</th><th style="text-align:right;">Monthly</th><th style="text-align:right;">Annual</th></tr></thead>
+        <tbody>
+          <tr><td>5 rooms × $245 × 4.3 wks</td><td class="num">$5,268</td><td class="num">$63,210</td></tr>
+          <tr><td>Vacancy / turnover (10%)</td><td class="num">($527)</td><td class="num">($6,321)</td></tr>
+          <tr><td>Effective gross</td><td class="num">$4,741</td><td class="num">$56,889</td></tr>
+          <tr><td>Utilities all-in</td><td class="num">($420)</td><td class="num">($5,040)</td></tr>
+          <tr><td>Platform fee (12%)</td><td class="num">($569)</td><td class="num">($6,827)</td></tr>
+          <tr><td>Cleaning common areas</td><td class="num">($280)</td><td class="num">($3,360)</td></tr>
+          <tr><td>Maintenance + CapEx</td><td class="num">($240)</td><td class="num">($2,880)</td></tr>
+          <tr class="emphasis"><td>NOI</td><td class="num">$3,232</td><td class="num">$38,782</td></tr>
+          <tr><td>Debt service (1st + 2nd)</td><td class="num">($2,490)</td><td class="num">($29,880)</td></tr>
+          <tr><td>Conversion capex amortized</td><td class="num">($250)</td><td class="num">($3,000)</td></tr>
+          <tr class="total"><td>Cashflow</td><td class="num">$492</td><td class="num">$5,902</td></tr>
+          <tr class="total"><td>Yr&#8209;6+ cashflow</td><td class="num">$1,092</td><td class="num">$13,104</td></tr>
+        </tbody>
+      </table>
+
+      <div class="col gap-10" style="justify-content:center;">
+        <div class="hero-stat">
+          <div class="num gain" style="font-size:112px;">$492</div>
+          <div class="lbl">Yr&#8209;1 Monthly CF</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; padding-top:32px; border-top:1px solid var(--rule);">
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">5 rm</div>
+            <div class="lbl">Rentable Keys</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$38.8K</div>
+            <div class="lbl">NOI (annual)</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">10.0%</div>
+            <div class="lbl">Cap rate</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">14.1%</div>
+            <div class="lbl">Yr&#8209;1 CoC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:18px; color:var(--muted);">
+      <b style="color:var(--ink);">Verdict:</b> Highest cashflow exit. Requires ~$8K conversion (adding 2 bedrooms via partition, furnishing common areas). Verify Tampa rooming&#8209;house code.
+    </div>
+
+    <div class="page-footer"><div>17 / 23</div><div>PadSplit market data · Tampa region Q1 '26</div></div>
+  </div>
+</section>
+
+
+<!-- 18 WRAP -->
+<section data-label="18 Exit · Wrap / Lease Option">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Exit 6 of 7 · Wrap / Lease Option</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">Exit Strategy 06</div>
+        <h2 class="slide-title small">Wrap&#8209;Around Mortgage</h2>
+      </div>
+      <div class="pill gold">Passive · Interest rate spread</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <div class="col gap-8">
+        <div>
+          <div class="kicker" style="font-size:18px; margin-bottom:18px;">The Wrap Structure</div>
+          <table class="data-table">
+            <tbody>
+              <tr><td>Sale price to end buyer (wrap)</td><td class="num">$475,000</td></tr>
+              <tr><td>End buyer down (10%)</td><td class="num">$47,500</td></tr>
+              <tr><td>Wrap note to end buyer</td><td class="num">$427,500 @ 7.5%</td></tr>
+              <tr><td>Underlying debt (SubTo + 2nd)</td><td class="num">$345,140 blended 2.63%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="kicker" style="font-size:18px; margin-bottom:18px;">Monthly Spread</div>
+          <table class="data-table">
+            <tbody>
+              <tr><td>Incoming payment (wrap)</td><td class="num">$2,989</td></tr>
+              <tr><td>Outgoing (1st + 2nd)</td><td class="num">($2,490)</td></tr>
+              <tr class="total"><td>Passive spread / mo</td><td class="num">$499</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col gap-10" style="justify-content:center;">
+        <div class="hero-stat">
+          <div class="num gold" style="font-size:112px;">$47.5K</div>
+          <div class="lbl">Down received on wrap</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; padding-top:32px; border-top:1px solid var(--rule);">
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$499</div>
+            <div class="lbl">Monthly Spread</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">4.87%</div>
+            <div class="lbl">Interest Spread</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">+$5.5K</div>
+            <div class="lbl">Net cash after Yr 1</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">$88K</div>
+            <div class="lbl">Total capital recovered</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:18px; color:var(--muted);">
+      <b style="color:var(--ink);">Verdict:</b> Fully passive — no tenant management. Title transfers to end buyer; you hold the note. Use a licensed loan servicer.
+    </div>
+
+    <div class="page-footer"><div>18 / 23</div><div>Dodd-Frank: limit 1 wrap per 12mo or use RMLO</div></div>
+  </div>
+</section>
+
+
+<!-- 19 DEVELOPMENT -->
+<section data-label="19 Exit · Development">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Exit 7 of 7 · Development / ADU</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; align-items:baseline;">
+      <div>
+        <div class="eyebrow">Exit Strategy 07</div>
+        <h2 class="slide-title small">ADU Build&#8209;Out</h2>
+      </div>
+      <div class="pill gold">Value&#8209;add · 12&#8209;mo horizon</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:56px; flex:1;">
+      <table class="data-table">
+        <thead><tr><th>Line Item</th><th style="text-align:right;">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>ADU construction (640 sqft, detached)</td><td class="num">$118,000</td></tr>
+          <tr><td>Site work + permitting</td><td class="num">$14,500</td></tr>
+          <tr><td>Contingency (15%)</td><td class="num">$19,875</td></tr>
+          <tr class="emphasis"><td>Total ADU cost</td><td class="num">$152,375</td></tr>
+          <tr><td>Post-ADU appraisal (as-complete)</td><td class="num">$618,000</td></tr>
+          <tr><td>ADU rent (LTR)</td><td class="num">$1,450 / mo</td></tr>
+          <tr><td>Main house rent</td><td class="num">$2,650 / mo</td></tr>
+          <tr class="total"><td>Combined gross · post-ADU</td><td class="num">$4,100 / mo</td></tr>
+        </tbody>
+      </table>
+
+      <div class="col gap-10" style="justify-content:center;">
+        <div class="hero-stat">
+          <div class="num gain" style="font-size:112px;">+$153K</div>
+          <div class="lbl">Forced Appreciation</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; padding-top:32px; border-top:1px solid var(--rule);">
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">12 mo</div>
+            <div class="lbl">Build Timeline</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num slate" style="font-size:56px;">$1,450</div>
+            <div class="lbl">ADU Monthly Rent</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">11.4%</div>
+            <div class="lbl">Return on cost</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num gain" style="font-size:56px;">$850</div>
+            <div class="lbl">Incremental CF / mo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding:20px 28px; background:var(--ivory); border-left:3px solid var(--gold); font-family:'Inter Tight'; font-size:18px; color:var(--muted);">
+      <b style="color:var(--ink);">Verdict:</b> Highest equity&#8209;creation exit. Tampa allows detached ADUs on &gt;5,000 sq ft lots zoned RS&#8209;50. Our lot is 8,712 sqft.
+    </div>
+
+    <div class="page-footer"><div>19 / 23</div><div>Zoning: RS&#8209;50 · ADU max 800 sqft detached</div></div>
+  </div>
+</section>
+
+
+<!-- 20 STRATEGY COMPARISON -->
+<section data-label="20 Strategy Comparison">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · All Exits</div>
+    </div>
+
+    <div class="eyebrow">11 · Side&#8209;by&#8209;Side Comparison</div>
+    <h2 class="slide-title small">Match the exit to the buyer.</h2>
+
+    <table class="data-table" style="margin-top:48px;">
+      <thead>
+        <tr>
+          <th>Strategy</th>
+          <th style="text-align:right;">Cash In</th>
+          <th style="text-align:right;">Mo. Cashflow</th>
+          <th style="text-align:right;">Annual NOI</th>
+          <th style="text-align:right;">CoC Return</th>
+          <th style="text-align:right;">Margin / Profit</th>
+          <th style="text-align:right;">Horizon</th>
+          <th style="text-align:right;">Complexity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Fix &amp; Flip</td><td class="num">$64.4K</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">31.2%</td><td class="num">$20.1K</td><td class="num">4 mo</td><td class="num">●●○</td></tr>
+        <tr><td>Long&#8209;Term Rental</td><td class="num">$42K</td><td class="num" style="color:var(--loss);">($460)</td><td class="num">$24.4K</td><td class="num">(3.3%) → 9.1%</td><td class="num">$78K equity</td><td class="num">Hold</td><td class="num">●○○</td></tr>
+        <tr><td>Short&#8209;Term Rental</td><td class="num">$67K</td><td class="num" style="color:var(--loss);">($198)</td><td class="num">$30.0K</td><td class="num">(1.8%) → 8.6%</td><td class="num">$78K equity</td><td class="num">Hold</td><td class="num">●●●</td></tr>
+        <tr><td>BRRRR</td><td class="num">$4.0K <i style="color:var(--muted);font-weight:400;">post&#8209;refi</i></td><td class="num">$310</td><td class="num">$24.4K</td><td class="num">93.4%</td><td class="num">$119K equity</td><td class="num">6–8 mo</td><td class="num">●●○</td></tr>
+        <tr style="background:rgba(200,162,76,0.08);"><td><b>Coliving / PadSplit</b></td><td class="num">$50K</td><td class="num" style="color:var(--gain);">$492</td><td class="num">$38.8K</td><td class="num">14.1% → 26.2%</td><td class="num">$78K equity</td><td class="num">Hold</td><td class="num">●●●</td></tr>
+        <tr><td>Wrap / Lease Option</td><td class="num">$42K</td><td class="num" style="color:var(--gain);">$499</td><td class="num">$6.0K</td><td class="num">14.3%</td><td class="num">$47.5K down</td><td class="num">Passive</td><td class="num">●○○</td></tr>
+        <tr><td>Development (ADU)</td><td class="num">$194K all-in</td><td class="num" style="color:var(--gain);">$850 incr.</td><td class="num">+$17.4K incr.</td><td class="num">11.4% RoC</td><td class="num">+$153K equity</td><td class="num">12 mo</td><td class="num">●●●</td></tr>
+      </tbody>
     </table>
-  </div>
-  <div class="slide-footer"><span>Specifications</span><span>04 / 23</span></div>
-</section>
 
-<!-- ==================== SLIDE 5 — LOCATION & MARKET ==================== -->
-<section class="slide">
-  <h1 class="title">Location &amp; Market<span class="title-underline"></span></h1>
-  <div class="row" style="margin-top:16px;">
-    <div class="col" style="flex:0 0 5.2in;">
-      <div class="map-placeholder">MAP &middot; {{SUBMARKET_NAME}}</div>
+    <!-- Simple bar chart: CoC visualization -->
+    <div style="margin-top:auto; padding-top:40px; border-top:1.5px solid var(--rule-strong);">
+      <div class="kicker" style="font-size:16px; margin-bottom:20px;">Cash&#8209;on&#8209;Cash — mature year (after seller 2nd retires, post&#8209;refi where applicable)</div>
+      <div style="display:grid; grid-template-columns:180px 1fr 80px; row-gap:12px; column-gap:16px; align-items:center; font-family:'Inter Tight'; font-size:17px;">
+        <div>Fix &amp; Flip</div><div class="bar-track"><div class="bar-fill gold" style="width:33.5%"></div></div><div style="text-align:right; font-weight:600;">31.2%</div>
+        <div>LTR (Yr 6)</div><div class="bar-track"><div class="bar-fill" style="width:9.8%"></div></div><div style="text-align:right; font-weight:600;">9.1%</div>
+        <div>STR (Yr 6)</div><div class="bar-track"><div class="bar-fill" style="width:9.2%"></div></div><div style="text-align:right; font-weight:600;">8.6%</div>
+        <div>BRRRR (post&#8209;refi)</div><div class="bar-track"><div class="bar-fill gain" style="width:100%"></div></div><div style="text-align:right; font-weight:600;">93.4%</div>
+        <div>PadSplit (Yr 6)</div><div class="bar-track"><div class="bar-fill gain" style="width:28%"></div></div><div style="text-align:right; font-weight:600;">26.2%</div>
+        <div>Wrap</div><div class="bar-track"><div class="bar-fill" style="width:15.3%"></div></div><div style="text-align:right; font-weight:600;">14.3%</div>
+      </div>
     </div>
-    <div class="col">
-      <h3 style="font-size:16pt; color:#0D1F3C;">{{SUBMARKET_NAME}}</h3>
-      <p style="margin-top:6px; font-size:10.5pt;">{{LOCATION_NARRATIVE}}</p>
-      <table class="kv" style="margin-top:10px;">
-        <tr><td class="k">Population Growth</td><td class="v">{{POP_GROWTH}}</td></tr>
-        <tr><td class="k">Median HH Income</td><td class="v">{{MEDIAN_HH_INCOME}}</td></tr>
-        <tr><td class="k">School Rating</td><td class="v">{{SCHOOL_RATING}}</td></tr>
-        <tr><td class="k">Rental Vacancy</td><td class="v">{{RENTAL_VACANCY}}</td></tr>
-        <tr><td class="k">Major Employers</td><td class="v" style="font-size:9pt;">{{MAJOR_EMPLOYERS}}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="slide-footer"><span>Location &amp; Market</span><span>05 / 23</span></div>
-</section>
 
-<!-- ==================== SLIDE 6 — COMPARABLE SALES ==================== -->
-<section class="slide">
-  <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-    <h1 class="title">Comparable Sales<span class="title-underline"></span></h1>
-    <span class="pill orange" style="font-size:11pt; padding:6px 14px;">ARV: {{ARV}}</span>
-  </div>
-  <table class="grid" style="margin-top:16px;">
-    <thead>
-      <tr><th>Address</th><th>Distance</th><th>B/B</th><th class="num">SQFT</th><th>Closed</th><th class="num">Sale Price</th><th class="num">$/SQFT</th><th class="num">Adj Value</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>{{COMP1_ADDRESS}}</td><td>{{COMP1_DISTANCE}}</td><td>{{COMP1_BEDS_BATHS}}</td><td class="num">{{COMP1_SQFT}}</td><td>{{COMP1_CLOSED_DATE}}</td><td class="num">{{COMP1_SALE_PRICE}}</td><td class="num">{{COMP1_PPSF}}</td><td class="num">{{COMP1_ADJ_VALUE}}</td></tr>
-      <tr><td>{{COMP2_ADDRESS}}</td><td>{{COMP2_DISTANCE}}</td><td>{{COMP2_BEDS_BATHS}}</td><td class="num">{{COMP2_SQFT}}</td><td>{{COMP2_CLOSED_DATE}}</td><td class="num">{{COMP2_SALE_PRICE}}</td><td class="num">{{COMP2_PPSF}}</td><td class="num">{{COMP2_ADJ_VALUE}}</td></tr>
-      <tr><td>{{COMP3_ADDRESS}}</td><td>{{COMP3_DISTANCE}}</td><td>{{COMP3_BEDS_BATHS}}</td><td class="num">{{COMP3_SQFT}}</td><td>{{COMP3_CLOSED_DATE}}</td><td class="num">{{COMP3_SALE_PRICE}}</td><td class="num">{{COMP3_PPSF}}</td><td class="num">{{COMP3_ADJ_VALUE}}</td></tr>
-    </tbody>
-  </table>
-  <div class="cols-2" style="margin-top:16px; gap:20px;">
-    <div class="callout blue"><div class="eyebrow" style="color:#29ABE2;">Method</div><p style="margin-top:4px; font-size:10pt;">{{COMPS_METHOD}}</p></div>
-    <div class="callout"><div class="eyebrow" style="color:#F7941D;">Spread to Purchase</div><p style="margin-top:4px; font-size:10pt;">{{SPREAD_TO_PURCHASE_NARRATIVE}}</p></div>
-  </div>
-  <div class="slide-footer"><span>Comparable Sales</span><span>06 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 7 — RENT COMPS ==================== -->
-<section class="slide">
-  <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-    <h1 class="title">Rent Comparables<span class="title-underline"></span></h1>
-    <div><span class="pill orange">Market Rent: {{MARKET_RENT}}</span> <span class="pill blue" style="margin-left:6px;">STR ADR: {{STR_ADR}}</span></div>
-  </div>
-  <table class="grid" style="margin-top:14px;">
-    <thead><tr><th>Address</th><th>Distance</th><th>B/B</th><th class="num">SQFT</th><th class="num">Monthly Rent</th><th class="num">$/SQFT</th></tr></thead>
-    <tbody>
-      <tr><td>{{RENT_COMP1_ADDRESS}}</td><td>{{RENT_COMP1_DISTANCE}}</td><td>{{RENT_COMP1_BEDS_BATHS}}</td><td class="num">{{RENT_COMP1_SQFT}}</td><td class="num">{{RENT_COMP1_RENT}}</td><td class="num">{{RENT_COMP1_PPSF}}</td></tr>
-      <tr><td>{{RENT_COMP2_ADDRESS}}</td><td>{{RENT_COMP2_DISTANCE}}</td><td>{{RENT_COMP2_BEDS_BATHS}}</td><td class="num">{{RENT_COMP2_SQFT}}</td><td class="num">{{RENT_COMP2_RENT}}</td><td class="num">{{RENT_COMP2_PPSF}}</td></tr>
-      <tr><td>{{RENT_COMP3_ADDRESS}}</td><td>{{RENT_COMP3_DISTANCE}}</td><td>{{RENT_COMP3_BEDS_BATHS}}</td><td class="num">{{RENT_COMP3_SQFT}}</td><td class="num">{{RENT_COMP3_RENT}}</td><td class="num">{{RENT_COMP3_PPSF}}</td></tr>
-      <tr><td>{{RENT_COMP4_ADDRESS}}</td><td>{{RENT_COMP4_DISTANCE}}</td><td>{{RENT_COMP4_BEDS_BATHS}}</td><td class="num">{{RENT_COMP4_SQFT}}</td><td class="num">{{RENT_COMP4_RENT}}</td><td class="num">{{RENT_COMP4_PPSF}}</td></tr>
-    </tbody>
-  </table>
-  <div class="eyebrow" style="margin-top:20px; color:#29ABE2;">Short-Term Rental (STR) Pro Forma</div>
-  <div class="cols-5" style="margin-top:8px;">
-    <div class="stat"><div class="label">Median ADR</div><div class="val" style="font-size:14pt;">{{STR_MEDIAN_ADR}}</div></div>
-    <div class="stat"><div class="label">Occupancy</div><div class="val" style="font-size:14pt;">{{STR_OCCUPANCY}}</div></div>
-    <div class="stat"><div class="label">RevPAR</div><div class="val" style="font-size:14pt;">{{STR_REVPAR}}</div></div>
-    <div class="stat"><div class="label">Pro-Forma Gross</div><div class="val" style="font-size:14pt;">{{STR_PRO_FORMA_GROSS}}</div></div>
-    <div class="stat"><div class="label">Seasonality</div><div class="val" style="font-size:14pt;">{{STR_SEASONALITY}}</div></div>
-  </div>
-  <div class="slide-footer"><span>Rent Comparables &amp; STR</span><span>07 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 8 — DEAL STRUCTURE (3 layers) ==================== -->
-<section class="slide">
-  <h1 class="title">Deal Structure &mdash; 3 Layers<span class="title-underline"></span></h1>
-  <div class="cols-3" style="margin-top:22px;">
-    <div style="border-left:4px solid #F7941D; padding:14px 16px; background:#fff8ef; border-radius:0 4px 4px 0;">
-      <div class="eyebrow" style="color:#F7941D;">Layer 1 &middot; Subject-To</div>
-      <table class="kv" style="margin-top:10px;">
-        <tr><td class="k">Balance</td><td class="v">{{SUBTO_BALANCE}}</td></tr>
-        <tr><td class="k">Rate</td><td class="v">{{SUBTO_RATE}}</td></tr>
-        <tr><td class="k">Remaining</td><td class="v">{{SUBTO_REMAINING_TERM}}</td></tr>
-        <tr><td class="k">PITI</td><td class="v">{{PITI}}</td></tr>
-      </table>
-    </div>
-    <div style="border-left:4px solid #29ABE2; padding:14px 16px; background:#eef7fc; border-radius:0 4px 4px 0;">
-      <div class="eyebrow" style="color:#29ABE2;">Layer 2 &middot; Seller Finance</div>
-      <table class="kv" style="margin-top:10px;">
-        <tr><td class="k">Amount</td><td class="v">{{SF_AMOUNT}}</td></tr>
-        <tr><td class="k">Rate</td><td class="v">{{SF_RATE}}</td></tr>
-        <tr><td class="k">Term</td><td class="v">{{SF_TERM}}</td></tr>
-        <tr><td class="k">Payment</td><td class="v">{{SF_PAYMENT}}</td></tr>
-      </table>
-    </div>
-    <div style="border-left:4px solid #0D1F3C; padding:14px 16px; background:#f3f5f9; border-radius:0 4px 4px 0;">
-      <div class="eyebrow" style="color:#0D1F3C;">Layer 3 &middot; Buyer Cash</div>
-      <table class="kv" style="margin-top:10px;">
-        <tr><td class="k">Cash to Close</td><td class="v">{{CASH_TO_CLOSE}}</td></tr>
-        <tr><td class="k">Down to Seller</td><td class="v">{{DOWN_TO_SELLER}}</td></tr>
-        <tr><td class="k">Closing Costs</td><td class="v">{{CLOSING_COSTS}}</td></tr>
-        <tr><td class="k">Reserves</td><td class="v">{{RESERVES}}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="slide-footer"><span>Deal Structure</span><span>08 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 9 — EXISTING LOAN (SubTo detail) ==================== -->
-<section class="slide">
-  <h1 class="title">Existing Loan &mdash; Subject-To<span class="title-underline"></span></h1>
-  <div class="cols-2" style="margin-top:18px; gap:24px;">
-    <div>
-      <div class="eyebrow" style="color:#29ABE2;">Loan Meta</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">Lender</td><td class="v">{{LENDER}}</td></tr>
-        <tr><td class="k">Loan Type</td><td class="v">{{LOAN_TYPE}}</td></tr>
-        <tr><td class="k">Original Amount</td><td class="v">{{ORIGINAL_AMOUNT}}</td></tr>
-        <tr><td class="k">Current Balance</td><td class="v">{{CURRENT_BALANCE}}</td></tr>
-        <tr><td class="k">Interest Rate</td><td class="v">{{INTEREST_RATE}}</td></tr>
-        <tr><td class="k">Origination Date</td><td class="v">{{ORIGINATION_DATE}}</td></tr>
-        <tr><td class="k">Remaining Term</td><td class="v">{{REMAINING_TERM}}</td></tr>
-        <tr><td class="k">Escrow</td><td class="v">{{ESCROW}}</td></tr>
-        <tr><td class="k">Assumability</td><td class="v">{{ASSUMABILITY}}</td></tr>
-      </table>
-    </div>
-    <div>
-      <div class="eyebrow" style="color:#29ABE2;">PITI Breakdown</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">PITI</td><td class="v">{{PITI}}</td></tr>
-        <tr><td class="k">P&amp;I</td><td class="v">{{PI}}</td></tr>
-        <tr><td class="k">Property Tax</td><td class="v">{{PROPERTY_TAX}}</td></tr>
-        <tr><td class="k">Hazard Insurance</td><td class="v">{{HAZARD_INS}}</td></tr>
-        <tr><td class="k">PMI</td><td class="v">{{PMI}}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="callout" style="position:absolute; left:0.7in; right:0.7in; bottom:0.95in;">
-    <strong>Rate Spread vs Market:</strong> today's market rate is {{MARKET_RATE_TODAY}}. Spread: {{SPREAD_BPS}}.
-  </div>
-  <div class="slide-footer"><span>Existing Loan</span><span>09 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 10 — SOURCES & USES ==================== -->
-<section class="slide">
-  <h1 class="title">Sources &amp; Uses<span class="title-underline"></span></h1>
-  <div class="cols-2" style="margin-top:18px; gap:24px;">
-    <div>
-      <div class="eyebrow" style="color:#29ABE2;">Sources</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">1st Lien (SubTo)</td><td class="v">{{SOURCE_1ST_LIEN}}</td></tr>
-        <tr><td class="k">Seller 2nd (SF)</td><td class="v">{{SOURCE_SELLER_2ND}}</td></tr>
-        <tr><td class="k">Cash Down</td><td class="v">{{SOURCE_CASH_DOWN}}</td></tr>
-        <tr><td class="k">Closing + Reserves</td><td class="v">{{SOURCE_CLOSING_RESERVES}}</td></tr>
-        <tr><td class="k" style="color:#0D1F3C; font-weight:700; font-size:10pt;">Total</td><td class="v" style="color:#F7941D; font-size:12pt;">{{SOURCES_TOTAL}}</td></tr>
-      </table>
-    </div>
-    <div>
-      <div class="eyebrow" style="color:#F7941D;">Uses</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">Purchase</td><td class="v">{{USE_PURCHASE}}</td></tr>
-        <tr><td class="k">Title</td><td class="v">{{USE_TITLE}}</td></tr>
-        <tr><td class="k">Attorney</td><td class="v">{{USE_ATTORNEY}}</td></tr>
-        <tr><td class="k">Recording</td><td class="v">{{USE_RECORDING}}</td></tr>
-        <tr><td class="k">Insurance</td><td class="v">{{USE_INSURANCE}}</td></tr>
-        <tr><td class="k">Reserves</td><td class="v">{{USE_RESERVES}}</td></tr>
-        <tr><td class="k">Inspection</td><td class="v">{{USE_INSPECTION}}</td></tr>
-        <tr><td class="k" style="color:#0D1F3C; font-weight:700; font-size:10pt;">Total</td><td class="v" style="color:#F7941D; font-size:12pt;">{{USES_TOTAL}}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="callout" style="position:absolute; left:0.7in; right:0.7in; bottom:0.95in; border-left-color:#F7941D; background:#fff8ef;">
-    <strong>Day-1 Equity Breakdown:</strong> {{DAY1_EQUITY_BREAKDOWN}}
-  </div>
-  <div class="slide-footer"><span>Sources &amp; Uses</span><span>10 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 11 — REHAB & CAPEX ==================== -->
-<section class="slide">
-  <h1 class="title">Rehab &amp; CapEx<span class="title-underline"></span></h1>
-  <div class="row" style="margin-top:16px; gap:24px;">
-    <div class="col" style="flex:0 0 6.5in;">
-      <table class="grid">
-        <thead><tr><th>Scope</th><th class="num">Amount</th></tr></thead>
-        <tbody>
-          <tr><td>Paint</td><td class="num">{{REHAB_PAINT}}</td></tr>
-          <tr><td>Flooring</td><td class="num">{{REHAB_FLOORING}}</td></tr>
-          <tr><td>Kitchen</td><td class="num">{{REHAB_KITCHEN}}</td></tr>
-          <tr><td>Bathrooms</td><td class="num">{{REHAB_BATHS}}</td></tr>
-          <tr><td>HVAC</td><td class="num">{{REHAB_HVAC}}</td></tr>
-          <tr><td>Roof</td><td class="num">{{REHAB_ROOF}}</td></tr>
-          <tr><td>Landscaping</td><td class="num">{{REHAB_LANDSCAPING}}</td></tr>
-          <tr><td>Contingency</td><td class="num">{{REHAB_CONTINGENCY}}</td></tr>
-          <tr style="background:#F7941D; color:#fff;"><td style="color:#fff; font-weight:700;">TOTAL</td><td class="num" style="color:#fff; font-weight:700; font-size:13pt;">{{REHAB_TOTAL}}</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="col">
-      <div class="eyebrow" style="color:#29ABE2;">Execution Plan</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">Timeline Start</td><td class="v">{{REHAB_TIMELINE_START}}</td></tr>
-        <tr><td class="k">Duration</td><td class="v">{{REHAB_DURATION}}</td></tr>
-        <tr><td class="k">GC Model</td><td class="v">{{REHAB_GC_MODEL}}</td></tr>
-        <tr><td class="k">Draws</td><td class="v">{{REHAB_DRAWS}}</td></tr>
-        <tr><td class="k">GC</td><td class="v">{{GC_NAME}}</td></tr>
-        <tr><td class="k">Bid Date</td><td class="v">{{GC_BID_DATE}}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="slide-footer"><span>Rehab &amp; CapEx</span><span>11 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 12 — SECTION II DIVIDER ==================== -->
-<section class="slide" style="padding:0;">
-  <div class="divider" style="position:relative;">
-    <div class="section-label">Section II</div>
-    <div class="big">Seven Viable Exits</div>
-    <div class="rule"></div>
-    <p class="lead">Every strategy below is stress-tested against realistic market assumptions &mdash; conservative rent, current cap rates, realistic occupancy, and current-market refi terms. The point is not one hero outcome. The point is that even if the first plan breaks, five more still work.</p>
-    <div class="f">12 / 23</div>
+    <div class="page-footer"><div>20 / 23</div><div>All figures pro forma · see per&#8209;exit slides for underwriting</div></div>
   </div>
 </section>
 
-<!-- ==================== SLIDE 13 — EXIT 1: FIX & FLIP ==================== -->
-<section class="slide">
-  <div style="display:flex; align-items:center;">
-    <span class="exit-num">1</span>
-    <div>
-      <h1 class="title" style="font-size:24pt;">Fix &amp; Flip</h1>
-      <div class="small muted">Acquire &middot; Renovate &middot; Sell retail</div>
+
+<!-- 21 RETURNS SUMMARY -->
+<section data-label="21 Returns Summary">
+  <div class="slide dark">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Returns</div>
     </div>
-  </div>
-  <div class="row" style="margin-top:16px; gap:20px;">
-    <div class="col" style="flex:0 0 5.5in;">
-      <table class="grid">
-        <thead><tr><th>P&amp;L</th><th class="num">Amount</th></tr></thead>
-        <tbody>
-          <tr><td>ARV (Sale Price)</td><td class="num">{{EXIT1_ARV}}</td></tr>
-          <tr><td>&minus; Selling Costs</td><td class="num">{{EXIT1_SELLING_COSTS}}</td></tr>
-          <tr><td>&minus; Holding Costs</td><td class="num">{{EXIT1_HOLDING_COSTS}}</td></tr>
-          <tr><td>&minus; Rehab</td><td class="num">{{EXIT1_REHAB}}</td></tr>
-          <tr><td>&minus; Purchase</td><td class="num">{{EXIT1_PURCHASE}}</td></tr>
-          <tr style="background:#10b981; color:#fff;"><td style="color:#fff; font-weight:700;">NET PROFIT</td><td class="num" style="color:#fff; font-weight:700; font-size:13pt;">{{EXIT1_NET_PROFIT}}</td></tr>
-        </tbody>
-      </table>
+
+    <div class="eyebrow" style="color:var(--gold);">12 · Returns Summary</div>
+    <h2 class="slide-title small" style="color:var(--ivory);">The four numbers that matter.</h2>
+
+    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:60px 80px; margin-top:72px; flex:1; align-content:center;">
+      <div class="col gap-4">
+        <div class="eyebrow" style="color:var(--gold); margin:0;">Cash-on-Cash (best case)</div>
+        <div class="num" style="font-family:'Manrope'; font-weight:400; font-size:180px; line-height:0.95; color:var(--ivory); letter-spacing:-0.02em;">93.4<span style="font-size:88px;">%</span></div>
+        <div style="font-family:'Inter Tight'; font-size:22px; color:var(--slate-mist);">via BRRRR cash-out · refi recycles 94.7% of capital</div>
+      </div>
+      <div class="col gap-4">
+        <div class="eyebrow" style="color:var(--gold); margin:0;">Monthly Cashflow (max)</div>
+        <div class="num" style="font-family:'Manrope'; font-weight:400; font-size:180px; line-height:0.95; color:var(--ivory); letter-spacing:-0.02em;"><span style="font-size:88px;">$</span>2,140</div>
+        <div style="font-family:'Inter Tight'; font-size:22px; color:var(--slate-mist);">Yr&#8209;6+ PadSplit · after seller 2nd retires</div>
+      </div>
+      <div class="col gap-4">
+        <div class="eyebrow" style="color:var(--gold); margin:0;">Annual NOI (best case)</div>
+        <div class="num" style="font-family:'Manrope'; font-weight:400; font-size:180px; line-height:0.95; color:var(--ivory); letter-spacing:-0.02em;"><span style="font-size:88px;">$</span>38.8<span style="font-size:88px;">K</span></div>
+        <div style="font-family:'Inter Tight'; font-size:22px; color:var(--slate-mist);">PadSplit 5&#8209;room operating NOI</div>
+      </div>
+      <div class="col gap-4">
+        <div class="eyebrow" style="color:var(--gold); margin:0;">Deal Margin / Equity</div>
+        <div class="num" style="font-family:'Manrope'; font-weight:400; font-size:180px; line-height:0.95; color:var(--ivory); letter-spacing:-0.02em;"><span style="font-size:88px;">$</span>78<span style="font-size:88px;">K</span></div>
+        <div style="font-family:'Inter Tight'; font-size:22px; color:var(--slate-mist);">Day&#8209;1 equity · before any value&#8209;add</div>
+      </div>
     </div>
-    <div class="col">
-      <div class="stat accent" style="margin-bottom:8px;"><div class="label">Cash-on-Cash</div><div class="val">{{EXIT1_COC}}</div></div>
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Margin</div><div class="val" style="font-size:14pt;">{{EXIT1_MARGIN}}</div></div>
-      <div class="stat blue" style="margin-bottom:8px;"><div class="label">Time</div><div class="val" style="font-size:14pt;">{{EXIT1_TIME}}</div></div>
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Capital</div><div class="val" style="font-size:14pt;">{{EXIT1_CAPITAL}}</div></div>
-      <div style="margin-top:10px;"><span class="badge-verdict">{{EXIT1_VERDICT}}</span></div>
-    </div>
+
+    <div class="page-footer"><div>21 / 23</div><div>Best-case metrics · actuals depend on exit chosen</div></div>
   </div>
-  <div class="callout navy" style="position:absolute; left:0.7in; right:0.7in; bottom:0.9in;">
-    <p style="margin:0; font-size:10pt;">{{EXIT1_NARRATIVE}}</p>
-  </div>
-  <div class="slide-footer"><span>Exit 1 &middot; Fix &amp; Flip</span><span>13 / 23</span></div>
 </section>
 
-<!-- ==================== SLIDE 14 — EXIT 2: LTR ==================== -->
-<section class="slide">
-  <div style="display:flex; align-items:center;">
-    <span class="exit-num">2</span>
-    <div>
-      <h1 class="title" style="font-size:24pt;">Long-Term Rental (LTR)</h1>
-      <div class="small muted">Hold &middot; Rent long-term &middot; Compound</div>
+
+<!-- 22 RISKS -->
+<section data-label="22 Risks & Assumptions">
+  <div class="slide">
+    <div class="page-header">
+      <div class="brand-mark"><span class="tfs-wordmark">Terms For Sale</span></div>
+      <div>Deal {{DEAL_ID_SHORT}} · Risks</div>
     </div>
-  </div>
-  <div class="row" style="margin-top:16px; gap:20px;">
-    <div class="col" style="flex:0 0 5.5in;">
-      <table class="grid">
-        <thead><tr><th>Operating P&amp;L</th><th class="num">Monthly</th></tr></thead>
-        <tbody>
-          <tr><td>Monthly Rent</td><td class="num">{{EXIT2_MONTHLY_RENT}}</td></tr>
-          <tr><td>&minus; Vacancy</td><td class="num">{{EXIT2_VACANCY}}</td></tr>
-          <tr><td>&minus; Management</td><td class="num">{{EXIT2_MGMT}}</td></tr>
-          <tr><td>&minus; Maintenance</td><td class="num">{{EXIT2_MAINT}}</td></tr>
-          <tr><td>&minus; Taxes</td><td class="num">{{EXIT2_TAXES}}</td></tr>
-          <tr><td>&minus; Insurance</td><td class="num">{{EXIT2_INS}}</td></tr>
-          <tr><td>&minus; HOA</td><td class="num">{{EXIT2_HOA}}</td></tr>
-          <tr style="background:#0D1F3C; color:#fff;"><td style="color:#fff; font-weight:700;">NOI (monthly)</td><td class="num" style="color:#fff; font-weight:700;">{{EXIT2_NOI_MONTHLY}}</td></tr>
-          <tr><td style="font-weight:700;">NOI (annual)</td><td class="num" style="font-weight:700;">{{EXIT2_NOI_ANNUAL}}</td></tr>
-        </tbody>
-      </table>
+
+    <div class="eyebrow">13 · Risks &amp; Key Assumptions</div>
+    <h2 class="slide-title small">What could move the thesis.</h2>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:48px 72px; margin-top:56px; flex:1;">
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">Due-on-Sale (DOS) · Subject&#8209;To</div>
+        <p style="font-size:22px; line-height:1.5;">Lender could call the loan on transfer. Historical call rate on seasoned, current SubTo loans with continued payment: <b>&lt; 2%</b>. Mitigation: land trust conveyance, pay reliably, maintain hazard ins in seller&#8209;friendly form.</p>
+      </div>
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">Insurance Transferability</div>
+        <p style="font-size:22px; line-height:1.5;">FL HO policies increasingly name insured&#8209;only. Pre&#8209;close quote obtained from <b>Ovation E&amp;S</b> at $1,728/yr naming buyer LLC as additional insured.</p>
+      </div>
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">Rent / ADR Assumption Risk</div>
+        <p style="font-size:22px; line-height:1.5;">Pro forma uses <b>median</b> comps, not high. 10% downside: LTR to $2,385/mo, STR ADR $193. Model stress-tested at both; cashflow flips to ($720)/mo Yr&#8209;1 under worst case.</p>
+      </div>
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">STR Ordinance Risk</div>
+        <p style="font-size:22px; line-height:1.5;">Tampa requires vacation rental registration. Current rules allow non&#8209;owner&#8209;occupied STR in this zone — verify at close; ordinance review flagged for Q3 '26.</p>
+      </div>
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">Seller Carry Balloon (Yr 5)</div>
+        <p style="font-size:22px; line-height:1.5;">$36K seller 2nd balloons month 60. Plan: amortize cashflow into reserve fund ($600/mo), or refi to retire. Documented in seller&#8209;carry addendum.</p>
+      </div>
+
+      <div class="col gap-4">
+        <div class="accent-line"></div>
+        <div class="kicker" style="font-size:18px;">Rate Environment · Refi Exits</div>
+        <p style="font-size:22px; line-height:1.5;">BRRRR and ADU scenarios assume DSCR refi at <b>7.25%</b>. +100 bps → BRRRR cash pulled drops by $18.4K. Not a dealbreaker, but compresses the recycle.</p>
+      </div>
     </div>
-    <div class="col">
-      <div class="stat accent" style="margin-bottom:8px;"><div class="label">Cap Rate</div><div class="val">{{EXIT2_CAP_RATE}}</div></div>
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Yr-1 COC</div><div class="val" style="font-size:14pt;">{{EXIT2_YR1_COC}}</div></div>
-      <div class="stat blue" style="margin-bottom:8px;"><div class="label">Yr-6 COC</div><div class="val" style="font-size:14pt;">{{EXIT2_YR6_COC}}</div></div>
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Yr-6 CF</div><div class="val" style="font-size:14pt;">{{EXIT2_YR6_CASHFLOW}}</div></div>
-      <div style="margin-top:10px;"><span class="badge-verdict">{{EXIT2_VERDICT}}</span></div>
-    </div>
+
+    <div class="page-footer"><div>22 / 23</div><div>Assumptions table available on request</div></div>
   </div>
-  <div class="callout navy" style="position:absolute; left:0.7in; right:0.7in; bottom:0.9in;">
-    <p style="margin:0; font-size:10pt;">{{EXIT2_NARRATIVE}}</p>
-  </div>
-  <div class="slide-footer"><span>Exit 2 &middot; Long-Term Rental</span><span>14 / 23</span></div>
 </section>
 
-<!-- ==================== SLIDE 15 — EXIT 3: STR ==================== -->
-<section class="slide">
-  <div style="display:flex; align-items:center;">
-    <span class="exit-num">3</span>
-    <div>
-      <h1 class="title" style="font-size:24pt;">Short-Term Rental (STR)</h1>
-      <div class="small muted">Airbnb / VRBO &middot; Nightly economics</div>
+
+<!-- 23 TIMELINE / CONTACT -->
+<section data-label="23 Next Steps & Contact">
+  <div class="slide ink" style="padding:0; display:grid; grid-template-columns:1.1fr 1fr;">
+    <div style="padding:100px; display:flex; flex-direction:column; background:var(--slate-deep);">
+      <div class="page-header" style="color:var(--slate-mist); border-bottom-color:rgba(255,255,255,0.15);">
+        <div class="brand-mark"><span class="tfs-wordmark" style="color:var(--ivory);">Terms For Sale</span></div>
+        <div>Deal {{DEAL_ID_SHORT}} · Next Steps</div>
+      </div>
+
+      <div class="eyebrow" style="color:var(--gold);">14 · Timeline to Close</div>
+      <h2 class="slide-title small" style="color:var(--ivory);">7 to 21 days. Straightforward.</h2>
+
+      <div style="margin-top:52px; display:flex; flex-direction:column; gap:28px; position:relative;">
+        <!-- Vertical timeline -->
+        <div style="position:absolute; left:34px; top:12px; bottom:12px; width:2px; background:rgba(255,255,255,0.15);"></div>
+
+        <div style="display:grid; grid-template-columns:72px 1fr; align-items:start; gap:24px;">
+          <div style="width:72px; height:72px; border-radius:50%; background:var(--gold); color:var(--slate-deep); display:flex; align-items:center; justify-content:center; font-family:'Manrope'; font-size:30px; font-weight:600;">1</div>
+          <div><div style="font-family:'Manrope'; font-size:30px; color:var(--ivory);">Offer accepted</div><div style="font-family:'Inter Tight'; font-size:18px; color:var(--slate-mist); margin-top:4px;">Day 0 · EMD $2,500 to title</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns:72px 1fr; align-items:start; gap:24px;">
+          <div style="width:72px; height:72px; border-radius:50%; background:var(--gold); color:var(--slate-deep); display:flex; align-items:center; justify-content:center; font-family:'Manrope'; font-size:30px; font-weight:600;">2</div>
+          <div><div style="font-family:'Manrope'; font-size:30px; color:var(--ivory);">Due diligence window</div><div style="font-family:'Inter Tight'; font-size:18px; color:var(--slate-mist); margin-top:4px;">Day 1–7 · Inspection, loan authorization, title review</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns:72px 1fr; align-items:start; gap:24px;">
+          <div style="width:72px; height:72px; border-radius:50%; background:var(--gold); color:var(--slate-deep); display:flex; align-items:center; justify-content:center; font-family:'Manrope'; font-size:30px; font-weight:600;">3</div>
+          <div><div style="font-family:'Manrope'; font-size:30px; color:var(--ivory);">Docs prep &amp; insurance bind</div><div style="font-family:'Inter Tight'; font-size:18px; color:var(--slate-mist); margin-top:4px;">Day 7–14 · Warranty deed, PSA, seller carry note, CYA docs</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns:72px 1fr; align-items:start; gap:24px;">
+          <div style="width:72px; height:72px; border-radius:50%; background:var(--gold); color:var(--slate-deep); display:flex; align-items:center; justify-content:center; font-family:'Manrope'; font-size:30px; font-weight:600;">4</div>
+          <div><div style="font-family:'Manrope'; font-size:30px; color:var(--ivory);">Close &amp; fund</div><div style="font-family:'Inter Tight'; font-size:18px; color:var(--slate-mist); margin-top:4px;">Day 14–21 · Remote notary available · keys to buyer</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto; padding-top:32px;"></div>
+    </div>
+
+    <!-- CONTACT -->
+    <div style="padding:100px; background:var(--slate); display:flex; flex-direction:column; justify-content:center;">
+      <div class="eyebrow" style="color:var(--gold);">Take the Deal</div>
+      <h2 style="font-family:'Manrope'; font-weight:400; font-size:88px; line-height:1; color:var(--ivory); letter-spacing:-0.02em;">Lock your position.</h2>
+      <p style="font-family:'Manrope'; font-weight:300; font-size:32px; color:var(--slate-mist); margin-top:24px; line-height:1.35;">{{ACTIVE_DEAL_COUNT}} active deals this week. First qualified offer moves forward.</p>
+
+      <div style="margin-top:56px; padding:44px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1);">
+        <div class="eyebrow" style="color:var(--gold); margin:0 0 18px;">Deal Coordinator</div>
+        <div style="font-family:'Manrope'; font-size:40px; color:var(--ivory);">{{COORDINATOR_NAME}}</div>
+        <div style="font-family:'Inter Tight'; font-size:22px; color:var(--slate-mist); margin-top:4px;">{{COORDINATOR_TITLE}}</div>
+
+        <div style="margin-top:32px; display:flex; flex-direction:column; gap:16px; font-family:'Inter Tight'; font-size:22px; color:var(--ivory);">
+          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Email</span><span>{{COORDINATOR_EMAIL}}</span></div>
+          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Phone</span><span>{{COORDINATOR_PHONE}}</span></div>
+          <div style="display:grid; grid-template-columns:88px 1fr; align-items:baseline;"><span style="font-family:'Inter Tight'; font-size:14px; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); font-weight:500;">Web</span><span>{{DEAL_URL}}</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:40px; display:flex; gap:16px;">
+        <span class="pill filled">Submit Offer</span>
+        <span class="pill" style="color:var(--ivory); border-color:rgba(255,255,255,0.4);">Schedule Walkthrough</span>
+      </div>
+
+      <div style="margin-top:auto; padding-top:56px; font-family:'Inter Tight'; font-size:14px; color:var(--slate-mist); letter-spacing:0.08em;">
+        © 2026 Deal Pros LLC · This memo is confidential and is not an offer of securities. All figures are pro forma and unaudited.
+      </div>
     </div>
   </div>
-  <div class="row" style="margin-top:16px; gap:20px;">
-    <div class="col" style="flex:0 0 5.5in;">
-      <table class="grid">
-        <thead><tr><th>Operating P&amp;L</th><th class="num">Annual</th></tr></thead>
-        <tbody>
-          <tr><td>Gross Revenue</td><td class="num">{{EXIT3_GROSS}}</td></tr>
-          <tr><td>&minus; Platform Fees</td><td class="num">{{EXIT3_PLATFORM}}</td></tr>
-          <tr><td>&minus; Management</td><td class="num">{{EXIT3_MGMT}}</td></tr>
-          <tr><td>&minus; Cleaning</td><td class="num">{{EXIT3_CLEANING}}</td></tr>
-          <tr><td>&minus; Utilities / Supplies</td><td class="num">{{EXIT3_UTIL}}</td></tr>
-          <tr><td>&minus; Taxes / Ins / HOA</td><td class="num">{{EXIT3_FIXED}}</td></tr>
-          <tr style="background:#0D1F3C; color:#fff;"><td style="color:#fff; font-weight:700;">NOI (annual)</td><td class="num" style="color:#fff; font-weight:700;">{{EXIT3_NOI}}</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="col">
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Pro-Forma Occ</div><div class="val" style="font-size:14pt;">{{EXIT3_OCC}}</div></div>
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Pro-Forma ADR</div><div class="val" style="font-size:14pt;">{{EXIT3_ADR}}</div></div>
-      <div class="stat accent" style="margin-bottom:8px;"><div class="label">Cap (Yr-1)</div><div class="val" style="font-size:14pt;">{{EXIT3_CAP}}</div></div>
-      <div class="stat blue" style="margin-bottom:8px;"><div class="label">Yr-6 COC</div><div class="val" style="font-size:14pt;">{{EXIT3_YR6_COC}}</div></div>
-      <div style="margin-top:10px;"><span class="badge-verdict">{{EXIT3_VERDICT}}</span></div>
-    </div>
-  </div>
-  <div class="callout navy" style="position:absolute; left:0.7in; right:0.7in; bottom:0.9in;">
-    <p style="margin:0; font-size:10pt;">{{EXIT3_NARRATIVE}}</p>
-  </div>
-  <div class="slide-footer"><span>Exit 3 &middot; Short-Term Rental</span><span>15 / 23</span></div>
 </section>
 
-<!-- ==================== SLIDE 16 — EXIT 4: BRRRR ==================== -->
-<section class="slide">
-  <div style="display:flex; align-items:center;">
-    <span class="exit-num">4</span>
-    <div>
-      <h1 class="title" style="font-size:24pt;">BRRRR</h1>
-      <div class="small muted">Buy &middot; Rehab &middot; Rent &middot; Refi &middot; Repeat</div>
-    </div>
-  </div>
-  <div class="cols-2" style="margin-top:16px; gap:20px;">
-    <div style="border-left:4px solid #29ABE2; padding:14px 16px; background:#eef7fc; border-radius:0 4px 4px 0;">
-      <div class="eyebrow" style="color:#29ABE2;">Phase 1 &middot; Acquire / Rehab / Stabilize</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">Cash In</td><td class="v">{{EXIT4_CASH_IN}}</td></tr>
-        <tr><td class="k">Rehab</td><td class="v">{{EXIT4_REHAB}}</td></tr>
-        <tr><td class="k">Stabilization Rent</td><td class="v">{{EXIT4_RENT}}</td></tr>
-      </table>
-    </div>
-    <div style="border-left:4px solid #F7941D; padding:14px 16px; background:#fff8ef; border-radius:0 4px 4px 0;">
-      <div class="eyebrow" style="color:#F7941D;">Phase 2 &middot; Refinance</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">Refi LTV</td><td class="v">{{EXIT4_REFI_LTV}}</td></tr>
-        <tr><td class="k">Refi Rate</td><td class="v">{{EXIT4_REFI_RATE}}</td></tr>
-        <tr><td class="k">New Appraisal</td><td class="v">{{EXIT4_NEW_APPRAISAL}}</td></tr>
-        <tr><td class="k">Refi Proceeds</td><td class="v">{{EXIT4_PROCEEDS}}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="cols-5" style="margin-top:18px;">
-    <div class="stat"><div class="label">Capital Returned</div><div class="val" style="font-size:13pt;">{{EXIT4_CAPITAL_RETURNED}}</div></div>
-    <div class="stat"><div class="label">Pulled at Refi</div><div class="val" style="font-size:13pt;">{{EXIT4_PULLED}}</div></div>
-    <div class="stat"><div class="label">Net Cash</div><div class="val" style="font-size:13pt;">{{EXIT4_NET_CASH}}</div></div>
-    <div class="stat blue"><div class="label">Monthly CF</div><div class="val" style="font-size:13pt;">{{EXIT4_MONTHLY_CF}}</div></div>
-    <div class="stat accent"><div class="label">Post-Refi COC</div><div class="val" style="font-size:13pt;">{{EXIT4_POST_COC}}</div></div>
-  </div>
-  <div style="margin-top:10px;"><span class="badge-verdict">{{EXIT4_VERDICT}}</span></div>
-  <div class="callout navy" style="position:absolute; left:0.7in; right:0.7in; bottom:0.85in;">
-    <p style="margin:0; font-size:10pt;">{{EXIT4_NARRATIVE}}</p>
-  </div>
-  <div class="slide-footer"><span>Exit 4 &middot; BRRRR</span><span>16 / 23</span></div>
-</section>
+</deck-stage>
 
-<!-- ==================== SLIDE 17 — EXIT 5: COLIVING / PADSPLIT ==================== -->
-<section class="slide">
-  <div style="display:flex; align-items:center;">
-    <span class="exit-num">5</span>
-    <div>
-      <h1 class="title" style="font-size:24pt;">Coliving / PadSplit</h1>
-      <div class="small muted">Room-by-room rental &middot; Maximize revenue per sqft</div>
-    </div>
+<!-- TWEAKS PANEL -->
+<div id="tweaks">
+  <h4>Tweaks</h4>
+  <label>Theme</label>
+  <div class="row" id="theme-row">
+    <button data-theme="theme-editorial" class="active">Editorial</button>
+    <button data-theme="theme-institutional">Institutional</button>
+    <button data-theme="theme-modern">Modern</button>
   </div>
-  <div class="row" style="margin-top:16px; gap:20px;">
-    <div class="col" style="flex:0 0 5.5in;">
-      <table class="grid">
-        <thead><tr><th>Operating P&amp;L</th><th class="num">Monthly / Annual</th></tr></thead>
-        <tbody>
-          <tr><td>Per-Key Rent &times; Keys</td><td class="num">{{EXIT5_PER_KEY}} &times; {{EXIT5_KEYS}}</td></tr>
-          <tr><td>&minus; Vacancy</td><td class="num">{{EXIT5_VACANCY}}</td></tr>
-          <tr><td>&minus; Management</td><td class="num">{{EXIT5_MGMT}}</td></tr>
-          <tr><td>&minus; Utilities (landlord-paid)</td><td class="num">{{EXIT5_UTIL}}</td></tr>
-          <tr><td>&minus; Taxes / Insurance</td><td class="num">{{EXIT5_FIXED}}</td></tr>
-          <tr style="background:#0D1F3C; color:#fff;"><td style="color:#fff; font-weight:700;">NOI (annual)</td><td class="num" style="color:#fff; font-weight:700;">{{EXIT5_NOI}}</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="col">
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Rentable Keys</div><div class="val" style="font-size:14pt;">{{EXIT5_KEYS_METRIC}}</div></div>
-      <div class="stat blue" style="margin-bottom:8px;"><div class="label">Yr-1 Monthly CF</div><div class="val" style="font-size:14pt;">{{EXIT5_MONTHLY_CF}}</div></div>
-      <div class="stat" style="margin-bottom:8px;"><div class="label">Cap Rate</div><div class="val" style="font-size:14pt;">{{EXIT5_CAP}}</div></div>
-      <div class="stat accent" style="margin-bottom:8px;"><div class="label">Yr-1 COC</div><div class="val" style="font-size:14pt;">{{EXIT5_COC}}</div></div>
-      <div style="margin-top:10px;"><span class="badge-verdict">{{EXIT5_VERDICT}}</span></div>
-    </div>
-  </div>
-  <div class="callout navy" style="position:absolute; left:0.7in; right:0.7in; bottom:0.9in;">
-    <p style="margin:0; font-size:10pt;">{{EXIT5_NARRATIVE}}</p>
-  </div>
-  <div class="slide-footer"><span>Exit 5 &middot; Coliving / PadSplit</span><span>17 / 23</span></div>
-</section>
+  <div style="font-size:11px; color:#777; line-height:1.5; margin-top:10px;">Editorial — Terms For Sale slate + gold, Fraunces serif.<br/>Institutional — black & white, conservative.<br/>Modern — deep green + warm orange accent.</div>
+</div>
 
-<!-- ==================== SLIDE 18 — EXIT 6: WRAP ==================== -->
-<section class="slide">
-  <div style="display:flex; align-items:center;">
-    <span class="exit-num">6</span>
-    <div>
-      <h1 class="title" style="font-size:24pt;">Wholetail Wrap</h1>
-      <div class="small muted">Sell with seller-financed wrap at spread</div>
-    </div>
-  </div>
-  <div class="callout" style="margin-top:16px;">
-    <div class="eyebrow" style="color:#F7941D;">Wrap Structure</div>
-    <p style="margin-top:6px; font-size:11pt;">Sell at <strong>{{EXIT6_SELL_PRICE}}</strong> with <strong>{{EXIT6_DOWN}}</strong> down. Wrap note of <strong>{{EXIT6_NOTE_AMOUNT}}</strong> at <strong>{{EXIT6_WRAP_RATE}}</strong> over <strong>{{EXIT6_WRAP_TERM}}</strong>.</p>
-  </div>
-  <div class="cols-4" style="margin-top:22px;">
-    <div class="stat accent"><div class="label">Rate Spread</div><div class="val">{{EXIT6_RATE_SPREAD}}</div></div>
-    <div class="stat blue"><div class="label">Monthly Spread</div><div class="val">{{EXIT6_MONTHLY_SPREAD}}</div></div>
-    <div class="stat"><div class="label">Net Cash at Close</div><div class="val">{{EXIT6_NET_CASH}}</div></div>
-    <div class="stat"><div class="label">Capital Recovered</div><div class="val">{{EXIT6_CAPITAL_RECOVERED}}</div></div>
-  </div>
-  <div style="margin-top:16px;"><span class="badge-verdict">{{EXIT6_VERDICT}}</span></div>
-  <div class="callout navy" style="position:absolute; left:0.7in; right:0.7in; bottom:0.9in;">
-    <p style="margin:0; font-size:10pt;">{{EXIT6_NARRATIVE}}</p>
-  </div>
-  <div class="slide-footer"><span>Exit 6 &middot; Wholetail Wrap</span><span>18 / 23</span></div>
-</section>
+<script>
+  // TWEAKS protocol
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "theme": "theme-editorial"
+  }/*EDITMODE-END*/;
 
-<!-- ==================== SLIDE 19 — EXIT 7: ADU ==================== -->
-<section class="slide">
-  <div style="display:flex; align-items:center;">
-    <span class="exit-num">7</span>
-    <div>
-      <h1 class="title" style="font-size:24pt;">ADU (Build + Rent)</h1>
-      <div class="small muted">Force equity via ADU build &middot; Stack a second income</div>
-    </div>
-  </div>
-  <div class="cols-2" style="margin-top:16px; gap:20px;">
-    <div>
-      <div class="eyebrow" style="color:#29ABE2;">ADU Build Budget</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">Permits</td><td class="v">{{EXIT7_PERMIT}}</td></tr>
-        <tr><td class="k">Build</td><td class="v">{{EXIT7_BUILD}}</td></tr>
-        <tr><td class="k">Utilities</td><td class="v">{{EXIT7_UTILITIES}}</td></tr>
-        <tr><td class="k">Landscape</td><td class="v">{{EXIT7_LANDSCAPE}}</td></tr>
-        <tr><td class="k" style="color:#0D1F3C; font-weight:700;">Total Cost</td><td class="v" style="color:#F7941D; font-size:12pt;">{{EXIT7_TOTAL_COST}}</td></tr>
-      </table>
-    </div>
-    <div>
-      <div class="eyebrow" style="color:#F7941D;">Post-ADU</div>
-      <table class="kv" style="margin-top:8px;">
-        <tr><td class="k">New Appraisal</td><td class="v">{{EXIT7_NEW_APPRAISAL}}</td></tr>
-        <tr><td class="k">ADU Monthly Rent</td><td class="v">{{EXIT7_ADU_RENT}}</td></tr>
-        <tr><td class="k">Forced Appreciation</td><td class="v">{{EXIT7_FORCED_APPREC}}</td></tr>
-        <tr><td class="k">Build Timeline</td><td class="v">{{EXIT7_TIMELINE}}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="cols-2" style="margin-top:18px;">
-    <div class="stat accent"><div class="label">Return on Cost</div><div class="val">{{EXIT7_ROC}}</div></div>
-    <div class="stat blue"><div class="label">Incremental CF</div><div class="val">{{EXIT7_INCR_CF}}</div></div>
-  </div>
-  <div style="margin-top:12px;"><span class="badge-verdict">{{EXIT7_VERDICT}}</span></div>
-  <div class="callout navy" style="position:absolute; left:0.7in; right:0.7in; bottom:0.9in;">
-    <p style="margin:0; font-size:10pt;">{{EXIT7_NARRATIVE}}</p>
-  </div>
-  <div class="slide-footer"><span>Exit 7 &middot; ADU Build</span><span>19 / 23</span></div>
-</section>
+  function applyTheme(t) {
+    document.body.className = t;
+    document.querySelectorAll('#theme-row button').forEach(b => {
+      b.classList.toggle('active', b.dataset.theme === t);
+    });
+  }
+  applyTheme(TWEAK_DEFAULTS.theme || 'theme-editorial');
 
-<!-- ==================== SLIDE 20 — COMPARISON TABLE ==================== -->
-<section class="slide">
-  <h1 class="title">Seven Exits &mdash; Side by Side<span class="title-underline"></span></h1>
-  <table class="grid" style="margin-top:14px;">
-    <thead>
-      <tr><th>Strategy</th><th class="num">Cash In</th><th class="num">Monthly CF</th><th class="num">Annual NOI</th><th class="num">COC</th><th class="num">Margin / Profit</th><th>Horizon</th><th>Complexity</th></tr>
-    </thead>
-    <tbody>
-      <tr><td><strong>Fix &amp; Flip</strong></td><td class="num">{{CMP_FLIP_CASH}}</td><td class="num">{{CMP_FLIP_CF}}</td><td class="num">{{CMP_FLIP_NOI}}</td><td class="num">{{CMP_FLIP_COC}}</td><td class="num">{{CMP_FLIP_MARGIN}}</td><td>{{CMP_FLIP_HORIZON}}</td><td>{{CMP_FLIP_COMPLEXITY}}</td></tr>
-      <tr><td><strong>LTR</strong></td><td class="num">{{CMP_LTR_CASH}}</td><td class="num">{{CMP_LTR_CF}}</td><td class="num">{{CMP_LTR_NOI}}</td><td class="num">{{CMP_LTR_COC}}</td><td class="num">{{CMP_LTR_MARGIN}}</td><td>{{CMP_LTR_HORIZON}}</td><td>{{CMP_LTR_COMPLEXITY}}</td></tr>
-      <tr><td><strong>STR</strong></td><td class="num">{{CMP_STR_CASH}}</td><td class="num">{{CMP_STR_CF}}</td><td class="num">{{CMP_STR_NOI}}</td><td class="num">{{CMP_STR_COC}}</td><td class="num">{{CMP_STR_MARGIN}}</td><td>{{CMP_STR_HORIZON}}</td><td>{{CMP_STR_COMPLEXITY}}</td></tr>
-      <tr><td><strong>BRRRR</strong></td><td class="num">{{CMP_BRRRR_CASH}}</td><td class="num">{{CMP_BRRRR_CF}}</td><td class="num">{{CMP_BRRRR_NOI}}</td><td class="num">{{CMP_BRRRR_COC}}</td><td class="num">{{CMP_BRRRR_MARGIN}}</td><td>{{CMP_BRRRR_HORIZON}}</td><td>{{CMP_BRRRR_COMPLEXITY}}</td></tr>
-      <tr><td><strong>Coliving</strong></td><td class="num">{{CMP_COLIVE_CASH}}</td><td class="num">{{CMP_COLIVE_CF}}</td><td class="num">{{CMP_COLIVE_NOI}}</td><td class="num">{{CMP_COLIVE_COC}}</td><td class="num">{{CMP_COLIVE_MARGIN}}</td><td>{{CMP_COLIVE_HORIZON}}</td><td>{{CMP_COLIVE_COMPLEXITY}}</td></tr>
-      <tr><td><strong>Wrap</strong></td><td class="num">{{CMP_WRAP_CASH}}</td><td class="num">{{CMP_WRAP_CF}}</td><td class="num">{{CMP_WRAP_NOI}}</td><td class="num">{{CMP_WRAP_COC}}</td><td class="num">{{CMP_WRAP_MARGIN}}</td><td>{{CMP_WRAP_HORIZON}}</td><td>{{CMP_WRAP_COMPLEXITY}}</td></tr>
-      <tr><td><strong>ADU</strong></td><td class="num">{{CMP_ADU_CASH}}</td><td class="num">{{CMP_ADU_CF}}</td><td class="num">{{CMP_ADU_NOI}}</td><td class="num">{{CMP_ADU_COC}}</td><td class="num">{{CMP_ADU_MARGIN}}</td><td>{{CMP_ADU_HORIZON}}</td><td>{{CMP_ADU_COMPLEXITY}}</td></tr>
-    </tbody>
-  </table>
-  <div class="eyebrow" style="color:#29ABE2; margin-top:20px;">Cash-on-Cash at Maturity</div>
-  <div style="margin-top:8px;">
-    <div class="bar-row"><div class="bl">Fix &amp; Flip</div><div class="bt"><div class="bf" style="width: {{CMP_FLIP_COC_BAR_WIDTH}};"></div></div><div class="bv">{{CMP_FLIP_COC_LABEL}}</div></div>
-    <div class="bar-row"><div class="bl">LTR</div><div class="bt"><div class="bf" style="width: {{CMP_LTR_COC_BAR_WIDTH}};"></div></div><div class="bv">{{CMP_LTR_COC_LABEL}}</div></div>
-    <div class="bar-row"><div class="bl">STR</div><div class="bt"><div class="bf" style="width: {{CMP_STR_COC_BAR_WIDTH}};"></div></div><div class="bv">{{CMP_STR_COC_LABEL}}</div></div>
-    <div class="bar-row"><div class="bl">BRRRR</div><div class="bt"><div class="bf" style="width: {{CMP_BRRRR_COC_BAR_WIDTH}};"></div></div><div class="bv">{{CMP_BRRRR_COC_LABEL}}</div></div>
-    <div class="bar-row"><div class="bl">Coliving</div><div class="bt"><div class="bf" style="width: {{CMP_COLIVE_COC_BAR_WIDTH}};"></div></div><div class="bv">{{CMP_COLIVE_COC_LABEL}}</div></div>
-    <div class="bar-row"><div class="bl">Wrap</div><div class="bt"><div class="bf" style="width: {{CMP_WRAP_COC_BAR_WIDTH}};"></div></div><div class="bv">{{CMP_WRAP_COC_LABEL}}</div></div>
-    <div class="bar-row"><div class="bl">ADU</div><div class="bt"><div class="bf" style="width: {{CMP_ADU_COC_BAR_WIDTH}};"></div></div><div class="bv">{{CMP_ADU_COC_LABEL}}</div></div>
-  </div>
-  <div class="slide-footer"><span>Seven Exits &middot; Side by Side</span><span>20 / 23</span></div>
-</section>
+  document.querySelectorAll('#theme-row button').forEach(b => {
+    b.addEventListener('click', () => {
+      const t = b.dataset.theme;
+      applyTheme(t);
+      try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { theme: t } }, '*'); } catch(e) {}
+    });
+  });
 
-<!-- ==================== SLIDE 21 — RETURNS SUMMARY ==================== -->
-<section class="slide">
-  <h1 class="title">Returns Summary<span class="title-underline"></span></h1>
-  <div class="cols-2" style="margin-top:22px; gap:18px;">
-    <div class="stat accent" style="padding:20px 22px;">
-      <div class="label" style="font-size:9pt;">Best Cash-on-Cash</div>
-      <div class="val" style="font-size:36pt; line-height:1;">{{BEST_COC}}</div>
-      <p style="margin:10px 0 0; font-size:10pt; color:#0D1F3C;">{{BEST_COC_NARRATIVE}}</p>
-    </div>
-    <div class="stat blue" style="padding:20px 22px;">
-      <div class="label" style="font-size:9pt;">Max Monthly Cashflow</div>
-      <div class="val" style="font-size:36pt; line-height:1;">{{MAX_MONTHLY_CF}}</div>
-      <p style="margin:10px 0 0; font-size:10pt; color:#0D1F3C;">{{MAX_CF_NARRATIVE}}</p>
-    </div>
-    <div class="stat" style="padding:20px 22px;">
-      <div class="label" style="font-size:9pt;">Best NOI</div>
-      <div class="val" style="font-size:36pt; line-height:1;">{{BEST_NOI}}</div>
-      <p style="margin:10px 0 0; font-size:10pt; color:#0D1F3C;">{{BEST_NOI_NARRATIVE}}</p>
-    </div>
-    <div class="stat accent" style="padding:20px 22px;">
-      <div class="label" style="font-size:9pt;">Day-1 Equity</div>
-      <div class="val" style="font-size:36pt; line-height:1;">{{DAY1_EQUITY}}</div>
-      <p style="margin:10px 0 0; font-size:10pt; color:#0D1F3C;">{{EQUITY_NARRATIVE}}</p>
-    </div>
-  </div>
-  <div class="slide-footer"><span>Returns Summary</span><span>21 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 22 — RISKS & MITIGANTS ==================== -->
-<section class="slide">
-  <h1 class="title">Risks &amp; Mitigants<span class="title-underline"></span></h1>
-  <div class="cols-3" style="margin-top:18px; gap:14px;">
-    <div class="callout navy">
-      <div class="eyebrow" style="color:#0D1F3C;">1 &middot; Due-on-Sale</div>
-      <p style="margin-top:6px; font-size:9.5pt;">{{RISK_DOS}}</p>
-    </div>
-    <div class="callout navy">
-      <div class="eyebrow" style="color:#0D1F3C;">2 &middot; Insurance</div>
-      <p style="margin-top:6px; font-size:9.5pt;">{{RISK_INSURANCE}}</p>
-    </div>
-    <div class="callout navy">
-      <div class="eyebrow" style="color:#0D1F3C;">3 &middot; Rate / Rent Compression</div>
-      <p style="margin-top:6px; font-size:9.5pt;">{{RISK_RATE_RENT}}</p>
-    </div>
-    <div class="callout navy">
-      <div class="eyebrow" style="color:#0D1F3C;">4 &middot; Vacancy</div>
-      <p style="margin-top:6px; font-size:9.5pt;">{{RISK_VACANCY}}</p>
-    </div>
-    <div class="callout navy">
-      <div class="eyebrow" style="color:#0D1F3C;">5 &middot; Regulatory (STR / ADU / Zoning)</div>
-      <p style="margin-top:6px; font-size:9.5pt;">{{RISK_REGULATORY}}</p>
-    </div>
-    <div class="callout navy">
-      <div class="eyebrow" style="color:#0D1F3C;">6 &middot; Execution / GC</div>
-      <p style="margin-top:6px; font-size:9.5pt;">{{RISK_EXECUTION}}</p>
-    </div>
-  </div>
-  <div class="slide-footer"><span>Risks &amp; Mitigants</span><span>22 / 23</span></div>
-</section>
-
-<!-- ==================== SLIDE 23 — NEXT STEPS ==================== -->
-<section class="slide">
-  <h1 class="title">Next Steps<span class="title-underline"></span></h1>
-  <div class="timeline" style="margin-top:28px;">
-    <div class="step"><div class="n">1</div><div class="l">Sign NDA +<br>receive data room</div></div>
-    <div class="step"><div class="n">2</div><div class="l">Buyer diligence<br>(5-7 days)</div></div>
-    <div class="step"><div class="n">3</div><div class="l">PSA execution</div></div>
-    <div class="step"><div class="n">4</div><div class="l">EMD wire<br>($5K)</div></div>
-    <div class="step"><div class="n">5</div><div class="l">Title/Escrow open<br>(7 days)</div></div>
-    <div class="step"><div class="n">6</div><div class="l">Inspection period<br>(10 days)</div></div>
-    <div class="step"><div class="n">7</div><div class="l">Close + funding<br>{{TARGET_CLOSE_DATE}}</div></div>
-  </div>
-  <div class="ns-cards">
-    <div class="ns-card">
-      <h4>Acquisitions Coordinator</h4>
-      <div class="line" style="font-weight:700; font-size:12pt;">{{COORDINATOR_NAME}}</div>
-      <div class="line muted">{{COORDINATOR_TITLE}}</div>
-      <div class="line">{{EMAIL}}</div>
-      <div class="line">{{PHONE}}</div>
-    </div>
-    <div class="ns-card">
-      <h4>Deal Links</h4>
-      <div class="line"><strong>Deal Page:</strong> <span style="font-size:9pt;">{{DEAL_URL}}</span></div>
-      <div class="line"><strong>Active Deals Available:</strong> {{ACTIVE_DEAL_COUNT}}</div>
-    </div>
-  </div>
-  <div class="slide-footer" style="bottom:0.6in;"><span>Next Steps</span><span>23 / 23</span></div>
-  <div class="brand-strip">Terms For Sale &middot; termsforsale.com &middot; info@termsforsale.com</div>
-</section>
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.type === '__activate_edit_mode') document.getElementById('tweaks').classList.add('on');
+    if (d.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('on');
+  });
+  try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(e) {}
+</script>
 
 </body>
 </html>
