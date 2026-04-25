@@ -1261,7 +1261,11 @@ function toggleSave(e,id,el){
 }
 const DEAL_STORE={};
 function storeDeal(d){DEAL_STORE[d.id]=d;}
-function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href=d?buildDealPath(d):'/deal.html?id='+encodeURIComponent(id);}
+// Always append ?id={Notion UUID} so deal.html resolves by UUID. Two
+// Notion pages can share a "Deal ID" (operator data error), which would
+// produce the same /d/{city-zip-code} slug and cause findDealBySlug to
+// return the same (first-matching) deal for both cards.
+function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}var dealId=d?d.id:id;var path=d?buildDealPath(d):'/deal.html';var sep=path.indexOf('?')===-1?'?':'&';window.location.href=path+sep+'id='+encodeURIComponent(dealId);}
 
 // ─── CARD HTML ─────────────────────────────────────────────────
 function makeCard(d){
@@ -2072,7 +2076,9 @@ function makeMarkerIcon(deal){
 function makePopup(deal){
   var color=markerColor(deal.dealType);
   var entry=deal.entryFee||deal.askingPrice;
-  var dealUrl=DEAL_BASE+buildDealPath(deal);
+  // Append ?id= so the deal page resolves by Notion UUID (clean slug can
+  // collide when two Notion pages share a Deal ID).
+  var dealUrl=DEAL_BASE+buildDealPath(deal)+(deal.id?'?id='+encodeURIComponent(deal.id):'');
   var loggedIn=!!getUser();
   var dsLower=(deal.dealStatus||'').toLowerCase().trim();
   var pendingChip=dsLower==='assigned with emd'?'<div style="display:inline-block;margin-left:6px;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800;background:#F59E0B;color:#fff;text-transform:uppercase;letter-spacing:.3px">Pending</div>':'';
