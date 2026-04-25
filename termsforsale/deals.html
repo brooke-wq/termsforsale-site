@@ -1948,31 +1948,67 @@ var geoCache={};
 var geoQueue=[];
 var geoRunning=false;
 
-function geocode(city,state,zip,cb){
-  if(!city&&!state){cb(null);return;}
-  var key=(city+','+state).toLowerCase().trim();
-  if(geoCache[key]){cb(geoCache[key]);return;}
-  if(CITY_COORDS[key]){geoCache[key]=CITY_COORDS[key];cb(CITY_COORDS[key]);return;}
-  // Try state capital fallback
-  var stateKey=','+state.toLowerCase().trim();
-  for(var k in CITY_COORDS){if(k.endsWith(stateKey)){geoCache[key]=CITY_COORDS[k];cb(CITY_COORDS[k]);return;}}
-  // Nominatim for unknowns
-  geoQueue.push({city:city,state:state,zip:zip,key:key,cb:cb});
+// Resolves a deal to a lat/lng. When street + (zip or city) are available,
+// goes to Nominatim with the full address so each property gets its own
+// pin location instead of all pins clustering at the city centroid (which
+// caused two same-city pins to overlap and look like a single pin).
+// Falls back through zip → city → state capital → null.
+function geocode(street,city,state,zip,cb){
+  if(!city&&!state&&!zip){cb(null);return;}
+  var hasStreet=!!(street&&String(street).trim());
+  var hasZip=!!(zip&&String(zip).trim().length>=5);
+  var cityKey=(city+','+state).toLowerCase().trim();
+  // Most-specific key wins. Street+zip is unique-per-property; zip alone
+  // disambiguates within a city; city is the coarse fallback.
+  var specificKey='';
+  if(hasStreet)specificKey=(String(street)+'|'+(hasZip?zip:cityKey)).toLowerCase().trim();
+  else if(hasZip)specificKey=('zip:'+String(zip).trim()+','+(state||'').toLowerCase().trim());
+  if(specificKey){
+    if(geoCache[specificKey]){cb(geoCache[specificKey]);return;}
+    geoQueue.push({street:hasStreet?String(street).trim():'',city:city||'',state:state||'',zip:hasZip?String(zip).trim():'',key:specificKey,cityKey:cityKey,cb:cb});
+    if(!geoRunning)runGeoQueue();
+    return;
+  }
+  // No street/zip — use the fast hardcoded city centroid.
+  if(geoCache[cityKey]){cb(geoCache[cityKey]);return;}
+  if(CITY_COORDS[cityKey]){geoCache[cityKey]=CITY_COORDS[cityKey];cb(CITY_COORDS[cityKey]);return;}
+  var stateKey=','+(state||'').toLowerCase().trim();
+  for(var k in CITY_COORDS){if(k.endsWith(stateKey)){geoCache[cityKey]=CITY_COORDS[k];cb(CITY_COORDS[k]);return;}}
+  geoQueue.push({street:'',city:city||'',state:state||'',zip:'',key:cityKey,cityKey:cityKey,cb:cb});
   if(!geoRunning)runGeoQueue();
 }
 function runGeoQueue(){
   if(!geoQueue.length){geoRunning=false;return;}
   geoRunning=true;
   var item=geoQueue.shift();
-  var query=encodeURIComponent(item.zip&&item.zip.length>=5?item.zip+', USA':item.city+', '+item.state+', USA');
+  var parts=[];
+  if(item.street)parts.push(item.street);
+  if(item.city)parts.push(item.city);
+  if(item.state)parts.push(item.state);
+  if(item.zip)parts.push(item.zip);
+  parts.push('USA');
+  var query=encodeURIComponent(parts.join(', '));
   fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+query,{headers:{'Accept-Language':'en','User-Agent':'TermsForSale/1.0'}})
     .then(function(r){return r.json();})
     .then(function(data){
       var ll=data&&data[0]?[parseFloat(data[0].lat),parseFloat(data[0].lon)]:null;
+      // Nominatim missed this exact address — fall back to the city centroid
+      // so the pin still appears (just less precisely placed).
+      if(!ll&&item.cityKey){
+        if(geoCache[item.cityKey])ll=geoCache[item.cityKey];
+        else if(CITY_COORDS[item.cityKey]){ll=CITY_COORDS[item.cityKey];geoCache[item.cityKey]=ll;}
+      }
       if(ll)geoCache[item.key]=ll;
       item.cb(ll);
     })
-    .catch(function(){item.cb(null);})
+    .catch(function(){
+      var ll=null;
+      if(item.cityKey){
+        if(geoCache[item.cityKey])ll=geoCache[item.cityKey];
+        else if(CITY_COORDS[item.cityKey]){ll=CITY_COORDS[item.cityKey];geoCache[item.cityKey]=ll;}
+      }
+      item.cb(ll);
+    })
     .finally(function(){setTimeout(runGeoQueue,1100);});
 }
 
@@ -2084,7 +2120,7 @@ window._mapInitDeals=function(deals){
   var bounds=[];
   var placed=0;
   deals.forEach(function(deal){
-    geocode(deal.city,deal.state,deal.zip,function(ll){
+    geocode(deal.streetAddress,deal.city,deal.state,deal.zip,function(ll){
       placed++;
       if(ll){placeMarker(deal,ll);bounds.push(ll);}
       if(placed===deals.length&&bounds.length){

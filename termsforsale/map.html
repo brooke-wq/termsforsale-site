@@ -287,17 +287,32 @@ var geoCache={};
 var geoQueue=[];
 var geoRunning=false;
 
-function geocode(city,state,zip,cb){
-  var key=(city+','+state).toLowerCase().trim();
-  // 1. Check runtime cache
-  if(geoCache[key]){cb(geoCache[key]);return;}
+// Resolves a deal to a lat/lng. When street + (zip or city) are available,
+// goes to Nominatim with the full address so each property gets its own
+// pin instead of all same-city pins clustering at the city centroid.
+function geocode(street,city,state,zip,cb){
+  if(!city&&!state&&!zip){cb(null);return;}
+  var hasStreet=!!(street&&String(street).trim());
+  var hasZip=!!(zip&&String(zip).trim().length>=5);
+  var cityKey=(city+','+state).toLowerCase().trim();
+  var specificKey='';
+  if(hasStreet)specificKey=(String(street)+'|'+(hasZip?zip:cityKey)).toLowerCase().trim();
+  else if(hasZip)specificKey=('zip:'+String(zip).trim()+','+(state||'').toLowerCase().trim());
+  if(specificKey){
+    if(geoCache[specificKey]){cb(geoCache[specificKey]);return;}
+    geoQueue.push({street:hasStreet?String(street).trim():'',city:city||'',state:state||'',zip:hasZip?String(zip).trim():'',key:specificKey,cityKey:cityKey,cb:cb});
+    if(!geoRunning)runGeoQueue();
+    return;
+  }
+  // 1. Check runtime cache (city-level)
+  if(geoCache[cityKey]){cb(geoCache[cityKey]);return;}
   // 2. Check built-in city list (instant)
-  if(CITY_COORDS[key]){geoCache[key]=CITY_COORDS[key];cb(CITY_COORDS[key]);return;}
+  if(CITY_COORDS[cityKey]){geoCache[cityKey]=CITY_COORDS[cityKey];cb(CITY_COORDS[cityKey]);return;}
   // 3. Try state capital fallback
-  var stateKey=','+state.toLowerCase().trim();
-  for(var k in CITY_COORDS){if(k.endsWith(stateKey)){geoCache[key]=CITY_COORDS[k];cb(CITY_COORDS[k]);return;}}
+  var stateKey=','+(state||'').toLowerCase().trim();
+  for(var k in CITY_COORDS){if(k.endsWith(stateKey)){geoCache[cityKey]=CITY_COORDS[k];cb(CITY_COORDS[k]);return;}}
   // 4. Fall back to Nominatim for genuinely unknown cities
-  geoQueue.push({city:city,state:state,zip:zip,key:key,cb:cb});
+  geoQueue.push({street:'',city:city||'',state:state||'',zip:'',key:cityKey,cityKey:cityKey,cb:cb});
   if(!geoRunning)runGeoQueue();
 }
 
@@ -305,17 +320,35 @@ function runGeoQueue(){
   if(!geoQueue.length){geoRunning=false;hideGeoBar();return;}
   geoRunning=true;
   var item=geoQueue.shift();
-  showGeoBar('Locating: '+item.city+', '+item.state+'…');
-  var query=encodeURIComponent(item.city+', '+item.state+', USA');
+  showGeoBar('Locating: '+(item.street?item.street+', ':'')+item.city+', '+item.state+'…');
+  var parts=[];
+  if(item.street)parts.push(item.street);
+  if(item.city)parts.push(item.city);
+  if(item.state)parts.push(item.state);
+  if(item.zip)parts.push(item.zip);
+  parts.push('USA');
+  var query=encodeURIComponent(parts.join(', '));
   var url='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+query;
   fetch(url,{headers:{'Accept-Language':'en','User-Agent':'TermsForSale/1.0'}})
     .then(function(r){return r.json();})
     .then(function(data){
       var ll=data&&data[0]?[parseFloat(data[0].lat),parseFloat(data[0].lon)]:null;
+      // Address miss — fall back to city centroid so the pin still shows.
+      if(!ll&&item.cityKey){
+        if(geoCache[item.cityKey])ll=geoCache[item.cityKey];
+        else if(CITY_COORDS[item.cityKey]){ll=CITY_COORDS[item.cityKey];geoCache[item.cityKey]=ll;}
+      }
       if(ll)geoCache[item.key]=ll;
       item.cb(ll);
     })
-    .catch(function(){item.cb(null);})
+    .catch(function(){
+      var ll=null;
+      if(item.cityKey){
+        if(geoCache[item.cityKey])ll=geoCache[item.cityKey];
+        else if(CITY_COORDS[item.cityKey]){ll=CITY_COORDS[item.cityKey];geoCache[item.cityKey]=ll;}
+      }
+      item.cb(ll);
+    })
     .finally(function(){setTimeout(runGeoQueue,1100);});
 }
 
@@ -581,7 +614,7 @@ function loadDeals(){
         var placed=0;
         var bounds=[];
         ALL_DEALS.forEach(function(deal){
-          geocode(deal.city,deal.state,deal.zip,function(ll){
+          geocode(deal.streetAddress,deal.city,deal.state,deal.zip,function(ll){
             placed++;
             if(ll){
               placeMarker(deal,ll);
