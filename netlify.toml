@@ -349,12 +349,11 @@
   status = 301
 
 [[redirects]]
-[[redirects]]
   from = "/api/generate-pitch-deck"
   to = "/.netlify/functions/generate-pitch-deck"
   status = 200
 
-
+[[redirects]]
   from = "/api/auto-enrich"
   to = "/.netlify/functions/auto-enrich"
   status = 200
