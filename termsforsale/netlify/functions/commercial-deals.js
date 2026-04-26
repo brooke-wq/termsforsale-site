@@ -214,11 +214,37 @@ async function fetchAllPages(dbId, token, filter) {
   return allPages;
 }
 
+// The main pipeline DB has hundreds of rows; we must filter server-side or the
+// /commercial page sits on a spinner. Deal Status is sometimes a `status` prop
+// and sometimes a `select` prop depending on the workspace, so try both before
+// falling back to an unfiltered fetch.
+async function fetchPipelineCommercial(dbId, token) {
+  var marketingStatuses = ['Actively Marketing', 'Assignment Sent'];
+  var attempts = [
+    { or: marketingStatuses.map(function(s){ return { property: 'Deal Status', status: { equals: s } }; }) },
+    { or: marketingStatuses.map(function(s){ return { property: 'Deal Status', select: { equals: s } }; }) }
+  ];
+  for (var i = 0; i < attempts.length; i++) {
+    try {
+      return await fetchAllPages(dbId, token, attempts[i]);
+    } catch (e) {
+      // Try the next filter shape; only swallow validation_error type failures.
+      if (i === attempts.length - 1) {
+        // Final fallback: no filter (mapPipelinePage will drop non-commercial / non-active rows).
+        return await fetchAllPages(dbId, token, null);
+      }
+    }
+  }
+  return [];
+}
+
 exports.handler = async function(event) {
   var headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Cache-Control': 'public, max-age=60'
+    // Short max-age + long stale-while-revalidate so a cold Lambda re-fetch
+    // doesn't make the next pageview wait on Notion (~1-3s round trip).
+    'Cache-Control': 'public, max-age=60, stale-while-revalidate=300'
   };
 
   if (event.httpMethod === 'OPTIONS') {
@@ -233,33 +259,28 @@ exports.handler = async function(event) {
     return { statusCode: 500, headers: headers, body: JSON.stringify({ error: 'NOTION_TOKEN not configured' }) };
   }
 
-  var commercialDeals = [];
-  var pipelineDeals = [];
   var errors = [];
 
-  // Source 1: dedicated commercial DB (Active only).
-  if (commercialDbId) {
-    try {
-      var pages = await fetchAllPages(commercialDbId, token, {
-        property: 'Status', select: { equals: 'Active' }
-      });
-      commercialDeals = pages.map(mapCommercialPage);
-    } catch (e) {
-      console.error('commercial-deals: dedicated DB error:', e.message);
-      errors.push({ source: 'commercial-db', error: e.message });
-    }
-  }
+  // Fetch both sources in parallel — they're independent Notion queries.
+  var commercialPromise = commercialDbId
+    ? fetchAllPages(commercialDbId, token, { property: 'Status', select: { equals: 'Active' } })
+        .catch(function(e) {
+          console.error('commercial-deals: dedicated DB error:', e.message);
+          errors.push({ source: 'commercial-db', error: e.message });
+          return [];
+        })
+    : Promise.resolve([]);
 
-  // Source 2: main pipeline, filtered client-side to commercial-realm property types.
-  try {
-    var pipelinePages = await fetchAllPages(pipelineDbId, token, null);
-    pipelineDeals = pipelinePages
-      .map(mapPipelinePage)
-      .filter(Boolean);
-  } catch (e) {
-    console.error('commercial-deals: pipeline DB error:', e.message);
-    errors.push({ source: 'pipeline', error: e.message });
-  }
+  var pipelinePromise = fetchPipelineCommercial(pipelineDbId, token)
+    .catch(function(e) {
+      console.error('commercial-deals: pipeline DB error:', e.message);
+      errors.push({ source: 'pipeline', error: e.message });
+      return [];
+    });
+
+  var results = await Promise.all([commercialPromise, pipelinePromise]);
+  var commercialDeals = results[0].map(mapCommercialPage);
+  var pipelineDeals = results[1].map(mapPipelinePage).filter(Boolean);
 
   // De-dupe by dealCode (commercial DB takes precedence if a code exists in both).
   var seen = {};
