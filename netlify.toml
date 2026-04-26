@@ -129,6 +129,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/weekly-digest"
+  to = "/.netlify/functions/weekly-digest"
+  status = 200
+
+[[redirects]]
   from = "/api/lead-intake"
   to = "/.netlify/functions/lead-intake"
   status = 200
