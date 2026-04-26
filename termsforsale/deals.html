@@ -48,6 +48,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -352,6 +354,26 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .deal-card-specs{display:flex;align-items:center;gap:16px;font-size:12px;color:#718096}
 .deal-card-spec{display:flex;align-items:center;gap:5px}
 .deal-card-spec strong{color:#0D1F3C;font-weight:700;font-size:13px}
+
+/* EXPECTED RETURN BADGE — Lennar-style yield-at-a-glance pill on the photo */
+.deal-card-return{position:absolute;top:12px;right:54px;padding:5px 10px;border-radius:50px;font-size:10px;font-weight:800;letter-spacing:.3px;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.15);font-variant-numeric:tabular-nums}
+.deal-card-return.r-good{background:#10B981;color:#fff}
+.deal-card-return.r-mid{background:#F59E0B;color:#fff}
+.deal-card-return.r-low{background:#EF4444;color:#fff}
+/* MATCH SCORE BADGE — only rendered when a buy box is in localStorage */
+.deal-card-match{position:absolute;bottom:12px;right:12px;padding:4px 9px;border-radius:50px;font-size:10px;font-weight:800;letter-spacing:.3px;z-index:3;background:rgba(13,31,60,.92);color:#fff;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.deal-card-match.m-strong{background:#10B981}
+.deal-card-match.m-mid{background:#29ABE2}
+.deal-card-match.m-low{background:rgba(13,31,60,.85)}
+.deal-card-match svg{flex-shrink:0}
+
+/* MARKER CLUSTER — brand colors */
+.marker-cluster div{background:rgba(41,171,226,.85)!important;color:#fff!important;font-weight:800!important;font-family:'Poppins',sans-serif!important;border:2px solid rgba(255,255,255,.95)!important;box-shadow:0 4px 14px rgba(13,31,60,.25)!important}
+.marker-cluster{background:rgba(41,171,226,.25)!important}
+.marker-cluster-small div{background:#29ABE2!important}
+.marker-cluster-medium div{background:#1a8bbf!important}
+.marker-cluster-large div{background:#0D1F3C!important}
+
 /* ── RECENTLY CLOSED (social proof track record) ───── */
 .closed-section{background:#fff;padding:72px 55px;border-top:1px solid var(--border)}
 .closed-inner{max-width:1330px;margin:0 auto}
@@ -1417,6 +1439,135 @@ function clickDeal(id){
   window.location.href=d?buildDealPath(d):'/deal.html?id='+encodeURIComponent(id);
 }
 
+// ─── EXPECTED RETURN BADGE ────────────────────────────────────
+// Computes a quick CoC return for a deal using the same default assumptions
+// as the deal-page Pro Forma calculator (25% down @ 6.5%, 5% vacancy, 8% mgmt,
+// 1.2% tax, 0.5% insurance, 5% maintenance, 5% capex). Pure compute — no API.
+// Returns { available, coc, cashFlow } where available=false signals the card
+// should suppress the badge entirely (insufficient inputs).
+function computeQuickReturn(d){
+  var rent  = +d.rentFinal || 0;
+  var price = +d.askingPrice || +d.entryFee || 0;
+  if(!rent || !price) return {available:false};
+  var down=0.25, rate=0.065, term=30;
+  var loan = price*(1-down);
+  var mr = rate/12;
+  var n = term*12;
+  var pi = loan>0 ? loan*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1) : 0;
+  var grossYr = rent*12;
+  var opexYr  = price*0.012 + price*0.005 + grossYr*(0.05+0.08+0.05+0.05);
+  var noiYr = grossYr - opexYr;
+  var cfYr  = noiYr - pi*12;
+  var cashIn = price - loan; // down payment as cash invested
+  var coc = cashIn>0 ? (cfYr/cashIn)*100 : 0;
+  return {available:true, coc:coc, cashFlow:cfYr/12};
+}
+function returnBadgeHtml(d){
+  var q = computeQuickReturn(d);
+  if(!q.available) return '';
+  var cls = q.coc >= 8 ? 'r-good' : q.coc >= 4 ? 'r-mid' : 'r-low';
+  var sign = q.coc >= 0 ? '+' : '';
+  return '<div class="deal-card-return '+cls+'">'+sign+q.coc.toFixed(1)+'% CoC</div>';
+}
+
+// ─── BUY BOX MATCH SCORE ──────────────────────────────────────
+// Reads the buyer's local buy box (saved by /buy-box.html into
+// localStorage as `tfs_buybox`) and scores each deal 0-100 against it.
+// Pure frontend. Returns null when there's no buy box (no badge shown).
+function getBuyBox(){
+  try{var raw=localStorage.getItem('tfs_buybox');if(!raw)return null;return JSON.parse(raw);}catch(e){return null;}
+}
+function _normCSV(s){
+  return String(s||'').toLowerCase().split(/[,;\n]/).map(function(t){return t.trim();}).filter(Boolean);
+}
+function computeMatchScore(deal, bb){
+  if(!bb) return null;
+  // Each criterion contributes a weight when it's defined in the buy box.
+  // The score is (sum of weights satisfied) / (sum of weights attempted) * 100.
+  var weights = 0, hits = 0;
+  function check(weight, ok){ weights += weight; if(ok) hits += weight; }
+  // Markets — match against city, state, zip
+  var marketsRaw = bb.markets || '';
+  if(marketsRaw && String(marketsRaw).trim()){
+    var tokens = _normCSV(marketsRaw);
+    var dealTokens = [deal.city, deal.state, deal.zip, deal.nearestMetro].filter(Boolean).map(function(s){return String(s).toLowerCase();});
+    var hit = tokens.some(function(t){ return dealTokens.some(function(dt){ return dt.indexOf(t)>-1 || t.indexOf(dt)>-1; }); });
+    check(20, hit);
+  }
+  // Structures — array of preferred deal types
+  if(Array.isArray(bb.structures) && bb.structures.length){
+    var dt = String(deal.dealType||'').toLowerCase();
+    var hit2 = bb.structures.some(function(s){
+      var sl=String(s).toLowerCase();
+      if(sl.includes('cash') && /cash/.test(dt)) return true;
+      if(sl.includes('sub') && /sub/.test(dt)) return true;
+      if(sl.includes('seller') && /seller/.test(dt)) return true;
+      if(sl.includes('hybrid') && /hybrid/.test(dt)) return true;
+      if(sl.includes('morby') && /morby|stack/.test(dt)) return true;
+      if(sl.includes('wrap') && /wrap/.test(dt)) return true;
+      if(sl.includes('lease') && /lease/.test(dt)) return true;
+      if(sl.includes('novation') && /novation/.test(dt)) return true;
+      return false;
+    });
+    check(20, hit2);
+  }
+  // Property type
+  if(Array.isArray(bb.propertyTypes) && bb.propertyTypes.length){
+    var pt = String(deal.propertyType||'').toLowerCase();
+    var hit3 = bb.propertyTypes.some(function(t){
+      var tl = String(t).toLowerCase();
+      if(/single|sfr/.test(tl) && /single|sfr|family/.test(pt)) return true;
+      if(/condo|town/.test(tl) && /condo|town/.test(pt)) return true;
+      if(/multi|duplex|triplex|fourplex|quadplex/.test(tl) && /multi|duplex|triplex|fourplex|quadplex/.test(pt)) return true;
+      if(/commercial/.test(tl) && /commercial|office|retail|industrial|mixed/.test(pt)) return true;
+      return false;
+    });
+    check(10, hit3);
+  }
+  // Numeric thresholds — each contributes a small weight if specified
+  function ckMax(field, dealVal, w){
+    var lim = parseFloat(bb[field]);
+    if(!isFinite(lim) || lim<=0) return;
+    var v = parseFloat(dealVal);
+    if(!isFinite(v)){ weights+=w; return; } // penalize missing data lightly
+    check(w, v <= lim);
+  }
+  function ckMin(field, dealVal, w){
+    var lim = parseFloat(bb[field]);
+    if(!isFinite(lim) || lim<=0) return;
+    var v = parseFloat(dealVal);
+    if(!isFinite(v)){ weights+=w; return; }
+    check(w, v >= lim);
+  }
+  ckMax('maxPrice', deal.askingPrice, 10);
+  ckMax('maxEntry', deal.entryFee || deal.askingPrice, 10);
+  ckMax('maxPmt',  deal.piti || deal.sfPayment, 5);
+  ckMin('minBeds', deal.beds, 5);
+  ckMin('minBaths',deal.baths, 5);
+  ckMin('minSqft', deal.sqft, 5);
+  ckMin('minYear', deal.yearBuilt, 5);
+  ckMin('minArv',  deal.compsArv, 5);
+  // HOA tolerance
+  if(bb.hoa){
+    var hoaTol = String(bb.hoa).toLowerCase();
+    var hasHoa = !!(deal.hoa && !/^(no|none|n\/a|0|false)/i.test(String(deal.hoa).trim()));
+    if(/no/.test(hoaTol)) check(5, !hasHoa);
+    else if(/yes|ok|fine/.test(hoaTol)) check(5, true);
+  }
+  if(weights===0) return null; // empty buy box — nothing to score against
+  return Math.round((hits/weights)*100);
+}
+function matchBadgeHtml(deal){
+  var bb = getBuyBox();
+  if(!bb) return '';
+  var score = computeMatchScore(deal, bb);
+  if(score == null) return '';
+  var cls = score >= 75 ? 'm-strong' : score >= 50 ? 'm-mid' : 'm-low';
+  return '<div class="deal-card-match '+cls+'" title="Match score against your saved buy box">'
+    +'<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>'
+    +score+'% match</div>';
+}
+
 // ─── CARD HTML ─────────────────────────────────────────────────
 function makeCard(d){
   storeDeal(d);
@@ -1491,6 +1642,8 @@ function makeCard(d){
       ${isClosed ? '' : `<div class="deal-card-save" onclick="toggleSave(event,'${safeId}',this)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="${saveFill}" stroke="${saveStroke}" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </div>`}
+      ${isClosed||isPending||isUC||isSold ? '' : returnBadgeHtml(d)}
+      ${isClosed||isPending||isUC||isSold ? '' : matchBadgeHtml(d)}
     </div>
     <div class="deal-card-body">
       <div class="deal-card-price-row">
@@ -2077,6 +2230,7 @@ async function loadDealsFromSheet(){
 
 <!-- LEAFLET MAP -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 'use strict';
 (function(){
@@ -2112,6 +2266,18 @@ if(window.ResizeObserver){
 window.MARKERS={};
 var MARKERS=window.MARKERS;
 var DEAL_BASE=(function(){var h=window.location.hostname;if(h==='localhost'||h==='127.0.0.1')return'';return window.location.origin;})();
+
+// MARKER CLUSTER LAYER — wraps individual markers so zoomed-out views show
+// counts instead of stacked pins. Falls back to direct map placement if the
+// markercluster plugin failed to load (CDN block, offline, etc.).
+var CLUSTER_LAYER = (typeof L.markerClusterGroup === 'function')
+  ? L.markerClusterGroup({
+      showCoverageOnHover:false,
+      spiderfyOnMaxZoom:true,
+      disableClusteringAtZoom:14,
+      maxClusterRadius:55
+    }).addTo(map)
+  : null;
 
 // ─── GEOCODE — instant US city cache ───────────────────────────
 var CITY_COORDS={
@@ -2302,7 +2468,10 @@ function placeMarker(deal,latlng){
   // Idempotent: re-running pass-2 with a refined geocode replaces the
   // pass-1 city-centroid marker instead of stacking duplicates.
   if(MARKERS[deal.id]){
-    try{map.removeLayer(MARKERS[deal.id]);}catch(e){}
+    try{
+      if(CLUSTER_LAYER) CLUSTER_LAYER.removeLayer(MARKERS[deal.id]);
+      else map.removeLayer(MARKERS[deal.id]);
+    }catch(e){}
     delete MARKERS[deal.id];
   }
   var jitter=0.006;
@@ -2322,7 +2491,8 @@ function placeMarker(deal,latlng){
   marker.on('click',function(){
     map.flyTo(marker.getLatLng(),13,{duration:0.6});
   });
-  marker.addTo(map);
+  if(CLUSTER_LAYER) CLUSTER_LAYER.addLayer(marker);
+  else marker.addTo(map);
   MARKERS[deal.id]=marker;
 }
 

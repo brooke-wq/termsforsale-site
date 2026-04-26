@@ -273,6 +273,90 @@ footer{background:var(--navy);padding:44px 40px 0}
 .calc-result-value.negative{color:#E53E3E}
 .calc-result-value.neutral{color:var(--blue)}
 
+/* PRO FORMA — live two-column calculator with side-by-side scenarios */
+.pf-wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+.pf-col{background:var(--white);border:1px solid var(--border-light);border-radius:var(--r);padding:18px}
+.pf-col h4{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pf-grid .pf-field.wide{grid-column:1/-1}
+.pf-field label{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.pf-field input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
+.pf-field input:focus{border-color:var(--blue);background:#fff}
+.pf-field-suffix{position:relative}
+.pf-field-suffix::after{content:attr(data-suffix);position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-light);font-weight:600;pointer-events:none}
+.pf-result-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px dashed var(--border-light)}
+.pf-result-row:last-child{border-bottom:none}
+.pf-result-row .pf-rl{font-size:12px;color:var(--text-mid);font-weight:600}
+.pf-result-row .pf-rv{font-size:18px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.pf-result-row .pf-rv.positive{color:#276749}
+.pf-result-row .pf-rv.negative{color:#E53E3E}
+.pf-result-row .pf-rv.neutral{color:var(--blue)}
+.pf-headline{background:linear-gradient(155deg,#0D1F3C 0%,#14284a 100%);color:#fff;border-radius:var(--r);padding:16px 18px;margin-bottom:14px}
+.pf-headline-num{font-size:28px;font-weight:900;line-height:1;margin-bottom:4px}
+.pf-headline-num.positive{color:#6EE7B7}
+.pf-headline-num.negative{color:#FCA5A5}
+.pf-headline-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.5px}
+.pf-scenarios{margin-top:16px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--white)}
+.pf-scenarios-head{padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px}
+.pf-scenarios-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.pf-scn{padding:14px 16px;border-right:1px solid var(--border-light);text-align:center}
+.pf-scn:last-child{border-right:none}
+.pf-scn.base{background:#F8FBFE;border-left:2px solid var(--blue);border-right:2px solid var(--blue);position:relative}
+.pf-scn-name{font-size:10px;font-weight:800;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.pf-scn-name.base{color:var(--blue)}
+.pf-scn-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text-mid);margin:4px 0;font-variant-numeric:tabular-nums}
+.pf-scn-row strong{color:var(--text);font-weight:700}
+.pf-scn-row strong.positive{color:#276749}
+.pf-scn-row strong.negative{color:#E53E3E}
+@media(max-width:768px){
+  .pf-wrap{grid-template-columns:1fr}
+  .pf-scenarios-grid{grid-template-columns:1fr;}
+  .pf-scn{border-right:none;border-bottom:1px solid var(--border-light)}
+  .pf-scn:last-child{border-bottom:none}
+  .pf-scn.base{border-left:none;border-right:none;border-top:2px solid var(--blue);border-bottom:2px solid var(--blue)}
+}
+
+/* INFO TOOLTIP — hover/focus tooltip on Terms table labels */
+.info-tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--bg);color:var(--text-light);font-size:9px;font-weight:700;margin-left:5px;cursor:help;border:1px solid var(--border);position:relative;vertical-align:middle;font-family:'Domine',serif;font-style:italic}
+.info-tip:hover,.info-tip:focus{background:var(--blue);color:#fff;border-color:var(--blue);outline:none}
+.info-tip .info-tip-body{display:none;position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);background:#0D1F3C;color:#fff;font-family:var(--font);font-style:normal;font-size:11px;font-weight:500;line-height:1.5;padding:8px 10px;border-radius:6px;width:220px;box-shadow:0 6px 20px rgba(0,0,0,.18);text-transform:none;letter-spacing:0;text-align:left;z-index:50}
+.info-tip:hover .info-tip-body,.info-tip:focus .info-tip-body{display:block}
+.info-tip .info-tip-body::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0D1F3C}
+
+/* RENTAL COMPS — Lennar-style horizontal scroll row */
+.rc-section{margin-top:20px;background:var(--white);border:1px solid var(--border-light);border-radius:var(--r);padding:16px}
+.rc-section h4{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.rc-section .rc-sub{font-size:11px;color:var(--text-light);margin-bottom:12px}
+.rc-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:thin;padding-bottom:6px}
+.rc-card-c{flex:0 0 200px;background:var(--bg);border:1px solid var(--border-light);border-radius:8px;padding:12px}
+.rc-card-c .rc-rent{font-size:18px;font-weight:800;color:var(--blue);line-height:1.1;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.rc-card-c .rc-loc{font-size:11px;color:var(--text-mid);font-weight:600;margin-bottom:6px}
+.rc-card-c .rc-meta{font-size:10px;color:var(--text-light);line-height:1.5}
+.rc-card-c .rc-meta strong{color:var(--text-mid);font-weight:600}
+.rc-empty{padding:18px;background:var(--bg);border-radius:8px;text-align:center;font-size:12px;color:var(--text-light)}
+
+/* HERO STAT STRIP — Lennar-style polished marquee tile above photo grid */
+.hero-strip{background:linear-gradient(155deg,#0D1F3C 0%,#14284a 100%);color:#fff;border-radius:var(--r);padding:18px 22px;margin-bottom:14px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center}
+.hero-strip-price{display:flex;flex-direction:column;gap:2px}
+.hero-strip-price .hsp-num{font-size:28px;font-weight:900;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.hero-strip-price .hsp-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.6px}
+.hero-strip-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.hero-strip-tile{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;text-align:center}
+.hero-strip-tile .hst-num{font-size:15px;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.hero-strip-tile .hst-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.hero-strip-pills{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.hero-strip-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.hero-strip-pill.creative{background:rgba(247,148,29,.15);color:#FFD08A;border:1px solid rgba(247,148,29,.4)}
+.hero-strip-pill.cash{background:rgba(16,185,129,.15);color:#6EE7B7;border:1px solid rgba(16,185,129,.4)}
+.hero-strip-pill.screened{background:rgba(255,255,255,.08);color:#CBD5E1;border:1px solid rgba(255,255,255,.18)}
+@media(max-width:768px){
+  .hero-strip{grid-template-columns:1fr;gap:12px;padding:14px 16px}
+  .hero-strip-tiles{grid-template-columns:repeat(4,1fr);gap:6px}
+  .hero-strip-tile{padding:7px 4px}
+  .hero-strip-tile .hst-num{font-size:13px}
+  .hero-strip-pills{flex-direction:row;justify-content:flex-start;flex-wrap:wrap}
+}
+
 /* STICKY ACTION BAR */
 .sticky-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(13,31,60,.97);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.1);padding:12px 40px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:500;transform:translateY(100%);transition:transform .3s}
 .sticky-bar.show{transform:translateY(0)}
@@ -978,7 +1062,32 @@ function renderDeal(d,allDeals){
     if(d.netToBuyer) structureRows.push({l:'Net to Buyer at Closing',v:fc(d.netToBuyer)});
   }
   if(structureRows.length%2!==0) structureRows.push({l:'',v:''});
-  var structureHtml=structureRows.filter(function(r){return r.l||r.v;}).length?'<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>'+structureHeading+'</div><div class="terms-grid">'+structureRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>':'';
+  // Tooltip glossary — surfaces a small `i` icon next to common terms so
+  // first-time investors can hover/tap to learn what they mean. Keys are
+  // matched case-insensitive against the row label after stripping
+  // suffixes like " (est)".
+  var TERM_GLOSSARY = {
+    'entry fee': 'Total cash you bring to close — typically down payment plus closing/transactional costs. This is your out-of-pocket to take possession.',
+    'piti': 'Principal, Interest, Taxes, and Insurance — the full monthly mortgage payment when an existing loan is in place (most common on Subject To deals).',
+    'piti (est)': 'Principal, Interest, Taxes, and Insurance — estimated full monthly mortgage payment.',
+    'principal & interest': 'The portion of the monthly payment that goes toward the loan only (excludes taxes and insurance).',
+    'monthly seller payment': 'Recurring payment to the seller under the seller-finance note. Does not include property tax or insurance.',
+    'monthly payment': 'Total recurring payment — see breakdown above for what is included.',
+    'cap rate': 'Net Operating Income divided by purchase price. Quick measure of unleveraged yield.',
+    'dscr ratio': 'Debt Service Coverage Ratio — NOI divided by annual debt service. Above 1.25 is generally considered safe by DSCR lenders.',
+    'cash to seller': 'How much of the entry fee actually flows to the seller at close.',
+    'wrap payment': 'Monthly payment from the buyer to the seller on the wraparound note. The seller continues to pay the underlying loan.'
+  };
+  function termLabelHtml(label){
+    if(!label) return '';
+    var key = String(label).toLowerCase().trim().replace(/[*]/g,'').trim();
+    var tip = TERM_GLOSSARY[key];
+    var safe = String(label).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if(!tip) return safe;
+    var tipSafe = String(tip).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return safe + '<span class="info-tip" tabindex="0" role="img" aria-label="'+tipSafe+'">i<span class="info-tip-body">'+tipSafe+'</span></span>';
+  }
+  var structureHtml=structureRows.filter(function(r){return r.l||r.v;}).length?'<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>'+structureHeading+'</div><div class="terms-grid">'+structureRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+termLabelHtml(r.l)+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>':'';
 
   // CASH FLOW ANALYSIS — renders whenever any of these fields are populated.
   // Works for Stack (NOI/Cap/DSCR/etc.) and for any deal that has rent + occupancy data.
@@ -996,7 +1105,7 @@ function renderDeal(d,allDeals){
   if(d.rentFinal) cfRows.push({l:'Gross Monthly Rents',v:fc(d.rentFinal)+'/mo'});
   if(d.occupancy) cfRows.push({l:'Occupancy',v:d.occupancy});
   if(cfRows.length%2!==0) cfRows.push({l:'',v:''});
-  var cashFlowHtml=cfRows.length?'<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>Cash Flow Analysis</div><div class="terms-grid">'+cfRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+r.l+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>':'';
+  var cashFlowHtml=cfRows.length?'<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>Cash Flow Analysis</div><div class="terms-grid">'+cfRows.map(function(r){return '<div class="term-item'+(!r.l?' empty-cell':'')+'"><div class="term-label">'+termLabelHtml(r.l)+'</div><div class="term-value '+(r.v==='—'?'empty':'')+'">'+r.v+'</div></div>';}).join('')+'</div></div>':'';
 
   // HERO CARD — photo on left, navy card on right with status + address + 5 metric tiles.
   // Universal for every deal type; metric mix varies.
@@ -1072,7 +1181,47 @@ function renderDeal(d,allDeals){
     return '<div class="shc-metric"><div class="shc-metric-label">'+m.l+'</div><div class="shc-metric-value '+(m.cls||'')+'">'+m.v+'</div></div>';
   }).join('');
 
+  // ── HERO STAT STRIP — Lennar-style summary tile above the photo grid.
+  // Shows the headline price (entry fee for creative, asking for cash),
+  // a 4-tile property-spec strip (beds/baths/sqft/year), and pills for
+  // deal type and "screened for investor strategy". Pure visual upgrade —
+  // no new data fetched.
+  var hsHeadlineNum, hsHeadlineLbl;
+  if (entry && +d.askingPrice && entry !== +d.askingPrice) {
+    hsHeadlineNum = fc(entry); hsHeadlineLbl = 'Entry Fee';
+  } else if (entry) {
+    hsHeadlineNum = fc(entry); hsHeadlineLbl = dtIsCash ? 'Purchase Price' : 'Entry Fee';
+  } else {
+    hsHeadlineNum = fc(d.askingPrice||0); hsHeadlineLbl = 'Asking Price';
+  }
+  var sqftDisp = !isNaN(sqftNum) ? sqftNum.toLocaleString() : '—';
+  var hsTiles = [
+    {n: d.beds || '—',     l: 'Beds'},
+    {n: d.baths || '—',    l: 'Baths'},
+    {n: sqftDisp,          l: 'Sqft'},
+    {n: d.yearBuilt || '—',l: 'Year'}
+  ];
+  var hsTilesHtml = hsTiles.map(function(t){
+    return '<div class="hero-strip-tile"><div class="hst-num">'+t.n+'</div><div class="hst-lbl">'+t.l+'</div></div>';
+  }).join('');
+  // Investor-strategy screening label varies by deal type.
+  var strategyLabel = 'Buy & Hold';
+  if (/flip/i.test(d.dealType||'')) strategyLabel = 'Fix & Flip';
+  else if (/colive|pad|room/i.test((d.details||'')+(d.description||''))) strategyLabel = 'Co-Living';
+  else if (dtIsCash) strategyLabel = 'Cash Flow / BRRRR';
+  else strategyLabel = 'Cash Flow';
+  var hsPillsHtml =
+    '<span class="hero-strip-pill '+(dtIsCash?'cash':'creative')+'">'+(d.dealType||'Deal')+'</span>'
+    +'<span class="hero-strip-pill screened">✓ Screened: '+strategyLabel+'</span>';
+  var heroStripHtml =
+    '<div class="hero-strip">'
+    +  '<div class="hero-strip-price"><div class="hsp-num">'+hsHeadlineNum+'</div><div class="hsp-lbl">'+hsHeadlineLbl+'</div></div>'
+    +  '<div class="hero-strip-tiles">'+hsTilesHtml+'</div>'
+    +  '<div class="hero-strip-pills">'+hsPillsHtml+'</div>'
+    +'</div>';
+
   var heroHtml=''
+    +heroStripHtml
     +'<div class="stack-hero">'
     +  '<div class="photo-grid" id="photo-grid">'+photoHtml+'</div>'
     +  '<div class="stack-hero-card">'
@@ -1174,6 +1323,7 @@ function renderDeal(d,allDeals){
         <div class="tabs-inner">
           <button class="tab-btn on" onclick="switchTab(this,'terms')">Terms</button>
           <button class="tab-btn" onclick="switchTab(this,'highlights')">Highlights</button>
+          <button class="tab-btn" onclick="switchTab(this,'proforma')">Pro Forma</button>
           <button class="tab-btn" onclick="switchTab(this,'analysis')">Analysis</button>
           ${d.deckLink?`<button class="tab-btn" onclick="switchTab(this,'resources')">Resources</button>`:''}
           <button class="tab-btn" onclick="switchTab(this,'process')">Buy Process</button>
@@ -1213,6 +1363,82 @@ function renderDeal(d,allDeals){
       </div>
 
       <div id="tab-highlights" class="tab-panel">${hlHtml||'<p style="color:var(--text-light);font-size:13px">No highlights added for this deal.</p>'}</div>
+
+      <div id="tab-proforma" class="tab-panel">
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;line-height:1.5">Live underwriting model. Defaults reflect creative-finance investor norms — adjust any input and the cap rate, cash-on-cash, and 5/10-year totals refresh instantly. Three scenarios (conservative / base / aggressive) appear below.</div>
+        <div class="pf-wrap">
+          <div class="pf-col">
+            <h4>Your Assumptions</h4>
+            <div class="pf-grid">
+              <div class="pf-field"><label>Purchase Price</label><div class="pf-field-suffix" data-suffix="$"><input type="number" id="pf-price" value="${+d.askingPrice||entry||''}" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Down Payment</label><div class="pf-field-suffix" data-suffix="%"><input type="number" id="pf-down" value="25" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Loan Rate</label><div class="pf-field-suffix" data-suffix="%"><input type="number" id="pf-rate" step="0.125" value="${(function(){var r=d.subtoRate||d.sfRate;if(r){var n=parseFloat(String(r).replace(/[^0-9.]/g,''));if(!isNaN(n)){return n<1?(n*100).toFixed(3):n.toFixed(3);}}return '6.500';})()}" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Loan Term (yrs)</label><input type="number" id="pf-term" value="30" oninput="calcProForma()"></div>
+              <div class="pf-field"><label>Monthly Rent</label><div class="pf-field-suffix" data-suffix="$"><input type="number" id="pf-rent" value="${+d.rentFinal||''}" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Vacancy</label><div class="pf-field-suffix" data-suffix="%"><input type="number" id="pf-vac" value="5" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Mgmt</label><div class="pf-field-suffix" data-suffix="%"><input type="number" id="pf-mgmt" value="8" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Property Tax / yr</label><div class="pf-field-suffix" data-suffix="$"><input type="number" id="pf-tax" value="${(function(){var p=+d.askingPrice||entry||0;return p?Math.round(p*0.012):'';})()}" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Insurance / yr</label><div class="pf-field-suffix" data-suffix="$"><input type="number" id="pf-ins" value="${(function(){var p=+d.askingPrice||entry||0;return p?Math.round(p*0.005):'';})()}" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>HOA / mo</label><div class="pf-field-suffix" data-suffix="$"><input type="number" id="pf-hoa" value="${(function(){var h=String(d.hoa||'').replace(/[$,]/g,'');var n=parseFloat(h);return isNaN(n)?0:n;})()}" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Maintenance Reserve</label><div class="pf-field-suffix" data-suffix="%"><input type="number" id="pf-maint" value="5" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>CapEx Reserve</label><div class="pf-field-suffix" data-suffix="%"><input type="number" id="pf-capex" value="5" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Appreciation</label><div class="pf-field-suffix" data-suffix="%"><input type="number" id="pf-appr" value="3" step="0.5" oninput="calcProForma()"></div></div>
+              <div class="pf-field"><label>Hold Period (yrs)</label><input type="number" id="pf-hold" value="10" oninput="calcProForma()"></div>
+            </div>
+          </div>
+          <div class="pf-col">
+            <h4>Your Returns</h4>
+            <div class="pf-headline" id="pf-headline">
+              <div class="pf-headline-num" id="pf-h-num">—</div>
+              <div class="pf-headline-lbl" id="pf-h-lbl">Monthly Cash Flow</div>
+            </div>
+            <div id="pf-results">
+              <div class="pf-result-row"><span class="pf-rl">Monthly P&amp;I</span><span class="pf-rv neutral" id="pf-pi">—</span></div>
+              <div class="pf-result-row"><span class="pf-rl">Monthly NOI</span><span class="pf-rv neutral" id="pf-noi">—</span></div>
+              <div class="pf-result-row"><span class="pf-rl">Cap Rate</span><span class="pf-rv neutral" id="pf-cap">—</span></div>
+              <div class="pf-result-row"><span class="pf-rl">Cash-on-Cash</span><span class="pf-rv neutral" id="pf-coc">—</span></div>
+              <div class="pf-result-row"><span class="pf-rl">5-yr Total Return</span><span class="pf-rv neutral" id="pf-5yr">—</span></div>
+              <div class="pf-result-row"><span class="pf-rl">10-yr Total Return</span><span class="pf-rv neutral" id="pf-10yr">—</span></div>
+              <div class="pf-result-row"><span class="pf-rl">Break-Even Rent</span><span class="pf-rv neutral" id="pf-be">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-scenarios">
+          <div class="pf-scenarios-head">Side-by-Side Scenarios — same inputs, three risk profiles</div>
+          <div class="pf-scenarios-grid">
+            <div class="pf-scn">
+              <div class="pf-scn-name">Conservative</div>
+              <div class="pf-scn-row"><span>Cash Flow</span><strong id="pf-s-cons-cf">—</strong></div>
+              <div class="pf-scn-row"><span>Cap Rate</span><strong id="pf-s-cons-cap">—</strong></div>
+              <div class="pf-scn-row"><span>CoC</span><strong id="pf-s-cons-coc">—</strong></div>
+              <div class="pf-scn-row"><span>10-yr Total</span><strong id="pf-s-cons-10">—</strong></div>
+            </div>
+            <div class="pf-scn base">
+              <div class="pf-scn-name base">Base (Your Inputs)</div>
+              <div class="pf-scn-row"><span>Cash Flow</span><strong id="pf-s-base-cf">—</strong></div>
+              <div class="pf-scn-row"><span>Cap Rate</span><strong id="pf-s-base-cap">—</strong></div>
+              <div class="pf-scn-row"><span>CoC</span><strong id="pf-s-base-coc">—</strong></div>
+              <div class="pf-scn-row"><span>10-yr Total</span><strong id="pf-s-base-10">—</strong></div>
+            </div>
+            <div class="pf-scn">
+              <div class="pf-scn-name">Aggressive</div>
+              <div class="pf-scn-row"><span>Cash Flow</span><strong id="pf-s-agg-cf">—</strong></div>
+              <div class="pf-scn-row"><span>Cap Rate</span><strong id="pf-s-agg-cap">—</strong></div>
+              <div class="pf-scn-row"><span>CoC</span><strong id="pf-s-agg-coc">—</strong></div>
+              <div class="pf-scn-row"><span>10-yr Total</span><strong id="pf-s-agg-10">—</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rc-section" id="rc-section">
+          <h4>Nearby Rental Comps</h4>
+          <div class="rc-sub">Long-term rental comparables within ~1 mile, pulled from RentCast. Used to validate the rent input above.</div>
+          <div class="rc-row" id="rc-row"><div class="rc-empty">Loading nearby rental comps…</div></div>
+        </div>
+
+        <div style="margin-top:14px;font-size:10px;color:var(--text-light);line-height:1.6">Pro forma figures are estimates for educational purposes only — not a guarantee of return. Verify all assumptions independently before making an investment decision.</div>
+      </div>
 
       <div id="tab-analysis" class="tab-panel">
         ${rentHtml}
@@ -1466,6 +1692,11 @@ function switchTab(btn,id){
   btn.classList.add('on');
   const panel=document.getElementById('tab-'+id);
   if(panel)panel.classList.add('on');
+  // Pro Forma: lazy-render math + fetch comps the first time it opens.
+  if(id==='proforma'){
+    try{calcProForma();}catch(e){}
+    try{loadRentalComps();}catch(e){}
+  }
 }
 
 // ─── CALCULATOR TABS & FUNCTIONS ──────────────────────────────
@@ -1568,6 +1799,168 @@ function calcCoLive(){
     r('Cash-on-Cash',totalCashIn>0?cocReturn.toFixed(1)+'%':'Enter costs',cocReturn>=12?'positive':cocReturn>0?'neutral':totalCashIn?'negative':'',cocReturn>=15?'Excellent — co-living premium':cocReturn>=8?'Solid return':'')+
     (uplift>0?r('vs. Traditional Rent','+'+$(uplift)+'/mo','positive','Co-living premium over '+$(vsTraditional)+' traditional rent'):'');
 }
+
+// ── PRO FORMA — Lennar-style live underwriting model.
+// Re-runs on every input change. Pure compute — no API calls.
+// Three scenarios share the same numeric inputs but vary vacancy / mgmt /
+// appreciation so the buyer sees a risk band, not a single point estimate.
+function pfPmt(principal,annualRate,termYears){
+  var n=termYears*12;
+  var mr=annualRate/100/12;
+  if(!(principal>0)||!(n>0))return 0;
+  if(mr===0)return principal/n;
+  return principal*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1);
+}
+function pfNum(id){var el=document.getElementById(id);if(!el)return 0;var n=parseFloat(el.value);return isNaN(n)?0:n;}
+function pfFmt$(n){if(!isFinite(n))return '—';return (n<0?'-$':'$')+Math.abs(Math.round(n)).toLocaleString();}
+function pfFmtPct(n){if(!isFinite(n))return '—';return n.toFixed(2)+'%';}
+function pfClass(n){return n>0?'positive':n<0?'negative':'neutral';}
+// Run the math for ONE scenario. `over` lets us swap individual inputs
+// (vacancy/mgmt/appreciation) so we can render conservative/base/aggressive
+// from the same form in one pass.
+function pfRunScenario(over){
+  var price=pfNum('pf-price');
+  var down=pfNum('pf-down');
+  var rate=pfNum('pf-rate');
+  var term=pfNum('pf-term')||30;
+  var rent=pfNum('pf-rent');
+  var vac=over.vac!=null?over.vac:pfNum('pf-vac');
+  var mgmt=over.mgmt!=null?over.mgmt:pfNum('pf-mgmt');
+  var taxYr=pfNum('pf-tax');
+  var insYr=pfNum('pf-ins');
+  var hoaMo=pfNum('pf-hoa');
+  var maint=pfNum('pf-maint');
+  var capex=pfNum('pf-capex');
+  var appr=over.appr!=null?over.appr:pfNum('pf-appr');
+  var hold=pfNum('pf-hold')||10;
+  var loanAmt=Math.max(0,price*(1-down/100));
+  var cashIn=price-loanAmt; // down payment as proxy for cash invested
+  var pi=pfPmt(loanAmt,rate,term);
+  var grossRentYr=rent*12;
+  var vacYr=grossRentYr*(vac/100);
+  var mgmtYr=grossRentYr*(mgmt/100);
+  var maintYr=grossRentYr*(maint/100);
+  var capexYr=grossRentYr*(capex/100);
+  var hoaYr=hoaMo*12;
+  var opexYr=taxYr+insYr+hoaYr+mgmtYr+maintYr+capexYr+vacYr;
+  var noiYr=grossRentYr-opexYr;
+  var noiMo=noiYr/12;
+  var debtYr=pi*12;
+  var cfYr=noiYr-debtYr;
+  var cfMo=cfYr/12;
+  var capRate=price>0?(noiYr/price)*100:0;
+  var coc=cashIn>0?(cfYr/cashIn)*100:0;
+  function totalReturn(yrs){
+    if(!(price>0))return 0;
+    var futurePrice=price*Math.pow(1+appr/100,yrs);
+    var sellCosts=futurePrice*0.06;
+    var netSale=futurePrice-sellCosts;
+    // Approximate remaining loan balance after `yrs` of payments.
+    var n=term*12; var mr=rate/100/12; var paid=Math.min(yrs*12,n);
+    var remBal=loanAmt;
+    if(loanAmt>0&&n>0&&paid>0){
+      if(mr===0){ remBal=Math.max(0,loanAmt-(loanAmt/n)*paid); }
+      else{
+        remBal=loanAmt*(Math.pow(1+mr,n)-Math.pow(1+mr,paid))/(Math.pow(1+mr,n)-1);
+        if(remBal<0)remBal=0;
+      }
+    }
+    var equityProceeds=netSale-remBal;
+    var cumCashFlow=cfYr*yrs;
+    return (equityProceeds-cashIn)+cumCashFlow;
+  }
+  var fiveYr=totalReturn(5);
+  var tenYr=totalReturn(hold||10);
+  var beRent=(opexYr+debtYr)/12; // gross monthly rent that breaks even
+  return {
+    price:price,cashIn:cashIn,loanAmt:loanAmt,pi:pi,
+    rentMo:rent,noiMo:noiMo,noiYr:noiYr,
+    cfMo:cfMo,cfYr:cfYr,capRate:capRate,coc:coc,
+    fiveYr:fiveYr,tenYr:tenYr,beRent:beRent
+  };
+}
+function calcProForma(){
+  var base = pfRunScenario({});
+  var cons = pfRunScenario({vac:8,mgmt:10,appr:1.5});
+  var agg  = pfRunScenario({vac:3,mgmt:6, appr:5});
+
+  // Headline number = base monthly cash flow.
+  var hNum=document.getElementById('pf-h-num');
+  var hLbl=document.getElementById('pf-h-lbl');
+  if(hNum){
+    hNum.textContent=pfFmt$(base.cfMo)+'/mo';
+    hNum.className='pf-headline-num '+(base.cfMo>0?'positive':base.cfMo<0?'negative':'');
+  }
+  if(hLbl) hLbl.textContent=base.cfMo>=0?'Monthly Cash Flow':'Monthly Cash Flow (negative)';
+
+  function setRow(id,val,kind){
+    var el=document.getElementById(id);if(!el)return;
+    el.textContent=val;
+    el.className='pf-rv '+(kind||'neutral');
+  }
+  setRow('pf-pi','-'+pfFmt$(base.pi)+'/mo','negative');
+  setRow('pf-noi',pfFmt$(base.noiMo)+'/mo',pfClass(base.noiMo));
+  setRow('pf-cap',pfFmtPct(base.capRate),base.capRate>=6?'positive':base.capRate>0?'neutral':'negative');
+  setRow('pf-coc',pfFmtPct(base.coc),base.coc>=8?'positive':base.coc>0?'neutral':'negative');
+  setRow('pf-5yr',pfFmt$(base.fiveYr),pfClass(base.fiveYr));
+  setRow('pf-10yr',pfFmt$(base.tenYr),pfClass(base.tenYr));
+  setRow('pf-be',pfFmt$(base.beRent)+'/mo','neutral');
+
+  // Scenarios table — 4 rows × 3 columns.
+  function fillScn(prefix,s){
+    var ids=[
+      [prefix+'-cf', pfFmt$(s.cfMo)+'/mo', pfClass(s.cfMo)],
+      [prefix+'-cap',pfFmtPct(s.capRate), s.capRate>=6?'positive':s.capRate>0?'neutral':'negative'],
+      [prefix+'-coc',pfFmtPct(s.coc),     s.coc>=8?'positive':s.coc>0?'neutral':'negative'],
+      [prefix+'-10', pfFmt$(s.tenYr),     pfClass(s.tenYr)]
+    ];
+    ids.forEach(function(t){var el=document.getElementById(t[0]);if(!el)return;el.textContent=t[1];el.className=t[2]?t[2]:'';});
+  }
+  fillScn('pf-s-cons',cons);
+  fillScn('pf-s-base',base);
+  fillScn('pf-s-agg', agg);
+}
+window.calcProForma=calcProForma;
+
+// ── RENTAL COMPS — fetched lazily the first time the Pro Forma tab opens.
+// Cached on window.* so reopening the tab is instant. The backend caches on
+// the Notion page so cross-pageviews are also free.
+var _rcLoaded=false;
+function loadRentalComps(){
+  if(_rcLoaded)return;
+  _rcLoaded=true;
+  var d=window._currentDeal||{};
+  if(!d.id){renderRentalComps({comps:[]});return;}
+  fetch('/api/rental-comps?dealId='+encodeURIComponent(d.id))
+    .then(function(r){return r.ok?r.json():{comps:[]};})
+    .then(renderRentalComps)
+    .catch(function(){renderRentalComps({comps:[]});});
+}
+function renderRentalComps(data){
+  var row=document.getElementById('rc-row');
+  if(!row)return;
+  var comps=(data&&data.comps)||[];
+  if(!comps.length){
+    row.innerHTML='<div class="rc-empty">No nearby comps available for this property yet. Use the rent input above to model your own assumption.</div>';
+    return;
+  }
+  row.innerHTML=comps.map(function(c){
+    var loc=[c.city,c.state].filter(Boolean).join(', ')+(c.zipCode?' '+c.zipCode:'');
+    var specs=[
+      c.beds!=null?c.beds+' bd':null,
+      c.baths!=null?c.baths+' ba':null,
+      c.sqft?Number(c.sqft).toLocaleString()+' sqft':null
+    ].filter(Boolean).join(' · ');
+    var dist=c.distance!=null?c.distance.toFixed(2)+' mi away':'';
+    var ppsf=c.rentPerSqft?'$'+c.rentPerSqft+'/sqft':'';
+    return '<div class="rc-card-c">'
+      +'<div class="rc-rent">$'+Math.round(c.rent).toLocaleString()+'<span style="font-size:11px;color:var(--text-light);font-weight:600">/mo</span></div>'
+      +'<div class="rc-loc">'+loc+'</div>'
+      +'<div class="rc-meta">'+(specs?'<strong>'+specs+'</strong><br>':'')+(ppsf?ppsf+(dist?' · ':''):'')+dist+'</div>'
+      +'</div>';
+  }).join('');
+}
+window.loadRentalComps=loadRentalComps;
 
 // Pre-fill both inquiry + offer forms with the logged-in user's info
 // so they never have to re-type name/phone/email.

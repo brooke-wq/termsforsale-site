@@ -6,6 +6,8 @@
 <title>Deal Map — Terms For Sale</title>
 <meta name="description" content="Interactive map of active off-market real estate deals. Browse subject-to, seller finance, and cash deals by location across the US.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -80,6 +82,12 @@ nav{height:60px;background:#fff;display:flex;align-items:center;justify-content:
 .leaflet-popup-content-wrapper{border-radius:12px;box-shadow:var(--shadow);border:none;padding:0;overflow:hidden;min-width:220px}
 .leaflet-popup-content{margin:0;font-family:var(--font)}
 .leaflet-popup-tip-container{display:none}
+/* MARKER CLUSTER — brand colors to match deals.html */
+.marker-cluster div{background:rgba(41,171,226,.85)!important;color:#fff!important;font-weight:800!important;font-family:'Poppins',sans-serif!important;border:2px solid rgba(255,255,255,.95)!important;box-shadow:0 4px 14px rgba(13,31,60,.25)!important}
+.marker-cluster{background:rgba(41,171,226,.25)!important}
+.marker-cluster-small div{background:#29ABE2!important}
+.marker-cluster-medium div{background:#1a8bbf!important}
+.marker-cluster-large div{background:#0D1F3C!important}
 .popup-inner{padding:16px}
 .popup-badge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
 .popup-price{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:2px}
@@ -192,6 +200,7 @@ nav{height:60px;background:#fff;display:flex;align-items:center;justify-content:
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="/deal-url.js"></script>
 <script>
 'use strict';
@@ -327,6 +336,18 @@ var ALL_DEALS=[];
 var MARKERS={};
 var LAYER=L.layerGroup().addTo(map);
 var activeId=null;
+
+// Cluster layer wraps individual deal markers so zoomed-out views collapse
+// into counts. Falls back to direct map placement if the markercluster
+// plugin failed to load (CDN block / offline).
+var CLUSTER_LAYER = (typeof L.markerClusterGroup === 'function')
+  ? L.markerClusterGroup({
+      showCoverageOnHover:false,
+      spiderfyOnMaxZoom:true,
+      disableClusteringAtZoom:14,
+      maxClusterRadius:55
+    }).addTo(map)
+  : null;
 
 // ─── SHEET PARSE ───────────────────────────────────────────────
 function parseGviz(text){
@@ -652,12 +673,19 @@ function applyFilters(){
     return true;
   });
 
-  // Update markers visibility based on criteria
+  // Update markers visibility based on criteria. When clustered, membership
+  // is on CLUSTER_LAYER instead of the map itself.
   Object.keys(MARKERS).forEach(function(id){
     var marker=MARKERS[id];
     var show=_lastFiltered.some(function(d){return d.id===id;});
-    if(show&&!map.hasLayer(marker)){marker.addTo(map);}
-    else if(!show&&map.hasLayer(marker)){map.removeLayer(marker);}
+    if(CLUSTER_LAYER){
+      var inLayer=CLUSTER_LAYER.hasLayer(marker);
+      if(show&&!inLayer)CLUSTER_LAYER.addLayer(marker);
+      else if(!show&&inLayer)CLUSTER_LAYER.removeLayer(marker);
+    } else {
+      if(show&&!map.hasLayer(marker)){marker.addTo(map);}
+      else if(!show&&map.hasLayer(marker)){map.removeLayer(marker);}
+    }
   });
 
   // Then narrow sidebar list by current map bounds
@@ -706,7 +734,10 @@ function placeMarker(deal,latlng){
   // with the same deal.id. Drop the existing marker so we don't stack
   // duplicates at slightly different jittered positions.
   if(MARKERS[deal.id]){
-    try{map.removeLayer(MARKERS[deal.id]);}catch(e){}
+    try{
+      if(CLUSTER_LAYER) CLUSTER_LAYER.removeLayer(MARKERS[deal.id]);
+      else map.removeLayer(MARKERS[deal.id]);
+    }catch(e){}
     delete MARKERS[deal.id];
   }
   // Add small random jitter so overlapping cities don't stack exactly
@@ -715,7 +746,8 @@ function placeMarker(deal,latlng){
   var marker=L.marker(ll,{icon:makeMarkerIcon(deal)});
   marker.bindPopup(makePopup(deal),{maxWidth:280,className:'deal-popup'});
   marker.on('click',function(){selectDeal(deal.id);});
-  marker.addTo(map);
+  if(CLUSTER_LAYER) CLUSTER_LAYER.addLayer(marker);
+  else marker.addTo(map);
   MARKERS[deal.id]=marker;
 }
 

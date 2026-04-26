@@ -359,6 +359,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/rental-comps"
+  to = "/.netlify/functions/rental-comps"
+  status = 200
+
+[[redirects]]
   from = "/webhook-test.html"
   to = "/404.html"
   status = 404

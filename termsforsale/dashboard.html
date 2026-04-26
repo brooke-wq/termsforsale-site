@@ -79,6 +79,10 @@ nav{background:#fff;border-bottom:1px solid var(--border);height:68px;display:fl
 .type-sf{background:#FFF3E0;color:#c05621}
 .type-cash{background:#E6F9F0;color:#276749}
 .type-hybrid{background:#F3E8FF;color:#7C3AED}
+.deal-row-match{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:50px;color:#fff;letter-spacing:.3px;margin-left:6px;font-variant-numeric:tabular-nums}
+.deal-row-match.m-strong{background:#10B981}
+.deal-row-match.m-mid{background:#29ABE2}
+.deal-row-match.m-low{background:#94A3B8}
 
 /* ACTIVITY LIST */
 .activity-list{display:flex;flex-direction:column;gap:10px}
@@ -180,6 +184,65 @@ function timeAgo(iso){
 
 function money(n){if(!n)return'—';return'$'+Number(n).toLocaleString();}
 
+// ── BUY BOX MATCH SCORE — same logic as deals.html cards. Uses the local
+// `tfs_buybox` blob written by /buy-box.html. Returns null when there is no
+// buy box stored OR when the buy box has zero matchable criteria.
+function getBuyBox(){try{var raw=localStorage.getItem('tfs_buybox');if(!raw)return null;return JSON.parse(raw);}catch(e){return null;}}
+function _normCSV(s){return String(s||'').toLowerCase().split(/[,;\n]/).map(function(t){return t.trim();}).filter(Boolean);}
+function computeMatchScore(deal,bb){
+  if(!bb)return null;
+  var weights=0,hits=0;
+  function check(w,ok){weights+=w;if(ok)hits+=w;}
+  if(bb.markets && String(bb.markets).trim()){
+    var tokens=_normCSV(bb.markets);
+    var dealTokens=[deal.city,deal.state,deal.nearestMetro].filter(Boolean).map(function(s){return String(s).toLowerCase();});
+    var hit=tokens.some(function(t){return dealTokens.some(function(dt){return dt.indexOf(t)>-1||t.indexOf(dt)>-1;});});
+    check(20,hit);
+  }
+  if(Array.isArray(bb.structures)&&bb.structures.length){
+    var dt=String(deal.dealType||'').toLowerCase();
+    var hit2=bb.structures.some(function(s){
+      var sl=String(s).toLowerCase();
+      if(sl.includes('cash')&&/cash/.test(dt))return true;
+      if(sl.includes('sub')&&/sub/.test(dt))return true;
+      if(sl.includes('seller')&&/seller/.test(dt))return true;
+      if(sl.includes('hybrid')&&/hybrid/.test(dt))return true;
+      if(sl.includes('morby')&&/morby|stack/.test(dt))return true;
+      if(sl.includes('wrap')&&/wrap/.test(dt))return true;
+      if(sl.includes('lease')&&/lease/.test(dt))return true;
+      if(sl.includes('novation')&&/novation/.test(dt))return true;
+      return false;
+    });
+    check(20,hit2);
+  }
+  function ckMax(field,dealVal,w){
+    var lim=parseFloat(bb[field]);if(!isFinite(lim)||lim<=0)return;
+    var v=parseFloat(dealVal);
+    if(!isFinite(v)){weights+=w;return;}
+    check(w,v<=lim);
+  }
+  function ckMin(field,dealVal,w){
+    var lim=parseFloat(bb[field]);if(!isFinite(lim)||lim<=0)return;
+    var v=parseFloat(dealVal);
+    if(!isFinite(v)){weights+=w;return;}
+    check(w,v>=lim);
+  }
+  ckMax('maxPrice',deal.askingPrice,10);
+  ckMax('maxEntry',deal.entryFee||deal.askingPrice,10);
+  ckMin('minBeds',deal.beds,5);
+  ckMin('minBaths',deal.baths,5);
+  ckMin('minSqft',deal.sqft,5);
+  ckMin('minYear',deal.yearBuilt,5);
+  if(weights===0)return null;
+  return Math.round((hits/weights)*100);
+}
+function matchPillHtml(deal){
+  var bb=getBuyBox();if(!bb)return '';
+  var s=computeMatchScore(deal,bb);if(s==null)return '';
+  var cls=s>=75?'m-strong':s>=50?'m-mid':'m-low';
+  return '<span class="deal-row-match '+cls+'">'+s+'%</span>';
+}
+
 function typeClass(t){
   if(!t)return'type-cash';
   if(/subto|subject/i.test(t))return'type-subto';
@@ -241,9 +304,10 @@ function renderDashboard(user,deals){
         +statCard('👁',viewed.length,'Deals Viewed','#E6F9F0','#10B981')
       +'</div>'
 
-      // Tabs
+      // Tabs — Recommended is the default landing tab when a buy box exists.
       +'<div class="dash-tabs">'
-        +'<button class="dash-tab on" onclick="switchDashTab(this,\'saved\')">❤️ Saved Deals ('+savedDeals.length+')</button>'
+        +(getBuyBox()?'<button class="dash-tab on" onclick="switchDashTab(this,\'recommended\')">⭐ For You ('+deals.length+')</button>':'')
+        +'<button class="dash-tab '+(getBuyBox()?'':'on')+'" onclick="switchDashTab(this,\'saved\')">❤️ Saved Deals ('+savedDeals.length+')</button>'
         +'<button class="dash-tab" onclick="switchDashTab(this,\'offers\')">📋 My Offers ('+offers.length+')</button>'
         +'<button class="dash-tab" onclick="switchDashTab(this,\'activity\')">📊 Activity</button>'
         +'<button class="dash-tab" onclick="switchDashTab(this,\'viewed\')">👁 Recently Viewed ('+viewed.length+')</button>'
@@ -251,8 +315,14 @@ function renderDashboard(user,deals){
         +'<button class="dash-tab" onclick="switchDashTab(this,\'prefs\')">⚙️ Preferences</button>'
       +'</div>'
 
+      // Recommended panel — sorted by match score against saved buy box.
+      +(getBuyBox()?'<div id="dp-recommended" class="dash-panel on">'
+        +'<div class="section-head"><div class="section-title">Properties Matching Your Buy Box</div><a href="/buy-box.html" class="section-link">Edit buy box →</a></div>'
+        +dealList(sortByMatch(deals),false)
+      +'</div>':'')
+
       // Saved deals panel
-      +'<div id="dp-saved" class="dash-panel on">'
+      +'<div id="dp-saved" class="dash-panel '+(getBuyBox()?'':'on')+'">'
         +'<div class="section-head"><div class="section-title">Saved Deals</div><a href="/deals.html" class="section-link">Browse all →</a></div>'
         +(savedDeals.length?dealList(savedDeals,true)
           :'<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><h3>No saved deals yet</h3><p>Click the ❤️ on any deal to save it here for easy access.</p><a href="/deals.html" class="btn-blue">Browse Active Deals →</a></div>')
@@ -320,7 +390,7 @@ function dealList(deals,showRemove){
     return '<a class="deal-row" href="'+buildDealPath(d)+'">'
       +'<div class="deal-row-thumb">'+thumb+'</div>'
       +'<div class="deal-row-info">'
-        +'<div class="deal-row-title">'+(d.nearestMetro||d.city+', '+d.state)+'</div>'
+        +'<div class="deal-row-title">'+(d.nearestMetro||d.city+', '+d.state)+matchPillHtml(d)+'</div>'
         +'<div class="deal-row-meta">'+(d.beds?d.beds+'bd / ':'')+( d.baths?d.baths+'ba':'')+(d.sqft?' · '+Number(d.sqft).toLocaleString()+' sqft':'')+'</div>'
       +'</div>'
       +'<div class="deal-row-right">'
@@ -329,6 +399,16 @@ function dealList(deals,showRemove){
       +'</div>'
     +'</a>';
   }).join('')+'</div>';
+}
+
+// Sort deals by match score descending. Deals with no score sink to the
+// bottom but stay listed.
+function sortByMatch(deals){
+  return deals.slice().sort(function(a,b){
+    var sa=computeMatchScore(a,getBuyBox());
+    var sb=computeMatchScore(b,getBuyBox());
+    return (sb==null?-1:sb) - (sa==null?-1:sa);
+  });
 }
 
 function offerCard(o){
