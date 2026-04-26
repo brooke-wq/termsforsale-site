@@ -151,16 +151,20 @@ nav{height:60px;background:#fff;display:flex;align-items:center;justify-content:
       <p>Click any deal or marker to view details</p>
     </div>
     <div class="filter-bar">
-      <select class="filter-select" id="f-type" onchange="applyFilters()">
+      <select class="filter-select" id="f-type" onchange="onFilterChange()">
         <option value="">All Types</option>
         <option>Cash</option>
         <option>SubTo</option>
         <option>Seller Finance</option>
         <option>Hybrid</option>
       </select>
-      <select class="filter-select" id="f-state" onchange="applyFilters()">
+      <select class="filter-select" id="f-state" onchange="onFilterChange()">
         <option value="">All States</option>
       </select>
+      <button id="map-reset-btn" type="button" onclick="resetMapState()" title="Reset filters and map view" style="display:none;align-items:center;gap:4px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text-mid);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset
+      </button>
     </div>
     <div class="geo-bar" id="geo-bar">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -200,6 +204,115 @@ var DEAL_BASE = (function(){
   if(h==='localhost'||h==='127.0.0.1')return '';
   return window.location.origin;
 })();
+
+// ─── MAP/FILTER STATE PERSISTENCE ─────────────────────────────
+// URL is the source of truth for filters and map view so state
+// survives the full page reload that the back button triggers
+// after a user navigates to /d/{slug}.
+window.MapState=(function(){
+  var SS_KEY='tfs_map_v1';
+  function readSS(){try{return JSON.parse(sessionStorage.getItem(SS_KEY)||'{}');}catch(e){return{};}}
+  function writeSS(o){try{sessionStorage.setItem(SS_KEY,JSON.stringify(o));}catch(e){}}
+  function patchSS(p){var o=readSS();Object.keys(p).forEach(function(k){o[k]=p[k];});writeSS(o);}
+  function urlParams(){return new URLSearchParams(window.location.search);}
+  function readFilters(){
+    var p=urlParams();
+    return{
+      type:p.get('type')||'',
+      state:p.get('state')||''
+    };
+  }
+  function readView(){
+    var p=urlParams();
+    var z=parseFloat(p.get('z'));
+    var lat=parseFloat(p.get('lat'));
+    var lng=parseFloat(p.get('lng'));
+    if(isFinite(z)&&isFinite(lat)&&isFinite(lng))return{z:z,lat:lat,lng:lng};
+    return null;
+  }
+  function buildSearch(filters,view){
+    var p=new URLSearchParams();
+    if(filters){
+      if(filters.type)p.set('type',filters.type);
+      if(filters.state)p.set('state',filters.state);
+    }
+    if(view){
+      p.set('z',String(Math.round(view.z*10)/10));
+      p.set('lat',String(view.lat.toFixed(5)));
+      p.set('lng',String(view.lng.toFixed(5)));
+    }
+    var s=p.toString();
+    return s?'?'+s:window.location.pathname;
+  }
+  function writeFilters(filters){
+    var url=buildSearch(filters,readView());
+    try{history.pushState({tfs:1},'',url);}catch(e){}
+    toggleResetVisibility();
+  }
+  function writeView(view){
+    var url=buildSearch(readFilters(),view);
+    try{history.replaceState({tfs:1},'',url);}catch(e){}
+    toggleResetVisibility();
+  }
+  function reset(){
+    try{history.pushState({tfs:1},'',window.location.pathname);}catch(e){}
+    try{sessionStorage.removeItem(SS_KEY);}catch(e){}
+    toggleResetVisibility();
+  }
+  function toggleResetVisibility(){
+    var btn=document.getElementById('map-reset-btn');
+    if(!btn)return;
+    var f=readFilters();
+    var has=!!(f.type||f.state||readView());
+    btn.style.display=has?'inline-flex':'none';
+  }
+  return{
+    readFilters:readFilters,
+    readView:readView,
+    writeFilters:writeFilters,
+    writeView:writeView,
+    reset:reset,
+    ss:readSS,
+    patchSS:patchSS,
+    toggleResetVisibility:toggleResetVisibility
+  };
+})();
+
+function onFilterChange(){
+  if(window.MapState){
+    window.MapState.writeFilters({
+      type:(document.getElementById('f-type')||{}).value||'',
+      state:(document.getElementById('f-state')||{}).value||''
+    });
+  }
+  if(typeof applyFilters==='function')applyFilters();
+}
+
+function resetMapState(){
+  if(window.MapState)window.MapState.reset();
+  var ti=document.getElementById('f-type');if(ti)ti.value='';
+  var stI=document.getElementById('f-state');if(stI)stI.value='';
+  try{if(window._tfsMap&&window._tfsMap.setView)window._tfsMap.setView([37.5,-96],4,{animate:false});}catch(e){}
+  if(typeof applyFilters==='function')applyFilters();
+}
+
+function fetchWithRetry(url,opts,attempts){
+  attempts=attempts||3;
+  return new Promise(function(resolve,reject){
+    var tries=0;
+    function go(){
+      tries++;
+      fetch(url,opts).then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        resolve(r);
+      }).catch(function(err){
+        if(tries>=attempts){reject(err);return;}
+        setTimeout(go,Math.pow(2,tries-1)*500);
+      });
+    }
+    go();
+  });
+}
 
 // ─── MAP INIT ──────────────────────────────────────────────────
 var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([37.5,-96],4);
@@ -553,10 +666,32 @@ function applyFilters(){
 
 // Re-filter the sidebar list whenever the user pans or zooms the map so it
 // shows only the deals currently visible. Markers themselves stay on the
-// map (Leaflet already culls ones outside the tile buffer).
-map.on('moveend zoomend', function(){
-  if(_lastFiltered.length)applyBoundsFilter();
+// map (Leaflet already culls ones outside the tile buffer). Debounced
+// 200ms so a 10-event pan doesn't thrash applyBoundsFilter or stomp the
+// URL with a dozen replaceState calls.
+var _moveDebounce=null;
+map.on('moveend zoomend',function(){
+  if(_moveDebounce)clearTimeout(_moveDebounce);
+  _moveDebounce=setTimeout(function(){
+    if(_lastFiltered.length)applyBoundsFilter();
+    if(window.MapState){
+      try{
+        var c=map.getCenter();
+        window.MapState.writeView({z:map.getZoom(),lat:c.lat,lng:c.lng});
+      }catch(e){}
+    }
+  },200);
 });
+
+// Expose the map for resetMapState and pin-click view flush.
+window._tfsMap=map;
+window._flushMapState=function(){
+  if(!window.MapState)return;
+  try{
+    var c=map.getCenter();
+    window.MapState.writeView({z:map.getZoom(),lat:c.lat,lng:c.lng});
+  }catch(e){}
+};
 
 function populateStateFilter(){
   var states=[...new Set(ALL_DEALS.map(function(d){return d.state;}).filter(Boolean))].sort();
@@ -567,6 +702,13 @@ function populateStateFilter(){
 // ─── PLACE MARKER ──────────────────────────────────────────────
 function placeMarker(deal,latlng){
   if(!latlng)return;
+  // Idempotent: pass-2 (Nominatim refinement) calls placeMarker again
+  // with the same deal.id. Drop the existing marker so we don't stack
+  // duplicates at slightly different jittered positions.
+  if(MARKERS[deal.id]){
+    try{map.removeLayer(MARKERS[deal.id]);}catch(e){}
+    delete MARKERS[deal.id];
+  }
   // Add small random jitter so overlapping cities don't stack exactly
   var jitter=0.008;
   var ll=[latlng[0]+(Math.random()-.5)*jitter,latlng[1]+(Math.random()-.5)*jitter];
@@ -577,10 +719,46 @@ function placeMarker(deal,latlng){
   MARKERS[deal.id]=marker;
 }
 
+// Cached + retried Notion fetch. 5-minute TTL covers the back-nav case
+// where the user just left the page seconds ago. Background refresh
+// keeps the cache warm without blocking the first paint.
+function fetchDealsCached(){
+  return new Promise(function(resolve,reject){
+    var cached=null;
+    try{
+      var raw=sessionStorage.getItem('tfs_deals_cache_v1');
+      if(raw){
+        var parsed=JSON.parse(raw);
+        if(parsed&&parsed.ts&&(Date.now()-parsed.ts)<5*60*1000&&Array.isArray(parsed.deals)&&parsed.deals.length){
+          cached=parsed.deals;
+        }
+      }
+    }catch(e){}
+    if(cached){
+      // Background refresh — never throws.
+      fetchWithRetry('/api/deals',undefined,3).then(function(r){return r.json();}).then(function(data){
+        if(data&&data.deals&&data.deals.length){
+          try{sessionStorage.setItem('tfs_deals_cache_v1',JSON.stringify({ts:Date.now(),deals:data.deals}));}catch(e){}
+        }
+      }).catch(function(){});
+      resolve({deals:cached});
+      return;
+    }
+    fetchWithRetry('/api/deals',undefined,3)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.deals&&data.deals.length){
+          try{sessionStorage.setItem('tfs_deals_cache_v1',JSON.stringify({ts:Date.now(),deals:data.deals}));}catch(e){}
+        }
+        resolve(data);
+      })
+      .catch(reject);
+  });
+}
+
 // ─── MAIN LOAD ─────────────────────────────────────────────────
 function loadDeals(){
-  fetch('/api/deals')
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+  fetchDealsCached()
     .then(function(data){
       var deals=data.deals||[];
       // Drop Closed deals from the live map — they belong in the social-proof
@@ -606,31 +784,89 @@ function loadDeals(){
       });
 
       populateStateFilter();
-      applyFilters();
 
-      // Geocode and place markers
+      // Hydrate filter inputs from the URL before the first applyFilters
+      // run so the criteria + viewport filter both apply on frame 1.
+      var savedFilters=(window.MapState&&window.MapState.readFilters())||{};
+      var ti=document.getElementById('f-type');
+      if(ti&&savedFilters.type){
+        // f-type uses display labels as values (e.g. "Cash", "SubTo"); set
+        // by matching either value or normType equivalence.
+        for(var i=0;i<ti.options.length;i++){
+          if(ti.options[i].value===savedFilters.type){ti.value=savedFilters.type;break;}
+        }
+      }
+      var stI=document.getElementById('f-state');
+      if(stI&&savedFilters.state){
+        var hasOpt=false;
+        for(var j=0;j<stI.options.length;j++){if(stI.options[j].value===savedFilters.state){hasOpt=true;break;}}
+        if(!hasOpt){var opt=document.createElement('option');opt.value=savedFilters.state;opt.textContent=savedFilters.state;stI.appendChild(opt);}
+        stI.value=savedFilters.state;
+      }
+      if(window.MapState)window.MapState.toggleResetVisibility();
+
+      // Pass 1 (synchronous): place every deal whose city we already know.
+      // No API calls — pins appear in one paint. This is the core fix for
+      // the visible drip / "global pins for several seconds" symptom.
       if(ALL_DEALS.length){
-        showGeoBar('Locating deals on map… ('+ALL_DEALS.length+' deals)');
-        var placed=0;
         var bounds=[];
+        var asyncQueue=[];
         ALL_DEALS.forEach(function(deal){
-          geocode(deal.streetAddress,deal.city,deal.state,deal.zip,function(ll){
-            placed++;
-            if(ll){
-              placeMarker(deal,ll);
-              bounds.push(ll);
+          try{
+            var hasStreet=!!(deal.streetAddress&&String(deal.streetAddress).trim());
+            var cityKey=((deal.city||'')+','+(deal.state||'')).toLowerCase().trim();
+            var coords=CITY_COORDS[cityKey];
+            if(coords){
+              try{placeMarker(deal,coords);}catch(e){console.warn('placeMarker failed',deal.id,e);}
+              bounds.push(coords);
+              if(hasStreet)asyncQueue.push(deal);
+            }else{
+              asyncQueue.push(deal);
             }
-            document.getElementById('geo-status').textContent='Placing deals… '+placed+' of '+ALL_DEALS.length;
-            if(placed===ALL_DEALS.length){
-              hideGeoBar();
-              if(bounds.length>1){
-                try{map.fitBounds(bounds,{padding:[40,40]});}catch(e){}
-              }else if(bounds.length===1){
-                map.setView(bounds[0],10);
-              }
-            }
-          });
+          }catch(e){asyncQueue.push(deal);}
         });
+
+        // Restore exact saved view if URL has one, otherwise fit to the
+        // synchronous pass.
+        var savedView=(window.MapState&&window.MapState.readView())||null;
+        if(savedView){
+          try{map.setView([savedView.lat,savedView.lng],savedView.z,{animate:false});}catch(e){}
+        }else if(bounds.length>1){
+          try{map.fitBounds(bounds,{padding:[40,40]});}catch(e){}
+        }else if(bounds.length===1){
+          map.setView(bounds[0],10);
+        }
+
+        // First criteria + viewport pass with markers already on the map.
+        applyFilters();
+
+        // Pass 2 (async, rate-limited): refine to street-level precision
+        // via Nominatim. Each placeMarker is fenced against bad responses.
+        if(asyncQueue.length){
+          showGeoBar('Refining pins… ('+asyncQueue.length+' deals)');
+          var refined=0;
+          var refineDebounce=null;
+          asyncQueue.forEach(function(deal){
+            try{
+              var pass1Key=((deal.city||'')+','+(deal.state||'')).toLowerCase().trim();
+              var pass1Coords=CITY_COORDS[pass1Key]||null;
+              geocode(deal.streetAddress,deal.city,deal.state,deal.zip,function(ll){
+                refined++;
+                // Skip re-place if pass-2 fell back to the same city
+                // centroid we already used (no real refinement) — avoids
+                // a visible jiggle from re-jittered random offsets.
+                if(ll && (!pass1Coords || Math.abs(ll[0]-pass1Coords[0])>=1e-4 || Math.abs(ll[1]-pass1Coords[1])>=1e-4)){
+                  try{placeMarker(deal,ll);}catch(e){console.warn('placeMarker failed',deal.id,e);}
+                }
+                if(refineDebounce)clearTimeout(refineDebounce);
+                refineDebounce=setTimeout(applyFilters,300);
+                if(refined===asyncQueue.length)hideGeoBar();
+              });
+            }catch(e){console.warn('geocode failed',deal.id,e);}
+          });
+        }
+      }else{
+        applyFilters();
       }
     })
     .catch(function(err){
@@ -641,6 +877,33 @@ function loadDeals(){
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
 }
+
+// On full-page navigation (popup "View Deal Details" link, or browser
+// back from another page), flush the current view to URL and save the
+// sidebar scroll position. Belt-and-suspenders against the case where
+// the moveend debounce hasn't fired yet (e.g. flyTo still animating).
+window.addEventListener('pagehide',function(){
+  try{
+    if(typeof window._flushMapState==='function')window._flushMapState();
+    var dl=document.getElementById('deal-list');
+    if(dl&&window.MapState)window.MapState.patchSS({scrollY:dl.scrollTop});
+  }catch(e){}
+});
+
+// Restore sidebar scroll on initial render.
+(function restoreScroll(){
+  try{
+    var ss=window.MapState?window.MapState.ss():{};
+    if(typeof ss.scrollY==='number'){
+      var poll=0;
+      var iv=setInterval(function(){
+        var dl=document.getElementById('deal-list');
+        if(dl&&dl.children.length){dl.scrollTop=ss.scrollY;clearInterval(iv);}
+        if(++poll>30)clearInterval(iv);
+      },100);
+    }
+  }catch(e){}
+})();
 
 loadDeals();
 </script>
