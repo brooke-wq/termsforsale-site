@@ -1,6 +1,11 @@
 // Netlify function: commercial-deals
-// Fetches active commercial/multifamily deals from Notion
-// Returns BLIND teaser data only — no addresses, no data room URLs
+// Returns BLIND teaser data for the /commercial page.
+// Merges TWO sources:
+//   1) The dedicated commercial Notion DB (NOTION_COMMERCIAL_DB_ID) — purpose-built blind teasers.
+//   2) The main residential/creative-finance pipeline (NOTION_DB_ID), filtered to property types
+//      that fall under the "commercial realm" (multifamily, commercial, industrial, storage facilities,
+//      hotels/motels, RV parks, mobile home parks). These deals continue to appear on /deals as well.
+// Never returns addresses or data-room URLs.
 
 const https = require('https');
 
@@ -40,9 +45,173 @@ function prop(page, name) {
     case 'multi_select': return (p.multi_select || []).map(function(s) { return s.name; }).join(', ');
     case 'status': return p.status ? p.status.name : '';
     case 'url': return p.url || '';
-    case 'number': return p.number !== null ? p.number : '';
+    case 'number': return p.number !== null && p.number !== undefined ? p.number : '';
+    case 'formula':
+      if (p.formula.type === 'string') return p.formula.string || '';
+      if (p.formula.type === 'number') return p.formula.number !== null ? p.formula.number : '';
+      return '';
     default: return '';
   }
+}
+
+// Maps a free-text property type to one of the commercial-realm categories
+// that the /commercial page surfaces. Returns null if the deal is not commercial.
+function commercialCategory(propType) {
+  if (!propType) return null;
+  var s = String(propType).toLowerCase();
+  if (/mobile.?home|manufactured.?home|\bmhp\b/.test(s)) return 'Mobile Home Parks';
+  if (/\brv\b|recreational.?vehicle/.test(s)) return 'RV Parks';
+  if (/hotel|motel|hospitality|\binn\b|resort/.test(s)) return 'Hotels/Motels';
+  if (/self.?storage|storage.?facility|storage.?unit|\bstorage\b/.test(s)) return 'Storage Facilities';
+  if (/industrial|warehouse|\bflex\b|distribution/.test(s)) return 'Industrial';
+  if (/multi.?family|multifamily|apartment|\bmf\b/.test(s)) return 'Multifamily';
+  if (/mixed.?use|retail|office|commercial|\bcre\b/.test(s)) return 'Commercial';
+  return null;
+}
+
+// Bucket a numeric asking price into the same bands the commercial filter uses.
+function priceBucket(n) {
+  var v = Number(n) || 0;
+  if (v <= 0) return '';
+  if (v < 5000000) return 'Under $5M';
+  if (v < 10000000) return '$5M - $10M';
+  if (v < 20000000) return '$10M - $20M';
+  return '$20M+';
+}
+
+// Try to extract a numeric price from a priceRange string ("$5M - $10M", "~$3.2M", etc.).
+function parsePriceFromRange(s) {
+  if (!s) return 0;
+  var m = String(s).match(/\$?\s*([0-9]+(?:\.[0-9]+)?)\s*([mMkK]?)/);
+  if (!m) return 0;
+  var n = parseFloat(m[1]);
+  var unit = (m[2] || '').toLowerCase();
+  if (unit === 'm') n *= 1000000;
+  else if (unit === 'k') n *= 1000;
+  return n;
+}
+
+function formatMoneyShort(n) {
+  var v = Number(n) || 0;
+  if (v <= 0) return '';
+  if (v >= 1000000) return '$' + (Math.round(v / 100000) / 10) + 'M';
+  if (v >= 1000) return '$' + Math.round(v / 1000) + 'K';
+  return '$' + v;
+}
+
+// Build a teaser-shaped object from a commercial-DB Notion page.
+function mapCommercialPage(page) {
+  var priceRange = prop(page, 'Price Range');
+  return {
+    id: page.id,
+    source: 'commercial-db',
+    dealCode: prop(page, 'Deal Code'),
+    status: prop(page, 'Status'),
+    metro: prop(page, 'Metro'),
+    submarket: prop(page, 'Submarket'),
+    propertyType: prop(page, 'Property Type'),
+    commercialCategory: commercialCategory(prop(page, 'Property Type')),
+    unitsOrSqft: prop(page, 'Units or Sqft'),
+    vintageClass: prop(page, 'Vintage / Class'),
+    noiRange: prop(page, 'NOI Range'),
+    priceRange: priceRange,
+    priceNum: parsePriceFromRange(priceRange),
+    dealStory: [
+      prop(page, 'Deal Story 1'),
+      prop(page, 'Deal Story 2'),
+      prop(page, 'Deal Story 3')
+    ].filter(Boolean),
+    structureSummary: prop(page, 'Structure Summary')
+    // EXPLICITLY OMITTED: Address, Data Room URL, CIM URL
+  };
+}
+
+// Build a teaser-shaped object from a main-pipeline Notion page that classifies as commercial.
+function mapPipelinePage(page) {
+  var rawType = prop(page, 'Property Type');
+  var category = commercialCategory(rawType);
+  if (!category) return null;
+
+  var dealStatus = prop(page, 'Deal Status');
+  // Only surface deals that are still in-market on /commercial.
+  if (dealStatus !== 'Actively Marketing' && dealStatus !== 'Assignment Sent') return null;
+
+  var dealCode = prop(page, 'Deal ID');
+  var city = prop(page, 'City');
+  var state = prop(page, 'State');
+  var nearestMetro = prop(page, 'Nearest Metro') || prop(page, 'Nearest Metro Area');
+  var metro = nearestMetro || [city, state].filter(Boolean).join(', ');
+
+  var sqft = prop(page, 'Living Area') || prop(page, 'Sqft');
+  var beds = prop(page, 'Beds');
+  var unitsOrSqft = '';
+  if (category === 'Multifamily' || category === 'Mobile Home Parks' || category === 'RV Parks') {
+    if (beds) unitsOrSqft = beds + (String(beds).match(/unit|pad|site/i) ? '' : ' units');
+    else if (sqft) unitsOrSqft = sqft + ' sqft';
+  } else {
+    if (sqft) unitsOrSqft = sqft + ' sqft';
+    else if (beds) unitsOrSqft = beds + ' units';
+  }
+
+  var yearBuilt = prop(page, 'Year Built') || prop(page, 'Year Build');
+  var noi = +prop(page, 'Annual NOI') || 0;
+  var asking = +prop(page, 'Asking Price') || 0;
+
+  var stories = [
+    prop(page, 'Highlight 1'),
+    prop(page, 'Highlight 2'),
+    prop(page, 'Highlight 3')
+  ].filter(Boolean);
+
+  var loanType = prop(page, 'Loan Type');
+  var subtoBalance = +prop(page, 'SubTo Loan Balance') || 0;
+  var subtoRate = prop(page, 'SubTo Rate (%)') || prop(page, 'SubTo Rate');
+  var sfAmount = +prop(page, 'SF Loan Amount') || 0;
+  var sfRate = prop(page, 'SF Rate');
+
+  var structureBits = [];
+  if (loanType) structureBits.push(loanType);
+  if (subtoBalance > 0) structureBits.push('SubTo ' + formatMoneyShort(subtoBalance) + (subtoRate ? ' @ ' + subtoRate + '%' : ''));
+  if (sfAmount > 0) structureBits.push('SF ' + formatMoneyShort(sfAmount) + (sfRate ? ' @ ' + sfRate + '%' : ''));
+  var structureSummary = structureBits.join(' · ') || (loanType || 'Cash / Negotiable');
+
+  return {
+    id: page.id,
+    source: 'pipeline',
+    dealCode: dealCode,
+    status: dealStatus,
+    metro: metro,
+    submarket: city,
+    propertyType: category,
+    commercialCategory: category,
+    unitsOrSqft: unitsOrSqft,
+    vintageClass: yearBuilt ? String(yearBuilt) : '',
+    noiRange: noi > 0 ? formatMoneyShort(noi) + ' NOI' : '',
+    priceRange: asking > 0 ? priceBucket(asking) : '',
+    priceNum: asking,
+    dealStory: stories,
+    structureSummary: structureSummary
+  };
+}
+
+async function fetchAllPages(dbId, token, filter) {
+  var allPages = [];
+  var hasMore = true;
+  var cursor = undefined;
+  while (hasMore) {
+    var queryBody = { page_size: 100 };
+    if (filter) queryBody.filter = filter;
+    if (cursor) queryBody.start_cursor = cursor;
+    var result = await notionRequest('/v1/databases/' + dbId + '/query', token, queryBody);
+    if (result.status !== 200) {
+      var detail = result.body && result.body.message ? result.body.message : '';
+      throw new Error('Notion ' + result.status + ': ' + detail);
+    }
+    allPages = allPages.concat(result.body.results || []);
+    hasMore = result.body.has_more === true;
+    cursor = result.body.next_cursor || undefined;
+  }
+  return allPages;
 }
 
 exports.handler = async function(event) {
@@ -57,68 +226,63 @@ exports.handler = async function(event) {
   }
 
   var token = process.env.NOTION_TOKEN;
-  var dbId = process.env.NOTION_COMMERCIAL_DB_ID;
+  var commercialDbId = process.env.NOTION_COMMERCIAL_DB_ID;
+  var pipelineDbId = process.env.NOTION_DB_ID || 'a3c0a38fd9294d758dedabab2548ff29';
 
-  if (!token || !dbId) {
-    return { statusCode: 500, headers: headers, body: JSON.stringify({ error: 'Notion not configured' }) };
+  if (!token) {
+    return { statusCode: 500, headers: headers, body: JSON.stringify({ error: 'NOTION_TOKEN not configured' }) };
   }
 
-  try {
-    // Fetch all active commercial deals (paginated)
-    var allPages = [];
-    var hasMore = true;
-    var cursor = undefined;
+  var commercialDeals = [];
+  var pipelineDeals = [];
+  var errors = [];
 
-    while (hasMore) {
-      var queryBody = {
-        filter: { property: 'Status', select: { equals: 'Active' } },
-        page_size: 100
-      };
-      if (cursor) queryBody.start_cursor = cursor;
-
-      var result = await notionRequest('/v1/databases/' + dbId + '/query', token, queryBody);
-      if (result.status !== 200) {
-        console.error('Notion error:', result.status, JSON.stringify(result.body).substring(0, 200));
-        return { statusCode: result.status, headers: headers, body: JSON.stringify({ error: 'Notion error', detail: result.body.message || '' }) };
-      }
-      allPages = allPages.concat(result.body.results || []);
-      hasMore = result.body.has_more === true;
-      cursor = result.body.next_cursor || undefined;
+  // Source 1: dedicated commercial DB (Active only).
+  if (commercialDbId) {
+    try {
+      var pages = await fetchAllPages(commercialDbId, token, {
+        property: 'Status', select: { equals: 'Active' }
+      });
+      commercialDeals = pages.map(mapCommercialPage);
+    } catch (e) {
+      console.error('commercial-deals: dedicated DB error:', e.message);
+      errors.push({ source: 'commercial-db', error: e.message });
     }
-
-    // Map to BLIND teaser objects — explicitly exclude private fields
-    var deals = allPages.map(function(page) {
-      return {
-        id: page.id,
-        dealCode: prop(page, 'Deal Code'),
-        status: prop(page, 'Status'),
-        metro: prop(page, 'Metro'),
-        submarket: prop(page, 'Submarket'),
-        propertyType: prop(page, 'Property Type'),
-        unitsOrSqft: prop(page, 'Units or Sqft'),
-        vintageClass: prop(page, 'Vintage / Class'),
-        noiRange: prop(page, 'NOI Range'),
-        priceRange: prop(page, 'Price Range'),
-        dealStory: [
-          prop(page, 'Deal Story 1'),
-          prop(page, 'Deal Story 2'),
-          prop(page, 'Deal Story 3')
-        ].filter(Boolean),
-        structureSummary: prop(page, 'Structure Summary')
-        // EXPLICITLY OMITTED: Address, Data Room URL, CIM URL
-      };
-    });
-
-    console.log('Commercial deals fetched: ' + deals.length);
-
-    return {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify({ deals: deals, count: deals.length })
-    };
-
-  } catch (err) {
-    console.error('commercial-deals error:', err.message);
-    return { statusCode: 500, headers: headers, body: JSON.stringify({ error: err.message }) };
   }
+
+  // Source 2: main pipeline, filtered client-side to commercial-realm property types.
+  try {
+    var pipelinePages = await fetchAllPages(pipelineDbId, token, null);
+    pipelineDeals = pipelinePages
+      .map(mapPipelinePage)
+      .filter(Boolean);
+  } catch (e) {
+    console.error('commercial-deals: pipeline DB error:', e.message);
+    errors.push({ source: 'pipeline', error: e.message });
+  }
+
+  // De-dupe by dealCode (commercial DB takes precedence if a code exists in both).
+  var seen = {};
+  var deals = [];
+  commercialDeals.forEach(function(d) {
+    if (!d.dealCode) { deals.push(d); return; }
+    if (!seen[d.dealCode]) { seen[d.dealCode] = true; deals.push(d); }
+  });
+  pipelineDeals.forEach(function(d) {
+    if (!d.dealCode) { deals.push(d); return; }
+    if (!seen[d.dealCode]) { seen[d.dealCode] = true; deals.push(d); }
+  });
+
+  console.log('commercial-deals: ' + deals.length + ' total (' + commercialDeals.length + ' commercial-db, ' + pipelineDeals.length + ' pipeline)');
+
+  return {
+    statusCode: 200,
+    headers: headers,
+    body: JSON.stringify({
+      deals: deals,
+      count: deals.length,
+      sources: { commercialDb: commercialDeals.length, pipeline: pipelineDeals.length },
+      errors: errors.length ? errors : undefined
+    })
+  };
 };

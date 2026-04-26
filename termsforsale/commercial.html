@@ -205,13 +205,12 @@ footer a{color:rgba(255,255,255,.8);text-decoration:none}
     <select class="filter-select" id="f-type" onchange="applyFilters()">
       <option value="">All Property Types</option>
       <option>Multifamily</option>
-      <option>Mixed-Use</option>
-      <option>Retail</option>
-      <option>Office</option>
+      <option>Commercial</option>
       <option>Industrial</option>
-      <option>Self-Storage</option>
-      <option>Hotel</option>
-      <option>Other</option>
+      <option>Storage Facilities</option>
+      <option>Hotels/Motels</option>
+      <option>RV Parks</option>
+      <option>Mobile Home Parks</option>
     </select>
     <select class="filter-select" id="f-price" onchange="applyFilters()">
       <option value="">All Price Ranges</option>
@@ -343,13 +342,21 @@ function applyFilters() {
   var price = document.getElementById('f-price').value;
   var filtered = ALL_DEALS.filter(function(d) {
     if (metro && d.metro !== metro) return false;
-    if (type && d.propertyType !== type) return false;
+    if (type && (d.commercialCategory || d.propertyType) !== type) return false;
     if (price) {
-      var pr = (d.priceRange || '').toLowerCase();
-      if (price === 'Under $5M' && !pr.match(/[<\b][1-4]m/)) return false;
-      if (price === '$5M - $10M' && !pr.match(/[5-9]m/)) return false;
-      if (price === '$10M - $20M' && !pr.match(/1[0-9]m/)) return false;
-      if (price === '$20M+' && !pr.match(/[2-9][0-9]m/)) return false;
+      var n = +d.priceNum || 0;
+      if (n > 0) {
+        if (price === 'Under $5M' && !(n < 5000000)) return false;
+        if (price === '$5M - $10M' && !(n >= 5000000 && n < 10000000)) return false;
+        if (price === '$10M - $20M' && !(n >= 10000000 && n < 20000000)) return false;
+        if (price === '$20M+' && !(n >= 20000000)) return false;
+      } else {
+        var pr = (d.priceRange || '').toLowerCase();
+        if (price === 'Under $5M' && !pr.match(/under \$5m|[<\b][1-4]m/)) return false;
+        if (price === '$5M - $10M' && !pr.match(/\$5m\s*-\s*\$10m|[5-9]m/)) return false;
+        if (price === '$10M - $20M' && !pr.match(/\$10m\s*-\s*\$20m|1[0-9]m/)) return false;
+        if (price === '$20M+' && !pr.match(/\$20m\+|[2-9][0-9]m/)) return false;
+      }
     }
     return true;
   });
