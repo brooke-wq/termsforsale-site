@@ -59,6 +59,13 @@ function fmtPct(n, decimals) { if (n == null || n === '' || isNaN(Number(n))) re
 function fmtNumber(n) { if (n == null || n === '' || isNaN(Number(n))) return EMDASH; return Number(n).toLocaleString(); }
 function fmtDate(iso) { if (!iso) return EMDASH; try { const d = new Date(iso); return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return EMDASH; } }
 function emOrStr(s) { return (s != null && s !== '') ? String(s) : EMDASH; }
+function parseMoneyText(s) {
+  if (s == null) return null;
+  if (typeof s === 'number') return s;
+  const cleaned = String(s).replace(/[^0-9.-]/g, '');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? null : n;
+}
 
 function buildTokenMap(page, pageId) {
   const streetAddress = prop(page, 'Street Address') || '';
@@ -89,6 +96,10 @@ function buildTokenMap(page, pageId) {
   const ltrRent       = prop(page, 'LTR Market Rent');
   const loanType      = prop(page, 'Loan Type');
   const nearestMetro  = prop(page, 'Nearest Metro');
+  const description   = prop(page, 'Description');
+  const uwVerdict     = prop(page, 'UW Verdict');
+  const contractedPrice = prop(page, 'Contracted Price');
+  const internalNotes = prop(page, 'Internal Notes');
 
   const fullAddress  = [streetAddress, city, state, zip].filter(Boolean).join(', ');
   const cityStateZip = [city, state].filter(Boolean).join(', ') + (zip ? ' ' + zip : '');
@@ -118,7 +129,8 @@ function buildTokenMap(page, pageId) {
   t.PURCHASE_PRICE = fmtMoney(askingPrice);
   t.EXISTING_RATE = fmtPct(subToRate, 3);
   t.PITI = fmtMoney(piti);
-  t.ARV = arv ? '$' + (Number(arv) ? Number(arv).toLocaleString() : arv) : EMDASH;
+  const arvNum = parseMoneyText(arv);
+  t.ARV = fmtMoney(arvNum);
   t.CASH_TO_CLOSE = fmtMoneyShort(cashToSeller != null ? cashToSeller : entryFee);
   t.MARKET_RATE_TODAY = '7.25%';
   t.MARKET_RENT = fmtMoney(ltrRent);
@@ -182,15 +194,30 @@ function buildTokenMap(page, pageId) {
   t.ACTIVE_DEAL_COUNT = EMDASH;
   // === Aliases / extras the template uses (added after smoke test caught them) ===
   t.PREPARED_FOR = 'Strategic Investor Network';
-  t.CASH_TO_CLOSE_SHORT = t.CASH_TO_CLOSE;
   t.DEAL_ID_SHORT = dealId.replace(/^TFS-/, '').slice(0, 8);
-  t.EXEC_HEADLINE = EMDASH;
   t.DEAL_ADDRESS_PLAIN = emOrStr(streetAddress);
   t.COORDINATOR_EMAIL = 'brooke@termsforsale.com';
   t.COORDINATOR_PHONE = '+1 (480) 637-3117';
-  t.DAY1_EQUITY_SHORT = EMDASH;  // Phase 2 (compute)
-  t.YEAR_BUILT_2 = emOrStr(yearBuilt);  // template uses YEAR_BUILT_2 as alias for YEAR_BUILT
-  t.VIABLE_EXITS = EMDASH;  // Phase 2
+  t.YEAR_BUILT_2 = emOrStr(yearBuilt);
+  // EXEC_HEADLINE — short hook from Description (first 90 chars), or UW Verdict, or em-dash
+  t.EXEC_HEADLINE = description ? String(description).slice(0, 90).trim() : (uwVerdict ? uwVerdict : EMDASH);
+  // DAY1_EQUITY_SHORT — ARV minus Purchase Price, formatted short ($185K)
+  const day1Equity = (arvNum != null && askingPrice != null) ? Math.max(0, arvNum - Number(askingPrice)) : null;
+  t.DAY1_EQUITY_SHORT = day1Equity != null ? fmtMoneyShort(day1Equity) : EMDASH;
+  // CASH_TO_CLOSE_SHORT — for cash deals = asking price; for sub-to = cash to seller + entry fee
+  const isCashDeal = /^cash\b/i.test(dealType || '');
+  let cashToClose;
+  if (cashToSeller != null || entryFee != null) {
+    cashToClose = (Number(cashToSeller) || 0) + (Number(entryFee) || 0);
+  } else if (isCashDeal && askingPrice != null) {
+    cashToClose = Number(askingPrice);
+  } else {
+    cashToClose = null;
+  }
+  t.CASH_TO_CLOSE_SHORT = cashToClose != null ? fmtMoneyShort(cashToClose) : EMDASH;
+  t.CASH_TO_CLOSE = t.CASH_TO_CLOSE_SHORT;
+  // VIABLE_EXITS — pull from UW Verdict if present (e.g., "PASS — All-Cash + Light Rehab")
+  t.VIABLE_EXITS = uwVerdict ? String(uwVerdict).split('—')[1] ? String(uwVerdict).split('—')[1].split('(')[0].trim() : uwVerdict : EMDASH;
   return t;
 }
 
