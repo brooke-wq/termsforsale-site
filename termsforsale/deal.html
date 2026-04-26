@@ -1186,11 +1186,14 @@ function renderDeal(d,allDeals){
   // a 4-tile property-spec strip (beds/baths/sqft/year), and pills for
   // deal type and "screened for investor strategy". Pure visual upgrade —
   // no new data fetched.
+  // Note: the canonical `dtIsCash` const is declared further down in this
+  // function — re-derive it locally so we don't hit the temporal-dead-zone.
+  var hsIsCash = /^cash$/i.test((d.dealType||'').trim());
   var hsHeadlineNum, hsHeadlineLbl;
   if (entry && +d.askingPrice && entry !== +d.askingPrice) {
     hsHeadlineNum = fc(entry); hsHeadlineLbl = 'Entry Fee';
   } else if (entry) {
-    hsHeadlineNum = fc(entry); hsHeadlineLbl = dtIsCash ? 'Purchase Price' : 'Entry Fee';
+    hsHeadlineNum = fc(entry); hsHeadlineLbl = hsIsCash ? 'Purchase Price' : 'Entry Fee';
   } else {
     hsHeadlineNum = fc(d.askingPrice||0); hsHeadlineLbl = 'Asking Price';
   }
@@ -1208,10 +1211,10 @@ function renderDeal(d,allDeals){
   var strategyLabel = 'Buy & Hold';
   if (/flip/i.test(d.dealType||'')) strategyLabel = 'Fix & Flip';
   else if (/colive|pad|room/i.test((d.details||'')+(d.description||''))) strategyLabel = 'Co-Living';
-  else if (dtIsCash) strategyLabel = 'Cash Flow / BRRRR';
+  else if (hsIsCash) strategyLabel = 'Cash Flow / BRRRR';
   else strategyLabel = 'Cash Flow';
   var hsPillsHtml =
-    '<span class="hero-strip-pill '+(dtIsCash?'cash':'creative')+'">'+(d.dealType||'Deal')+'</span>'
+    '<span class="hero-strip-pill '+(hsIsCash?'cash':'creative')+'">'+(d.dealType||'Deal')+'</span>'
     +'<span class="hero-strip-pill screened">✓ Screened: '+strategyLabel+'</span>';
   var heroStripHtml =
     '<div class="hero-strip">'
