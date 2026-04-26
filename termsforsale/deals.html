@@ -744,14 +744,14 @@ footer{background:var(--navy);padding:52px 55px 0}
           <span class="split-badge-lbl">live</span>
         </div>
       </div>
-      <input class="split-search" id="f-search" placeholder="Search city, state, zip, or address…" oninput="clearTimeout(window._ft);window._ft=setTimeout(applyFilters,200)">
+      <input class="split-search" id="f-search" placeholder="Search city, state, zip, or address…" oninput="clearTimeout(window._ft);window._ft=setTimeout(onFilterChange,200)">
       <div class="split-filters">
         <div class="split-tabs">
           <button class="split-tab on" onclick="setExploreTab(this,'')">All</button>
           <button class="split-tab" onclick="setExploreTab(this,'creative')">Creative</button>
           <button class="split-tab" onclick="setExploreTab(this,'cash')">Cash</button>
         </div>
-        <select class="split-filter-select" id="f-type" onchange="applyFilters()">
+        <select class="split-filter-select" id="f-type" onchange="onFilterChange()">
           <option value="">All Types</option>
           <option value="cash">Cash</option>
           <option value="subto">Subject To</option>
@@ -760,15 +760,19 @@ footer{background:var(--navy);padding:52px 55px 0}
           <option value="wrap">Wrap</option>
           <option value="lease">Lease Option</option>
         </select>
-        <select class="split-filter-select" id="f-state" onchange="applyFilters()">
+        <select class="split-filter-select" id="f-state" onchange="onFilterChange()">
           <option value="">All States</option>
         </select>
-        <select class="split-filter-select" id="f-sort" onchange="applyFilters()">
+        <select class="split-filter-select" id="f-sort" onchange="onFilterChange()">
           <option value="">Newest</option>
           <option value="price-low">Price: Low → High</option>
           <option value="price-high">Price: High → Low</option>
           <option value="entry-low">Entry: Low → High</option>
         </select>
+        <button id="map-reset-btn" type="button" onclick="resetMapState()" title="Reset filters and map view" style="display:none;align-items:center;gap:4px;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text-mid);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset
+        </button>
         <span class="split-count" id="filter-count"></span>
       </div>
     </div>
@@ -1052,6 +1056,144 @@ function getUTMs(){
 }
 const AUTH_KEY = 'tfs_buyer';
 
+// ─── MAP/FILTER STATE PERSISTENCE ─────────────────────────────
+// URL is the source of truth for filters and map view. Survives the
+// full page reload that the browser back button triggers after a
+// user navigates to /d/{slug}. sessionStorage mirrors UI-only state
+// (scroll position) and caches the deals API response so back-nav
+// renders instantly instead of re-fetching from Notion.
+window.MapState=(function(){
+  var SS_KEY='tfs_map_v1';
+  function readSS(){try{return JSON.parse(sessionStorage.getItem(SS_KEY)||'{}');}catch(e){return{};}}
+  function writeSS(o){try{sessionStorage.setItem(SS_KEY,JSON.stringify(o));}catch(e){}}
+  function patchSS(p){var o=readSS();Object.keys(p).forEach(function(k){o[k]=p[k];});writeSS(o);}
+  function urlParams(){return new URLSearchParams(window.location.search);}
+  function readFilters(){
+    var p=urlParams();
+    return{
+      q:p.get('q')||'',
+      type:p.get('type')||'',
+      state:p.get('state')||'',
+      sort:p.get('sort')||'',
+      tab:p.get('tab')||''
+    };
+  }
+  function readView(){
+    var p=urlParams();
+    var z=parseFloat(p.get('z'));
+    var lat=parseFloat(p.get('lat'));
+    var lng=parseFloat(p.get('lng'));
+    if(isFinite(z)&&isFinite(lat)&&isFinite(lng))return{z:z,lat:lat,lng:lng};
+    return null;
+  }
+  function buildSearch(filters,view){
+    var p=new URLSearchParams();
+    if(filters){
+      if(filters.q)p.set('q',filters.q);
+      if(filters.type)p.set('type',filters.type);
+      if(filters.state)p.set('state',filters.state);
+      if(filters.sort)p.set('sort',filters.sort);
+      if(filters.tab)p.set('tab',filters.tab);
+    }
+    if(view){
+      p.set('z',String(Math.round(view.z*10)/10));
+      p.set('lat',String(view.lat.toFixed(5)));
+      p.set('lng',String(view.lng.toFixed(5)));
+    }
+    var s=p.toString();
+    return s?'?'+s:window.location.pathname;
+  }
+  function writeFilters(filters){
+    // Filter changes use pushState — back button steps through the user's
+    // filter history (matches Zillow behavior).
+    var url=buildSearch(filters,readView());
+    try{history.pushState({tfs:1},'',url);}catch(e){}
+    toggleResetVisibility();
+  }
+  function writeView(view){
+    // Map pan/zoom uses replaceState — back button does NOT replay every
+    // pan event; only filter changes and pin selections push history.
+    var url=buildSearch(readFilters(),view);
+    try{history.replaceState({tfs:1},'',url);}catch(e){}
+    toggleResetVisibility();
+  }
+  function reset(){
+    try{history.pushState({tfs:1},'',window.location.pathname);}catch(e){}
+    try{sessionStorage.removeItem(SS_KEY);}catch(e){}
+    toggleResetVisibility();
+  }
+  function toggleResetVisibility(){
+    var btn=document.getElementById('map-reset-btn');
+    if(!btn)return;
+    var f=readFilters();
+    var has=!!(f.q||f.type||f.state||f.sort||f.tab||readView());
+    btn.style.display=has?'inline-flex':'none';
+  }
+  return{
+    readFilters:readFilters,
+    readView:readView,
+    writeFilters:writeFilters,
+    writeView:writeView,
+    reset:reset,
+    ss:readSS,
+    patchSS:patchSS,
+    toggleResetVisibility:toggleResetVisibility
+  };
+})();
+
+// Single entry point for filter UI changes — writes URL first, then
+// re-renders. Wired to the toolbar inputs/selects/tab buttons.
+function onFilterChange(){
+  if(window.MapState){
+    window.MapState.writeFilters({
+      q:(document.getElementById('f-search')||{}).value||'',
+      type:(document.getElementById('f-type')||{}).value||'',
+      state:(document.getElementById('f-state')||{}).value||'',
+      sort:(document.getElementById('f-sort')||{}).value||'',
+      tab:typeof _tab==='string'?_tab:''
+    });
+  }
+  if(typeof applyFilters==='function')applyFilters();
+}
+window.onFilterChange=onFilterChange;
+
+// Reset map state — clears URL params, sessionStorage, and returns to
+// default global view. Wired to the "Reset" button in the toolbar.
+function resetMapState(){
+  if(window.MapState)window.MapState.reset();
+  var si=document.getElementById('f-search');if(si)si.value='';
+  var ti=document.getElementById('f-type');if(ti)ti.value='';
+  var stI=document.getElementById('f-state');if(stI)stI.value='';
+  var srt=document.getElementById('f-sort');if(srt)srt.value='';
+  if(typeof _tab!=='undefined')_tab='';
+  document.querySelectorAll('.split-tab').forEach(function(t){t.classList.toggle('on',t.textContent.trim()==='All');});
+  try{if(window._tfsMap&&window._tfsMap.setView)window._tfsMap.setView([37.5,-96],4,{animate:false});}catch(e){}
+  if(typeof applyFilters==='function')applyFilters();
+}
+window.resetMapState=resetMapState;
+
+// Fetch with exponential backoff. Three attempts at 500ms / 1s / 2s
+// covers transient API hiccups without leaving the user staring at an
+// error after a single 502.
+function fetchWithRetry(url,opts,attempts){
+  attempts=attempts||3;
+  return new Promise(function(resolve,reject){
+    var tries=0;
+    function go(){
+      tries++;
+      fetch(url,opts).then(function(r){
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        resolve(r);
+      }).catch(function(err){
+        if(tries>=attempts){reject(err);return;}
+        setTimeout(go,Math.pow(2,tries-1)*500);
+      });
+    }
+    go();
+  });
+}
+window.fetchWithRetry=fetchWithRetry;
+
 // ─── NAV SCROLL ────────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   document.getElementById('main-nav').classList.toggle('scrolled', scrollY > 60);
@@ -1261,7 +1403,19 @@ function toggleSave(e,id,el){
 }
 const DEAL_STORE={};
 function storeDeal(d){DEAL_STORE[d.id]=d;}
-function clickDeal(id){const d=DEAL_STORE[id];if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}window.location.href=d?buildDealPath(d):'/deal.html?id='+encodeURIComponent(id);}
+function clickDeal(id){
+  // Force-flush the current map view to URL so the back button returns
+  // to the exact zoom/center the user clicked from. Also save scroll
+  // position for restore after back-nav.
+  if(typeof window._flushMapState==='function')window._flushMapState();
+  try{
+    var sc=document.getElementById('split-cards');
+    if(sc&&window.MapState)window.MapState.patchSS({scrollY:sc.scrollTop});
+  }catch(e){}
+  const d=DEAL_STORE[id];
+  if(d)try{sessionStorage.setItem('deal',JSON.stringify(d));}catch(e){}
+  window.location.href=d?buildDealPath(d):'/deal.html?id='+encodeURIComponent(id);
+}
 
 // ─── CARD HTML ─────────────────────────────────────────────────
 function makeCard(d){
@@ -1459,7 +1613,7 @@ function fillCardImg(el,url){
 
 function setExploreTab(btn,tab){
   document.querySelectorAll('.split-tab,.explore-tab').forEach(t=>t.classList.remove('on'));
-  btn.classList.add('on');_tab=tab;applyFilters();
+  btn.classList.add('on');_tab=tab;onFilterChange();
 }
 function scrollToDeals(){document.getElementById('all-deals').scrollIntoView({behavior:'smooth'});}
 
@@ -1801,11 +1955,36 @@ function renderClosedSection(){
 }
 
 // ─── LOAD DEALS (Notion first, Google Sheets fallback) ───────
+// In-session cache (5-minute TTL) makes back-navigation feel instant —
+// the dataset that was just rendered is reused on the next load while
+// a fresh fetch refreshes the cache in the background.
 async function loadDealsFromNotion(){
-  const r=await fetch('/api/deals');
-  if(!r.ok)throw new Error('Notion API '+r.status);
+  var cached=null;
+  try{
+    var raw=sessionStorage.getItem('tfs_deals_cache_v1');
+    if(raw){
+      var parsed=JSON.parse(raw);
+      if(parsed&&parsed.ts&&(Date.now()-parsed.ts)<5*60*1000&&Array.isArray(parsed.deals)&&parsed.deals.length){
+        cached=parsed.deals;
+      }
+    }
+  }catch(e){}
+  if(cached){
+    // Background refresh — never throws, never blocks UI.
+    fetchWithRetry('/api/deals',undefined,3)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.deals&&data.deals.length){
+          try{sessionStorage.setItem('tfs_deals_cache_v1',JSON.stringify({ts:Date.now(),deals:data.deals}));}catch(e){}
+        }
+      })
+      .catch(function(){});
+    return cached;
+  }
+  const r=await fetchWithRetry('/api/deals',undefined,3);
   const data=await r.json();
   if(!data.deals||!data.deals.length)throw new Error('No deals from Notion');
+  try{sessionStorage.setItem('tfs_deals_cache_v1',JSON.stringify({ts:Date.now(),deals:data.deals}));}catch(e){}
   return data.deals;
 }
 async function loadDealsFromSheet(){
@@ -1843,11 +2022,40 @@ async function loadDealsFromSheet(){
       updateStats();
       populateStates();
       updateHowSections();
-      // Apply search params from homepage hero search
-      var urlParams=new URLSearchParams(window.location.search);
-      if(urlParams.get('q')){var si=document.getElementById('f-search');if(si)si.value=urlParams.get('q');}
-      if(urlParams.get('tab')){var tab=urlParams.get('tab');_tab=tab;document.querySelectorAll('.split-tab').forEach(function(t){t.classList.remove('on');if(t.textContent.toLowerCase()===tab||(!tab&&t.textContent==='All'))t.classList.add('on');});}
+      // Hydrate filter inputs from the URL (or homepage hero search hand-off).
+      // populateStates() ran above so the f-state <option>s exist before
+      // we set its value here.
+      var savedFilters=(window.MapState&&window.MapState.readFilters())||{};
+      var si=document.getElementById('f-search');if(si&&savedFilters.q)si.value=savedFilters.q;
+      var ti=document.getElementById('f-type');if(ti&&savedFilters.type)ti.value=savedFilters.type;
+      var stI=document.getElementById('f-state');
+      if(stI&&savedFilters.state){
+        // If the saved state isn't yet in the dropdown (e.g. paste-shared
+        // URL where that state has no current deals), inject it so the
+        // value sticks instead of being silently dropped.
+        var hasOpt=false;
+        for(var i=0;i<stI.options.length;i++){if(stI.options[i].value===savedFilters.state){hasOpt=true;break;}}
+        if(!hasOpt){var opt=document.createElement('option');opt.value=savedFilters.state;opt.textContent=savedFilters.state;stI.appendChild(opt);}
+        stI.value=savedFilters.state;
+      }
+      var srt=document.getElementById('f-sort');if(srt&&savedFilters.sort)srt.value=savedFilters.sort;
+      if(savedFilters.tab){
+        _tab=savedFilters.tab;
+        document.querySelectorAll('.split-tab').forEach(function(t){
+          t.classList.toggle('on',t.textContent.trim().toLowerCase()===savedFilters.tab);
+        });
+      }
+      if(window.MapState)window.MapState.toggleResetVisibility();
       applyFilters();
+      // Restore deal-list scroll position on back-nav. Done after
+      // applyFilters so the cards are in the DOM.
+      try{
+        var ss=window.MapState?window.MapState.ss():{};
+        if(typeof ss.scrollY==='number'){
+          var sc=document.getElementById('split-cards');
+          if(sc)requestAnimationFrame(function(){sc.scrollTop=ss.scrollY;});
+        }
+      }catch(e){}
       const sbc=document.getElementById('sb-count');if(sbc)sbc.textContent=ALL_DEALS.length;
       const spc=document.getElementById('sp-count');if(spc)spc.textContent=ALL_DEALS.length+'+';
       // Initialize map markers. Leaflet's <script> tag loads after this IIFE,
@@ -2091,6 +2299,12 @@ function makePopup(deal){
 }
 function placeMarker(deal,latlng){
   if(!latlng)return;
+  // Idempotent: re-running pass-2 with a refined geocode replaces the
+  // pass-1 city-centroid marker instead of stacking duplicates.
+  if(MARKERS[deal.id]){
+    try{map.removeLayer(MARKERS[deal.id]);}catch(e){}
+    delete MARKERS[deal.id];
+  }
   var jitter=0.006;
   var ll=[latlng[0]+(Math.random()-.5)*jitter,latlng[1]+(Math.random()-.5)*jitter];
   var marker=L.marker(ll,{icon:makeMarkerIcon(deal)});
@@ -2112,39 +2326,112 @@ function placeMarker(deal,latlng){
   MARKERS[deal.id]=marker;
 }
 
+// Expose the Leaflet map instance to page-level scripts (resetMapState
+// needs it; clickDeal flushes view via _flushMapState below).
+window._tfsMap=map;
+window._flushMapState=function(){
+  if(!window.MapState)return;
+  try{
+    var c=map.getCenter();
+    window.MapState.writeView({z:map.getZoom(),lat:c.lat,lng:c.lng});
+  }catch(e){}
+};
+
 // ─── GEOCODE ALL DEALS & PLACE ON MAP ──────────────────────────
 window._mapReady=false;
 window._mapInitDeals=function(deals){
   if(window._mapReady)return;
   window._mapReady=true;
+
+  // Install the bounds filter immediately so the sidebar narrows to the
+  // viewport on the very first applyFilters() call. Markers that haven't
+  // been geocoded yet return true (don't hide). This is the core fix for
+  // "global sidebar shown for several seconds while pins drip in".
+  window._isDealInBounds=function(id){
+    var m=MARKERS[id];
+    if(!m)return true;
+    try{return map.getBounds().contains(m.getLatLng());}catch(e){return true;}
+  };
+
+  // Pass 1 (synchronous): place every deal whose city we already know
+  // via the CITY_COORDS table. No API calls — pins appear in one paint.
   var bounds=[];
-  var placed=0;
+  var asyncQueue=[];
   deals.forEach(function(deal){
-    geocode(deal.streetAddress,deal.city,deal.state,deal.zip,function(ll){
-      placed++;
-      if(ll){placeMarker(deal,ll);bounds.push(ll);}
-      if(placed===deals.length&&bounds.length){
-        try{map.fitBounds(bounds,{padding:[50,50],maxZoom:12});}catch(e){}
-        // Now that all markers are placed, enable the bounds filter so the
-        // sidebar list tracks the visible map viewport.
-        window._isDealInBounds=function(id){
-          var m=MARKERS[id];
-          if(!m)return true; // not geocoded — don't hide
-          try{return map.getBounds().contains(m.getLatLng());}catch(e){return true;}
-        };
-        // Re-run applyFilters once with the bounds check active so the sidebar
-        // matches the initial fit-to-bounds view.
-        if(typeof window.applyFilters==='function')window.applyFilters();
+    try{
+      var hasStreet=!!(deal.streetAddress&&String(deal.streetAddress).trim());
+      var cityKey=((deal.city||'')+','+(deal.state||'')).toLowerCase().trim();
+      var coords=CITY_COORDS[cityKey];
+      if(coords){
+        // City-known deal: place instantly. If there's a street address
+        // we'll refine to per-property precision in pass 2 (Nominatim).
+        try{placeMarker(deal,coords);}catch(e){console.warn('placeMarker failed',deal.id,e);}
+        bounds.push(coords);
+        if(hasStreet)asyncQueue.push(deal);
+      }else{
+        asyncQueue.push(deal);
       }
-    });
+    }catch(e){asyncQueue.push(deal);}
+  });
+
+  // Restore exact saved view if the URL has one (back-nav from /d/{slug}
+  // or paste-shared link), otherwise fit to the synchronous pass so
+  // pins are visible without waiting on Nominatim.
+  var savedView=(window.MapState&&window.MapState.readView())||null;
+  if(savedView){
+    try{map.setView([savedView.lat,savedView.lng],savedView.z,{animate:false});}catch(e){}
+  }else if(bounds.length){
+    try{map.fitBounds(bounds,{padding:[50,50],maxZoom:12});}catch(e){}
+  }
+
+  // Sidebar narrows to the viewport now, before the async tail runs.
+  if(typeof window.applyFilters==='function')window.applyFilters();
+
+  // Pass 2 (async, rate-limited): refine street-precision pins via
+  // Nominatim. Each placeMarker is fenced so a single bad fetch can't
+  // blank the layer. applyFilters re-runs debounced as refinements
+  // settle so the sidebar updates without thrashing.
+  var refineDebounce=null;
+  function scheduleRefilter(){
+    if(refineDebounce)clearTimeout(refineDebounce);
+    refineDebounce=setTimeout(function(){
+      if(typeof window.applyFilters==='function')window.applyFilters();
+    },300);
+  }
+  asyncQueue.forEach(function(deal){
+    try{
+      var pass1Key=((deal.city||'')+','+(deal.state||'')).toLowerCase().trim();
+      var pass1Coords=CITY_COORDS[pass1Key]||null;
+      geocode(deal.streetAddress,deal.city,deal.state,deal.zip,function(ll){
+        if(!ll)return;
+        // Pass-2 fell back to the same city centroid we used in pass-1.
+        // No real refinement — skip the re-place to avoid a visible
+        // jiggle from re-jittered random offsets.
+        if(pass1Coords && Math.abs(ll[0]-pass1Coords[0])<1e-4 && Math.abs(ll[1]-pass1Coords[1])<1e-4)return;
+        try{placeMarker(deal,ll);}catch(e){console.warn('placeMarker failed',deal.id,e);}
+        scheduleRefilter();
+      });
+    }catch(e){console.warn('geocode failed',deal.id,e);}
   });
 };
 
-// Refresh sidebar list whenever the user pans / zooms the map.
+// Debounce moveend/zoomend so a 10-event pan doesn't thrash applyFilters
+// or stomp the URL with 10 history.replaceState calls. Single trailing
+// call ~200ms after the user stops interacting.
+var _moveDebounce=null;
 map.on('moveend zoomend',function(){
-  if(window._isDealInBounds && typeof window.applyFilters==='function'){
-    window.applyFilters();
-  }
+  if(_moveDebounce)clearTimeout(_moveDebounce);
+  _moveDebounce=setTimeout(function(){
+    if(window._isDealInBounds && typeof window.applyFilters==='function'){
+      window.applyFilters();
+    }
+    if(window.MapState){
+      try{
+        var c=map.getCenter();
+        window.MapState.writeView({z:map.getZoom(),lat:c.lat,lng:c.lng});
+      }catch(e){}
+    }
+  },200);
 });
 
 // ─── SYNC FILTERS WITH MAP ─────────────────────────────────────
@@ -2212,6 +2499,16 @@ setTimeout(function(){map.invalidateSize();},1500);
 if(document.readyState!=='complete'){
   window.addEventListener('load',function(){map.invalidateSize();},{once:true,passive:true});
 }
+// Save the deal-list scroll position on page hide. pagehide fires
+// reliably on full-page navigation (the browser back button replays
+// it on return) where beforeunload doesn't.
+window.addEventListener('pagehide',function(){
+  try{
+    var sc=document.getElementById('split-cards');
+    if(sc&&window.MapState)window.MapState.patchSS({scrollY:sc.scrollTop});
+  }catch(e){}
+});
+
 // Drain any deals queued by the loader IIFE that ran before this script.
 if(window._pendingMapDeals){window._mapInitDeals(window._pendingMapDeals);window._pendingMapDeals=null;}
 })();
