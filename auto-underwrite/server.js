@@ -7,6 +7,7 @@ const { promisify } = require('util');
 const { generateDealDoc } = require('./generate_pdf');
 const { uploadToDrive } = require('./google_drive');
 const puppeteer = require('puppeteer-core');
+const PptxGenJS = require('pptxgenjs');
 
 const execFileAsync = promisify(execFile);
 
@@ -121,6 +122,7 @@ app.post('/render-deck', requireAuth, async (req, res) => {
 
     let pdfRendered = false;
     let browser = null;
+    let slideImages = [];
     try {
       browser = await puppeteer.launch({
         executablePath: '/usr/bin/google-chrome',
@@ -174,6 +176,25 @@ app.post('/render-deck', requireAuth, async (req, res) => {
       });
       pdfRendered = fs.existsSync(pdfPath) && fs.statSync(pdfPath).size > 0;
       console.log('[render-deck] puppeteer PDF rendered: ' + (pdfRendered ? fs.statSync(pdfPath).size + ' bytes' : 'FAIL'));
+
+      // Capture each slide as a 1920x1080 PNG screenshot for the PPTX build
+      try {
+        const slideCount = (diag && diag.slideCount) || 22;
+        await pageObj.setViewport({ width: 1920, height: slideCount * 1080, deviceScaleFactor: 1 });
+        await new Promise(r => setTimeout(r, 500)); // let layout settle
+        slideImages = [];
+        for (let i = 0; i < slideCount; i++) {
+          const buf = await pageObj.screenshot({
+            clip: { x: 0, y: i * 1080, width: 1920, height: 1080 },
+            type: 'png',
+            encoding: 'binary'
+          });
+          slideImages.push(buf);
+        }
+        console.log('[render-deck] captured ' + slideImages.length + ' slide screenshots');
+      } catch (e) {
+        console.error('[render-deck] slide screenshot failed:', e.message);
+      }
     } catch (e) {
       console.error('[render-deck] Puppeteer PDF failed:', e.message);
     } finally {
@@ -207,42 +228,52 @@ app.post('/render-deck', requireAuth, async (req, res) => {
         console.error('[render-deck] PDF upload failed:', e.message);
       }
 
-      // Convert PDF -> PPTX via libreoffice, then upload PPTX as native Google Slides.
-      // Drive converts .pptx -> Google Slides reliably. Each slide will be an image of
-      // the corresponding PDF page (visual fidelity preserved, text not editable per-element).
+      // Build PPTX from slide screenshots via pptxgenjs, upload as Google Slides
+      // (Drive converts .pptx -> native Slides on upload via mimeType swap).
+      // Each slide is a full-bleed PNG so visual fidelity matches the PDF.
       try {
-        const pptxPath = pdfPath.replace(/\.pdf$/, '.pptx');
-        await execFileAsync('libreoffice', [
-          '--headless',
-          '--convert-to', 'pptx',
-          '--outdir', tempDir,
-          pdfPath
-        ], { timeout: 60000 });
-
-        if (fs.existsSync(pptxPath)) {
-          const drive = require('./google_drive').getDriveClient();
-          const { Readable } = require('stream');
-          const slidesRes = await drive.files.create({
-            requestBody: {
-              name: filenameBase,
-              parents: [decksFolderId],
-              mimeType: 'application/vnd.google-apps.presentation'  // converts .pptx -> Slides on upload
-            },
-            media: {
-              mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-              body: Readable.from(fs.readFileSync(pptxPath))
-            },
-            fields: 'id, name, webViewLink',
-            supportsAllDrives: true
-          });
-          slidesUploaded = slidesRes.data;
-          console.log('[render-deck] uploaded as Google Slides via PPTX: ' + slidesUploaded.id);
-          try { fs.unlinkSync(pptxPath); } catch (e) {}
+        if (slideImages.length === 0) {
+          console.warn('[render-deck] no slide screenshots to build PPTX');
         } else {
-          console.warn('[render-deck] libreoffice did not produce pptx file at ' + pptxPath);
+          const pptx = new PptxGenJS();
+          pptx.defineLayout({ name: 'WIDE_16_9', width: 13.333, height: 7.5 });
+          pptx.layout = 'WIDE_16_9';
+          pptx.title = filenameBase;
+
+          for (const img of slideImages) {
+            const slide = pptx.addSlide();
+            slide.addImage({
+              data: 'data:image/png;base64,' + img.toString('base64'),
+              x: 0, y: 0, w: 13.333, h: 7.5
+            });
+          }
+
+          const pptxPath = pdfPath.replace(/\.pdf$/, '.pptx');
+          await pptx.writeFile({ fileName: pptxPath });
+
+          if (fs.existsSync(pptxPath)) {
+            const drive = require('./google_drive').getDriveClient();
+            const { Readable } = require('stream');
+            const slidesRes = await drive.files.create({
+              requestBody: {
+                name: filenameBase,
+                parents: [decksFolderId],
+                mimeType: 'application/vnd.google-apps.presentation'
+              },
+              media: {
+                mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                body: Readable.from(fs.readFileSync(pptxPath))
+              },
+              fields: 'id, name, webViewLink',
+              supportsAllDrives: true
+            });
+            slidesUploaded = slidesRes.data;
+            console.log('[render-deck] uploaded as Google Slides: ' + slidesUploaded.id);
+            try { fs.unlinkSync(pptxPath); } catch (e) {}
+          }
         }
       } catch (e) {
-        console.error('[render-deck] PDF->PPTX->Slides failed:', e.message);
+        console.error('[render-deck] PPTX build/upload failed:', e.message, e.stack ? e.stack.slice(0, 300) : '');
       }
     }
 
