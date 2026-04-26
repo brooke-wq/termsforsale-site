@@ -80,6 +80,7 @@ app.post('/render-deck', requireAuth, async (req, res) => {
   const body = req.body || {};
   const dealId = body.dealId || `deal-${Date.now()}`;
   const tokens = body.tokens || {};
+  const notionPageId = body.notionPageId || null;
   const decksFolderId = process.env.DRIVE_DECKS_FOLDER_ID;
 
   if (!decksFolderId) {
@@ -280,6 +281,51 @@ app.post('/render-deck', requireAuth, async (req, res) => {
     try { fs.unlinkSync(htmlPath); } catch (e) {}
     try { if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath); } catch (e) {}
 
+    // Patch Notion deal page with Slides + PDF URLs (paperclip-side, no Netlify timeout)
+    let notionPatched = false;
+    if (notionPageId && (slidesUploaded || pdfUploaded) && process.env.NOTION_TOKEN) {
+      try {
+        const props = {};
+        if (slidesUploaded || pdfUploaded) {
+          props['Summary URL'] = { url: (slidesUploaded && slidesUploaded.webViewLink) || (pdfUploaded && pdfUploaded.webViewLink) };
+        }
+        if (pdfUploaded) {
+          props['Analysis PDF URL'] = { rich_text: [{ type: 'text', text: { content: pdfUploaded.webViewLink } }] };
+        }
+        const fetch = (await import('node-fetch')).default || global.fetch || require('https');
+        const patchRes = await new Promise((resolve, reject) => {
+          const data = JSON.stringify({ properties: props });
+          const url = new URL('https://api.notion.com/v1/pages/' + notionPageId);
+          const req = require('https').request({
+            hostname: url.hostname,
+            path: url.pathname,
+            method: 'PATCH',
+            headers: {
+              'Authorization': 'Bearer ' + process.env.NOTION_TOKEN,
+              'Notion-Version': '2022-06-28',
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(data)
+            }
+          }, (resp) => {
+            let body = '';
+            resp.on('data', c => body += c);
+            resp.on('end', () => resolve({ status: resp.statusCode, body }));
+          });
+          req.on('error', reject);
+          req.write(data);
+          req.end();
+        });
+        if (patchRes.status >= 200 && patchRes.status < 300) {
+          notionPatched = true;
+          console.log('[render-deck] Notion patched: Summary URL = ' + props['Summary URL'].url);
+        } else {
+          console.warn('[render-deck] Notion patch failed: ' + patchRes.status + ' ' + (patchRes.body || '').slice(0, 200));
+        }
+      } catch (e) {
+        console.error('[render-deck] Notion patch error:', e.message);
+      }
+    }
+
     res.json({
       ok: true,
       dealId,
@@ -290,6 +336,7 @@ app.post('/render-deck', requireAuth, async (req, res) => {
       slidesFileId: slidesUploaded ? slidesUploaded.id : null,
       slidesWebViewLink: slidesUploaded ? slidesUploaded.webViewLink : null,
       pdfRendered,
+      notionPatched,
       unreplacedTokens: unreplaced
     });
   } catch (err) {
