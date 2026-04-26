@@ -262,19 +262,44 @@ exports.handler = async (event) => {
   const filledCount = Object.values(tokens).filter(v => v !== EMDASH).length;
   console.log('[generate-pitch-deck] dealId=' + dealId + ' address=' + address + ' filled=' + filledCount + '/' + Object.keys(tokens).length);
 
-  let renderRes;
+  // Fire-and-forget: kick off paperclip render. Paperclip handles full pipeline:
+  // render PDF, capture screenshots, build PPTX, upload Slides + PDF to Drive,
+  // and PATCH Notion Summary URL all on its own (~30-45s total).
+  // Netlify returns 202 immediately so we don't trip its 26s timeout.
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 4000);
   try {
-    renderRes = await fetch(RENDER_DECK_URL, {
+    await fetch(RENDER_DECK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Auth-Token': RENDER_TOKEN },
-      body: JSON.stringify({ dealId, tokens, deal: { address, dealType: tokens.DEAL_STRUCTURE } })
-    });
+      body: JSON.stringify({
+        dealId,
+        tokens,
+        notionPageId: pageId,
+        deal: { address, dealType: tokens.DEAL_STRUCTURE }
+      }),
+      signal: controller.signal
+    }).catch(() => {});
   } catch (e) {
-    return { statusCode: 502, headers, body: JSON.stringify({ error: 'Render service unreachable: ' + e.message }) };
+    if (e.name !== 'AbortError') {
+      clearTimeout(abortTimer);
+      return { statusCode: 502, headers, body: JSON.stringify({ error: 'Render service unreachable: ' + e.message }) };
+    }
   }
+  clearTimeout(abortTimer);
 
-  if (!renderRes.ok) {
-    const t = await renderRes.text().catch(() => '');
-    return { statusCode: 502, headers, body: JSON.stringify({ error: 'Render service failed: ' + renderRes.status, detail: t.slice(0, 500) }) };
-  }
-
+  return {
+    statusCode: 202,
+    headers,
+    body: JSON.stringify({
+      ok: true,
+      queued: true,
+      dealId,
+      address,
+      tokensReplaced: Object.keys(tokens).length,
+      tokensFilled: filledCount,
+      notionPageUrl: 'https://www.notion.so/' + pageId.replace(/-/g, ''),
+      message: 'Deck render queued. Slides + PDF will appear in Drive (Deal Decks folder) and the Summary URL on this Notion page within ~30-45 seconds.'
+    })
+  };
+};
