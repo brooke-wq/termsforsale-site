@@ -11,6 +11,11 @@ const { upsertContact, addTags, postNote, sendSMS, sendEmail } = require('./_ghl
 const GHL_API_KEY     = process.env.GHL_API_KEY;
 const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
 
+// Inquiry/offer SMS alerts route to the team line, NOT BROOKE_PHONE
+// (which is set to her personal cell elsewhere). Override via
+// INQUIRY_NOTIFICATION_PHONE if needed; defaults to +14807191175.
+const INQUIRY_NOTIFY_PHONE = process.env.INQUIRY_NOTIFICATION_PHONE || '+14807191175';
+
 // Pipeline / stage IDs — Brooke sets these in Netlify env vars.
 // Fallback strings are placeholders that will cause a clear GHL error
 // if the real IDs have not been configured yet.
@@ -141,11 +146,10 @@ exports.handler = async (event) => {
         } catch(e) { console.warn('[buyer-inquiry] Email failed:', e.message); }
       }
 
-      // Internal notification to Brooke
-      var brookePhone = process.env.BROOKE_PHONE;
-      if (brookePhone) {
+      // Internal notification to the team line
+      if (INQUIRY_NOTIFY_PHONE) {
         try {
-          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone,
+          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, INQUIRY_NOTIFY_PHONE,
             'NEW BUYER CRITERIA: ' + (payload.firstName || '') + ' ' + (payload.email || '') + ' — ' + (payload.summary || '').split('\n').slice(0, 3).join(' | ').slice(0, 120));
         } catch(e) {}
       }
@@ -272,11 +276,10 @@ exports.handler = async (event) => {
         console.log('[buyer-inquiry] Internal offer notification sent');
       } catch(e) { console.warn('[buyer-inquiry] Internal notification failed:', e.message); }
 
-      // SMS alert to Brooke
-      var brookePhone = process.env.BROOKE_PHONE;
-      if (brookePhone) {
+      // SMS alert to the team line
+      if (INQUIRY_NOTIFY_PHONE) {
         try {
-          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone,
+          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, INQUIRY_NOTIFY_PHONE,
             'NEW OFFER: $' + Number(payload.price||0).toLocaleString() + ' on ' + (fullAddress || 'property') + ' from ' + contactName);
         } catch(e) {}
       }
@@ -364,11 +367,10 @@ exports.handler = async (event) => {
         );
       } catch(e) { console.warn('[buyer-inquiry] Internal inquiry notification failed:', e.message); }
 
-      // SMS alert to Brooke
-      var brookePhone2 = process.env.BROOKE_PHONE;
-      if (brookePhone2) {
+      // SMS alert to the team line
+      if (INQUIRY_NOTIFY_PHONE) {
         try {
-          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, brookePhone2,
+          await sendSMS(GHL_API_KEY, GHL_LOCATION_ID, INQUIRY_NOTIFY_PHONE,
             'NEW INQUIRY: ' + contactName + ' asking about ' + (fullAddress || 'a deal') + '. ' + (message ? '"' + message.slice(0,60) + '"' : ''));
         } catch(e) {}
       }

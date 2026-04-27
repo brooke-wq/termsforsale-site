@@ -5,7 +5,7 @@
 // ENV VARS: ANTHROPIC_API_KEY, GHL_API_KEY, GHL_LOCATION_ID
 
 const { complete } = require('./_claude');
-const { postNote, swapTags, upsertContact, updateCustomFields } = require('./_ghl');
+const { getContact, postNote, addTags, removeTags, swapTags, upsertContact, updateCustomFields } = require('./_ghl');
 
 const PROFILE_SYSTEM = `You are the Buyer Relations Agent for Deal Pros LLC (Terms For Sale brand).
 
@@ -51,6 +51,36 @@ exports.handler = async function(event) {
       if (upsertRes.body && (upsertRes.body.contact || upsertRes.body.id)) {
         contactId = (upsertRes.body.contact && upsertRes.body.contact.id) || upsertRes.body.id;
         console.log('[buyer-relations] upserted contact: ' + contactId);
+      }
+    }
+
+    // Idempotency gate: if this contact has already been processed (has
+    // `buyer-active` tag) OR is currently being processed by another run
+    // (has `buyer-relations-processing`), skip. Both cron runs and GHL
+    // workflow webhooks can fire this function for the same contact, and
+    // without this check Claude generates two slightly-different profile
+    // notes that both get posted.
+    if (contactId) {
+      try {
+        var contactRes = await getContact(ghlKey, contactId);
+        var existingTags = ((contactRes.body && contactRes.body.contact && contactRes.body.contact.tags) || []).map(function (t) {
+          return String(t || '').toLowerCase().trim();
+        });
+        if (existingTags.indexOf('buyer-active') !== -1) {
+          console.log('[buyer-relations] contact ' + contactId + ' already has buyer-active tag, skipping');
+          return respond(200, { success: true, contactId: contactId, skipped: 'already-processed' });
+        }
+        if (existingTags.indexOf('buyer-relations-processing') !== -1) {
+          console.log('[buyer-relations] contact ' + contactId + ' is currently being processed by another run, skipping');
+          return respond(200, { success: true, contactId: contactId, skipped: 'concurrent-run' });
+        }
+        // Claim the contact: remove `buyer-signup` and add a processing
+        // marker. Done BEFORE the slow Claude call so a concurrent run
+        // can't pick up the same contact mid-flight.
+        await addTags(ghlKey, contactId, ['buyer-relations-processing']);
+        await removeTags(ghlKey, contactId, ['buyer-signup', 'buyer-new']);
+      } catch (e) {
+        console.warn('[buyer-relations] idempotency check failed (continuing):', e.message);
       }
     }
 
@@ -107,13 +137,15 @@ exports.handler = async function(event) {
 
     console.log('[buyer-relations] profile generated, cost=$' + claudeRes.usage.cost.toFixed(6));
 
-    // Post profile note and apply tags
+    // Post profile note and apply tags. We already removed `buyer-signup`
+    // and `buyer-new` at the start of the run (idempotency claim) — here
+    // we clear the processing marker and stamp `buyer-active`.
     if (contactId && ghlKey) {
       var noteBody = '--- BUYER PROFILE ---\n' + profile + '\n\n' +
         'Tags Applied: ' + tags.join(', ') + '\n\n' +
         '--- Buyer Relations Agent / Deal Pros LLC ---';
       await postNote(ghlKey, contactId, noteBody);
-      await swapTags(ghlKey, contactId, ['buyer-signup', 'buyer-new'], ['buyer-active'].concat(tags));
+      await swapTags(ghlKey, contactId, ['buyer-relations-processing'], ['buyer-active'].concat(tags));
     }
 
     return respond(200, {
@@ -128,6 +160,10 @@ exports.handler = async function(event) {
     console.error('[buyer-relations] error:', err.message);
     if (contactId && ghlKey) {
       try { await postNote(ghlKey, contactId, 'Buyer Relations ERROR: ' + err.message); } catch(e) {}
+      // Clear the processing marker so the next cron run can retry.
+      // Without this, a transient Claude/GHL failure would leave the
+      // contact stuck in "processing" state forever.
+      try { await removeTags(ghlKey, contactId, ['buyer-relations-processing']); } catch(e) {}
     }
     return respond(500, { error: err.message });
   }

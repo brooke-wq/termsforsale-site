@@ -10,8 +10,11 @@
  * 6. Sends confirmation email to the buyer
  *
  * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, GHL_PIPELINE_ID_BUYER,
- *           GHL_STAGE_OFFER_RECEIVED, BROOKE_PHONE (optional override —
- *           defaults to the main TFS line)
+ *           GHL_STAGE_OFFER_RECEIVED,
+ *           INQUIRY_NOTIFICATION_PHONE (optional override — defaults to the
+ *           team line +14807191175). Offer alerts deliberately do NOT use
+ *           BROOKE_PHONE so the team line stays the recipient even if
+ *           BROOKE_PHONE is set to her personal cell elsewhere.
  */
 
 const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields } = require('./_ghl');
@@ -20,7 +23,7 @@ const GHL_BASE = 'https://services.leadconnectorhq.com';
 
 // Team notification SMS target. MUST NOT equal CAMPAIGN_FROM_PHONE
 // (+14806373117) — Twilio/GHL silently drop SMS sent from a number to
-// itself. Kept as an env-var override (BROOKE_PHONE) for testing.
+// itself. Override via INQUIRY_NOTIFICATION_PHONE env var if needed.
 const DEFAULT_NOTIFICATION_PHONE = '+14807191175';
 
 // Internal inbox that receives the offer notification email. We upsert
@@ -154,35 +157,61 @@ async function ensureNotificationPhoneContact(apiKey, locationId, phone) {
   }
 }
 
+// Plain-text-leaning notification body. From and To both being on
+// info@termsforsale.com / offers@termsforsale.com strains spam filters;
+// keeping styling minimal + adding a plain-text sibling + a Reply-To
+// pointing at the buyer keeps Gmail/Proton from quarantining the alert.
 function buildInternalOfferEmailHtml(ctx) {
-  function row(label, value) {
-    if (value === undefined || value === null || value === '') return '';
-    return '<tr><td style="padding:8px 14px;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;width:40%">' + label + '</td>'
-      + '<td style="padding:8px 14px;font-size:14px;color:#0D1F3C;font-weight:700;border-bottom:1px solid #E2E8F0">' + value + '</td></tr>';
-  }
   var esc = function (s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  function line(label, value) {
+    if (value === undefined || value === null || value === '') return '';
+    return '<p style="margin:4px 0;font-size:14px;color:#1F2937"><strong>' + label + ':</strong> ' + value + '</p>';
+  }
   var rows = [
-    row('Buyer',        esc(ctx.buyerName)),
-    row('Phone',        esc(ctx.buyerPhone)),
-    row('Email',        esc(ctx.buyerEmail)),
-    row('Deal ID',      esc(ctx.dealId)),
-    row('Property',     esc(ctx.fullAddress)),
-    row('Asset Type',   esc(ctx.dealType)),
-    row('Offer Amount', esc(ctx.amountFmt)),
-    row('Type of Deal', esc(ctx.typeOfDeal)),
-    row('Entry Fee',    esc(ctx.entryFeeFmt)),
-    row('Target Close', esc(ctx.coe)),
+    line('Buyer',        esc(ctx.buyerName)),
+    line('Phone',        esc(ctx.buyerPhone)),
+    line('Email',        esc(ctx.buyerEmail)),
+    line('Deal ID',      esc(ctx.dealId)),
+    line('Property',     esc(ctx.fullAddress)),
+    line('Asset Type',   esc(ctx.dealType)),
+    line('Offer Amount', esc(ctx.amountFmt)),
+    line('Type of Deal', esc(ctx.typeOfDeal)),
+    line('Entry Fee',    esc(ctx.entryFeeFmt)),
+    line('Target Close', esc(ctx.coe)),
   ].join('');
   var notesBlock = ctx.notes
-    ? '<div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:14px 16px;margin-top:16px"><div style="font-size:12px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Proposed Terms / Notes</div><div style="font-size:14px;color:#1F2937;white-space:pre-wrap">' + esc(ctx.notes) + '</div></div>'
+    ? '<p style="margin:12px 0 4px;font-size:14px;color:#1F2937"><strong>Proposed terms / notes:</strong></p><p style="margin:0;font-size:14px;color:#1F2937;white-space:pre-wrap">' + esc(ctx.notes) + '</p>'
     : '';
-  return '<div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px">'
-    + '<h2 style="color:#0D1F3C;margin:0 0 8px">🔥 New Offer Received</h2>'
-    + '<p style="color:#4A5568;font-size:13px;margin:0 0 16px">Submitted ' + new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }) + ' MST</p>'
-    + '<table style="width:100%;border-collapse:collapse;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden"><tbody>' + rows + '</tbody></table>'
+  var ghlLink = ctx.contactId
+    ? '<p style="margin:16px 0 0;font-size:13px"><a href="https://app.gohighlevel.com/v2/location/' + esc(process.env.GHL_LOCATION_ID || '') + '/contacts/detail/' + esc(ctx.contactId) + '">Open contact in GHL</a></p>'
+    : '';
+  return '<div style="font-family:Arial,sans-serif;max-width:640px;font-size:14px;color:#1F2937">'
+    + '<p style="margin:0 0 12px;font-size:14px;color:#6B7280">New offer received via Terms For Sale website.</p>'
+    + rows
     + notesBlock
-    + (ctx.contactId ? '<p style="margin-top:20px"><a href="https://app.gohighlevel.com/v2/location/' + esc(process.env.GHL_LOCATION_ID || '') + '/contacts/detail/' + esc(ctx.contactId) + '" style="background:#0D1F3C;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px">Open contact in GHL →</a></p>' : '')
+    + ghlLink
     + '</div>';
+}
+
+function buildInternalOfferEmailText(ctx) {
+  var lines = [
+    'New offer received via Terms For Sale website.',
+    '',
+    'Buyer: ' + (ctx.buyerName || ''),
+    'Phone: ' + (ctx.buyerPhone || ''),
+    'Email: ' + (ctx.buyerEmail || ''),
+    'Deal ID: ' + (ctx.dealId || ''),
+    'Property: ' + (ctx.fullAddress || ''),
+    'Asset Type: ' + (ctx.dealType || ''),
+    'Offer Amount: ' + (ctx.amountFmt || ''),
+    'Type of Deal: ' + (ctx.typeOfDeal || ''),
+    'Entry Fee: ' + (ctx.entryFeeFmt || ''),
+    'Target Close: ' + (ctx.coe || ''),
+  ];
+  if (ctx.notes) {
+    lines.push('', 'Proposed terms / notes:', ctx.notes);
+  }
+  return lines.join('\n');
 }
 
 exports.handler = async (event) => {
@@ -392,8 +421,11 @@ exports.handler = async (event) => {
     }
   }
 
-  // 4. SMS notification to the team line
-  var notifyPhone = process.env.BROOKE_PHONE || DEFAULT_NOTIFICATION_PHONE;
+  // 4. SMS notification to the team line. Use INQUIRY_NOTIFICATION_PHONE
+  // override if set; otherwise default to the team line. We deliberately
+  // do NOT fall back to BROOKE_PHONE — that env var is set to her personal
+  // cell and offer alerts should land on the team line instead.
+  var notifyPhone = process.env.INQUIRY_NOTIFICATION_PHONE || DEFAULT_NOTIFICATION_PHONE;
   diagnostic.notifyPhone = notifyPhone;
   if (notifyPhone && locationId) {
     var sms = 'New offer: ' + (buyerName || 'Buyer') + ' on ' + location;
@@ -418,16 +450,18 @@ exports.handler = async (event) => {
     }
   }
 
-  // 4b. Internal notification email to offers@termsforsale.com
+  // 4b. Internal notification email to offers@termsforsale.com.
+  // Plain subject (no emoji), simple HTML, plain-text sibling, replyTo set
+  // to the buyer — all to keep the alert out of Gmail/Proton spam folders.
   try {
     var internalId = await getInternalContactId(apiKey, locationId, INTERNAL_NOTIFICATION_EMAIL);
     if (internalId) {
-      var subjectBits = ['🔥 New Offer — ' + (buyerName || 'Buyer')];
+      var subjectBits = ['New offer: ' + (buyerName || 'Buyer')];
       if (location) subjectBits.push(' on ' + location);
       if (typeOfDeal) subjectBits.push(' (' + typeOfDeal + ')');
       if (amount) subjectBits.push(' — ' + amountFmt);
       var internalSubject = subjectBits.join('');
-      var internalHtml = buildInternalOfferEmailHtml({
+      var emailCtx = {
         buyerName: buyerName,
         buyerPhone: buyerPhone,
         buyerEmail: buyerEmail,
@@ -440,11 +474,31 @@ exports.handler = async (event) => {
         coe: coe,
         notes: notes,
         contactId: contactId,
+      };
+      var internalHtml = buildInternalOfferEmailHtml(emailCtx);
+      var internalText = buildInternalOfferEmailText(emailCtx);
+      var internalRes = await fetch(GHL_BASE + '/conversations/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + apiKey,
+          'Version': '2021-07-28',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'Email',
+          contactId: internalId,
+          subject: internalSubject,
+          html: internalHtml,
+          text: internalText,
+          emailFrom: 'Terms For Sale <info@termsforsale.com>',
+          replyTo: buyerEmail || undefined,
+        }),
       });
-      var internalRes = await sendEmail(apiKey, internalId, internalSubject, internalHtml);
       diagnostic.internalEmailStatus = internalRes.status;
       if (internalRes.status >= 400) {
-        console.warn('[submit-offer] internal email -> ' + internalRes.status, JSON.stringify(internalRes.body));
+        var errText = await internalRes.text().catch(function () { return ''; });
+        console.warn('[submit-offer] internal email -> ' + internalRes.status, errText);
         diagnostic.errors.push('internalEmail -> ' + internalRes.status);
       } else {
         console.log('[submit-offer] internal notification email sent to ' + INTERNAL_NOTIFICATION_EMAIL);
