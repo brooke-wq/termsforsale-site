@@ -350,6 +350,8 @@ nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.1)}
 .deal-card-arv strong{color:#4A5568;font-weight:600}
 .deal-card-loc{display:flex;align-items:center;gap:5px;font-size:12px;color:#4A5568;font-weight:500;margin-bottom:12px}
 .deal-card-loc svg{color:#29ABE2;flex-shrink:0}
+.deal-card-loc-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.deal-card-proptype{flex-shrink:0;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#1a8bbf;background:#EBF8FF;padding:3px 8px;border-radius:4px;line-height:1.5}
 .deal-card-divider{height:1px;background:#F0F4F8;margin:0 0 12px}
 .deal-card-specs{display:flex;align-items:center;gap:16px;font-size:12px;color:#718096}
 .deal-card-spec{display:flex;align-items:center;gap:5px}
@@ -1654,7 +1656,8 @@ function makeCard(d){
       ${arv ? `<div class="deal-card-arv">(ARV — <strong>${money(arv)}</strong>)</div>` : hasDiff ? `<div class="deal-card-arv">Entry: <strong>${money(d.entryFee)}</strong></div>` : '<div style="margin-bottom:8px"></div>'}
       <div class="deal-card-loc">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        ${d.nearestMetro||d.city+', '+d.state}
+        <span class="deal-card-loc-text">${d.nearestMetro||d.city+', '+d.state}</span>
+        ${formatPropertyType(d.propertyType)?`<span class="deal-card-proptype">${formatPropertyType(d.propertyType)}</span>`:''}
       </div>
       <div class="deal-card-divider"></div>
       <div class="deal-card-specs">
@@ -1691,6 +1694,26 @@ function normType(t){
   if(l.includes('lease')||l.includes('option'))return'lease';
   if(l.includes('novation'))return'novation';
   return l;
+}
+
+function formatPropertyType(t){
+  if(!t)return'';
+  var s=String(t).trim();
+  if(!s)return'';
+  var l=s.toLowerCase().replace(/[_-]/g,' ').replace(/\s+/g,' ').trim();
+  var map={
+    'single family':'Single Family','single family home':'Single Family','sfh':'Single Family','sf':'Single Family','single fam':'Single Family',
+    'multi family':'Multifamily','multifamily':'Multifamily','multi fam':'Multifamily','mf':'Multifamily',
+    'duplex':'Duplex','triplex':'Triplex','fourplex':'Fourplex','quadplex':'Fourplex',
+    'townhouse':'Townhouse','townhome':'Townhouse','town house':'Townhouse',
+    'condo':'Condo','condominium':'Condo',
+    'commercial':'Commercial','retail':'Commercial','office':'Office','industrial':'Industrial','warehouse':'Industrial',
+    'mixed use':'Mixed Use','mixed-use':'Mixed Use',
+    'land':'Land','lot':'Land','vacant land':'Land','raw land':'Land',
+    'mobile home':'Mobile Home','manufactured':'Manufactured','manufactured home':'Manufactured'
+  };
+  if(map[l])return map[l];
+  return l.split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
 }
 
 function applyFilters(){
