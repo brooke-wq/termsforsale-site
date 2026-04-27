@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investor Tools | Terms For Sale</title>
+<meta name="description" content="Free commercial real estate calculators and a full deal analyzer for Terms For Sale buyers. Cap rate, NOI, DSCR, IRR, seller finance, sub-to wrap math.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TERMS FOR SALE — INVESTOR TOOLS HUB
+   Brand-matched: navy #0D1F3C + orange #F7941D + Poppins
+   Pulled from termsforsale.com on 2026-04-25
+   ========================================================= */
+:root{
+  --tfs-navy:#0D1F3C;
+  --tfs-navy-2:#162B4E;
+  --tfs-navy-3:#1F3A66;
+  --tfs-orange:#F7941D;
+  --tfs-orange-deep:#DC8014;
+  --tfs-bg:#F4F6F9;
+  --tfs-cream:#FAF9F5;
+  --tfs-white:#FFFFFF;
+  --tfs-line:#E2E6EE;
+  --tfs-muted:#5A6B85;
+  --tfs-text:#0D1F3C;
+  --tfs-success:#3F7D5C;
+  --tfs-warn:#C97B3F;
+  --tfs-danger:#B0432F;
+  --shadow-sm:0 1px 2px rgba(13,31,60,.06);
+  --shadow-md:0 8px 28px rgba(13,31,60,.10);
+  --shadow-lg:0 18px 56px rgba(13,31,60,.20);
+  --radius:8px;
+  --radius-lg:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--tfs-bg);
+  color:var(--tfs-text);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  font-weight:400;
+}
+button,input,select,textarea{font-family:inherit;color:var(--tfs-text)}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--tfs-navy);text-decoration:none}
+a:hover{opacity:.85}
+.hidden{display:none !important}
+.eyebrow{
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--tfs-orange-deep);font-weight:700;
+}
+
+/* ---------- Buttons (match TFS exactly) ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 32px;border-radius:8px;
+  font-weight:700;font-size:15px;letter-spacing:.01em;
+  transition:all .15s ease;white-space:nowrap;
+  font-family:'Poppins',sans-serif;
+}
+.btn-primary{background:var(--tfs-orange);color:#fff}
+.btn-primary:hover{background:var(--tfs-orange-deep);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-navy{background:var(--tfs-navy);color:#fff}
+.btn-navy:hover{background:var(--tfs-navy-2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-ghost{background:transparent;color:var(--tfs-navy);border:1.5px solid var(--tfs-navy);padding:12.5px 30px}
+.btn-ghost:hover{background:var(--tfs-navy);color:#fff}
+.btn-sm{padding:9px 18px;font-size:13px;font-weight:600}
+.btn-lg{padding:16px 36px;font-size:16px}
+
+/* ---------- Inputs ---------- */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:12px;font-weight:600;color:var(--tfs-muted);letter-spacing:.02em}
+.field input,.field select,.field textarea{
+  padding:12px 14px;border:1.5px solid var(--tfs-line);border-radius:8px;
+  background:#fff;font-size:15px;color:var(--tfs-text);font-weight:500;
+  transition:all .15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--tfs-navy);box-shadow:0 0 0 3px rgba(13,31,60,.10);
+}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.input-prefix{position:relative}
+.input-prefix span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--tfs-muted);font-size:14px;font-weight:600;pointer-events:none}
+.input-prefix input{padding-left:28px}
+.input-suffix{position:relative}
+.input-suffix span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--tfs-muted);font-size:14px;font-weight:600;pointer-events:none}
+.input-suffix input{padding-right:34px}
+.checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.checkbox-grid label{
+  display:flex;align-items:center;gap:8px;padding:11px 13px;
+  border:1.5px solid var(--tfs-line);border-radius:8px;
+  background:#fff;cursor:pointer;font-size:14px;font-weight:500;
+  transition:all .12s;color:var(--tfs-text);
+}
+.checkbox-grid label:hover{border-color:var(--tfs-navy)}
+.checkbox-grid input[type=checkbox]{accent-color:var(--tfs-orange);width:16px;height:16px}
+.checkbox-grid label:has(input:checked){border-color:var(--tfs-navy);background:#F7F9FC;font-weight:600}
+
+/* ---------- Layout ---------- */
+.container{max-width:1280px;margin:0 auto;padding:0 32px}
+.container-narrow{max-width:920px;margin:0 auto;padding:0 32px}
+@media (max-width:640px){
+  .container,.container-narrow{padding:0 20px}
+}
+
+/* ===========================================================
+   HEADER — matches termsforsale.com
+   =========================================================== */
+.tfs-header{
+  background:var(--tfs-navy);color:#fff;
+  padding:18px 0;position:sticky;top:0;z-index:50;
+}
+.tfs-header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.tfs-logo{display:flex;align-items:center}
+.tfs-logo img{height:54px;width:auto;display:block}
+.tfs-nav{display:flex;align-items:center;gap:28px;flex:1;justify-content:center}
+.tfs-nav a{color:#fff;font-size:15px;font-weight:500;letter-spacing:.01em;opacity:.92}
+.tfs-nav a:hover{opacity:1;color:var(--tfs-orange)}
+.tfs-nav a.active{color:var(--tfs-orange);font-weight:600}
+.tfs-header-cta{display:flex;align-items:center;gap:14px}
+.tfs-header-cta .btn{padding:10px 22px;font-size:14px}
+.tfs-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.15);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;cursor:pointer;
+}
+
+/* ===========================================================
+   FOOTER — matches termsforsale.com
+   =========================================================== */
+.tfs-footer{background:var(--tfs-navy);color:#A8B5C7;padding:60px 0 30px;margin-top:80px}
+.tfs-footer-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.tfs-footer-brand img{height:48px;margin-bottom:16px}
+.tfs-footer-brand p{color:#A8B5C7;font-size:13px;line-height:1.65;margin:0 0 16px;max-width:300px}
+.tfs-footer-newsletter{display:flex;gap:8px}
+.tfs-footer-newsletter input{flex:1;padding:11px 14px;border-radius:8px;border:1px solid #2A3F66;background:#152A4D;color:#fff;font-size:13px}
+.tfs-footer-newsletter input::placeholder{color:#7A8AA3}
+.tfs-footer-newsletter button{padding:11px 16px;background:var(--tfs-orange);color:#fff;border-radius:8px;font-weight:700;font-size:13px}
+.tfs-footer h4{font-size:14px;color:#fff;font-weight:700;margin:0 0 18px;letter-spacing:.02em}
+.tfs-footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.tfs-footer li a{color:#A8B5C7;font-size:14px}
+.tfs-footer li a:hover{color:var(--tfs-orange);opacity:1}
+.tfs-footer-bottom{
+  border-top:1px solid #1F3258;padding-top:24px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;
+  font-size:12px;color:#7A8AA3;
+}
+.tfs-footer-bottom a{color:#7A8AA3;margin-left:18px}
+.tfs-footer-bottom a:hover{color:#fff;opacity:1}
+@media (max-width:780px){
+  .tfs-footer-grid{grid-template-columns:1fr 1fr;gap:30px}
+}
+@media (max-width:480px){
+  .tfs-footer-grid{grid-template-columns:1fr}
+}
+
+/* ===========================================================
+   GATE — Email + Buy Box (lead capture)
+   =========================================================== */
+.gate-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:linear-gradient(135deg,var(--tfs-navy) 0%,#091428 100%);
+  overflow-y:auto;display:flex;align-items:center;justify-content:center;
+  padding:40px 20px;
+}
+.gate-card{
+  width:100%;max-width:1100px;
+  display:grid;grid-template-columns:1fr 1.1fr;
+  background:var(--tfs-bg);border-radius:16px;
+  overflow:hidden;box-shadow:var(--shadow-lg);
+}
+.gate-pitch{
+  padding:54px 46px;color:#fff;
+  background:linear-gradient(160deg,var(--tfs-navy) 0%,#061025 100%);
+  display:flex;flex-direction:column;justify-content:space-between;position:relative;
+}
+.gate-pitch::after{
+  content:"";position:absolute;right:-80px;bottom:-80px;
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,var(--tfs-orange) 0%,transparent 65%);
+  opacity:.18;
+}
+.gate-pitch .gate-logo img{height:56px;margin-bottom:20px}
+.gate-pitch .eyebrow{color:var(--tfs-orange)}
+.gate-pitch h1{
+  font-family:'Poppins',sans-serif;font-weight:900;
+  font-size:38px;line-height:1.1;margin:14px 0 18px;letter-spacing:-.01em;
+}
+.gate-pitch h1 em{color:var(--tfs-orange);font-style:normal}
+.gate-pitch p.lead{color:#C8D2E1;font-size:15px;line-height:1.7;max-width:380px;margin:0 0 24px}
+.gate-features{margin-top:24px;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+.gate-feature{display:flex;align-items:flex-start;gap:14px;font-size:14px}
+.gate-feature-dot{
+  flex-shrink:0;width:26px;height:26px;border-radius:50%;
+  background:var(--tfs-orange);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+}
+.gate-feature strong{color:#fff;display:block;margin-bottom:2px;font-weight:700}
+.gate-feature span{color:#A8B5C7}
+.gate-form{padding:48px 46px;overflow-y:auto;max-height:92vh;background:var(--tfs-bg)}
+.gate-form h2{font-family:'Poppins',sans-serif;font-size:28px;font-weight:800;margin:0 0 6px;color:var(--tfs-navy);letter-spacing:-.01em}
+.gate-form .lede{color:var(--tfs-muted);font-size:14px;margin:0 0 26px}
+.gate-section-title{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tfs-orange-deep);font-weight:700;
+  margin:24px 0 10px;padding-top:18px;border-top:1px solid var(--tfs-line);
+}
+.gate-section-title:first-of-type{padding-top:0;border-top:none;margin-top:0}
+.gate-cta{margin-top:28px;display:flex;flex-direction:column;gap:12px}
+.gate-cta .btn{width:100%}
+.gate-fineprint{font-size:12px;color:var(--tfs-muted);text-align:center;margin-top:6px;line-height:1.55}
+.gate-error{
+  background:#FCEBE6;color:var(--tfs-danger);
+  padding:12px 14px;border-radius:8px;font-size:13px;margin-top:12px;display:none;font-weight:500;
+}
+.gate-error.show{display:block}
+
+/* ===========================================================
+   HUB
+   =========================================================== */
+.hub-hero{
+  background:var(--tfs-navy);color:#fff;
+  padding:72px 0 60px;position:relative;overflow:hidden;
+}
+.hub-hero::before{
+  content:"";position:absolute;left:-120px;top:-120px;
+  width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,var(--tfs-orange) 0%,transparent 65%);
+  opacity:.12;
+}
+.hub-hero-inner{position:relative;z-index:1}
+.hub-hero .pill{
+  display:inline-block;padding:8px 18px;border-radius:50px;
+  background:rgba(247,148,29,.18);color:var(--tfs-orange);
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:18px;
+}
+.hub-hero h1{
+  font-family:'Poppins',sans-serif;font-size:52px;line-height:1.05;
+  margin:0 0 16px;font-weight:900;max-width:760px;letter-spacing:-.015em;
+}
+.hub-hero h1 em{color:var(--tfs-orange);font-style:normal}
+.hub-hero p{font-size:17px;color:#B8C5DA;max-width:640px;margin:0;line-height:1.65}
+.hub-buybox-summary{
+  margin-top:36px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;padding:18px 24px;display:flex;gap:24px;align-items:center;
+  flex-wrap:wrap;backdrop-filter:blur(10px);
+}
+.hub-buybox-summary .label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7A8AA3;font-weight:700;margin-bottom:2px}
+.hub-buybox-summary .value{font-size:14px;color:#fff;font-weight:600}
+.hub-buybox-summary .divider{width:1px;background:rgba(255,255,255,.12);align-self:stretch}
+
+.hub-grid-section{padding:60px 0 30px}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;flex-wrap:wrap;gap:14px}
+.section-head h2{font-family:'Poppins',sans-serif;font-size:32px;margin:6px 0 0;font-weight:800;color:var(--tfs-navy);letter-spacing:-.01em}
+.calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.calc-card{
+  background:#fff;border:1px solid var(--tfs-line);
+  border-radius:14px;padding:30px 28px;
+  cursor:pointer;transition:all .2s ease;
+  display:flex;flex-direction:column;gap:10px;
+  position:relative;overflow:hidden;
+}
+.calc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--tfs-navy)}
+.calc-card.featured{
+  background:linear-gradient(135deg,var(--tfs-navy) 0%,#162B4E 100%);
+  color:#fff;border-color:var(--tfs-navy);grid-column:span 3;
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:30px;
+  padding:42px 40px;
+}
+.calc-card.featured h3{color:#fff;font-size:32px;margin-bottom:6px;font-weight:900;letter-spacing:-.01em}
+.calc-card.featured .calc-tag{color:var(--tfs-orange)}
+.calc-card.featured p{color:#B8C5DA;font-size:15px;max-width:580px;line-height:1.6}
+.calc-card.featured .calc-icon{
+  background:var(--tfs-orange);color:#fff;
+  width:96px;height:96px;border-radius:24px;
+  font-size:42px;
+}
+.calc-icon{
+  width:52px;height:52px;border-radius:12px;
+  background:#FFF6E8;color:var(--tfs-orange-deep);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:22px;margin-bottom:8px;
+}
+.calc-tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tfs-orange-deep);font-weight:700}
+.calc-card h3{font-family:'Poppins',sans-serif;font-size:22px;margin:0;font-weight:800;color:var(--tfs-navy);letter-spacing:-.005em}
+.calc-card p{margin:0;color:var(--tfs-muted);font-size:14px;line-height:1.6}
+.calc-cta{margin-top:auto;padding-top:14px;color:var(--tfs-navy);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px}
+.calc-card.featured .calc-cta{color:var(--tfs-orange)}
+
+/* ===========================================================
+   CALCULATOR VIEW
+   =========================================================== */
+.calc-view{padding:50px 0 60px}
+.calc-back{display:inline-flex;align-items:center;gap:6px;color:var(--tfs-muted);font-size:14px;font-weight:500;margin-bottom:20px;cursor:pointer}
+.calc-back:hover{color:var(--tfs-navy);opacity:1}
+.calc-header{margin-bottom:28px}
+.calc-header h1{font-family:'Poppins',sans-serif;font-size:36px;margin:8px 0 8px;font-weight:900;color:var(--tfs-navy);letter-spacing:-.015em}
+.calc-header p{color:var(--tfs-muted);margin:0;font-size:15px;line-height:1.6}
+
+.calc-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;align-items:start}
+.calc-pane{
+  background:#fff;border:1px solid var(--tfs-line);
+  border-radius:14px;padding:28px;box-shadow:var(--shadow-sm);
+}
+.pane-title{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tfs-orange-deep);font-weight:700;margin:0 0 16px;
+}
+.pane-title:not(:first-child){margin-top:24px;padding-top:18px;border-top:1px solid var(--tfs-line)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--tfs-cream);padding:6px;border-radius:10px;margin-bottom:22px;flex-wrap:wrap;border:1px solid var(--tfs-line)}
+.tab{
+  padding:10px 18px;font-size:13px;font-weight:600;color:var(--tfs-muted);
+  border-radius:7px;cursor:pointer;flex:1 1 auto;text-align:center;white-space:nowrap;
+  transition:all .15s;
+}
+.tab:hover{color:var(--tfs-navy)}
+.tab.active{background:var(--tfs-navy);color:#fff;font-weight:700;box-shadow:var(--shadow-sm)}
+
+/* Results / KPIs */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.kpi{
+  background:var(--tfs-cream);border:1px solid var(--tfs-line);
+  border-radius:10px;padding:18px 20px;
+}
+.kpi.hero{
+  background:linear-gradient(135deg,var(--tfs-navy) 0%,#162B4E 100%);
+  color:#fff;border-color:var(--tfs-navy);grid-column:span 2;
+}
+.kpi.hero .kpi-label{color:rgba(255,255,255,.7)}
+.kpi.hero .kpi-value{font-size:38px;color:var(--tfs-orange)}
+.kpi.hero .kpi-sub{color:#A8B5C7}
+.kpi-label{
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tfs-muted);font-weight:700;margin-bottom:6px;
+}
+.kpi-value{font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:var(--tfs-navy);letter-spacing:-.01em}
+.kpi-sub{font-size:12px;color:var(--tfs-muted);margin-top:4px;font-weight:500}
+.kpi.good .kpi-value{color:var(--tfs-success)}
+.kpi.warn .kpi-value{color:var(--tfs-warn)}
+.kpi.bad .kpi-value{color:var(--tfs-danger)}
+.recommendation{
+  margin-top:14px;padding:18px 20px;border-radius:10px;
+  border-left:4px solid var(--tfs-orange);background:#FFF6E8;font-size:14px;line-height:1.6;
+}
+.recommendation.green{border-left-color:var(--tfs-success);background:#EEF7F1}
+.recommendation.yellow{border-left-color:var(--tfs-warn);background:#FFF6E8}
+.recommendation.red{border-left-color:var(--tfs-danger);background:#FCEBE6}
+.recommendation strong{display:block;margin-bottom:6px;color:var(--tfs-navy);font-size:13px;letter-spacing:.04em;text-transform:uppercase;font-weight:800}
+
+/* Pro forma table */
+.proforma{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.proforma th,.proforma td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--tfs-line)}
+.proforma th:first-child,.proforma td:first-child{text-align:left;font-weight:600}
+.proforma th{background:var(--tfs-cream);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tfs-muted);font-weight:700}
+.proforma .total-row{font-weight:700;background:var(--tfs-cream);color:var(--tfs-navy)}
+.proforma .pf-section{font-weight:700;color:var(--tfs-navy);background:#FFF6E8}
+
+.action-row{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
+
+/* Save toast */
+.save-toast{
+  position:fixed;bottom:24px;right:24px;z-index:200;
+  background:var(--tfs-navy);color:#fff;padding:14px 22px;border-radius:8px;
+  font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);
+  transform:translateY(140%);transition:transform .25s ease;
+}
+.save-toast.show{transform:translateY(0)}
+
+/* Responsive */
+@media (max-width:980px){
+  .gate-card{grid-template-columns:1fr}
+  .gate-pitch{padding:38px 28px}
+  .gate-form{padding:38px 28px}
+  .calc-grid{grid-template-columns:1fr 1fr}
+  .calc-card.featured{grid-column:span 2;grid-template-columns:1fr;text-align:left}
+  .calc-layout{grid-template-columns:1fr}
+  .tfs-nav{display:none}
+}
+@media (max-width:640px){
+  .hub-hero h1{font-size:36px}
+  .calc-header h1{font-size:28px}
+  .calc-grid{grid-template-columns:1fr}
+  .calc-card.featured{grid-column:span 1;padding:30px 24px}
+  .calc-card.featured h3{font-size:24px}
+  .field-row,.field-row-3{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr}
+  .kpi.hero{grid-column:span 1}
+  .checkbox-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- =====================================================
+     GATE — Email + Buy Box (lead capture)
+     ===================================================== -->
+<div id="gate" class="gate-overlay">
+  <div class="gate-card">
+    <aside class="gate-pitch">
+      <div>
+        <div class="gate-logo">
+          <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="filter:brightness(0) invert(1)">
+        </div>
+        <div class="eyebrow">Investor Tools</div>
+        <h1>Underwrite a deal in <em>five minutes.</em></h1>
+        <p class="lead">The same calculators our team uses to price every Terms For Sale offering &mdash; cap rate, DSCR, IRR, seller-finance, and a full multi-year deal analyzer. Free for vetted buyers.</p>
+      </div>
+      <div class="gate-features">
+        <div class="gate-feature"><div class="gate-feature-dot">1</div><div><strong>Full Deal Analyzer</strong><span>NNN, multifamily, retail, industrial, office &amp; sale-leaseback &mdash; with multi-year IRR.</span></div></div>
+        <div class="gate-feature"><div class="gate-feature-dot">2</div><div><strong>Seller-Finance &amp; Sub-To Math</strong><span>Wrap, sub-to, and seller carry analyzer. Most calculator tools don't have this.</span></div></div>
+        <div class="gate-feature"><div class="gate-feature-dot">3</div><div><strong>Save Any Analysis</strong><span>One click to save a deal to your account. We'll match it against incoming offerings.</span></div></div>
+      </div>
+    </aside>
+    <main class="gate-form">
+      <h2>Unlock the Investor Tools</h2>
+      <p class="lede">Free for Terms For Sale buyers. Takes 30 seconds.</p>
+
+      <form id="gateForm" autocomplete="on" novalidate>
+        <div class="field-row">
+          <div class="field"><label>First name *</label><input name="firstName" required></div>
+          <div class="field"><label>Last name *</label><input name="lastName" required></div>
+        </div>
+        <div class="field"><label>Email *</label><input name="email" type="email" required></div>
+        <div class="field"><label>Phone *</label><input name="phone" type="tel" required></div>
+        <div class="field"><label>Company / Entity (optional)</label><input name="company"></div>
+
+        <div style="background:#FFF6E8;border:1px solid #F4DBA6;border-radius:8px;padding:14px 16px;margin-top:16px;font-size:13px;color:var(--tfs-navy);line-height:1.55">
+          <strong style="display:block;margin-bottom:4px;font-weight:700">Already submitted your buy box?</strong>
+          You're set &mdash; matching deals will alert you automatically. Haven't yet? <a href="https://termsforsale.com/buying-criteria" style="color:var(--tfs-orange-deep);font-weight:600;text-decoration:underline">Set up deal alerts &rarr;</a>
+        </div>
+
+        <div id="gateError" class="gate-error">Please complete the required fields.</div>
+
+        <div class="gate-cta">
+          <button type="submit" class="btn btn-primary btn-lg">Unlock the Investor Tools &rarr;</button>
+          <p class="gate-fineprint">By submitting, you agree to receive occasional emails about new tools and matching deals. Reply STOP to opt out. We never sell your info.</p>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<!-- =====================================================
+     APP SHELL (hidden until gate is passed)
+     ===================================================== -->
+<div id="app" class="hidden">
+
+<!-- ============== Site header ============== -->
+<header class="tfs-header">
+  <div class="container tfs-header-inner">
+    <a class="tfs-logo" href="https://termsforsale.com/">
+      <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="filter:brightness(0) invert(1)">
+    </a>
+    <nav class="tfs-nav">
+      <a href="https://termsforsale.com/deals">Browse Deals</a>
+      <a href="https://dispobuddy.com">Sell Your Deal</a>
+      <a href="https://termsforsale.com/buying-criteria">Get Deal Alerts</a>
+      <a href="https://termsforsale.com/commercial">Commercial</a>
+      <a href="#" class="active">Tools</a>
+      <a href="https://termsforsale.com/blog/">Learn</a>
+    </nav>
+    <div class="tfs-header-cta">
+      <a href="https://termsforsale.com/buy-box.html" class="btn btn-primary btn-sm">My Buy Box</a>
+      <div class="tfs-avatar" id="userAvatar" title="Account">··</div>
+    </div>
+  </div>
+</header>
+
+<!-- ============== HUB ============== -->
+<section id="view-hub">
+  <div class="hub-hero">
+    <div class="container hub-hero-inner">
+      <span class="pill">Investor Tools</span>
+      <h1>Run the numbers <em>like we do.</em></h1>
+      <p>Six free calculators built for active commercial &amp; creative-finance buyers. Save any analysis to your account &mdash; we'll match it against live offerings that fit.</p>
+      <div class="hub-buybox-summary" id="buyboxSummary"></div>
+    </div>
+  </div>
+
+  <div class="hub-grid-section container">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Calculators</div>
+        <h2>Pick a tool</h2>
+      </div>
+      <a href="https://termsforsale.com/buying-criteria" class="btn btn-ghost btn-sm">Manage deal alerts &rarr;</a>
+    </div>
+
+    <div class="calc-grid">
+      <div class="calc-card featured" onclick="showView('analyzer')">
+        <div>
+          <div class="calc-tag">Flagship</div>
+          <h3>Full Deal Analyzer</h3>
+          <p>Multi-year underwriting for NNN, multifamily, retail, office, industrial, and sale-leasebacks. Levered IRR, equity multiple, cash-on-cash, DSCR, exit value &mdash; with a GREEN / YELLOW / RED recommendation.</p>
+          <div class="calc-cta">Open analyzer &rarr;</div>
+        </div>
+        <div class="calc-icon">&#9646;&#9646;</div>
+      </div>
+
+      <div class="calc-card" onclick="showView('caprate')">
+        <div class="calc-icon">%</div>
+        <div class="calc-tag">Quick</div>
+        <h3>Cap Rate &amp; NOI</h3>
+        <p>Solve for cap rate, NOI, or value when you have any two of the three.</p>
+        <div class="calc-cta">Open &rarr;</div>
+      </div>
+
+      <div class="calc-card" onclick="showView('dscr')">
+        <div class="calc-icon">&#8650;</div>
+        <div class="calc-tag">Lender View</div>
+        <h3>DSCR Calculator</h3>
+        <p>Find the debt service coverage ratio your lender will see. Test rates, terms, and amortization.</p>
+        <div class="calc-cta">Open &rarr;</div>
+      </div>
+
+      <div class="calc-card" onclick="showView('coc')">
+        <div class="calc-icon">&#36;</div>
+        <div class="calc-tag">Returns</div>
+        <h3>Cash-on-Cash + IRR</h3>
+        <p>Year-one CoC and a 5- or 10-year IRR projection with appreciation and rent growth.</p>
+        <div class="calc-cta">Open &rarr;</div>
+      </div>
+
+      <div class="calc-card" onclick="showView('mortgage')">
+        <div class="calc-icon">&#8801;</div>
+        <div class="calc-tag">Debt</div>
+        <h3>Mortgage / Amortization</h3>
+        <p>Monthly P&amp;I, full amortization schedule, and interest-only support.</p>
+        <div class="calc-cta">Open &rarr;</div>
+      </div>
+
+      <div class="calc-card" onclick="showView('seller')">
+        <div class="calc-icon">&#8634;</div>
+        <div class="calc-tag">Creative Finance</div>
+        <h3>Seller Finance / Sub-To</h3>
+        <p>Wrap, sub-to, and seller-carry math. Spread, monthly cash flow, and yield to seller.</p>
+        <div class="calc-cta">Open &rarr;</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== Calculator views ============== -->
+
+<!-- DEAL ANALYZER -->
+<section id="view-analyzer" class="calc-view hidden">
+  <div class="container">
+    <span class="calc-back" onclick="showView('hub')">&larr; Back to all tools</span>
+    <div class="calc-header">
+      <div class="eyebrow">Flagship</div>
+      <h1>Full Deal Analyzer</h1>
+      <p>Multi-year underwriting with levered &amp; unlevered returns, exit value, and a GREEN/YELLOW/RED call.</p>
+    </div>
+
+    <div class="tabs" id="analyzerTabs">
+      <div class="tab active" data-asset="NNN">Single-Tenant NNN</div>
+      <div class="tab" data-asset="Multifamily">Multifamily</div>
+      <div class="tab" data-asset="Retail">Retail</div>
+      <div class="tab" data-asset="Office">Office</div>
+      <div class="tab" data-asset="Industrial">Industrial</div>
+      <div class="tab" data-asset="SLB">Sale-Leaseback</div>
+    </div>
+
+    <div class="calc-layout">
+      <div class="calc-pane">
+        <div class="pane-title">Property &amp; Income</div>
+        <div class="field-row">
+          <div class="field"><label>Purchase price</label>
+            <div class="input-prefix"><span>$</span><input id="an_price" type="text" inputmode="numeric" value="2,500,000"></div></div>
+          <div class="field"><label>Closing costs</label>
+            <div class="input-suffix"><input id="an_closing" type="text" inputmode="decimal" value="2.0"><span>%</span></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Year 1 gross income</label>
+            <div class="input-prefix"><span>$</span><input id="an_gross" type="text" inputmode="numeric" value="240,000"></div></div>
+          <div class="field"><label>Vacancy / credit loss</label>
+            <div class="input-suffix"><input id="an_vacancy" type="text" inputmode="decimal" value="5"><span>%</span></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Operating expenses</label>
+            <div class="input-prefix"><span>$</span><input id="an_opex" type="text" inputmode="numeric" value="48,000"></div></div>
+          <div class="field"><label>Reserves / CapEx</label>
+            <div class="input-prefix"><span>$</span><input id="an_reserves" type="text" inputmode="numeric" value="6,000"></div></div>
+        </div>
+
+        <div class="pane-title">Growth &amp; Hold</div>
+        <div class="field-row-3">
+          <div class="field"><label>Income growth /yr</label>
+            <div class="input-suffix"><input id="an_incgrowth" type="text" inputmode="decimal" value="3.0"><span>%</span></div></div>
+          <div class="field"><label>Expense growth /yr</label>
+            <div class="input-suffix"><input id="an_expgrowth" type="text" inputmode="decimal" value="2.5"><span>%</span></div></div>
+          <div class="field"><label>Hold period</label>
+            <div class="input-suffix"><input id="an_hold" type="text" inputmode="numeric" value="5"><span>yrs</span></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Exit cap rate</label>
+            <div class="input-suffix"><input id="an_exitcap" type="text" inputmode="decimal" value="7.0"><span>%</span></div></div>
+          <div class="field"><label>Sale costs</label>
+            <div class="input-suffix"><input id="an_salecost" type="text" inputmode="decimal" value="3.0"><span>%</span></div></div>
+        </div>
+
+        <div class="pane-title">Financing</div>
+        <div class="field-row-3">
+          <div class="field"><label>LTV</label>
+            <div class="input-suffix"><input id="an_ltv" type="text" inputmode="decimal" value="70"><span>%</span></div></div>
+          <div class="field"><label>Interest rate</label>
+            <div class="input-suffix"><input id="an_rate" type="text" inputmode="decimal" value="7.25"><span>%</span></div></div>
+          <div class="field"><label>Amortization</label>
+            <div class="input-suffix"><input id="an_amort" type="text" inputmode="numeric" value="25"><span>yrs</span></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Interest-only period</label>
+            <div class="input-suffix"><input id="an_io" type="text" inputmode="numeric" value="0"><span>yrs</span></div></div>
+          <div class="field"><label>Loan fees</label>
+            <div class="input-suffix"><input id="an_loanfee" type="text" inputmode="decimal" value="1.0"><span>%</span></div></div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="runAnalyzer()">Run Analysis</button>
+          <button class="btn btn-ghost" onclick="saveDeal('analyzer')">Save deal &amp; alert me to matches</button>
+        </div>
+      </div>
+
+      <div class="calc-pane">
+        <div class="pane-title">Results</div>
+        <div id="analyzer_results">
+          <div class="kpi-grid">
+            <div class="kpi hero"><div class="kpi-label">Levered IRR (5yr)</div><div class="kpi-value" id="kpi_irr">&mdash;</div><div class="kpi-sub" id="kpi_em">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Going-in cap</div><div class="kpi-value" id="kpi_going">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Year-1 cash-on-cash</div><div class="kpi-value" id="kpi_coc">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Year-1 DSCR</div><div class="kpi-value" id="kpi_dscr">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Total equity in</div><div class="kpi-value" id="kpi_equity">&mdash;</div></div>
+          </div>
+          <div id="recommendation" class="recommendation" style="display:none"></div>
+        </div>
+
+        <div class="pane-title">Pro Forma (cash flow)</div>
+        <div style="overflow-x:auto"><table class="proforma" id="proforma_table"></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAP RATE / NOI -->
+<section id="view-caprate" class="calc-view hidden">
+  <div class="container container-narrow">
+    <span class="calc-back" onclick="showView('hub')">&larr; Back to all tools</span>
+    <div class="calc-header">
+      <div class="eyebrow">Quick</div>
+      <h1>Cap Rate &amp; NOI</h1>
+      <p>Enter any two values &mdash; we'll calculate the third.</p>
+    </div>
+    <div class="calc-layout">
+      <div class="calc-pane">
+        <div class="pane-title">Inputs</div>
+        <div class="field"><label>Purchase price</label>
+          <div class="input-prefix"><span>$</span><input id="cr_price" type="text" inputmode="numeric" placeholder="1,000,000" oninput="runCapRate()"></div></div>
+        <div class="field"><label>Net operating income (annual)</label>
+          <div class="input-prefix"><span>$</span><input id="cr_noi" type="text" inputmode="numeric" placeholder="75,000" oninput="runCapRate()"></div></div>
+        <div class="field"><label>Cap rate</label>
+          <div class="input-suffix"><input id="cr_cap" type="text" inputmode="decimal" placeholder="7.5" oninput="runCapRate()"><span>%</span></div></div>
+        <p style="font-size:13px;color:var(--tfs-muted);margin-top:0">Leave one field blank &mdash; we solve for it. Cap = NOI &divide; Price.</p>
+        <div class="action-row">
+          <button class="btn btn-ghost btn-sm" onclick="resetCapRate()">Clear</button>
+          <button class="btn btn-primary" onclick="saveDeal('caprate')">Save analysis</button>
+        </div>
+      </div>
+      <div class="calc-pane">
+        <div class="pane-title">Result</div>
+        <div class="kpi-grid">
+          <div class="kpi hero"><div class="kpi-label" id="cr_label">Solve a value</div><div class="kpi-value" id="cr_result">&mdash;</div></div>
+        </div>
+        <div id="cr_explainer" style="font-size:14px;color:var(--tfs-muted);line-height:1.6;margin-top:14px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DSCR -->
+<section id="view-dscr" class="calc-view hidden">
+  <div class="container container-narrow">
+    <span class="calc-back" onclick="showView('hub')">&larr; Back to all tools</span>
+    <div class="calc-header">
+      <div class="eyebrow">Lender View</div>
+      <h1>DSCR Calculator</h1>
+      <p>Most lenders want 1.20&ndash;1.30+. We'll show you exactly where your deal lands.</p>
+    </div>
+    <div class="calc-layout">
+      <div class="calc-pane">
+        <div class="pane-title">Inputs</div>
+        <div class="field"><label>Net operating income (annual)</label>
+          <div class="input-prefix"><span>$</span><input id="ds_noi" type="text" inputmode="numeric" value="120,000" oninput="runDSCR()"></div></div>
+        <div class="field"><label>Loan amount</label>
+          <div class="input-prefix"><span>$</span><input id="ds_loan" type="text" inputmode="numeric" value="1,400,000" oninput="runDSCR()"></div></div>
+        <div class="field-row">
+          <div class="field"><label>Interest rate</label>
+            <div class="input-suffix"><input id="ds_rate" type="text" inputmode="decimal" value="7.25" oninput="runDSCR()"><span>%</span></div></div>
+          <div class="field"><label>Amortization</label>
+            <div class="input-suffix"><input id="ds_amort" type="text" inputmode="numeric" value="25" oninput="runDSCR()"><span>yrs</span></div></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="saveDeal('dscr')">Save analysis</button>
+        </div>
+      </div>
+      <div class="calc-pane">
+        <div class="pane-title">Result</div>
+        <div class="kpi-grid">
+          <div class="kpi hero"><div class="kpi-label">DSCR</div><div class="kpi-value" id="ds_value">&mdash;</div><div class="kpi-sub" id="ds_status">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Monthly P&amp;I</div><div class="kpi-value" id="ds_mo">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Annual debt service</div><div class="kpi-value" id="ds_ads">&mdash;</div></div>
+        </div>
+        <div id="ds_recommendation" class="recommendation" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASH-ON-CASH + IRR -->
+<section id="view-coc" class="calc-view hidden">
+  <div class="container container-narrow">
+    <span class="calc-back" onclick="showView('hub')">&larr; Back to all tools</span>
+    <div class="calc-header">
+      <div class="eyebrow">Returns</div>
+      <h1>Cash-on-Cash + IRR</h1>
+      <p>Quick year-one CoC plus a multi-year IRR projection.</p>
+    </div>
+    <div class="calc-layout">
+      <div class="calc-pane">
+        <div class="pane-title">Inputs</div>
+        <div class="field-row">
+          <div class="field"><label>Total cash invested</label>
+            <div class="input-prefix"><span>$</span><input id="coc_equity" type="text" inputmode="numeric" value="500,000" oninput="runCoC()"></div></div>
+          <div class="field"><label>Year 1 cash flow</label>
+            <div class="input-prefix"><span>$</span><input id="coc_cf" type="text" inputmode="numeric" value="42,000" oninput="runCoC()"></div></div>
+        </div>
+        <div class="field-row-3">
+          <div class="field"><label>Cash flow growth /yr</label>
+            <div class="input-suffix"><input id="coc_growth" type="text" inputmode="decimal" value="3.0" oninput="runCoC()"><span>%</span></div></div>
+          <div class="field"><label>Hold period</label>
+            <div class="input-suffix"><input id="coc_hold" type="text" inputmode="numeric" value="5" oninput="runCoC()"><span>yrs</span></div></div>
+          <div class="field"><label>Sale proceeds (yr N)</label>
+            <div class="input-prefix"><span>$</span><input id="coc_sale" type="text" inputmode="numeric" value="650,000" oninput="runCoC()"></div></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="saveDeal('coc')">Save analysis</button>
+        </div>
+      </div>
+      <div class="calc-pane">
+        <div class="pane-title">Result</div>
+        <div class="kpi-grid">
+          <div class="kpi hero"><div class="kpi-label">Levered IRR</div><div class="kpi-value" id="coc_irr">&mdash;</div><div class="kpi-sub" id="coc_em">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Year-1 CoC</div><div class="kpi-value" id="coc_y1">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Average CoC</div><div class="kpi-value" id="coc_avg">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Total profit</div><div class="kpi-value" id="coc_profit">&mdash;</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MORTGAGE -->
+<section id="view-mortgage" class="calc-view hidden">
+  <div class="container container-narrow">
+    <span class="calc-back" onclick="showView('hub')">&larr; Back to all tools</span>
+    <div class="calc-header">
+      <div class="eyebrow">Debt</div>
+      <h1>Mortgage / Amortization</h1>
+      <p>Monthly payment, full schedule, and interest-only support.</p>
+    </div>
+    <div class="calc-layout">
+      <div class="calc-pane">
+        <div class="pane-title">Inputs</div>
+        <div class="field"><label>Loan amount</label>
+          <div class="input-prefix"><span>$</span><input id="mt_loan" type="text" inputmode="numeric" value="1,000,000" oninput="runMortgage()"></div></div>
+        <div class="field-row">
+          <div class="field"><label>Interest rate</label>
+            <div class="input-suffix"><input id="mt_rate" type="text" inputmode="decimal" value="7.25" oninput="runMortgage()"><span>%</span></div></div>
+          <div class="field"><label>Term (amortization)</label>
+            <div class="input-suffix"><input id="mt_term" type="text" inputmode="numeric" value="25" oninput="runMortgage()"><span>yrs</span></div></div>
+        </div>
+        <div class="field"><label>Interest-only period</label>
+          <div class="input-suffix"><input id="mt_io" type="text" inputmode="numeric" value="0" oninput="runMortgage()"><span>yrs</span></div></div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="saveDeal('mortgage')">Save analysis</button>
+        </div>
+      </div>
+      <div class="calc-pane">
+        <div class="pane-title">Result</div>
+        <div class="kpi-grid">
+          <div class="kpi hero"><div class="kpi-label">Monthly payment</div><div class="kpi-value" id="mt_pmt">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Total interest</div><div class="kpi-value" id="mt_totalint">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Total paid</div><div class="kpi-value" id="mt_totalpaid">&mdash;</div></div>
+        </div>
+        <div class="pane-title">First 5 years (annual summary)</div>
+        <div style="overflow-x:auto;max-height:300px"><table class="proforma" id="mt_schedule"></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SELLER FINANCE / SUB-TO -->
+<section id="view-seller" class="calc-view hidden">
+  <div class="container">
+    <span class="calc-back" onclick="showView('hub')">&larr; Back to all tools</span>
+    <div class="calc-header">
+      <div class="eyebrow">Creative Finance</div>
+      <h1>Seller Finance / Sub-To Analyzer</h1>
+      <p>Wrap, sub-to, and seller carry math &mdash; built for the way Terms For Sale buyers actually structure deals.</p>
+    </div>
+    <div class="calc-layout">
+      <div class="calc-pane">
+        <div class="pane-title">Existing Loan (taken sub-to or wrapped)</div>
+        <div class="field-row">
+          <div class="field"><label>Existing balance</label>
+            <div class="input-prefix"><span>$</span><input id="sf_exbal" type="text" inputmode="numeric" value="650,000" oninput="runSeller()"></div></div>
+          <div class="field"><label>Existing rate</label>
+            <div class="input-suffix"><input id="sf_exrate" type="text" inputmode="decimal" value="3.5" oninput="runSeller()"><span>%</span></div></div>
+        </div>
+        <div class="field"><label>Existing remaining term</label>
+          <div class="input-suffix"><input id="sf_exterm" type="text" inputmode="numeric" value="22" oninput="runSeller()"><span>yrs</span></div></div>
+
+        <div class="pane-title">Buyer's Wrap / New Note</div>
+        <div class="field-row">
+          <div class="field"><label>Sale price</label>
+            <div class="input-prefix"><span>$</span><input id="sf_price" type="text" inputmode="numeric" value="850,000" oninput="runSeller()"></div></div>
+          <div class="field"><label>Buyer down</label>
+            <div class="input-prefix"><span>$</span><input id="sf_down" type="text" inputmode="numeric" value="50,000" oninput="runSeller()"></div></div>
+        </div>
+        <div class="field-row-3">
+          <div class="field"><label>Seller carry rate</label>
+            <div class="input-suffix"><input id="sf_carryrate" type="text" inputmode="decimal" value="7.0" oninput="runSeller()"><span>%</span></div></div>
+          <div class="field"><label>Carry term</label>
+            <div class="input-suffix"><input id="sf_carryterm" type="text" inputmode="numeric" value="30" oninput="runSeller()"><span>yrs</span></div></div>
+          <div class="field"><label>Balloon</label>
+            <div class="input-suffix"><input id="sf_balloon" type="text" inputmode="numeric" value="7" oninput="runSeller()"><span>yrs</span></div></div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="saveDeal('seller')">Save analysis</button>
+        </div>
+      </div>
+      <div class="calc-pane">
+        <div class="pane-title">Result</div>
+        <div class="kpi-grid">
+          <div class="kpi hero"><div class="kpi-label">Monthly cash flow to seller</div><div class="kpi-value" id="sf_spread">&mdash;</div><div class="kpi-sub" id="sf_spread_sub">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Buyer total wrap balance</div><div class="kpi-value" id="sf_wrapbal">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Buyer monthly P&amp;I</div><div class="kpi-value" id="sf_buyerpi">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Existing monthly P&amp;I</div><div class="kpi-value" id="sf_expi">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Balloon to seller (yr N)</div><div class="kpi-value" id="sf_balloondue">&mdash;</div></div>
+          <div class="kpi"><div class="kpi-label">Seller cash at close</div><div class="kpi-value" id="sf_cashclose">&mdash;</div></div>
+        </div>
+        <div id="sf_warn" class="recommendation" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== Site footer ============== -->
+<footer class="tfs-footer">
+  <div class="container">
+    <div class="tfs-footer-grid">
+      <div class="tfs-footer-brand">
+        <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="filter:brightness(0) invert(1)">
+        <p>Off-market real estate deals with creative finance terms. Subject-to, seller finance, and cash deals you can actually close.</p>
+        <div class="tfs-footer-newsletter">
+          <input type="email" placeholder="Enter your email">
+          <button>Subscribe</button>
+        </div>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="https://termsforsale.com/">About Us</a></li>
+          <li><a href="https://termsforsale.com/deals">Active Deals</a></li>
+          <li><a href="https://termsforsale.com/commercial">Commercial</a></li>
+          <li><a href="https://calendar.app.google/DXJoTQwDpGhCjicu6">Book a Call</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:info@termsforsale.com">info@termsforsale.com</a></li>
+          <li><a href="tel:4806373117">(480) 637-3117</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Social</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/termsforsale">Instagram</a></li>
+          <li><a href="https://www.facebook.com/termsforsale">Facebook</a></li>
+          <li><a href="https://x.com/termsforsale">X / Twitter</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="tfs-footer-bottom">
+      <span>&copy; 2025 Deal Pros LLC. All Rights Reserved. &middot; Investor Tools are for informational use only. Not investment, legal, or tax advice.</span>
+      <span>
+        <a href="https://termsforsale.com/privacy">Privacy</a>
+        <a href="https://termsforsale.com/terms">Terms</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /#app -->
+
+<div id="saveToast" class="save-toast">&#10003; Saved &mdash; we'll match this against incoming deals.</div>
+
+<script>
+/* =========================================================
+   CONFIG
+   ========================================================= */
+// >>> PASTE YOUR GHL INBOUND WEBHOOK URL HERE <<<
+// In GoHighLevel: Workflows -> Triggers -> Inbound Webhook. Copy the URL it gives you.
+const GHL_WEBHOOK_URL = "REPLACE_WITH_GHL_INBOUND_WEBHOOK_URL";
+
+/* =========================================================
+   FORMATTING / PARSING HELPERS
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const fmtUSD = n => isFinite(n) ? "$" + Math.round(n).toLocaleString() : "—";
+const fmtUSDc = n => isFinite(n) ? "$" + n.toLocaleString(undefined,{maximumFractionDigits:0}) : "—";
+const fmtPct = n => isFinite(n) ? (n*100).toFixed(2) + "%" : "—";
+const fmtPctRaw = n => isFinite(n) ? n.toFixed(2) + "%" : "—";
+const fmtX = n => isFinite(n) ? n.toFixed(2) + "x" : "—";
+function num(v){
+  if(v===null||v===undefined) return 0;
+  const s = String(v).replace(/[^0-9.\-]/g,"");
+  const n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+function fmtCommas(input){
+  if(input.dataset.fmt==="off") return;
+  let v = input.value.replace(/[^0-9.]/g,"");
+  if(!v) { input.value = ""; return; }
+  const parts = v.split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  input.value = parts.join(".");
+}
+document.querySelectorAll('.input-prefix input').forEach(i=>{
+  i.addEventListener('input',()=>fmtCommas(i));
+});
+
+/* =========================================================
+   GATE
+   ========================================================= */
+const STORAGE_KEY = "tfs_lead_v1";
+function loadLead(){ try{return JSON.parse(sessionStorage.getItem(STORAGE_KEY)||"null")}catch(e){return null} }
+function saveLead(lead){ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(lead)); }
+function clearLead(){ sessionStorage.removeItem(STORAGE_KEY); }
+
+function resetGate(){
+  clearLead();
+  $("app").classList.add("hidden");
+  $("gate").classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+
+document.getElementById('gateForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const f = e.target;
+  const fd = new FormData(f);
+
+  const required = ["firstName","lastName","email","phone"];
+  const missing = required.filter(k=>!fd.get(k));
+  if(missing.length){
+    $("gateError").textContent = "Please complete the required fields.";
+    $("gateError").classList.add("show");
+    return;
+  }
+  $("gateError").classList.remove("show");
+
+  const lead = {
+    firstName: fd.get("firstName"),
+    lastName: fd.get("lastName"),
+    email: fd.get("email"),
+    phone: fd.get("phone"),
+    company: fd.get("company") || "",
+    source: "Investor Tools Hub",
+    submittedAt: new Date().toISOString()
+  };
+
+  saveLead(lead);
+  postToGHL({ event:"tools_signup", ...lead });
+
+  $("gate").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  hydrateHub(lead);
+  runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller();
+  window.scrollTo(0,0);
+});
+
+function hydrateHub(lead){
+  const initials = ((lead.firstName||"").charAt(0) + (lead.lastName||"").charAt(0)).toUpperCase();
+  $("userAvatar").textContent = initials || "··";
+  $("userAvatar").title = lead.firstName + " " + lead.lastName + " — click to log out";
+  $("userAvatar").onclick = resetGate;
+  $("buyboxSummary").innerHTML = `
+    <div><div class="label">Signed in as</div><div class="value">${lead.firstName} ${lead.lastName}</div></div>
+    <div class="divider"></div>
+    <div><div class="label">Email</div><div class="value">${lead.email}</div></div>
+    <div class="divider"></div>
+    <div style="flex:1;text-align:right">
+      <a href="https://termsforsale.com/buying-criteria" class="btn btn-primary btn-sm" style="display:inline-flex">Update buy box &rarr;</a>
+    </div>
+  `;
+}
+
+(function init(){
+  const lead = loadLead();
+  if(lead && lead.email){
+    $("gate").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    hydrateHub(lead);
+    runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller();
+  }
+})();
+
+/* =========================================================
+   GHL POST
+   ========================================================= */
+async function postToGHL(payload){
+  if(!GHL_WEBHOOK_URL || GHL_WEBHOOK_URL.indexOf("REPLACE")===0){
+    console.warn("[Terms For Sale] GHL webhook not configured. Payload:", payload);
+    return;
+  }
+  try{
+    await fetch(GHL_WEBHOOK_URL, {
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+  }catch(err){ console.error("GHL post failed:", err); }
+}
+
+function showSaveToast(msg){
+  const t = $("saveToast");
+  if(msg) t.textContent = "✓ " + msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2400);
+}
+
+/* =========================================================
+   VIEW ROUTING
+   ========================================================= */
+const VIEWS = ["hub","analyzer","caprate","dscr","coc","mortgage","seller"];
+function showView(name){
+  VIEWS.forEach(v => $("view-"+v).classList.add("hidden"));
+  $("view-"+name).classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* =========================================================
+   FINANCE PRIMITIVES
+   ========================================================= */
+function pmt(P, annualRate, years){
+  const r = annualRate/12, n = years*12;
+  if(r===0) return P/n;
+  return P * (r*Math.pow(1+r,n)) / (Math.pow(1+r,n)-1);
+}
+function remainingBalance(P, annualRate, totalMonths, monthsPaid){
+  const r = annualRate/12;
+  if(r===0) return P*(1 - monthsPaid/totalMonths);
+  const m = pmt(P, annualRate, totalMonths/12);
+  return P*Math.pow(1+r,monthsPaid) - m*((Math.pow(1+r,monthsPaid)-1)/r);
+}
+function irr(cashflows, guess=0.1){
+  const npv = (rate)=>{ let s=0; for(let t=0;t<cashflows.length;t++) s += cashflows[t]/Math.pow(1+rate,t); return s; };
+  let r = guess;
+  for(let i=0;i<80;i++){
+    const v = npv(r), dr = 1e-5;
+    const dv = (npv(r+dr)-v)/dr;
+    if(Math.abs(dv)<1e-12) break;
+    const nr = r - v/dv;
+    if(Math.abs(nr-r)<1e-7) return nr;
+    r = Math.max(-0.95, Math.min(10, nr));
+  }
+  let lo=-0.95, hi=10;
+  if(npv(lo)*npv(hi)>0) return r;
+  for(let i=0;i<200;i++){
+    const mid=(lo+hi)/2, v=npv(mid);
+    if(Math.abs(v)<1e-4) return mid;
+    if(npv(lo)*v<0) hi=mid; else lo=mid;
+  }
+  return (lo+hi)/2;
+}
+
+/* =========================================================
+   ANALYZER
+   ========================================================= */
+let analyzerAsset = "NNN";
+document.querySelectorAll('#analyzerTabs .tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('#analyzerTabs .tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    analyzerAsset = t.dataset.asset;
+    const presets = {
+      NNN:        {gross:240000, opex:12000, vac:0, exitcap:7.0, hold:5},
+      Multifamily:{gross:360000, opex:144000, vac:7, exitcap:6.5, hold:5},
+      Retail:     {gross:300000, opex:60000, vac:5, exitcap:7.5, hold:5},
+      Office:     {gross:340000, opex:120000, vac:10, exitcap:8.5, hold:5},
+      Industrial: {gross:280000, opex:35000, vac:3, exitcap:7.0, hold:7},
+      SLB:        {gross:220000, opex:0, vac:0, exitcap:7.25, hold:10}
+    };
+    const p = presets[analyzerAsset];
+    if(p){
+      $("an_gross").value = p.gross.toLocaleString();
+      $("an_opex").value = p.opex.toLocaleString();
+      $("an_vacancy").value = p.vac;
+      $("an_exitcap").value = p.exitcap;
+      $("an_hold").value = p.hold;
+      runAnalyzer();
+    }
+  });
+});
+
+function runAnalyzer(){
+  const price   = num($("an_price").value);
+  const close   = num($("an_closing").value)/100;
+  const gross   = num($("an_gross").value);
+  const vac     = num($("an_vacancy").value)/100;
+  const opex    = num($("an_opex").value);
+  const reserves= num($("an_reserves").value);
+  const incG    = num($("an_incgrowth").value)/100;
+  const expG    = num($("an_expgrowth").value)/100;
+  const hold    = Math.max(1, Math.round(num($("an_hold").value)));
+  const exitCap = num($("an_exitcap").value)/100;
+  const saleCost= num($("an_salecost").value)/100;
+  const ltv     = num($("an_ltv").value)/100;
+  const rate    = num($("an_rate").value)/100;
+  const amort   = Math.max(1, num($("an_amort").value));
+  const ioYears = Math.max(0, num($("an_io").value));
+  const loanFee = num($("an_loanfee").value)/100;
+
+  if(price<=0) return;
+
+  const closingCash = price*close;
+  const loanAmt = price*ltv;
+  const loanFeeCash = loanAmt*loanFee;
+  const downPmt = price - loanAmt;
+  const equityIn = downPmt + closingCash + loanFeeCash;
+
+  const monthlyPI = pmt(loanAmt, rate, amort);
+  const annualDS_full = monthlyPI*12;
+  const annualDS_io = loanAmt*rate;
+
+  const rows = [];
+  let saleProceeds = 0, exitNOI=0;
+  const cashflows = [-equityIn];
+  let firstYearCF = 0, sumCoC=0, firstYearDSCR=1, firstYearCap=0;
+
+  for(let y=1; y<=hold; y++){
+    const grossY = gross * Math.pow(1+incG, y-1);
+    const vacY   = grossY * vac;
+    const egiY   = grossY - vacY;
+    const opexY  = opex * Math.pow(1+expG, y-1);
+    const resY   = reserves * Math.pow(1+expG, y-1);
+    const noiY   = egiY - opexY - resY;
+    const ds     = (y<=ioYears) ? annualDS_io : annualDS_full;
+    const cfY    = noiY - ds;
+    const dscrY  = ds>0 ? noiY/ds : 99;
+
+    if(y===1){ firstYearCF = cfY; firstYearDSCR = dscrY; firstYearCap = noiY/price; }
+    sumCoC += equityIn>0 ? cfY/equityIn : 0;
+
+    let row = {y, gross:grossY, vac:vacY, egi:egiY, opex:opexY, reserves:resY, noi:noiY, ds, cf:cfY, dscr:dscrY};
+
+    if(y===hold){
+      const noiNext = (egiY*(1+incG)) - (opexY*(1+expG)) - (resY*(1+expG));
+      exitNOI = noiNext;
+      const grossSale = exitCap>0 ? noiNext/exitCap : 0;
+      const netSale = grossSale*(1-saleCost);
+      const monthsPaid = hold*12;
+      let loanBal = loanAmt;
+      if(monthsPaid<=ioYears*12){ loanBal = loanAmt; }
+      else {
+        const amortMonths = (amort*12);
+        const monthsAmortPaid = monthsPaid - ioYears*12;
+        loanBal = remainingBalance(loanAmt, rate, amortMonths, Math.min(monthsAmortPaid, amortMonths));
+      }
+      saleProceeds = netSale - loanBal;
+      row.cf += saleProceeds;
+    }
+    rows.push(row);
+    cashflows.push(rows[rows.length-1].cf);
+  }
+
+  const irrLev = irr(cashflows, 0.12);
+  const totalCF = cashflows.slice(1).reduce((a,b)=>a+b,0);
+  const equityMultiple = equityIn>0 ? totalCF/equityIn : 0;
+  const avgCoC = sumCoC/hold;
+
+  $("kpi_irr").textContent = fmtPct(irrLev);
+  $("kpi_em").textContent = fmtX(equityMultiple) + " equity multiple · avg CoC " + fmtPct(avgCoC);
+  $("kpi_going").textContent = fmtPct(firstYearCap);
+  $("kpi_coc").textContent = fmtPct(equityIn>0?firstYearCF/equityIn:0);
+  $("kpi_dscr").textContent = fmtX(firstYearDSCR);
+  $("kpi_equity").textContent = fmtUSD(equityIn);
+
+  const rec = $("recommendation");
+  rec.style.display = "block";
+  let level="green", title="GREEN — Strong fit", body="";
+  if(irrLev<0.08 || firstYearDSCR<1.20){ level="red"; title="RED — Below threshold"; }
+  else if(irrLev<0.14 || firstYearDSCR<1.30 || avgCoC<0.07){ level="yellow"; title="YELLOW — Marginal"; }
+  rec.className = "recommendation "+level;
+  body =
+    (level==="green" ? "Returns and coverage clear typical institutional thresholds. " :
+     level==="yellow"? "Returns are working but tight. Pressure-test rate, exit cap, and rent growth before locking. " :
+                       "This deal is below conservative thresholds. Re-trade price, increase down, or pass. ") +
+    `IRR ${fmtPct(irrLev)} · DSCR ${fmtX(firstYearDSCR)} · Avg CoC ${fmtPct(avgCoC)} · EM ${fmtX(equityMultiple)}.`;
+  rec.innerHTML = "<strong>"+title+"</strong>"+body;
+
+  let html = "<thead><tr><th>Year</th>";
+  for(let y=1;y<=hold;y++) html += "<th>Y"+y+"</th>";
+  html += "</tr></thead><tbody>";
+  const line = (label, accessor, fmt=fmtUSDc, cls="") => {
+    let r = `<tr class="${cls}"><td>${label}</td>`;
+    for(const row of rows) r += `<td>${fmt(accessor(row))}</td>`;
+    return r + "</tr>";
+  };
+  html += line("Gross income", r=>r.gross);
+  html += line("Vacancy", r=>-r.vac);
+  html += line("Effective income", r=>r.egi, fmtUSDc, "pf-section");
+  html += line("Operating expenses", r=>-r.opex);
+  html += line("Reserves", r=>-r.reserves);
+  html += line("NOI", r=>r.noi, fmtUSDc, "total-row");
+  html += line("Debt service", r=>-r.ds);
+  html += line("Cash flow", r=>r.cf, fmtUSDc, "total-row");
+  html += line("DSCR", r=>r.dscr, fmtX);
+  html += "</tbody>";
+  $("proforma_table").innerHTML = html;
+
+  window._lastAnalyzer = {
+    asset: analyzerAsset,
+    inputs:{price, gross, opex, vacancy:vac, hold, exitCap, ltv, rate, amort},
+    outputs:{irrLev, equityMultiple, firstYearCap, firstYearCoC: equityIn>0?firstYearCF/equityIn:0, firstYearDSCR, equityIn, recommendation:level}
+  };
+}
+
+/* =========================================================
+   CAP RATE
+   ========================================================= */
+function runCapRate(){
+  const price = num($("cr_price").value);
+  const noi   = num($("cr_noi").value);
+  const cap   = num($("cr_cap").value)/100;
+
+  let label="—", value="—", explainer="";
+  if(price && noi && !$("cr_cap").value){
+    const c = noi/price;
+    label = "Cap Rate"; value = fmtPctRaw(c*100);
+    explainer = `NOI ÷ Price = ${fmtUSD(noi)} ÷ ${fmtUSD(price)} = <strong>${fmtPctRaw(c*100)}</strong>.`;
+  } else if(price && cap && !$("cr_noi").value){
+    const n = price*cap;
+    label = "NOI"; value = fmtUSD(n);
+    explainer = `Price × Cap = ${fmtUSD(price)} × ${fmtPctRaw(cap*100)} = <strong>${fmtUSD(n)}</strong> NOI.`;
+  } else if(noi && cap && !$("cr_price").value){
+    const p = noi/cap;
+    label = "Implied Value"; value = fmtUSD(p);
+    explainer = `NOI ÷ Cap = ${fmtUSD(noi)} ÷ ${fmtPctRaw(cap*100)} = <strong>${fmtUSD(p)}</strong> price.`;
+  } else if(price && noi && cap){
+    const implied = noi/price;
+    label = "Cap Rate (calculated)"; value = fmtPctRaw(implied*100);
+    explainer = `Note: you entered all three. Calculated cap (NOI ÷ Price) is <strong>${fmtPctRaw(implied*100)}</strong>; you typed ${fmtPctRaw(cap*100)}. Difference: ${(Math.abs(implied-cap)*100).toFixed(2)} bps.`;
+  } else {
+    label = "Solve a value"; value = "—"; explainer = "Enter any two of: Price, NOI, Cap rate.";
+  }
+  $("cr_label").textContent = label;
+  $("cr_result").textContent = value;
+  $("cr_explainer").innerHTML = explainer;
+  window._lastCaprate = {price, noi, cap};
+}
+function resetCapRate(){
+  $("cr_price").value=""; $("cr_noi").value=""; $("cr_cap").value="";
+  runCapRate();
+}
+
+/* =========================================================
+   DSCR
+   ========================================================= */
+function runDSCR(){
+  const noi = num($("ds_noi").value);
+  const loan = num($("ds_loan").value);
+  const rate = num($("ds_rate").value)/100;
+  const amort = Math.max(1, num($("ds_amort").value));
+  if(loan<=0){ $("ds_value").textContent="—"; return; }
+  const monthly = pmt(loan, rate, amort);
+  const ads = monthly*12;
+  const dscr = ads>0 ? noi/ads : 0;
+
+  $("ds_value").textContent = fmtX(dscr);
+  $("ds_mo").textContent = fmtUSD(monthly);
+  $("ds_ads").textContent = fmtUSD(ads);
+
+  let lvl="green", msg="Lender-friendly. Most banks want 1.20–1.30+.";
+  if(dscr<1.0){ lvl="red"; msg="Negative leverage. NOI doesn't cover debt service."; }
+  else if(dscr<1.20){ lvl="yellow"; msg="Tight. Most lenders want 1.20+ minimum."; }
+  else if(dscr<1.25){ lvl="yellow"; msg="OK for some lenders. Agency wants 1.25+."; }
+
+  $("ds_status").textContent = msg;
+  const rec = $("ds_recommendation");
+  rec.style.display="block";
+  rec.className = "recommendation "+lvl;
+  rec.innerHTML = "<strong>"+(lvl==="green"?"Lender-friendly":lvl==="yellow"?"Marginal":"Below threshold")+"</strong>"+msg;
+  window._lastDSCR = {noi, loan, rate, amort, dscr, monthly};
+}
+
+/* =========================================================
+   CASH-ON-CASH + IRR
+   ========================================================= */
+function runCoC(){
+  const equity = num($("coc_equity").value);
+  const cf1 = num($("coc_cf").value);
+  const g = num($("coc_growth").value)/100;
+  const hold = Math.max(1,Math.round(num($("coc_hold").value)));
+  const sale = num($("coc_sale").value);
+  if(equity<=0) return;
+
+  const flows = [-equity];
+  let sumCoC=0, total=0;
+  for(let y=1;y<=hold;y++){
+    let cf = cf1*Math.pow(1+g, y-1);
+    if(y===hold) cf += sale;
+    flows.push(cf);
+    sumCoC += (cf - (y===hold?sale:0))/equity;
+    total += cf;
+  }
+  const irrV = irr(flows, 0.10);
+  const em = total/equity;
+  $("coc_irr").textContent = fmtPct(irrV);
+  $("coc_em").textContent = fmtX(em) + " equity multiple";
+  $("coc_y1").textContent = fmtPct(cf1/equity);
+  $("coc_avg").textContent = fmtPct(sumCoC/hold);
+  $("coc_profit").textContent = fmtUSD(total - equity);
+  window._lastCoC = {equity, cf1, growth:g, hold, sale, irr:irrV, em};
+}
+
+/* =========================================================
+   MORTGAGE
+   ========================================================= */
+function runMortgage(){
+  const loan = num($("mt_loan").value);
+  const rate = num($("mt_rate").value)/100;
+  const term = Math.max(1, num($("mt_term").value));
+  const io = Math.max(0, num($("mt_io").value));
+  if(loan<=0) return;
+
+  const monthlyAmort = pmt(loan, rate, term);
+  const monthlyIO = loan*rate/12;
+
+  let bal = loan, totalInt=0, totalPaid=0;
+  let html = "<thead><tr><th>Year</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>";
+  for(let y=1;y<=Math.min(5,term);y++){
+    let yInt=0, yPrin=0, yPay=0;
+    for(let m=1;m<=12;m++){
+      const monthIdx = (y-1)*12 + m;
+      let payment, interest, principal;
+      if(monthIdx <= io*12){
+        payment = monthlyIO; interest = monthlyIO; principal = 0;
+      } else {
+        const monthsAmortLeft = term*12 - io*12;
+        const remainingPmt = pmt(remainingBalance(loan, rate, term*12, io*12), rate, monthsAmortLeft/12);
+        payment = remainingPmt;
+        interest = bal*rate/12;
+        principal = payment - interest;
+        bal = Math.max(0, bal - principal);
+      }
+      yInt += interest; yPrin += principal; yPay += payment;
+    }
+    html += `<tr><td>Y${y}</td><td>${fmtUSD(yPay)}</td><td>${fmtUSD(yInt)}</td><td>${fmtUSD(yPrin)}</td><td>${fmtUSD(bal)}</td></tr>`;
+  }
+  let bal2 = loan, allInt=0;
+  for(let m=1;m<=term*12;m++){
+    let interest, principal;
+    if(m <= io*12){ interest = bal2*rate/12; principal = 0; }
+    else {
+      const remainingPmt = pmt(remainingBalance(loan, rate, term*12, io*12), rate, (term*12 - io*12)/12);
+      interest = bal2*rate/12;
+      principal = remainingPmt - interest;
+      bal2 = Math.max(0, bal2 - principal);
+    }
+    allInt += interest;
+  }
+  html += "</tbody>";
+  $("mt_schedule").innerHTML = html;
+
+  $("mt_pmt").textContent = io>0 ? fmtUSD(monthlyIO) + " IO / " + fmtUSD(monthlyAmort) + " amort" : fmtUSD(monthlyAmort);
+  $("mt_totalint").textContent = fmtUSD(allInt);
+  $("mt_totalpaid").textContent = fmtUSD(allInt + loan);
+  window._lastMortgage = {loan, rate, term, io, monthly:monthlyAmort};
+}
+
+/* =========================================================
+   SELLER FINANCE / SUB-TO
+   ========================================================= */
+function runSeller(){
+  const exBal = num($("sf_exbal").value);
+  const exRate = num($("sf_exrate").value)/100;
+  const exTerm = Math.max(1, num($("sf_exterm").value));
+  const price = num($("sf_price").value);
+  const down = num($("sf_down").value);
+  const carryRate = num($("sf_carryrate").value)/100;
+  const carryTerm = Math.max(1, num($("sf_carryterm").value));
+  const balloonY = Math.max(1, num($("sf_balloon").value));
+
+  const wrapBal = price - down;
+  const buyerPI = pmt(wrapBal, carryRate, carryTerm);
+  const exPI = pmt(exBal, exRate, exTerm);
+  const monthlySpread = buyerPI - exPI;
+  const cashAtClose = down;
+
+  const wrapBalAtBalloon = remainingBalance(wrapBal, carryRate, carryTerm*12, balloonY*12);
+  const exBalAtBalloon = remainingBalance(exBal, exRate, exTerm*12, balloonY*12);
+  const sellerBalloonNet = wrapBalAtBalloon - exBalAtBalloon;
+
+  $("sf_spread").textContent = fmtUSD(monthlySpread);
+  $("sf_spread_sub").textContent = monthlySpread>0 ? `${fmtUSD(monthlySpread*12)} per year` : "Negative spread!";
+  $("sf_wrapbal").textContent = fmtUSD(wrapBal);
+  $("sf_buyerpi").textContent = fmtUSD(buyerPI);
+  $("sf_expi").textContent = fmtUSD(exPI);
+  $("sf_balloondue").textContent = fmtUSD(sellerBalloonNet);
+  $("sf_cashclose").textContent = fmtUSD(cashAtClose);
+
+  const w = $("sf_warn");
+  if(monthlySpread<=0){
+    w.style.display="block"; w.className="recommendation red";
+    w.innerHTML = "<strong>Negative spread</strong>The buyer's wrap payment is less than the existing loan payment. Either raise the carry rate, raise the price, or shorten the carry term.";
+  } else if(carryRate <= exRate){
+    w.style.display="block"; w.className="recommendation yellow";
+    w.innerHTML = "<strong>Heads up</strong>Carry rate is at or below the existing rate. You're working off price uplift only — confirm the spread covers your effort.";
+  } else {
+    w.style.display="block"; w.className="recommendation green";
+    w.innerHTML = "<strong>Spread looks healthy</strong>Carry rate above the existing wrap creates positive monthly income. Confirm due-on-sale risk and have an attorney paper this.";
+  }
+
+  window._lastSeller = {exBal, exRate, exTerm, price, down, carryRate, carryTerm, balloonY, wrapBal, buyerPI, exPI, monthlySpread, sellerBalloonNet, cashAtClose};
+}
+
+/* =========================================================
+   SAVE A DEAL TO GHL
+   ========================================================= */
+function saveDeal(kind){
+  const lead = loadLead();
+  if(!lead){ resetGate(); return; }
+  let payload = { event:"deal_save", calculator:kind, email: lead.email, firstName: lead.firstName, lastName: lead.lastName };
+  if(kind==="analyzer") payload.analysis = window._lastAnalyzer;
+  if(kind==="caprate")  payload.analysis = window._lastCaprate;
+  if(kind==="dscr")     payload.analysis = window._lastDSCR;
+  if(kind==="coc")      payload.analysis = window._lastCoC;
+  if(kind==="mortgage") payload.analysis = window._lastMortgage;
+  if(kind==="seller")   payload.analysis = window._lastSeller;
+  postToGHL(payload);
+  showSaveToast("Saved to your account — we'll match this against deals.");
+}
+</script>
+
+</body>
+</html>
