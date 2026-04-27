@@ -194,6 +194,163 @@ async function fetchFemaFlood(latitude, longitude) {
   return res.json();
 }
 
+// ── Street View → GitHub → Notion ──────────────────────────────────────
+// Pulls a Google Street View Static image for the deal address, commits it
+// to the repo at /street-view/{slug}-{timestamp}.jpg, and returns the
+// raw.githubusercontent.com URL so we can patch it back onto the Notion
+// "Cover photo" property. Cost: ~$0.007 per Street View call.
+
+function slugifyAddressForFile(streetAddress, city, state) {
+  return [streetAddress, city, state]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+async function fetchStreetView(apiKey, address) {
+  const params = new URLSearchParams({
+    size: '1024x768',
+    location: address,
+    fov: '80',
+    heading: '0',
+    pitch: '0',
+    return_error_code: 'true',
+    key: apiKey
+  });
+  const res = await fetch('https://maps.googleapis.com/maps/api/streetview?' + params.toString());
+  if (!res.ok) throw new Error('Street View ' + res.status);
+  const buf = await res.arrayBuffer();
+  return Buffer.from(buf);
+}
+
+async function commitImageToGitHub(token, owner, repo, branch, path, buffer, message) {
+  const apiUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path);
+  const res = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + token,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'termsforsale-auto-enrich'
+    },
+    body: JSON.stringify({
+      message,
+      content: buffer.toString('base64'),
+      branch
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error('GitHub commit failed: ' + res.status + ' ' + t.slice(0, 200));
+  }
+  return await res.json();
+}
+
+// Notion comment API caps each rich_text segment at 2000 chars. Chunk to
+// stay under and tolerate longer underwriting writeups.
+async function postNotionComment(token, pageId, text) {
+  const segments = [];
+  let remaining = text || '';
+  while (remaining.length) {
+    segments.push({ type: 'text', text: { content: remaining.slice(0, 1900) } });
+    remaining = remaining.slice(1900);
+    if (segments.length >= 50) break; // Notion caps rich_text at ~100 segments; keep well under
+  }
+  if (!segments.length) return null;
+  const res = await fetch(NOTION_BASE + '/comments', {
+    method: 'POST',
+    headers: notionHeaders(token),
+    body: JSON.stringify({
+      parent: { page_id: pageId },
+      rich_text: segments
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error('Notion comment failed: ' + res.status + ' ' + t.slice(0, 200));
+  }
+  return await res.json();
+}
+
+function buildUwCommentText({ dealId, fullAddress, narrative, compute, enriched, driveWebViewLink }) {
+  const lines = [];
+  lines.push('🏠 Auto-Underwriting Complete' + (dealId ? ' — ' + dealId : ''));
+  if (fullAddress) lines.push(fullAddress);
+  lines.push('');
+
+  if (narrative && narrative.hook) {
+    lines.push('HOOK');
+    lines.push(narrative.hook);
+    lines.push('');
+  }
+  if (narrative && narrative.whyExists) {
+    lines.push('WHY THIS EXISTS');
+    lines.push(narrative.whyExists);
+    lines.push('');
+  }
+  if (narrative && narrative.strategies) {
+    lines.push('STRATEGIES');
+    lines.push(toBulletStr(narrative.strategies));
+    lines.push('');
+  }
+  if (narrative && narrative.buyerFitYes) {
+    lines.push('IDEAL BUYER');
+    lines.push(narrative.buyerFitYes);
+    lines.push('');
+  }
+  if (narrative && narrative.redFlags) {
+    const rf = toBulletStr(narrative.redFlags);
+    if (rf) {
+      lines.push('RED FLAGS');
+      lines.push(rf);
+      lines.push('');
+    }
+  }
+  if (narrative && narrative.confidence) {
+    lines.push('CONFIDENCE: ' + narrative.confidence);
+    lines.push('');
+  }
+
+  if (compute && compute.verdict && compute.verdict.verdict) {
+    lines.push('VERDICT: ' + compute.verdict.verdict +
+      ' — best ' + (compute.verdict.bestScenario || 'scenario') +
+      ' (CoC ' + compute.verdict.bestCashOnCash + '%, spread ' + compute.verdict.maxSpreadPct + '%)');
+    lines.push('');
+  }
+
+  if (narrative && narrative.rehab) {
+    lines.push('REHAB ESTIMATES');
+    ['light', 'moderate', 'substantial'].forEach(k => {
+      const r = narrative.rehab[k];
+      if (r && r.total != null) {
+        lines.push('• ' + k.charAt(0).toUpperCase() + k.slice(1) +
+          ': $' + Number(r.total).toLocaleString() +
+          (r.description ? ' — ' + r.description : ''));
+      }
+    });
+    lines.push('');
+  }
+
+  if (enriched) {
+    const refs = [];
+    if (enriched.rcAvm && enriched.rcAvm.value) refs.push('AVM $' + Number(enriched.rcAvm.value).toLocaleString());
+    if (enriched.rcRent && enriched.rcRent.rent) refs.push('Rent $' + Math.round(enriched.rcRent.rent) + '/mo');
+    if (enriched.hud && enriched.hud.ltr) refs.push('HUD FMR $' + Math.round(enriched.hud.ltr) + '/mo');
+    if (enriched.femaFlood && enriched.femaFlood.zone) refs.push('Flood ' + enriched.femaFlood.zone);
+    if (refs.length) lines.push('DATA: ' + refs.join(' • '));
+  }
+
+  if (driveWebViewLink) {
+    lines.push('');
+    lines.push('Full deal doc: ' + driveWebViewLink);
+  }
+
+  return lines.join('\n').slice(0, 9500);
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -260,6 +417,7 @@ exports.handler = async (event) => {
     const existingBaths = prop(page, 'Baths');
     const existingLivingArea = prop(page, 'Living Area');
     const existingYearBuilt = prop(page, 'Year Built');
+    const existingCoverPhoto = prop(page, 'Cover photo') || prop(page, 'Cover Photo');
     const entryFee = prop(page, 'Entry Fee');
     const loanBalance = prop(page, 'Loan Balance');
     const interestRate = prop(page, 'Interest Rate');
@@ -563,6 +721,58 @@ exports.handler = async (event) => {
       console.log('[auto-enrich] Notion patch:', JSON.stringify(notionPatched));
     }
 
+    // ── Street View image → GitHub → Notion Cover photo ────────────────
+    let streetViewUrl = null;
+    let streetViewError = null;
+    const googleApiKey = process.env.GOOGLE_API_KEY;
+    const githubToken = process.env.GITHUB_TOKEN;
+    const repoOwner = process.env.GITHUB_REPO_OWNER;
+    const repoName = process.env.GITHUB_REPO_NAME;
+    const repoBranch = process.env.GITHUB_REPO_BRANCH || 'main';
+    const skipStreetView = !!existingCoverPhoto;
+
+    if (!dryRun && !skipStreetView && googleApiKey && githubToken && repoOwner && repoName && fullAddress) {
+      try {
+        const slug = slugifyAddressForFile(streetAddress, city, state);
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        const filePath = 'street-view/' + slug + '-' + ts + '.jpg';
+        const imgBuf = await withTimeout(fetchStreetView(googleApiKey, fullAddress), 8000);
+        // Real Street View JPEGs are >5KB. The "no imagery" placeholder is ~1.5KB —
+        // bail if the response looks too small to avoid committing a useless gray tile.
+        if (imgBuf && imgBuf.length > 5000) {
+          await commitImageToGitHub(
+            githubToken, repoOwner, repoName, repoBranch, filePath, imgBuf,
+            'auto-enrich: street view for ' + (dealId || fullAddress)
+          );
+          streetViewUrl = 'https://raw.githubusercontent.com/' + repoOwner + '/' + repoName + '/' + repoBranch + '/' + filePath;
+          console.log('[auto-enrich] Street view committed: ' + streetViewUrl);
+
+          const coverPatch = await patchNotion(notionToken, pageId, {
+            'Cover photo': { url: streetViewUrl }
+          });
+          if (!coverPatch.ok) {
+            console.warn('[auto-enrich] Cover photo patch failed:', coverPatch.error);
+          }
+        } else {
+          streetViewError = 'No Street View imagery for this address (response was ' + (imgBuf ? imgBuf.length : 0) + ' bytes)';
+          console.warn('[auto-enrich] ' + streetViewError);
+        }
+      } catch (e) {
+        streetViewError = e.message;
+        console.error('[auto-enrich] Street view failed:', e.message);
+      }
+    } else if (skipStreetView) {
+      console.log('[auto-enrich] Skipping street view — Cover photo already populated');
+    } else if (!dryRun) {
+      const missing = [];
+      if (!googleApiKey) missing.push('GOOGLE_API_KEY');
+      if (!githubToken)  missing.push('GITHUB_TOKEN');
+      if (!repoOwner)    missing.push('GITHUB_REPO_OWNER');
+      if (!repoName)     missing.push('GITHUB_REPO_NAME');
+      if (!fullAddress)  missing.push('full address');
+      if (missing.length) console.warn('[auto-enrich] Skipping street view — missing: ' + missing.join(', '));
+    }
+
     let driveFileId = null;
     let driveWebViewLink = null;
 
@@ -621,6 +831,32 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── Notion comment with full UW analysis ───────────────────────────
+    // Adds the hook + why-exists + strategies + buyer fit + red flags +
+    // confidence + verdict + 3-tier rehab summary as a comment on the
+    // Notion page so the team sees the full underwriting writeup right
+    // where the deal lives, not just in email/Drive.
+    let notionCommentPosted = false;
+    let notionCommentError = null;
+    if (!dryRun && narrative) {
+      try {
+        const commentText = buildUwCommentText({
+          dealId,
+          fullAddress,
+          narrative,
+          compute,
+          enriched,
+          driveWebViewLink
+        });
+        await postNotionComment(notionToken, pageId, commentText);
+        notionCommentPosted = true;
+        console.log('[auto-enrich] Notion comment posted (' + commentText.length + ' chars)');
+      } catch (e) {
+        notionCommentError = e.message;
+        console.error('[auto-enrich] Notion comment failed:', e.message);
+      }
+    }
+
     if (!dryRun && ghlKey) {
       const addr = streetAddress ? streetAddress + ', ' + city + ', ' + state : city + ', ' + state;
       const verdict = compute && compute.verdict && compute.verdict.verdict;
@@ -640,7 +876,9 @@ exports.handler = async (event) => {
         narrative ? '• Narrative: ' + (narrative.confidence || '') + ' confidence' : '• Narrative: skipped',
         verdict ? '• Verdict: ' + verdict + ' (best CoC ' + bestCoc + '%, spread ' + maxSpread + '%)' : '• Verdict: not computed',
         driveFileId ? '• Drive doc: ' + (driveWebViewLink || driveFileId) : '• Drive doc: not generated',
-        notionPatched.ok ? '• Notion: updated' : '• Notion: ' + (notionPatched.error || 'not patched')
+        notionPatched.ok ? '• Notion: updated' : '• Notion: ' + (notionPatched.error || 'not patched'),
+        streetViewUrl ? '• Street View: ' + streetViewUrl : (skipStreetView ? '• Street View: skipped (Cover photo already set)' : '• Street View: ' + (streetViewError || 'not generated')),
+        notionCommentPosted ? '• Notion comment: posted with full analysis' : '• Notion comment: ' + (notionCommentError || 'not posted')
       ];
 
       try {
@@ -705,6 +943,11 @@ ${narrative.redFlags ? '<p><strong>Red Flags:</strong><br>' + narrative.redFlags
         narrative,
         compute,
         notionPatched,
+        notionCommentPosted,
+        notionCommentError,
+        streetViewUrl,
+        streetViewError,
+        skippedStreetView: skipStreetView,
         driveFileId,
         driveLink: driveWebViewLink,
         claudeUsage
