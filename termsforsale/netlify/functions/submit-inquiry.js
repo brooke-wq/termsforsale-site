@@ -20,8 +20,11 @@
  *
  * ENV VARS: GHL_API_KEY, GHL_LOCATION_ID, GHL_PIPELINE_ID_BUYER,
  *           GHL_STAGE_NEW_ENGAGED_LEAD (optional — if unset, looked up
- *           by name from the pipeline at runtime), BROOKE_PHONE
- *           (optional override — defaults to the team line)
+ *           by name from the pipeline at runtime),
+ *           INQUIRY_NOTIFICATION_PHONE (optional override — defaults to the
+ *           team line +14807191175). Inquiry/offer alerts deliberately do
+ *           NOT use BROOKE_PHONE so the team line stays the recipient even
+ *           if BROOKE_PHONE is set to her personal cell elsewhere.
  */
 
 const { getContact, postNote, addTags, sendSMS, sendEmail, updateCustomFields, getStageIdByName } = require('./_ghl');
@@ -147,31 +150,53 @@ async function ensureNotificationPhoneContact(apiKey, locationId, phone) {
   }
 }
 
+// Plain-text-leaning notification body. Keeping styling minimal because
+// the From and To addresses share a domain (info@termsforsale.com), which
+// already strains spam filters — adding heavy marketing-style HTML on top
+// of that pushes Gmail/Proton to classify the message as promotional.
 function buildInternalInquiryEmailHtml(ctx) {
-  function row(label, value) {
-    if (value === undefined || value === null || value === '') return '';
-    return '<tr><td style="padding:8px 14px;font-size:13px;color:#718096;border-bottom:1px solid #E2E8F0;width:40%">' + label + '</td>'
-      + '<td style="padding:8px 14px;font-size:14px;color:#0D1F3C;font-weight:700;border-bottom:1px solid #E2E8F0">' + value + '</td></tr>';
-  }
   var esc = function (s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  function line(label, value) {
+    if (value === undefined || value === null || value === '') return '';
+    return '<p style="margin:4px 0;font-size:14px;color:#1F2937"><strong>' + label + ':</strong> ' + value + '</p>';
+  }
   var rows = [
-    row('Buyer',      esc(ctx.buyerName)),
-    row('Phone',      esc(ctx.buyerPhone)),
-    row('Email',      esc(ctx.buyerEmail)),
-    row('Deal ID',    esc(ctx.dealId)),
-    row('Property',   esc(ctx.fullAddress)),
-    row('Asset Type', esc(ctx.dealType)),
+    line('Buyer',      esc(ctx.buyerName)),
+    line('Phone',      esc(ctx.buyerPhone)),
+    line('Email',      esc(ctx.buyerEmail)),
+    line('Deal ID',    esc(ctx.dealId)),
+    line('Property',   esc(ctx.fullAddress)),
+    line('Asset Type', esc(ctx.dealType)),
   ].join('');
   var questionBlock = ctx.notes
-    ? '<div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;padding:14px 16px;margin-top:16px"><div style="font-size:12px;color:#1E3A8A;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Buyer\'s Question</div><div style="font-size:14px;color:#1F2937;white-space:pre-wrap">' + esc(ctx.notes) + '</div></div>'
-    : '<div style="background:#F3F4F6;border-radius:8px;padding:14px 16px;margin-top:16px;color:#6B7280;font-size:13px;font-style:italic">No question submitted — buyer clicked Send Inquiry without adding a note.</div>';
-  return '<div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px">'
-    + '<h2 style="color:#0D1F3C;margin:0 0 8px">💬 New Inquiry Received</h2>'
-    + '<p style="color:#4A5568;font-size:13px;margin:0 0 16px">Submitted ' + new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }) + ' MST</p>'
-    + '<table style="width:100%;border-collapse:collapse;background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden"><tbody>' + rows + '</tbody></table>'
+    ? '<p style="margin:12px 0 4px;font-size:14px;color:#1F2937"><strong>Question:</strong></p><p style="margin:0;font-size:14px;color:#1F2937;white-space:pre-wrap">' + esc(ctx.notes) + '</p>'
+    : '<p style="margin:12px 0;font-size:14px;color:#6B7280"><em>No question submitted.</em></p>';
+  var ghlLink = ctx.contactId
+    ? '<p style="margin:16px 0 0;font-size:13px"><a href="https://app.gohighlevel.com/v2/location/' + esc(process.env.GHL_LOCATION_ID || '') + '/contacts/detail/' + esc(ctx.contactId) + '">Open contact in GHL</a></p>'
+    : '';
+  return '<div style="font-family:Arial,sans-serif;max-width:640px;font-size:14px;color:#1F2937">'
+    + '<p style="margin:0 0 12px;font-size:14px;color:#6B7280">New buyer inquiry received via Terms For Sale website.</p>'
+    + rows
     + questionBlock
-    + (ctx.contactId ? '<p style="margin-top:20px"><a href="https://app.gohighlevel.com/v2/location/' + esc(process.env.GHL_LOCATION_ID || '') + '/contacts/detail/' + esc(ctx.contactId) + '" style="background:#0D1F3C;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px">Open contact in GHL →</a></p>' : '')
+    + ghlLink
     + '</div>';
+}
+
+function buildInternalInquiryEmailText(ctx) {
+  var lines = [
+    'New buyer inquiry received via Terms For Sale website.',
+    '',
+    'Buyer: ' + (ctx.buyerName || ''),
+    'Phone: ' + (ctx.buyerPhone || ''),
+    'Email: ' + (ctx.buyerEmail || ''),
+    'Deal ID: ' + (ctx.dealId || ''),
+    'Property: ' + (ctx.fullAddress || ''),
+    'Asset Type: ' + (ctx.dealType || ''),
+    '',
+    'Question:',
+    ctx.notes || '(none submitted)',
+  ];
+  return lines.filter(function (l) { return l !== null && l !== undefined; }).join('\n');
 }
 
 exports.handler = async (event) => {
@@ -378,8 +403,11 @@ exports.handler = async (event) => {
     }
   }
 
-  // 3. SMS notification to the team line
-  var notifyPhone = process.env.BROOKE_PHONE || DEFAULT_NOTIFICATION_PHONE;
+  // 3. SMS notification to the team line. Use INQUIRY_NOTIFICATION_PHONE
+  // override if set; otherwise default to the team line. We deliberately
+  // do NOT fall back to BROOKE_PHONE — that env var is set to her personal
+  // cell and inquiry alerts should land on the team line instead.
+  var notifyPhone = process.env.INQUIRY_NOTIFICATION_PHONE || DEFAULT_NOTIFICATION_PHONE;
   diagnostic.notifyPhone = notifyPhone;
   if (notifyPhone && locationId) {
     var sms = 'New inquiry: ' + buyerName + ' on ' + location;
@@ -399,12 +427,16 @@ exports.handler = async (event) => {
     }
   }
 
-  // 3b. Internal notification email to info@termsforsale.com
+  // 3b. Internal notification email to info@termsforsale.com.
+  // Subject + body are deliberately plain (no emoji, simple HTML, plain-text
+  // sibling, replyTo set to the buyer) so Gmail/Proton stop classifying the
+  // notification as promotional. From/To both being on info@termsforsale.com
+  // already strains spam filters; everything else stays minimal.
   try {
     var internalId = await getInternalContactId(apiKey, locationId, INTERNAL_NOTIFICATION_EMAIL);
     if (internalId) {
-      var internalSubject = '💬 New Inquiry — ' + buyerName + ' on ' + location + (dealType ? ' (' + dealType + ')' : '');
-      var internalHtml = buildInternalInquiryEmailHtml({
+      var internalSubject = 'New inquiry: ' + buyerName + ' on ' + location + (dealType ? ' (' + dealType + ')' : '');
+      var emailCtx = {
         buyerName: buyerName,
         buyerPhone: buyerPhone,
         buyerEmail: buyerEmail,
@@ -413,11 +445,31 @@ exports.handler = async (event) => {
         dealType: dealType,
         notes: notes,
         contactId: contactId,
+      };
+      var internalHtml = buildInternalInquiryEmailHtml(emailCtx);
+      var internalText = buildInternalInquiryEmailText(emailCtx);
+      var internalRes = await fetch(GHL_BASE + '/conversations/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + apiKey,
+          'Version': '2021-07-28',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'Email',
+          contactId: internalId,
+          subject: internalSubject,
+          html: internalHtml,
+          text: internalText,
+          emailFrom: 'Terms For Sale <info@termsforsale.com>',
+          replyTo: buyerEmail || undefined,
+        }),
       });
-      var internalRes = await sendEmail(apiKey, internalId, internalSubject, internalHtml);
       diagnostic.internalEmailStatus = internalRes.status;
       if (internalRes.status >= 400) {
-        console.warn('[submit-inquiry] internal email -> ' + internalRes.status, JSON.stringify(internalRes.body));
+        var errBody = await internalRes.text().catch(function () { return ''; });
+        console.warn('[submit-inquiry] internal email -> ' + internalRes.status, errBody);
         diagnostic.errors.push('internalEmail -> ' + internalRes.status);
       } else {
         console.log('[submit-inquiry] internal notification email sent to ' + INTERNAL_NOTIFICATION_EMAIL);
