@@ -506,6 +506,16 @@ a:hover{opacity:.85}
         <div class="calc-icon">&#9646;&#9646;</div>
       </div>
 
+      <div class="calc-card featured" onclick="showView('sfr')" style="background:linear-gradient(135deg,#162B4E 0%,#1F3A66 100%)">
+        <div>
+          <div class="calc-tag">Single Family / 1-4 Unit</div>
+          <h3>SFR Deal Analyzer</h3>
+          <p>Underwrite single-family and small-multi rentals across every exit: long-term rental, short-term rental, co-living, fix &amp; flip, and BRRRR. Built-in Subject-To &amp; Seller Finance modes for creative-finance buyers.</p>
+          <div class="calc-cta">Open SFR analyzer &rarr;</div>
+        </div>
+        <div class="calc-icon">&#8962;</div>
+      </div>
+
       <div class="calc-card" onclick="showView('caprate')">
         <div class="calc-icon">%</div>
         <div class="calc-tag">Quick</div>
@@ -864,6 +874,328 @@ a:hover{opacity:.85}
   </div>
 </section>
 
+<!-- SFR DEAL ANALYZER -->
+<section id="view-sfr" class="calc-view hidden">
+  <div class="container">
+    <span class="calc-back" onclick="showView('hub')">&larr; Back to all tools</span>
+    <div class="calc-header">
+      <div class="eyebrow">Single Family / 1-4 Unit</div>
+      <h1>SFR Deal Analyzer</h1>
+      <p>Run the numbers across every exit strategy. Switch financing modes for creative-finance deals.</p>
+    </div>
+
+    <div class="calc-layout">
+      <div class="calc-pane">
+
+        <div class="pane-title">Property &amp; Acquisition</div>
+        <div class="field-row">
+          <div class="field"><label>Purchase price</label>
+            <div class="input-prefix"><span>$</span><input id="sfr_price" type="text" inputmode="numeric" value="280,000" oninput="runSfr()"></div></div>
+          <div class="field"><label>ARV (after-repair value)</label>
+            <div class="input-prefix"><span>$</span><input id="sfr_arv" type="text" inputmode="numeric" value="320,000" oninput="runSfr()"></div></div>
+        </div>
+        <div class="field-row-3">
+          <div class="field"><label>Beds</label><input id="sfr_beds" type="text" inputmode="numeric" value="3" oninput="runSfr()"></div>
+          <div class="field"><label>Baths</label><input id="sfr_baths" type="text" inputmode="decimal" value="2" oninput="runSfr()"></div>
+          <div class="field"><label>Sqft</label><input id="sfr_sqft" type="text" inputmode="numeric" value="1,500" oninput="runSfr()"></div>
+        </div>
+
+        <div class="pane-title">Financing</div>
+        <div class="tabs" id="sfrFinTabs">
+          <div class="tab active" data-fin="conventional" onclick="setSfrFin('conventional')">Conventional</div>
+          <div class="tab" data-fin="subto" onclick="setSfrFin('subto')">Subject-To</div>
+          <div class="tab" data-fin="sf" onclick="setSfrFin('sf')">Seller Finance</div>
+          <div class="tab" data-fin="cash" onclick="setSfrFin('cash')">All Cash</div>
+        </div>
+
+        <div class="sfr-fin" id="sfr-fin-conventional">
+          <div class="field-row-3">
+            <div class="field"><label>Down %</label>
+              <div class="input-suffix"><input id="sfr_conv_down" type="text" inputmode="decimal" value="20" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Rate</label>
+              <div class="input-suffix"><input id="sfr_conv_rate" type="text" inputmode="decimal" value="7.25" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Term</label>
+              <div class="input-suffix"><input id="sfr_conv_term" type="text" inputmode="numeric" value="30" oninput="runSfr()"><span>yrs</span></div></div>
+          </div>
+          <div class="field"><label>Closing costs</label>
+            <div class="input-suffix"><input id="sfr_conv_closing" type="text" inputmode="decimal" value="3.0" oninput="runSfr()"><span>%</span></div></div>
+        </div>
+
+        <div class="sfr-fin hidden" id="sfr-fin-subto">
+          <div class="field-row">
+            <div class="field"><label>Assumed loan balance</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_subto_balance" type="text" inputmode="numeric" value="220,000" oninput="runSfr()"></div></div>
+            <div class="field"><label>Existing rate</label>
+              <div class="input-suffix"><input id="sfr_subto_rate" type="text" inputmode="decimal" value="3.5" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Remaining term</label>
+              <div class="input-suffix"><input id="sfr_subto_term" type="text" inputmode="numeric" value="25" oninput="runSfr()"><span>yrs</span></div></div>
+            <div class="field"><label>Entry fee to seller</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_subto_entry" type="text" inputmode="numeric" value="15,000" oninput="runSfr()"></div></div>
+          </div>
+          <p style="font-size:12px;color:var(--tfs-muted);margin:0">Subject-To: take over the existing mortgage. Cash in = entry fee + (price &minus; assumed balance). Monthly P&amp;I uses the existing loan terms.</p>
+        </div>
+
+        <div class="sfr-fin hidden" id="sfr-fin-sf">
+          <div class="field-row">
+            <div class="field"><label>Down to seller</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_sf_down" type="text" inputmode="numeric" value="30,000" oninput="runSfr()"></div></div>
+            <div class="field"><label>Carry rate</label>
+              <div class="input-suffix"><input id="sfr_sf_rate" type="text" inputmode="decimal" value="6.0" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Carry term</label>
+              <div class="input-suffix"><input id="sfr_sf_term" type="text" inputmode="numeric" value="30" oninput="runSfr()"><span>yrs</span></div></div>
+            <div class="field"><label>Balloon (0 = none)</label>
+              <div class="input-suffix"><input id="sfr_sf_balloon" type="text" inputmode="numeric" value="7" oninput="runSfr()"><span>yrs</span></div></div>
+          </div>
+        </div>
+
+        <div class="sfr-fin hidden" id="sfr-fin-cash">
+          <p style="font-size:13px;color:var(--tfs-muted);margin:8px 0 0">All-cash purchase. Equity in = purchase price + closing. No monthly P&amp;I.</p>
+          <div class="field"><label>Closing costs</label>
+            <div class="input-suffix"><input id="sfr_cash_closing" type="text" inputmode="decimal" value="2.0" oninput="runSfr()"><span>%</span></div></div>
+        </div>
+
+        <div class="pane-title">Exit Strategy</div>
+        <div class="tabs" id="sfrStratTabs">
+          <div class="tab active" data-strat="ltr" onclick="setSfrStrat('ltr')">LTR</div>
+          <div class="tab" data-strat="str" onclick="setSfrStrat('str')">STR</div>
+          <div class="tab" data-strat="coliving" onclick="setSfrStrat('coliving')">Co-living</div>
+          <div class="tab" data-strat="flip" onclick="setSfrStrat('flip')">Fix &amp; Flip</div>
+          <div class="tab" data-strat="brrrr" onclick="setSfrStrat('brrrr')">BRRRR</div>
+        </div>
+
+
+        <!-- LTR pane -->
+        <div class="sfr-strat" id="sfr-strat-ltr">
+          <div class="field-row">
+            <div class="field"><label>Monthly rent</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_ltr_rent" type="text" inputmode="numeric" value="2,200" oninput="runSfr()"></div></div>
+            <div class="field"><label>Vacancy</label>
+              <div class="input-suffix"><input id="sfr_ltr_vacancy" type="text" inputmode="decimal" value="5" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Property mgmt</label>
+              <div class="input-suffix"><input id="sfr_ltr_mgmt" type="text" inputmode="decimal" value="8" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Maintenance</label>
+              <div class="input-suffix"><input id="sfr_ltr_maint" type="text" inputmode="decimal" value="5" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>CapEx reserve</label>
+              <div class="input-suffix"><input id="sfr_ltr_capex" type="text" inputmode="decimal" value="5" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Annual prop tax</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_ltr_tax" type="text" inputmode="numeric" value="3,200" oninput="runSfr()"></div></div>
+            <div class="field"><label>Annual insurance</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_ltr_ins" type="text" inputmode="numeric" value="1,400" oninput="runSfr()"></div></div>
+            <div class="field"><label>Monthly HOA</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_ltr_hoa" type="text" inputmode="numeric" value="0" oninput="runSfr()"></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Hold period</label>
+              <div class="input-suffix"><input id="sfr_ltr_hold" type="text" inputmode="numeric" value="5" oninput="runSfr()"><span>yrs</span></div></div>
+            <div class="field"><label>Appreciation /yr</label>
+              <div class="input-suffix"><input id="sfr_ltr_appr" type="text" inputmode="decimal" value="3.0" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Rent growth /yr</label>
+              <div class="input-suffix"><input id="sfr_ltr_rentgrowth" type="text" inputmode="decimal" value="2.5" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+        </div>
+
+        <!-- STR pane -->
+        <div class="sfr-strat hidden" id="sfr-strat-str">
+          <div class="field-row">
+            <div class="field"><label>Avg daily rate (ADR)</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_str_adr" type="text" inputmode="numeric" value="195" oninput="runSfr()"></div></div>
+            <div class="field"><label>Occupancy</label>
+              <div class="input-suffix"><input id="sfr_str_occ" type="text" inputmode="decimal" value="65" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Cleaning fee / turn</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_str_clean" type="text" inputmode="numeric" value="125" oninput="runSfr()"></div></div>
+            <div class="field"><label>Avg stay (nights)</label>
+              <input id="sfr_str_stay" type="text" inputmode="decimal" value="3.5" oninput="runSfr()"></div>
+            <div class="field"><label>STR mgmt</label>
+              <div class="input-suffix"><input id="sfr_str_mgmt" type="text" inputmode="decimal" value="20" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Platform fees</label>
+              <div class="input-suffix"><input id="sfr_str_fees" type="text" inputmode="decimal" value="3" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Monthly utilities/internet/supplies</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_str_util" type="text" inputmode="numeric" value="450" oninput="runSfr()"></div></div>
+            <div class="field"><label>Maintenance</label>
+              <div class="input-suffix"><input id="sfr_str_maint" type="text" inputmode="decimal" value="6" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Annual prop tax</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_str_tax" type="text" inputmode="numeric" value="3,200" oninput="runSfr()"></div></div>
+            <div class="field"><label>Annual insurance (STR)</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_str_ins" type="text" inputmode="numeric" value="2,200" oninput="runSfr()"></div></div>
+            <div class="field"><label>Monthly HOA</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_str_hoa" type="text" inputmode="numeric" value="0" oninput="runSfr()"></div></div>
+          </div>
+        </div>
+
+        <!-- Co-living pane -->
+        <div class="sfr-strat hidden" id="sfr-strat-coliving">
+          <div class="field-row">
+            <div class="field"><label>Number of rentable rooms</label>
+              <input id="sfr_co_rooms" type="text" inputmode="numeric" value="4" oninput="runSfr()"></div>
+            <div class="field"><label>Avg rent per room</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_co_rentroom" type="text" inputmode="numeric" value="850" oninput="runSfr()"></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Vacancy (per-room)</label>
+              <div class="input-suffix"><input id="sfr_co_vacancy" type="text" inputmode="decimal" value="10" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Common utilities/internet/cleaning (mo)</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_co_common" type="text" inputmode="numeric" value="450" oninput="runSfr()"></div></div>
+            <div class="field"><label>Mgmt premium</label>
+              <div class="input-suffix"><input id="sfr_co_mgmt" type="text" inputmode="decimal" value="12" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Maintenance</label>
+              <div class="input-suffix"><input id="sfr_co_maint" type="text" inputmode="decimal" value="6" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Annual prop tax</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_co_tax" type="text" inputmode="numeric" value="3,200" oninput="runSfr()"></div></div>
+            <div class="field"><label>Annual insurance</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_co_ins" type="text" inputmode="numeric" value="1,400" oninput="runSfr()"></div></div>
+          </div>
+        </div>
+
+        <!-- Flip pane -->
+        <div class="sfr-strat hidden" id="sfr-strat-flip">
+          <div class="field-row">
+            <div class="field"><label>Rehab budget</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_flip_rehab" type="text" inputmode="numeric" value="35,000" oninput="runSfr()"></div></div>
+            <div class="field"><label>Holding period</label>
+              <div class="input-suffix"><input id="sfr_flip_months" type="text" inputmode="numeric" value="6" oninput="runSfr()"><span>mo</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Monthly holding cost (tax/ins/util)</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_flip_holding" type="text" inputmode="numeric" value="650" oninput="runSfr()"></div></div>
+            <div class="field"><label>Selling costs</label>
+              <div class="input-suffix"><input id="sfr_flip_sellcost" type="text" inputmode="decimal" value="8" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Contingency</label>
+              <div class="input-suffix"><input id="sfr_flip_contingency" type="text" inputmode="decimal" value="10" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <p style="font-size:12px;color:var(--tfs-muted);margin:0">Net profit = ARV &minus; selling costs &minus; (purchase + closing + rehab + rehab contingency + holding × months + monthly P&amp;I × months).</p>
+        </div>
+
+        <!-- BRRRR pane -->
+        <div class="sfr-strat hidden" id="sfr-strat-brrrr">
+          <div class="field-row">
+            <div class="field"><label>Rehab budget</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_br_rehab" type="text" inputmode="numeric" value="35,000" oninput="runSfr()"></div></div>
+            <div class="field"><label>Rehab + season period</label>
+              <div class="input-suffix"><input id="sfr_br_months" type="text" inputmode="numeric" value="6" oninput="runSfr()"><span>mo</span></div></div>
+          </div>
+          <div class="field"><label>Monthly holding cost during rehab (tax/ins/util)</label>
+            <div class="input-prefix"><span>$</span><input id="sfr_br_holding" type="text" inputmode="numeric" value="650" oninput="runSfr()"></div></div>
+          <div class="field-row-3">
+            <div class="field"><label>Refi LTV</label>
+              <div class="input-suffix"><input id="sfr_br_refiltv" type="text" inputmode="decimal" value="75" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Refi rate</label>
+              <div class="input-suffix"><input id="sfr_br_refirate" type="text" inputmode="decimal" value="7.50" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Refi term</label>
+              <div class="input-suffix"><input id="sfr_br_refiterm" type="text" inputmode="numeric" value="30" oninput="runSfr()"><span>yrs</span></div></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Post-rehab market rent</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_br_rent" type="text" inputmode="numeric" value="2,400" oninput="runSfr()"></div></div>
+            <div class="field"><label>Refi closing costs</label>
+              <div class="input-suffix"><input id="sfr_br_reficlose" type="text" inputmode="decimal" value="2.0" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Vacancy</label>
+              <div class="input-suffix"><input id="sfr_br_vacancy" type="text" inputmode="decimal" value="5" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Mgmt</label>
+              <div class="input-suffix"><input id="sfr_br_mgmt" type="text" inputmode="decimal" value="8" oninput="runSfr()"><span>%</span></div></div>
+            <div class="field"><label>Maint+CapEx</label>
+              <div class="input-suffix"><input id="sfr_br_maint" type="text" inputmode="decimal" value="10" oninput="runSfr()"><span>%</span></div></div>
+          </div>
+          <div class="field-row-3">
+            <div class="field"><label>Annual prop tax</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_br_tax" type="text" inputmode="numeric" value="3,200" oninput="runSfr()"></div></div>
+            <div class="field"><label>Annual insurance</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_br_ins" type="text" inputmode="numeric" value="1,400" oninput="runSfr()"></div></div>
+            <div class="field"><label>Monthly HOA</label>
+              <div class="input-prefix"><span>$</span><input id="sfr_br_hoa" type="text" inputmode="numeric" value="0" oninput="runSfr()"></div></div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="saveDeal('sfr')">Save deal &amp; alert me to matches</button>
+        </div>
+      </div>
+
+      <div class="calc-pane">
+        <div class="pane-title">Results</div>
+
+        <!-- LTR / STR / Co-living share a similar KPI shape but use strategy-specific labels -->
+        <div class="sfr-result" id="sfr-result-ltr">
+          <div class="kpi-grid">
+            <div class="kpi hero"><div class="kpi-label">Levered IRR (5yr)</div><div class="kpi-value" id="sfr_ltr_irr">&mdash;</div><div class="kpi-sub" id="sfr_ltr_em">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Monthly cash flow</div><div class="kpi-value" id="sfr_ltr_cf">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Year-1 CoC</div><div class="kpi-value" id="sfr_ltr_coc">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Cap rate</div><div class="kpi-value" id="sfr_ltr_cap">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">DSCR</div><div class="kpi-value" id="sfr_ltr_dscr">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">All-in monthly (PITI+HOA)</div><div class="kpi-value" id="sfr_ltr_piti">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Cash to close</div><div class="kpi-value" id="sfr_ltr_cash">&mdash;</div></div>
+          </div>
+          <div id="sfr_ltr_rec" class="recommendation" style="display:none"></div>
+        </div>
+
+        <div class="sfr-result hidden" id="sfr-result-str">
+          <div class="kpi-grid">
+            <div class="kpi hero"><div class="kpi-label">Monthly cash flow (STR)</div><div class="kpi-value" id="sfr_str_cf">&mdash;</div><div class="kpi-sub" id="sfr_str_vsltr">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Annual gross revenue</div><div class="kpi-value" id="sfr_str_rev">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Year-1 CoC</div><div class="kpi-value" id="sfr_str_coc">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Breakeven occupancy</div><div class="kpi-value" id="sfr_str_breakocc">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Breakeven ADR</div><div class="kpi-value" id="sfr_str_breakadr">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Cash to close</div><div class="kpi-value" id="sfr_str_cash">&mdash;</div></div>
+          </div>
+          <div id="sfr_str_rec" class="recommendation" style="display:none"></div>
+        </div>
+
+        <div class="sfr-result hidden" id="sfr-result-coliving">
+          <div class="kpi-grid">
+            <div class="kpi hero"><div class="kpi-label">Monthly cash flow (co-living)</div><div class="kpi-value" id="sfr_co_cf">&mdash;</div><div class="kpi-sub" id="sfr_co_vsltr">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Annual NOI</div><div class="kpi-value" id="sfr_co_noi">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Year-1 CoC</div><div class="kpi-value" id="sfr_co_coc">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Breakeven rooms rented</div><div class="kpi-value" id="sfr_co_breakroom">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Cash to close</div><div class="kpi-value" id="sfr_co_cash">&mdash;</div></div>
+          </div>
+          <div id="sfr_co_rec" class="recommendation" style="display:none"></div>
+        </div>
+
+        <div class="sfr-result hidden" id="sfr-result-flip">
+          <div class="kpi-grid">
+            <div class="kpi hero"><div class="kpi-label">Net profit</div><div class="kpi-value" id="sfr_flip_profit">&mdash;</div><div class="kpi-sub" id="sfr_flip_roi">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">All-in cost</div><div class="kpi-value" id="sfr_flip_allin">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Profit-to-rehab ratio</div><div class="kpi-value" id="sfr_flip_p2r">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Breakeven sale price</div><div class="kpi-value" id="sfr_flip_break">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Cash to close + rehab</div><div class="kpi-value" id="sfr_flip_cash">&mdash;</div></div>
+          </div>
+          <div id="sfr_flip_rec" class="recommendation" style="display:none"></div>
+        </div>
+
+        <div class="sfr-result hidden" id="sfr-result-brrrr">
+          <div class="kpi-grid">
+            <div class="kpi hero"><div class="kpi-label">Cash left in deal</div><div class="kpi-value" id="sfr_br_left">&mdash;</div><div class="kpi-sub" id="sfr_br_leftsub">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Initial cash in</div><div class="kpi-value" id="sfr_br_in">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Cash recouped at refi</div><div class="kpi-value" id="sfr_br_recoup">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">New refi loan</div><div class="kpi-value" id="sfr_br_refiloan">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Post-refi monthly CF</div><div class="kpi-value" id="sfr_br_cf">&mdash;</div></div>
+            <div class="kpi"><div class="kpi-label">Post-refi DSCR</div><div class="kpi-value" id="sfr_br_dscr">&mdash;</div></div>
+          </div>
+          <div id="sfr_br_rec" class="recommendation" style="display:none"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============== Site footer ============== -->
 <footer class="tfs-footer">
   <div class="container">
@@ -995,7 +1327,7 @@ document.getElementById('gateForm').addEventListener('submit', async function(e)
   $("gate").classList.add("hidden");
   $("app").classList.remove("hidden");
   hydrateHub(lead);
-  runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller();
+  runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller(); runSfr();
   window.scrollTo(0,0);
 });
 
@@ -1021,7 +1353,7 @@ function hydrateHub(lead){
     $("gate").classList.add("hidden");
     $("app").classList.remove("hidden");
     hydrateHub(lead);
-    runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller();
+    runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller(); runSfr();
   }
 })();
 
@@ -1052,7 +1384,7 @@ function showSaveToast(msg){
 /* =========================================================
    VIEW ROUTING
    ========================================================= */
-const VIEWS = ["hub","analyzer","caprate","dscr","coc","mortgage","seller"];
+const VIEWS = ["hub","analyzer","caprate","dscr","coc","mortgage","seller","sfr"];
 function showView(name){
   VIEWS.forEach(v => $("view-"+v).classList.add("hidden"));
   $("view-"+name).classList.remove("hidden");
@@ -1445,6 +1777,384 @@ function runSeller(){
   window._lastSeller = {exBal, exRate, exTerm, price, down, carryRate, carryTerm, balloonY, wrapBal, buyerPI, exPI, monthlySpread, sellerBalloonNet, cashAtClose};
 }
 
+
+/* =========================================================
+   SFR DEAL ANALYZER (LTR / STR / Co-living / Flip / BRRRR)
+   ========================================================= */
+let sfrFinMode = "conventional";
+let sfrStrategy = "ltr";
+
+function setSfrFin(mode){
+  sfrFinMode = mode;
+  document.querySelectorAll('#sfrFinTabs .tab').forEach(x=>x.classList.toggle('active', x.dataset.fin === mode));
+  document.querySelectorAll('#view-sfr .sfr-fin').forEach(g => g.classList.add('hidden'));
+  const el = $('sfr-fin-' + mode);
+  if(el) el.classList.remove('hidden');
+  runSfr();
+}
+function setSfrStrat(strat){
+  sfrStrategy = strat;
+  document.querySelectorAll('#sfrStratTabs .tab').forEach(x=>x.classList.toggle('active', x.dataset.strat === strat));
+  document.querySelectorAll('#view-sfr .sfr-strat').forEach(g => g.classList.add('hidden'));
+  document.querySelectorAll('#view-sfr .sfr-result').forEach(g => g.classList.add('hidden'));
+  const stratEl = $('sfr-strat-' + strat);
+  const resultEl = $('sfr-result-' + strat);
+  if(stratEl) stratEl.classList.remove('hidden');
+  if(resultEl) resultEl.classList.remove('hidden');
+  runSfr();
+}
+
+/* Shared financing math: returns { equityIn, monthlyPmt, loanBalance, rate, term } */
+function computeSfrFinancing(price){
+  if(sfrFinMode === "cash"){
+    const closing = num($("sfr_cash_closing").value)/100 * price;
+    return { equityIn: price + closing, monthlyPmt: 0, loanBalance: 0, rate: 0, term: 0 };
+  }
+  if(sfrFinMode === "conventional"){
+    const downPct = num($("sfr_conv_down").value)/100;
+    const rate = num($("sfr_conv_rate").value)/100;
+    const term = Math.max(1, num($("sfr_conv_term").value));
+    const closing = num($("sfr_conv_closing").value)/100 * price;
+    const down = price * downPct;
+    const loan = price - down;
+    return { equityIn: down + closing, monthlyPmt: pmt(loan, rate, term), loanBalance: loan, rate, term };
+  }
+  if(sfrFinMode === "subto"){
+    const balance = num($("sfr_subto_balance").value);
+    const rate = num($("sfr_subto_rate").value)/100;
+    const term = Math.max(1, num($("sfr_subto_term").value));
+    const entryFee = num($("sfr_subto_entry").value);
+    /* Cash in = entry fee + (price - assumed balance) i.e. equity owed to seller above the loan */
+    const equityToSeller = Math.max(0, price - balance);
+    return { equityIn: entryFee + equityToSeller, monthlyPmt: pmt(balance, rate, term), loanBalance: balance, rate, term };
+  }
+  if(sfrFinMode === "sf"){
+    const down = num($("sfr_sf_down").value);
+    const carryRate = num($("sfr_sf_rate").value)/100;
+    const carryTerm = Math.max(1, num($("sfr_sf_term").value));
+    const carryAmt = Math.max(0, price - down);
+    return { equityIn: down, monthlyPmt: pmt(carryAmt, carryRate, carryTerm), loanBalance: carryAmt, rate: carryRate, term: carryTerm };
+  }
+  return { equityIn: 0, monthlyPmt: 0, loanBalance: 0, rate: 0, term: 0 };
+}
+
+/* Render strategy-specific recommendation banner */
+function sfrRec(elId, level, title, body){
+  const el = $(elId);
+  if(!el) return;
+  el.style.display = "block";
+  el.className = "recommendation " + level;
+  el.innerHTML = "<strong>" + title + "</strong>" + body;
+}
+
+function runSfr(){
+  const fns = { ltr: runSfrLtr, str: runSfrStr, coliving: runSfrColiving, flip: runSfrFlip, brrrr: runSfrBrrrr };
+  if(fns[sfrStrategy]) fns[sfrStrategy]();
+}
+
+/* LTR — long-term rental, multi-year IRR with appreciation + rent growth */
+function runSfrLtr(){
+  const price = num($("sfr_price").value);
+  if(price<=0) return;
+  const fin = computeSfrFinancing(price);
+  const rent  = num($("sfr_ltr_rent").value);
+  const vac   = num($("sfr_ltr_vacancy").value)/100;
+  const mgmt  = num($("sfr_ltr_mgmt").value)/100;
+  const maint = num($("sfr_ltr_maint").value)/100;
+  const capex = num($("sfr_ltr_capex").value)/100;
+  const tax   = num($("sfr_ltr_tax").value);
+  const ins   = num($("sfr_ltr_ins").value);
+  const hoa   = num($("sfr_ltr_hoa").value);
+  const hold  = Math.max(1, num($("sfr_ltr_hold").value));
+  const apr   = num($("sfr_ltr_appr").value)/100;
+  const rg    = num($("sfr_ltr_rentgrowth").value)/100;
+
+  /* Year 1 economics */
+  const grossY1 = rent * 12;
+  const egiY1 = grossY1 * (1 - vac);
+  const opexY1 = (egiY1 * (mgmt + maint + capex)) + tax + ins + (hoa * 12);
+  const noiY1 = egiY1 - opexY1;
+  const dsY1 = fin.monthlyPmt * 12;
+  const cfY1 = noiY1 - dsY1;
+  const monthlyCf = cfY1 / 12;
+  const cap = noiY1 / price;
+  const dscr = dsY1 > 0 ? noiY1 / dsY1 : 99;
+  const coc = fin.equityIn > 0 ? cfY1 / fin.equityIn : 0;
+  const piti = fin.monthlyPmt + (tax/12) + (ins/12) + hoa;
+
+  /* Multi-year cashflow with sale at exit */
+  const cashflows = [-fin.equityIn];
+  for(let y=1; y<=hold; y++){
+    const yRent = rent * 12 * Math.pow(1+rg, y-1);
+    const yEgi = yRent * (1 - vac);
+    const yOpex = (yEgi * (mgmt+maint+capex)) + tax*Math.pow(1.025, y-1) + ins*Math.pow(1.025, y-1) + (hoa*12);
+    const yNoi = yEgi - yOpex;
+    let yCf = yNoi - dsY1;
+    if(y === hold){
+      const salePrice = price * Math.pow(1+apr, hold);
+      const sellingCosts = salePrice * 0.06;
+      const loanBal = (fin.monthlyPmt > 0 && fin.term > 0)
+        ? remainingBalance(fin.loanBalance, fin.rate, fin.term*12, hold*12)
+        : fin.loanBalance;
+      yCf += (salePrice - sellingCosts - loanBal);
+    }
+    cashflows.push(yCf);
+  }
+  const irrLev = irr(cashflows, 0.10);
+  const totalReturn = cashflows.slice(1).reduce((a,b)=>a+b, 0);
+  const em = fin.equityIn > 0 ? (totalReturn + fin.equityIn) / fin.equityIn : 0;
+
+  $("sfr_ltr_irr").textContent = fmtPct(irrLev);
+  $("sfr_ltr_em").textContent = fmtX(em) + " equity multiple";
+  $("sfr_ltr_cf").textContent = fmtUSD(monthlyCf) + " /mo";
+  $("sfr_ltr_coc").textContent = fmtPct(coc);
+  $("sfr_ltr_cap").textContent = fmtPct(cap);
+  $("sfr_ltr_dscr").textContent = fmtX(dscr);
+  $("sfr_ltr_piti").textContent = fmtUSD(piti);
+  $("sfr_ltr_cash").textContent = fmtUSD(fin.equityIn);
+
+  let lvl = "green", title = "GREEN — Strong fit";
+  if(coc < 0.04 || dscr < 1.0 || monthlyCf < 0){ lvl = "red"; title = "RED — Below threshold"; }
+  else if(coc < 0.08 || dscr < 1.2){ lvl = "yellow"; title = "YELLOW — Marginal"; }
+  sfrRec("sfr_ltr_rec", lvl, title,
+    "Year-1 CoC " + fmtPct(coc) + " · DSCR " + fmtX(dscr) + " · Monthly CF " + fmtUSD(monthlyCf) + " · IRR " + fmtPct(irrLev) + ".");
+
+  window._lastSfr = { strategy:"ltr", price, fin: sfrFinMode, irr:irrLev, coc, cap, dscr, monthlyCf, equityIn:fin.equityIn, hold };
+}
+
+/* STR — short-term rental, monthly economics */
+function runSfrStr(){
+  const price = num($("sfr_price").value);
+  if(price<=0) return;
+  const fin = computeSfrFinancing(price);
+  const adr = num($("sfr_str_adr").value);
+  const occ = num($("sfr_str_occ").value)/100;
+  const cleanFee = num($("sfr_str_clean").value);
+  const stayDays = Math.max(0.5, num($("sfr_str_stay").value));
+  const mgmt = num($("sfr_str_mgmt").value)/100;
+  const fees = num($("sfr_str_fees").value)/100;
+  const util = num($("sfr_str_util").value);
+  const maint = num($("sfr_str_maint").value)/100;
+  const tax = num($("sfr_str_tax").value);
+  const ins = num($("sfr_str_ins").value);
+  const hoa = num($("sfr_str_hoa").value);
+
+  const occupiedNights = 365 * occ;
+  const grossRev = adr * occupiedNights;                         /* annual nightly revenue */
+  const turns = stayDays > 0 ? occupiedNights / stayDays : 0;
+  const cleaningRev = cleanFee * turns;                          /* charged to guest, also paid to cleaner — net 0 in most models */
+  const totalRev = grossRev;                                     /* keep cleaning out of gross — typical */
+  const platformCost = totalRev * fees;
+  const mgmtCost = totalRev * mgmt;
+  const maintCost = totalRev * maint;
+  const utilAnnual = util * 12;
+  const totalOpex = platformCost + mgmtCost + maintCost + utilAnnual + tax + ins + (hoa*12) + (cleanFee * turns);
+  const noi = totalRev - totalOpex;
+  const ds = fin.monthlyPmt * 12;
+  const cfAnnual = noi - ds;
+  const monthlyCf = cfAnnual / 12;
+  const coc = fin.equityIn > 0 ? cfAnnual / fin.equityIn : 0;
+
+  /* Breakeven occupancy: occ at which CF = 0 */
+  const fixedCosts = utilAnnual + tax + ins + (hoa*12) + ds;
+  const variableMargin = (1 - fees - mgmt - maint);
+  const cleanPerNight = stayDays > 0 ? cleanFee / stayDays : 0;
+  /* Per-night net contribution = adr * variableMargin - cleanPerNight */
+  const perNightNet = adr * variableMargin - cleanPerNight;
+  const breakNights = perNightNet > 0 ? fixedCosts / perNightNet : Infinity;
+  const breakOcc = isFinite(breakNights) ? Math.min(1, breakNights / 365) : Infinity;
+  /* Breakeven ADR at current occupancy */
+  const breakAdr = (occupiedNights * variableMargin > 0)
+    ? (fixedCosts + (cleanPerNight * occupiedNights)) / (occupiedNights * variableMargin)
+    : Infinity;
+
+  /* vs LTR — read LTR rent if set, otherwise approximate as 0.7% of price/mo */
+  const ltrRent = num($("sfr_ltr_rent").value) || (price * 0.007);
+  const ltrAnnual = ltrRent * 12 * 0.93 - (price * 0.007) - tax - ins - (hoa*12) - ds;
+  const vsLtr = (cfAnnual - ltrAnnual) / 12;
+
+  $("sfr_str_cf").textContent = fmtUSD(monthlyCf) + " /mo";
+  $("sfr_str_vsltr").textContent = (vsLtr >= 0 ? "+" : "") + fmtUSD(vsLtr) + "/mo vs LTR";
+  $("sfr_str_rev").textContent = fmtUSD(totalRev);
+  $("sfr_str_coc").textContent = fmtPct(coc);
+  $("sfr_str_breakocc").textContent = isFinite(breakOcc) ? fmtPct(breakOcc) : "—";
+  $("sfr_str_breakadr").textContent = isFinite(breakAdr) ? fmtUSD(breakAdr) : "—";
+  $("sfr_str_cash").textContent = fmtUSD(fin.equityIn);
+
+  let lvl = "green", title = "GREEN — Strong STR";
+  if(monthlyCf < 0 || (isFinite(breakOcc) && breakOcc > 0.85)){ lvl = "red"; title = "RED — Tight margins"; }
+  else if(coc < 0.10 || (isFinite(breakOcc) && breakOcc > occ - 0.05)){ lvl = "yellow"; title = "YELLOW — Sensitive to occupancy"; }
+  sfrRec("sfr_str_rec", lvl, title,
+    "Monthly CF " + fmtUSD(monthlyCf) + " · CoC " + fmtPct(coc) + " · Breakeven occ " + (isFinite(breakOcc) ? fmtPct(breakOcc) : "—") + ".");
+
+  window._lastSfr = { strategy:"str", price, fin: sfrFinMode, monthlyCf, coc, totalRev, breakOcc, breakAdr, equityIn:fin.equityIn };
+}
+
+/* Co-living — by-the-room rental */
+function runSfrColiving(){
+  const price = num($("sfr_price").value);
+  if(price<=0) return;
+  const fin = computeSfrFinancing(price);
+  const rooms = Math.max(1, num($("sfr_co_rooms").value));
+  const rentPerRoom = num($("sfr_co_rentroom").value);
+  const vac = num($("sfr_co_vacancy").value)/100;
+  const common = num($("sfr_co_common").value);
+  const mgmt = num($("sfr_co_mgmt").value)/100;
+  const maint = num($("sfr_co_maint").value)/100;
+  const tax = num($("sfr_co_tax").value);
+  const ins = num($("sfr_co_ins").value);
+
+  const grossAnnual = rentPerRoom * rooms * 12;
+  const egi = grossAnnual * (1 - vac);
+  const opex = (egi * (mgmt + maint)) + (common * 12) + tax + ins;
+  const noi = egi - opex;
+  const ds = fin.monthlyPmt * 12;
+  const cfAnnual = noi - ds;
+  const monthlyCf = cfAnnual / 12;
+  const coc = fin.equityIn > 0 ? cfAnnual / fin.equityIn : 0;
+
+  /* Breakeven rooms rented = ceil(fixedCosts / monthly room contribution) */
+  const fixedCosts = (common * 12) + tax + ins + ds;
+  const roomMonthlyNet = rentPerRoom * (1 - mgmt - maint);
+  const breakRoomsAnnual = roomMonthlyNet > 0 ? fixedCosts / (roomMonthlyNet * 12) : Infinity;
+
+  /* vs LTR comparison */
+  const ltrRent = num($("sfr_ltr_rent").value) || (rentPerRoom * rooms * 0.65);
+  const ltrAnnualCf = (ltrRent * 12 * 0.93) - (ltrRent * 12 * 0.13) - tax - ins - ds;
+  const vsLtr = (cfAnnual - ltrAnnualCf) / 12;
+
+  $("sfr_co_cf").textContent = fmtUSD(monthlyCf) + " /mo";
+  $("sfr_co_vsltr").textContent = (vsLtr >= 0 ? "+" : "") + fmtUSD(vsLtr) + "/mo vs whole-house LTR";
+  $("sfr_co_noi").textContent = fmtUSD(noi);
+  $("sfr_co_coc").textContent = fmtPct(coc);
+  $("sfr_co_breakroom").textContent = isFinite(breakRoomsAnnual) ? breakRoomsAnnual.toFixed(1) + " of " + rooms : "—";
+  $("sfr_co_cash").textContent = fmtUSD(fin.equityIn);
+
+  let lvl = "green", title = "GREEN — Co-living works";
+  if(monthlyCf < 0 || coc < 0.05){ lvl = "red"; title = "RED — Below threshold"; }
+  else if(coc < 0.09 || (isFinite(breakRoomsAnnual) && breakRoomsAnnual > rooms - 0.5)){ lvl = "yellow"; title = "YELLOW — Tight; needs near-full occupancy"; }
+  sfrRec("sfr_co_rec", lvl, title,
+    "Monthly CF " + fmtUSD(monthlyCf) + " · CoC " + fmtPct(coc) + " · Breakeven " + (isFinite(breakRoomsAnnual) ? breakRoomsAnnual.toFixed(1) : "—") + " of " + rooms + " rooms.");
+
+  window._lastSfr = { strategy:"coliving", price, fin: sfrFinMode, monthlyCf, coc, noi, rooms, equityIn:fin.equityIn };
+}
+
+/* Fix & Flip — purchase, rehab, hold, sell */
+function runSfrFlip(){
+  const price = num($("sfr_price").value);
+  const arv = num($("sfr_arv").value);
+  if(price<=0 || arv<=0) return;
+  const fin = computeSfrFinancing(price);
+  const rehab = num($("sfr_flip_rehab").value);
+  const months = Math.max(1, num($("sfr_flip_months").value));
+  const holding = num($("sfr_flip_holding").value);
+  const sellPct = num($("sfr_flip_sellcost").value)/100;
+  const contingencyPct = num($("sfr_flip_contingency").value)/100;
+  const rehabWithCont = rehab * (1 + contingencyPct);
+
+  const cashIn = fin.equityIn + rehabWithCont;
+  const monthlyDS = fin.monthlyPmt;
+  const totalHolding = (holding + monthlyDS) * months;
+  const sellingCosts = arv * sellPct;
+  /* Loan payoff at sale (approximate) */
+  const loanPayoff = (fin.monthlyPmt > 0 && fin.term > 0)
+    ? remainingBalance(fin.loanBalance, fin.rate, fin.term*12, months)
+    : fin.loanBalance;
+
+  const allInCost = fin.equityIn + rehabWithCont + totalHolding;
+  const grossProceedsBeforeLoan = arv - sellingCosts;
+  const netToInvestor = grossProceedsBeforeLoan - loanPayoff;
+  const profit = netToInvestor - allInCost;
+  const roi = allInCost > 0 ? profit / allInCost : 0;
+  const p2r = rehab > 0 ? profit / rehab : 0;
+  const breakeven = allInCost + sellingCosts + loanPayoff - fin.loanBalance + (fin.loanBalance > 0 ? 0 : 0);
+  /* Breakeven sale price: solve ARV s.t. profit = 0 */
+  const breakevenSale = (allInCost + loanPayoff) / (1 - sellPct);
+
+  $("sfr_flip_profit").textContent = fmtUSD(profit);
+  $("sfr_flip_roi").textContent = fmtPct(roi) + " ROI · " + months + " mo hold";
+  $("sfr_flip_allin").textContent = fmtUSD(allInCost + loanPayoff);
+  $("sfr_flip_p2r").textContent = fmtX(p2r);
+  $("sfr_flip_break").textContent = fmtUSD(breakevenSale);
+  $("sfr_flip_cash").textContent = fmtUSD(cashIn);
+
+  let lvl = "green", title = "GREEN — Flip works";
+  if(profit <= 0 || roi < 0.10){ lvl = "red"; title = "RED — Don't flip this"; }
+  else if(roi < 0.20 || profit < 25000){ lvl = "yellow"; title = "YELLOW — Marginal flip"; }
+  sfrRec("sfr_flip_rec", lvl, title,
+    "Net profit " + fmtUSD(profit) + " · ROI " + fmtPct(roi) + " · Profit-to-rehab " + fmtX(p2r) + " · Breakeven sale " + fmtUSD(breakevenSale) + ".");
+
+  window._lastSfr = { strategy:"flip", price, arv, fin: sfrFinMode, profit, roi, allInCost, breakevenSale, months };
+}
+
+/* BRRRR — Buy, Rehab, Rent, Refinance, Repeat */
+function runSfrBrrrr(){
+  const price = num($("sfr_price").value);
+  const arv = num($("sfr_arv").value);
+  if(price<=0 || arv<=0) return;
+  const fin = computeSfrFinancing(price);
+  const rehab = num($("sfr_br_rehab").value);
+  const months = Math.max(1, num($("sfr_br_months").value));
+  const holding = num($("sfr_br_holding").value);
+  const refiLtv = num($("sfr_br_refiltv").value)/100;
+  const refiRate = num($("sfr_br_refirate").value)/100;
+  const refiTerm = Math.max(1, num($("sfr_br_refiterm").value));
+  const reficlosePct = num($("sfr_br_reficlose").value)/100;
+  const rent = num($("sfr_br_rent").value);
+  const vac = num($("sfr_br_vacancy").value)/100;
+  const mgmt = num($("sfr_br_mgmt").value)/100;
+  const maint = num($("sfr_br_maint").value)/100;
+  const tax = num($("sfr_br_tax").value);
+  const ins = num($("sfr_br_ins").value);
+  const hoa = num($("sfr_br_hoa").value);
+
+  /* Phase 1: rehab + season period out of pocket */
+  const monthlyDsPreRefi = fin.monthlyPmt;
+  const totalHolding = (holding + monthlyDsPreRefi) * months;
+  const initialCashIn = fin.equityIn + rehab + totalHolding;
+
+  /* Phase 2: refinance based on ARV */
+  const newLoan = arv * refiLtv;
+  const refiClosing = newLoan * reficlosePct;
+  /* Loan payoff at refi (approximate) */
+  const oldLoanPayoff = (fin.monthlyPmt > 0 && fin.term > 0)
+    ? remainingBalance(fin.loanBalance, fin.rate, fin.term*12, months)
+    : fin.loanBalance;
+  const cashFromRefi = newLoan - oldLoanPayoff - refiClosing;
+  const cashLeftIn = initialCashIn - cashFromRefi;
+
+  /* Phase 3: post-refi rental cashflow */
+  const newMonthlyPmt = pmt(newLoan, refiRate, refiTerm);
+  const grossY1 = rent * 12;
+  const egiY1 = grossY1 * (1 - vac);
+  const opexY1 = (egiY1 * (mgmt + maint)) + tax + ins + (hoa * 12);
+  const noiY1 = egiY1 - opexY1;
+  const dsY1 = newMonthlyPmt * 12;
+  const cfY1 = noiY1 - dsY1;
+  const monthlyCf = cfY1 / 12;
+  const dscr = dsY1 > 0 ? noiY1 / dsY1 : 99;
+
+  $("sfr_br_left").textContent = fmtUSD(cashLeftIn);
+  $("sfr_br_leftsub").textContent = cashLeftIn <= 0 ? "Infinite return" : (initialCashIn > 0 ? fmtPct(cashLeftIn / initialCashIn) + " of initial cash remaining" : "");
+  $("sfr_br_in").textContent = fmtUSD(initialCashIn);
+  $("sfr_br_recoup").textContent = fmtUSD(cashFromRefi);
+  $("sfr_br_refiloan").textContent = fmtUSD(newLoan);
+  $("sfr_br_cf").textContent = fmtUSD(monthlyCf) + " /mo";
+  $("sfr_br_dscr").textContent = fmtX(dscr);
+
+  let lvl = "green", title;
+  if(cashLeftIn <= 0){ title = "GREEN — Infinite Return"; }
+  else if(initialCashIn > 0 && cashLeftIn / initialCashIn <= 0.20){ title = "GREEN — Strong BRRRR"; }
+  else if(initialCashIn > 0 && cashLeftIn / initialCashIn <= 0.50){ lvl = "yellow"; title = "YELLOW — Partial recoup"; }
+  else { lvl = "red"; title = "RED — Most cash stuck in deal"; }
+  if(monthlyCf < 0){ lvl = "red"; title = "RED — Negative post-refi cash flow"; }
+
+  sfrRec("sfr_br_rec", lvl, title,
+    "Initial cash in " + fmtUSD(initialCashIn) + " · Recouped at refi " + fmtUSD(cashFromRefi) + " · Cash left " + fmtUSD(cashLeftIn) + " · Post-refi DSCR " + fmtX(dscr) + " · Monthly CF " + fmtUSD(monthlyCf) + ".");
+
+  window._lastSfr = { strategy:"brrrr", price, arv, fin: sfrFinMode, initialCashIn, cashFromRefi, cashLeftIn, newLoan, monthlyCf, dscr };
+}
+
 /* =========================================================
    SAVE A DEAL TO GHL
    ========================================================= */
@@ -1458,6 +2168,7 @@ function saveDeal(kind){
   if(kind==="coc")      payload.analysis = window._lastCoC;
   if(kind==="mortgage") payload.analysis = window._lastMortgage;
   if(kind==="seller")   payload.analysis = window._lastSeller;
+  if(kind==="sfr")      payload.analysis = window._lastSfr;
   postToGHL(payload);
   showSaveToast("Saved to your account — we'll match this against deals.");
 }
