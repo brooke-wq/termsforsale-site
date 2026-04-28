@@ -1,0 +1,84 @@
+{
+  "name": "CSE — 06 Daily Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 14 * * *" }]
+        }
+      },
+      "id": "cron",
+      "name": "Cron 7am AZ (14:00 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT (SELECT COUNT(*) FROM scores WHERE tier='HOT' AND scored_at >= NOW() - INTERVAL '24 hours') AS hot_count, (SELECT COUNT(*) FROM scores WHERE tier='WARM' AND scored_at >= NOW() - INTERVAL '24 hours') AS warm_count, (SELECT COUNT(*) FROM listings WHERE scraped_at >= NOW() - INTERVAL '24 hours') AS scraped_count, (SELECT COUNT(*) FROM scrape_errors WHERE occurred_at >= NOW() - INTERVAL '24 hours') AS errors_count, (SELECT COALESCE(SUM(cost_usd),0) FROM claude_cost_log WHERE called_at >= NOW() - INTERVAL '24 hours') AS claude_cost_24h, (SELECT json_agg(t) FROM (SELECT id, address, city, state, asset_class, units, listing_price, equity_estimate_percent, overall_score, recommended_structure FROM v_hot_leads_24h ORDER BY overall_score DESC LIMIT 5) t) AS top_hot"
+      },
+      "id": "stats",
+      "name": "Pull 24h stats",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst lines = [];\nlines.push('🏢 Commercial Stack Engine — Daily Digest');\nlines.push(`📅 ${new Date().toLocaleDateString('en-US',{timeZone:'America/Phoenix'})}`);\nlines.push('');\nlines.push(`🔥 HOT leads (24h): ${r.hot_count}`);\nlines.push(`💧 WARM leads (24h): ${r.warm_count}`);\nlines.push(`📥 Scraped: ${r.scraped_count}`);\nlines.push(`💵 Claude spend (24h): $${Number(r.claude_cost_24h || 0).toFixed(3)}`);\nlines.push(`⚠️ Errors: ${r.errors_count}`);\nif (r.top_hot && r.top_hot.length) {\n  lines.push('');\n  lines.push('Top 5 HOT leads:');\n  for (const l of r.top_hot) {\n    lines.push(`  • ${l.overall_score}/100 — ${l.address || '(no street)'} ${l.city}, ${l.state} — ${l.asset_class.toUpperCase()} ${l.units || '?'}u — $${(l.listing_price || 0).toLocaleString()} — ${l.equity_estimate_percent}% eq — ${l.recommended_structure?.type || 'n/a'}`);\n  }\n}\nreturn [{ json: { text: lines.join('\\n'), ...r } }];"
+      },
+      "id": "compose",
+      "name": "Compose digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "Commercial Stack Engine <noreply@dealpros.io>",
+        "toEmail": "={{$env.DIGEST_EMAIL_TO}}",
+        "subject": "🏢 Commercial Stack — Daily Digest ({{new Date().toLocaleDateString('en-US')}})",
+        "text": "={{$json.text}}"
+      },
+      "id": "email",
+      "name": "Email digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [960, 220]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.SLACK_WEBHOOK_URL}}",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"text\": {{JSON.stringify($json.text)}}\n}"
+      },
+      "id": "slack",
+      "name": "Slack post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [960, 380]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "digest_log",
+        "columns": "digest_date,hot_count,warm_count,scraped_count,errors_count,total_cost_usd,payload"
+      },
+      "id": "log",
+      "name": "Log digest",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Cron 7am AZ (14:00 UTC)": { "main": [[{ "node": "Pull 24h stats", "type": "main", "index": 0 }]] },
+    "Pull 24h stats":          { "main": [[{ "node": "Compose digest", "type": "main", "index": 0 }]] },
+    "Compose digest":          { "main": [[{ "node": "Email digest", "type": "main", "index": 0 }, { "node": "Slack post", "type": "main", "index": 0 }, { "node": "Log digest", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "_notes": "Fires daily at 7am AZ (14:00 UTC, Arizona has no DST). Posts to email + Slack in parallel. If SLACK_WEBHOOK_URL is unset the Slack node will error silently — that's fine, the email still ships. The digest_log INSERT acts as the idempotency record."
+}

@@ -1,0 +1,101 @@
+{
+  "name": "CSE — 05 LOI Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cse-loi-generator",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook",
+      "name": "Webhook from GHL ('ready_for_loi')",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lead.id AS lead_id, lead.ghl_contact_id, l.address, l.city, l.state, l.zip, l.asset_class, l.units, l.year_built, l.listing_price, e.parcel_number, e.estimated_market_value, e.equity_estimate_percent, e.has_active_mortgage, e.mortgage_estimated_balance, s.overall_score, s.tier, s.recommended_structure, s.red_flags FROM leads lead JOIN listings l ON l.id = lead.listing_id JOIN scores s ON s.id = lead.score_id JOIN enriched_properties e ON e.id = s.enrichment_id WHERE lead.ghl_contact_id = '{{$json.contactId}}' ORDER BY lead.pushed_at DESC LIMIT 1"
+      },
+      "id": "fetch",
+      "name": "Fetch lead+score+enrichment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{$env.ANTHROPIC_API_KEY}}" },
+            { "name": "anthropic-version", "value": "2023-06-01" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"claude-haiku-4-5-20251001\",\n  \"max_tokens\": 2500,\n  \"temperature\": 0.1,\n  \"system\": \"<<<PASTE prompts/loi-generation-prompt.md SYSTEM PROMPT>>>\",\n  \"messages\": [ { \"role\": \"user\", \"content\": {{JSON.stringify($json)}} } ]\n}"
+      },
+      "id": "claude",
+      "name": "Claude Haiku — fill LOI vars",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Render the LOI HTML from the filled vars and feed it to Puppeteer/wkhtmltopdf.\n// PHASE 1 STUB: returns the JSON only. Phase 2 should call a /generate-loi-pdf\n// endpoint on the existing /home/brooke/pdf-render-service that ships the\n// PDF to Google Drive and returns a webViewLink.\nconst vars = JSON.parse($input.first().json.content[0].text);\nreturn [{ json: { vars, generated_pdf_url: null } }];"
+      },
+      "id": "render",
+      "name": "Render PDF (stub)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "loi_drafts",
+        "columns": "lead_id,structure_type,purchase_price,down_payment,seller_carry_amount,interest_rate,term_months,balloon_months,monthly_payment,earnest_money,inspection_days,contingencies,generated_pdf_url"
+      },
+      "id": "insertLoi",
+      "name": "Insert loi_drafts row",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{$env.GHL_API_KEY}}" },
+            { "name": "Version", "value": "2021-07-28" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"type\": \"SMS\",\n  \"contactId\": \"{{$env.BROOKE_GHL_CONTACT_ID}}\",\n  \"message\": \"LOI ready: {{$json.vars.property_address}} — {{$json.generated_pdf_url}}\"\n}"
+      },
+      "id": "smsBrooke",
+      "name": "SMS Brooke (LOI ready)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook from GHL ('ready_for_loi')": { "main": [[{ "node": "Fetch lead+score+enrichment", "type": "main", "index": 0 }]] },
+    "Fetch lead+score+enrichment":        { "main": [[{ "node": "Claude Haiku — fill LOI vars", "type": "main", "index": 0 }]] },
+    "Claude Haiku — fill LOI vars":       { "main": [[{ "node": "Render PDF (stub)", "type": "main", "index": 0 }]] },
+    "Render PDF (stub)":                  { "main": [[{ "node": "Insert loi_drafts row", "type": "main", "index": 0 }]] },
+    "Insert loi_drafts row":              { "main": [[{ "node": "SMS Brooke (LOI ready)", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "_notes": "REQUIRES MANUAL TRIGGER. The webhook only fires when Brooke clicks 'Ready for LOI' on a GHL opportunity (which fires a GHL workflow that POSTs here). Per CRITICAL DO-NOTS: never auto-generate LOIs. PDF rendering is a phase-2 stub — wire to the existing pdf-render-service on the droplet."
+}

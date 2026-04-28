@@ -1,0 +1,68 @@
+{
+  "name": "CSE — 01 Sourcing Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "hours", "hoursInterval": 12 }
+          ]
+        }
+      },
+      "id": "cron",
+      "name": "Cron 2x daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://scraper:3100/scrape/run",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Auth-Token", "value": "={{$env.SCRAPER_AUTH_TOKEN}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"source\": \"{{$json.source}}\",\n  \"maxListings\": 200\n}",
+        "options": { "timeout": 600000 }
+      },
+      "id": "http",
+      "name": "Run scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "source", "value": "crexi" },
+            { "name": "source", "value": "loopnet" },
+            { "name": "source", "value": "bizbuysell" },
+            { "name": "source", "value": "mhpfinder" },
+            { "name": "source", "value": "craigslist" },
+            { "name": "source", "value": "fsbo-aggregator" }
+          ]
+        }
+      },
+      "id": "sources",
+      "name": "Source list (loop)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [560, 300]
+    }
+  ],
+  "connections": {
+    "Cron 2x daily": { "main": [[{ "node": "Source list (loop)", "type": "main", "index": 0 }]] },
+    "Source list (loop)": { "main": [[{ "node": "Run scraper", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_notes": "Fires at 6am + 6pm Phoenix time. Iterates over each source and POSTs to /scrape/run on the scraper-service container. Each scrape inserts into Postgres, which fires the new_listing trigger that workflow 02 (Enrichment Pipeline) listens on."
+}

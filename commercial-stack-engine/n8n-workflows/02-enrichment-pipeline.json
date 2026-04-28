@@ -1,0 +1,96 @@
+{
+  "name": "CSE — 02 Enrichment Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "channel": "new_listing"
+      },
+      "id": "pglisten",
+      "name": "Postgres LISTEN new_listing",
+      "type": "n8n-nodes-base.postgresTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM listings WHERE id = {{$json.listing_id}}::bigint"
+      },
+      "id": "fetchListing",
+      "name": "Fetch listing row",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Call the county records mapper via the scraper-service.\n// If county is unmapped, return enrichment_skipped=true and let the\n// next node handle the gating.\nconst l = $input.first().json;\nconst body = {\n  state: l.state,\n  county: l.county,\n  address: l.address,\n  city: l.city,\n  zip: l.zip\n};\n// TODO: Phase 1 — wire this up via /enrich endpoint on scraper-service\n// once county-scrapers/<state>-<county>.js modules ship.\n// For now, emit a stub enrichment row so the pipeline E2E works.\nreturn [{\n  json: {\n    listing_id: l.id,\n    enrichment_skipped: true,\n    enrichment_skip_reason: 'no county scraper module yet (phase 1)'\n  }\n}];"
+      },
+      "id": "fetchCounty",
+      "name": "Fetch county data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compute equity. Use the equity-calc helper logic inline since n8n\n// doesn't natively require local files. Real implementation should run\n// this inside the scraper-service via a /enrich endpoint.\n// For phase 1 stub: pass the row through unchanged.\nreturn $input.all();"
+      },
+      "id": "computeEquity",
+      "name": "Compute equity %",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "enriched_properties",
+        "columns": "listing_id,parcel_number,owner_name,owner_mailing_address,owner_state,is_llc,llc_status,last_sale_date,last_sale_price,estimated_market_value,has_active_mortgage,mortgage_estimated_balance,equity_estimate_dollars,equity_estimate_percent,motivation_signals,enrichment_skipped,enrichment_skip_reason,raw_county_json"
+      },
+      "id": "insertEnriched",
+      "name": "Insert enrichment row",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{$json.equity_estimate_percent}}", "operation": "largerEqual", "value2": 60 }
+          ]
+        }
+      },
+      "id": "equityGate",
+      "name": "Equity ≥ 60% gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1440, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.N8N_INTERNAL_URL}}/webhook/cse-stack-scoring",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"listing_id\": {{$json.listing_id}},\n  \"enrichment_id\": {{$json.id}}\n}"
+      },
+      "id": "fireScoring",
+      "name": "Fire scoring webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1680, 200]
+    }
+  ],
+  "connections": {
+    "Postgres LISTEN new_listing": { "main": [[{ "node": "Fetch listing row", "type": "main", "index": 0 }]] },
+    "Fetch listing row":           { "main": [[{ "node": "Fetch county data", "type": "main", "index": 0 }]] },
+    "Fetch county data":           { "main": [[{ "node": "Compute equity %", "type": "main", "index": 0 }]] },
+    "Compute equity %":            { "main": [[{ "node": "Insert enrichment row", "type": "main", "index": 0 }]] },
+    "Insert enrichment row":       { "main": [[{ "node": "Equity ≥ 60% gate", "type": "main", "index": 0 }]] },
+    "Equity ≥ 60% gate":           { "main": [[{ "node": "Fire scoring webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "_notes": "PHASE 1 STUB: the Fetch county data node is a placeholder. Replace with an HTTP call to a /enrich endpoint on the scraper-service that runs lib/county-records-mapper.js once Tier 1 county modules ship. Equity gate hard-rejects <60% so Claude is never invoked on cold leads."
+}

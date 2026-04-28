@@ -1,0 +1,133 @@
+{
+  "name": "CSE — 03 Stack Scoring Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cse-stack-scoring",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook",
+      "name": "Webhook in",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT l.id AS listing_id, l.asset_class, l.state, l.county, l.city, l.zip, l.address, l.listing_price, l.units, l.year_built, l.lot_size, e.id AS enrichment_id, e.parcel_number, e.owner_name, e.owner_state, e.is_llc, e.llc_status, e.last_sale_date, e.last_sale_price, e.estimated_market_value, e.has_active_mortgage, e.mortgage_estimated_balance, e.equity_estimate_percent, e.motivation_signals FROM listings l JOIN enriched_properties e ON e.listing_id = l.id WHERE e.equity_estimate_percent >= 60 AND NOT EXISTS (SELECT 1 FROM scores s WHERE s.enrichment_id = e.id) ORDER BY e.enriched_at DESC LIMIT 10"
+      },
+      "id": "pull10",
+      "name": "Pull 10 unscored properties",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build a single Claude payload with all 10 properties.\nconst items = $input.all().map(i => i.json);\nif (!items.length) return [];\nconst userMsg = JSON.stringify({ properties: items });\nreturn [{ json: { properties: items, userMsg } }];"
+      },
+      "id": "build",
+      "name": "Build Claude payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{$env.ANTHROPIC_API_KEY}}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"claude-haiku-4-5-20251001\",\n  \"max_tokens\": 8000,\n  \"temperature\": 0.2,\n  \"system\": \"<<<PASTE prompts/stack-scoring-prompt.md SYSTEM PROMPT>>>\",\n  \"messages\": [ { \"role\": \"user\", \"content\": {{$json.userMsg}} } ]\n}"
+      },
+      "id": "claude",
+      "name": "Claude Haiku score",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude response, log cost, prepare insert rows.\nconst resp = $input.first().json;\nconst text = resp.content?.[0]?.text || '{}';\nconst parsed = JSON.parse(text);\nconst scores = parsed.scores || (parsed.overall_score ? [parsed] : []);\nconst props = $node['Build Claude payload'].json.properties;\nconst inputTokens = resp.usage?.input_tokens || 0;\nconst outputTokens = resp.usage?.output_tokens || 0;\nconst cost = (inputTokens * 1 + outputTokens * 5) / 1_000_000;\nconst rows = scores.map((s, i) => ({\n  json: {\n    listing_id: props[i].listing_id,\n    enrichment_id: props[i].enrichment_id,\n    overall_score: s.overall_score,\n    equity_score: s.equity_score,\n    motivation_score: s.motivation_score,\n    asset_quality_score: s.asset_quality_score,\n    stack_fit_score: s.stack_fit_score,\n    tier: s.tier,\n    recommended_structure: s.recommended_structure,\n    red_flags: s.red_flags || [],\n    buyer_pitch_angle: s.buyer_pitch_angle || '',\n    claude_input_tokens: inputTokens,\n    claude_output_tokens: outputTokens,\n    claude_cost_usd: cost\n  }\n}));\nreturn rows;"
+      },
+      "id": "parse",
+      "name": "Parse + cost-log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "scores",
+        "columns": "listing_id,enrichment_id,overall_score,equity_score,motivation_score,asset_quality_score,stack_fit_score,tier,recommended_structure,red_flags,buyer_pitch_angle,claude_input_tokens,claude_output_tokens,claude_cost_usd"
+      },
+      "id": "insert",
+      "name": "Insert scores",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "claude_cost_log",
+        "columns": "workflow,listing_id,model,input_tokens,output_tokens,cost_usd"
+      },
+      "id": "costlog",
+      "name": "Log Claude cost",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1440, 480]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{$json.tier}}", "operation": "equal", "value2": "HOT" }
+          ]
+        }
+      },
+      "id": "isHot",
+      "name": "Is HOT?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1680, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.N8N_INTERNAL_URL}}/webhook/cse-hot-lead-router",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"score_id\": {{$json.id}},\n  \"listing_id\": {{$json.listing_id}}\n}"
+      },
+      "id": "fireRouter",
+      "name": "Fire Hot Lead Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1920, 200]
+    }
+  ],
+  "connections": {
+    "Webhook in":              { "main": [[{ "node": "Pull 10 unscored properties", "type": "main", "index": 0 }]] },
+    "Pull 10 unscored properties": { "main": [[{ "node": "Build Claude payload", "type": "main", "index": 0 }]] },
+    "Build Claude payload":    { "main": [[{ "node": "Claude Haiku score", "type": "main", "index": 0 }]] },
+    "Claude Haiku score":      { "main": [[{ "node": "Parse + cost-log", "type": "main", "index": 0 }]] },
+    "Parse + cost-log":        { "main": [[{ "node": "Insert scores", "type": "main", "index": 0 }, { "node": "Log Claude cost", "type": "main", "index": 0 }]] },
+    "Insert scores":           { "main": [[{ "node": "Is HOT?", "type": "main", "index": 0 }]] },
+    "Is HOT?":                 { "main": [[{ "node": "Fire Hot Lead Router", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "_notes": "Pulls up to 10 unscored properties at a time and batches them into a single Claude Haiku call (cost guardrail). The system prompt body must be pasted from prompts/stack-scoring-prompt.md before activating in n8n. After insert, only HOT-tier scores fire the Hot Lead Router; WARM/COLD are logged only and surface in the Daily Digest."
+}
