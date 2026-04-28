@@ -1,7 +1,8 @@
 # Investor Tools Hub: GHL Webhook Setup
 
 **Created:** April 27, 2026
-**Status:** Pending — `/tools.html` is live but submissions are silently dropped
+**Updated:** April 28, 2026 — gate flow rewired to use existing `/buying-criteria.html` auth + buy box
+**Status:** Pending — both `/tools.html` and `/admin/tools.html` `Save analysis` clicks are silently dropped
 **Estimated time:** 30 min (Option A, hardcode) or 90 min (Option B, proxy)
 **Access needed:** GHL (Terms For Sale sub-account `7IyUgu1zpi38MDYpSDTs`) + Netlify dashboard
 
@@ -10,19 +11,29 @@
 ## Why this doc exists
 
 The `/tools.html` calculator hub launched on 2026-04-27 (PR #153) with a
-placeholder webhook URL. Right now:
+placeholder webhook URL. As of 2026-04-28 the gate flow was rewired:
 
-- The gate form (First/Last/Email/Phone/Company) accepts submissions and
-  unlocks the calculators visually.
-- **No contact lands in GHL.** The JS detects the placeholder string and
-  short-circuits with a `console.warn` — a fire-and-forget no-op.
-- The "Save analysis" buttons inside each calculator have the same fate.
+- **No more email gate on `/tools.html`.** Calculators unlock when the visitor
+  has both a buyer profile (`localStorage.tfs_buyer`) and a buy box on file
+  (`localStorage.tfs_buybox`), both of which are written by
+  `/buying-criteria.html`. New visitors are sent there first; existing buyers
+  with a buy box hit `/tools.html` and the calculators unlock immediately.
+- **No more `tools_signup` event.** All buyers in the funnel are already
+  captured via the existing `/api/buy-box-save` and `/api/auth-signup`
+  endpoints, so we never duplicated that work here.
+- **`deal_save` is still the only public-page outbound event** — it fires when
+  a buyer clicks "Save analysis" inside any calculator, posting the email +
+  computed KPIs to a GHL inbound webhook so the team can match the contact
+  against incoming deals.
+- **Internal `/admin/tools.html`** is a parallel page gated by the existing
+  `AdminShell` admin password. Its save button posts `team_save` (distinct
+  event name) so internal usage doesn't pollute lead reporting.
 
-This doc walks through closing the loop. Read **Task 1** first (the GHL side
-is the same either way), then pick **Option A** or **Option B** for the
-client side.
+Both pages currently `console.warn` instead of POSTing because the placeholder
+URL is still in the code.
 
-The placeholder lives at `termsforsale/tools.html:951`:
+The placeholder lives at `termsforsale/tools.html` (and the same constant in
+`termsforsale/admin/tools.html`):
 
     const GHL_WEBHOOK_URL = "REPLACE_WITH_GHL_INBOUND_WEBHOOK_URL";
 
@@ -39,7 +50,7 @@ If/Else handles both cleanly.
    (location ID `7IyUgu1zpi38MDYpSDTs`).
 2. Left sidebar → **Automation** → **Workflows** → **+ Create Workflow**
    → **Start from scratch**.
-3. Name it `Investor Tools — Lead + Save Capture`.
+3. Name it `Investor Tools — Save Capture`.
 4. **Add New Trigger** → search **Inbound Webhook** → select → **Save Trigger**.
 5. GHL displays the **Webhook URL**. Copy it. Format:
 
@@ -48,52 +59,64 @@ If/Else handles both cleanly.
 6. Add the actions:
 
    **Action 1: Update or Create Contact** (this action de-duplicates by email
-   so we don't pile up dupes on repeat sessions)
+   so we don't pile up dupes on repeat sessions). The `deal_save` payload
+   carries `email`, `firstName`, `lastName`, and `phone` from the buyer's
+   `tfs_buyer` profile. The `team_save` payload has no contact data — handle
+   that with the If/Else below.
    - Email = `{{inboundWebhookRequest.email}}`
    - First Name = `{{inboundWebhookRequest.firstName}}`
    - Last Name = `{{inboundWebhookRequest.lastName}}`
    - Phone = `{{inboundWebhookRequest.phone}}`
-   - Company = `{{inboundWebhookRequest.company}}`
 
    **Action 2: If/Else** branching on `{{inboundWebhookRequest.event}}`:
 
-   - **Branch A — `event == "tools_signup"`**
-     - Add tag: `tools_signup`
-     - Add tag: `investor-tools-lead`
-     - (Optional) Send a confirmation email welcoming them.
-   - **Branch B — `event == "deal_save"`**
+   - **Branch A — `event == "deal_save"`** (public buyer save)
      - Add tag: `deal_save`
      - Add tag: `tools-{{inboundWebhookRequest.calculator}}`
-       (gives you per-calculator visibility — `tools-analyzer`, `tools-dscr`, etc.)
+       (gives you per-calculator visibility — `tools-analyzer`, `tools-dscr`,
+       `tools-sfr`, etc.)
+     - For SFR saves, also add tag: `sfr-{{inboundWebhookRequest.analysis.strategy}}`
+       (gives per-exit visibility — `sfr-ltr`, `sfr-flip`, `sfr-brrrr`, etc.)
      - (Optional) Send Brooke an internal SMS at `+1 480-637-3117` so
        you know in real time when a buyer saves a deal.
+   - **Branch B — `event == "team_save"`** (internal team usage from `/admin/tools.html`)
+     - Skip Action 1 entirely (no contact attached) — branch this BEFORE the
+       update-contact action, OR have the contact action route only on
+       `event == "deal_save"`.
+     - Add tag: `team_save` to a fixed internal contact (e.g. Brooke's contact
+       ID `1HMBtAv9EuTlJa5EekAL`) if you want a usage trail.
+     - Or simply log via Slack/email instead of touching contacts.
 
 7. Click **Publish**. The workflow is now live.
 
-### Payload reference (from `tools.html`)
+### Payload reference
 
-**`tools_signup`** fires once per gate submission:
+The `tools_signup` event was retired in 2026-04-28's gate rework — buyers
+now sign up via `/buying-criteria.html` which already handles GHL contact
+creation via `/api/buy-box-save`. The tools page never re-captures that data.
 
-    {
-      "event": "tools_signup",
-      "firstName": "...",
-      "lastName": "...",
-      "email": "...",
-      "phone": "...",
-      "company": "...",
-      "source": "Investor Tools Hub",
-      "submittedAt": "<ISO timestamp>"
-    }
-
-**`deal_save`** fires every time a "Save analysis" button is clicked:
+**`deal_save`** (public `/tools.html`) fires every time a logged-in buyer
+clicks "Save analysis" inside any calculator:
 
     {
       "event": "deal_save",
-      "calculator": "analyzer" | "caprate" | "dscr" | "coc" | "mortgage" | "seller",
+      "calculator": "analyzer" | "caprate" | "dscr" | "coc" | "mortgage" | "seller" | "sfr",
       "email": "...",
       "firstName": "...",
       "lastName": "...",
-      "analysis": { ... calculator-specific outputs ... }
+      "phone": "...",
+      "analysis": { ...calculator-specific outputs; sfr also includes `strategy`... }
+    }
+
+**`team_save`** (internal `/admin/tools.html`) fires when a team member
+clicks "Save analysis" — no buyer attribution:
+
+    {
+      "event": "team_save",
+      "calculator": "...",
+      "source": "admin/tools",
+      "savedAt": "<ISO timestamp>",
+      "analysis": { ...same shape as deal_save... }
     }
 
 ---

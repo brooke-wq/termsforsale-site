@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Investor Tools | Terms For Sale</title>
-<meta name="description" content="Free commercial real estate calculators and a full deal analyzer for Terms For Sale buyers. Cap rate, NOI, DSCR, IRR, seller finance, sub-to wrap math.">
+<title>Team Tools (Internal) | Terms For Sale</title>
+<meta name="description" content="Internal team-only access to the Terms For Sale calculator suite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+<script src="/admin/admin.js" defer></script>
 <style>
 /* =========================================================
    TERMS FOR SALE — INVESTOR TOOLS HUB
@@ -400,63 +402,12 @@ a:hover{opacity:.85}
 </head>
 <body>
 
-<!-- =====================================================
-     ACCESS GATE — login + buy box
-     Public /tools.html only. Reads tfs_buyer + tfs_buybox
-     from localStorage; calculators unlock when both are set.
-     ===================================================== -->
-<div id="gate" class="gate-overlay">
-  <div class="gate-card">
-    <aside class="gate-pitch">
-      <div>
-        <div class="gate-logo">
-          <img src="https://assets.cdn.filesafe.space/7IyUgu1zpi38MDYpSDTs/media/697a3aee1fd827ffd863448d.svg" alt="Terms For Sale" style="filter:brightness(0) invert(1)">
-        </div>
-        <div class="eyebrow">Investor Tools</div>
-        <h1>Free for Terms For Sale <em>buyers.</em></h1>
-        <p class="lead">Six commercial calculators plus a full single-family analyzer with all five exit strategies. We unlock them automatically once you have a buyer profile and buy box on file.</p>
-      </div>
-      <div class="gate-features">
-        <div class="gate-feature"><div class="gate-feature-dot">1</div><div><strong>Full Deal Analyzer</strong><span>NNN, multifamily, retail, industrial, office &amp; sale-leaseback &mdash; with multi-year IRR.</span></div></div>
-        <div class="gate-feature"><div class="gate-feature-dot">2</div><div><strong>SFR Deal Analyzer</strong><span>LTR, STR, co-living, fix &amp; flip, BRRRR &mdash; with subject-to and seller-finance modes built in.</span></div></div>
-        <div class="gate-feature"><div class="gate-feature-dot">3</div><div><strong>Save Any Analysis</strong><span>One click to save a deal to your account. We'll match it against incoming offerings.</span></div></div>
-      </div>
-    </aside>
-    <main class="gate-form">
-      <!-- State A: not logged in -->
-      <div id="gate-state-anon">
-        <h2>Sign in to unlock</h2>
-        <p class="lede">The investor tools are reserved for our VIP buyer list. Set up your buyer profile and buy box (one form, takes 2 minutes) and the calculators will unlock automatically.</p>
-        <div style="background:#FFF6E8;border:1px solid #F4DBA6;border-radius:8px;padding:14px 16px;margin-top:16px;font-size:13px;color:var(--tfs-navy);line-height:1.55">
-          <strong style="display:block;margin-bottom:4px;font-weight:700">What you'll get</strong>
-          Auto-matched deal alerts, full access to the calculator suite, and one-click "save deal" buttons that route matching properties straight to your inbox.
-        </div>
-        <div class="gate-cta" style="margin-top:24px">
-          <a href="/buying-criteria.html" class="btn btn-primary btn-lg" style="display:inline-flex;justify-content:center">Set up profile &amp; buy box &rarr;</a>
-          <p class="gate-fineprint">Already have an account? <a href="/dashboard.html" style="color:var(--tfs-orange-deep);font-weight:600">Sign in here</a> &mdash; the tools will unlock once your buy box is on file.</p>
-        </div>
-      </div>
-      <!-- State B: logged in but missing buy box -->
-      <div id="gate-state-no-buybox" class="hidden">
-        <h2>Almost there, <span id="gate-firstname">there</span></h2>
-        <p class="lede">We have your buyer profile on file but we don't have your buy box yet. Finish the criteria form and the calculators will unlock automatically.</p>
-        <div style="background:#FFF6E8;border:1px solid #F4DBA6;border-radius:8px;padding:14px 16px;margin-top:16px;font-size:13px;color:var(--tfs-navy);line-height:1.55">
-          <strong style="display:block;margin-bottom:4px;font-weight:700">Why we ask</strong>
-          The buy box gates more than the tools &mdash; it powers your matched deal alerts, your "For You" feed on the deal map, and the calculator's Save buttons (which route matching deals back to you).
-        </div>
-        <div class="gate-cta" style="margin-top:24px">
-          <a href="/buying-criteria.html" class="btn btn-primary btn-lg" style="display:inline-flex;justify-content:center">Set up my buy box &rarr;</a>
-          <p class="gate-fineprint">Wrong account? <a href="#" onclick="signOutTools();return false" style="color:var(--tfs-orange-deep);font-weight:600">Sign out</a></p>
-        </div>
-      </div>
-    </main>
-  </div>
-</div>
 
 <!-- =====================================================
      APP SHELL (hidden until gate is passed)
      ===================================================== -->
 <div id="app" class="hidden">
+<!-- AdminShell.requireAuth will remove .hidden once authed -->
 
 <!-- ============== Site header ============== -->
 <header class="tfs-header">
@@ -469,11 +420,11 @@ a:hover{opacity:.85}
       <a href="https://dispobuddy.com">Sell Your Deal</a>
       <a href="https://termsforsale.com/buying-criteria">Get Deal Alerts</a>
       <a href="https://termsforsale.com/commercial">Commercial</a>
-      <a href="#" class="active">Tools</a>
+      <a href="/admin/tools.html" class="active">Team Tools</a>
       <a href="https://termsforsale.com/blog/">Learn</a>
     </nav>
     <div class="tfs-header-cta">
-      <a href="https://termsforsale.com/buy-box.html" class="btn btn-primary btn-sm">My Buy Box</a>
+      
       <div class="tfs-avatar" id="userAvatar" title="Account">··</div>
     </div>
   </div>
@@ -483,9 +434,9 @@ a:hover{opacity:.85}
 <section id="view-hub">
   <div class="hub-hero">
     <div class="container hub-hero-inner">
-      <span class="pill">Investor Tools</span>
+      <span class="pill">Team Tools (Internal)</span>
       <h1>Run the numbers <em>like we do.</em></h1>
-      <p>Six free calculators built for active commercial &amp; creative-finance buyers. Save any analysis to your account &mdash; we'll match it against live offerings that fit.</p>
+      <p>Internal team access. Same calculator suite as the public hub, no lead capture &mdash; saves are tagged <code>team_save</code> in GHL.</p>
       <div class="hub-buybox-summary" id="buyboxSummary"></div>
     </div>
   </div>
@@ -496,7 +447,7 @@ a:hover{opacity:.85}
         <div class="eyebrow">Calculators</div>
         <h2>Pick a tool</h2>
       </div>
-      <a href="https://termsforsale.com/buying-criteria" class="btn btn-ghost btn-sm">Manage deal alerts &rarr;</a>
+      <a href="/admin/" class="btn btn-ghost btn-sm">&larr; Back to admin</a>
     </div>
 
     <div class="calc-grid">
@@ -1287,83 +1238,50 @@ document.querySelectorAll('.input-prefix input').forEach(i=>{
 });
 
 /* =========================================================
-   GATE / AUTH (login + buy box, reads existing site keys)
+   GATE / AUTH (admin password via AdminShell)
+   The AdminShell injects its own gate UI when there's no
+   valid admin session. Once authed, onReady fires and we
+   render the hub + run the calculators.
    ========================================================= */
-const TFS_BUYER_KEY  = "tfs_buyer";   /* set by /buying-criteria.html */
-const TFS_BUYBOX_KEY = "tfs_buybox";  /* set by /buying-criteria.html */
+function signOutTools(){ if(window.AdminShell) AdminShell.logout(); else location.reload(); }
 
-function loadBuyer(){ try{return JSON.parse(localStorage.getItem(TFS_BUYER_KEY) || "null");}catch(e){return null;} }
-function loadBuyBox(){ try{return JSON.parse(localStorage.getItem(TFS_BUYBOX_KEY) || "null");}catch(e){return null;} }
-function hasBuyBox(){ const b = loadBuyBox(); return b && (b.targetCities || b.targetStates || b.dealStructures || b.assetTypes || b.maxPrice || b.profile); }
+/* applyGate is referenced by saveDeal as a fallback path; on the
+   admin page there's no buyer/buybox to recheck — the only failure
+   mode is a stale admin session, which AdminShell handles via its
+   401-on-API auto-rotate. So we just no-op here. */
+function applyGate(){ /* no-op on admin page */ }
 
-/* exposed for the "wrong account" link */
-function signOutTools(){
-  try{
-    localStorage.removeItem(TFS_BUYER_KEY);
-    localStorage.removeItem(TFS_BUYBOX_KEY);
-  }catch(e){}
-  location.reload();
-}
-
-function showGateState(state){
-  const anon = $("gate-state-anon");
-  const noBb = $("gate-state-no-buybox");
-  if(anon) anon.classList.toggle("hidden", state !== "anon");
-  if(noBb) noBb.classList.toggle("hidden", state !== "no-buybox");
-}
-
-function applyGate(){
-  const buyer = loadBuyer();
-  if(!buyer || !buyer.email){
-    showGateState("anon");
-    $("gate").classList.remove("hidden");
-    $("app").classList.add("hidden");
-    return;
-  }
-  if(!hasBuyBox()){
-    const fn = (buyer.name || "").split(/\s+/)[0];
-    const fnEl = $("gate-firstname");
-    if(fnEl && fn) fnEl.textContent = fn;
-    showGateState("no-buybox");
-    $("gate").classList.remove("hidden");
-    $("app").classList.add("hidden");
-    return;
-  }
-  /* Both present — unlock */
-  $("gate").classList.add("hidden");
-  $("app").classList.remove("hidden");
-  hydrateHub(buyer);
-  runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller(); runSfr();
-}
-
-function hydrateHub(buyer){
-  const initials = (buyer.initials || "").toUpperCase() || ((buyer.name || "")
-    .split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0]).join("").toUpperCase()) || "··";
-  $("userAvatar").textContent = initials;
-  $("userAvatar").title = (buyer.name || "Account") + " — click to sign out";
+function hydrateHub(){
+  $("userAvatar").textContent = "TM";
+  $("userAvatar").title = "Team Tools — click to sign out";
   $("userAvatar").onclick = signOutTools;
-  const bb = loadBuyBox() || {};
-  const cities = bb.targetCities || (bb.profile && bb.profile.targetCities) || "";
-  const strats = bb.dealStructures || (bb.profile && bb.profile.dealStructures) || "";
   $("buyboxSummary").innerHTML =
-    '<div><div class="label">Signed in as</div><div class="value">' + (buyer.name || "") + '</div></div>' +
+    '<div><div class="label">Mode</div><div class="value">Team Tools (internal)</div></div>' +
     '<div class="divider"></div>' +
-    '<div><div class="label">Email</div><div class="value">' + (buyer.email || "") + '</div></div>' +
-    (cities ? '<div class="divider"></div><div><div class="label">Markets</div><div class="value">' + cities + '</div></div>' : '') +
-    (strats ? '<div class="divider"></div><div><div class="label">Structures</div><div class="value">' + strats + '</div></div>' : '') +
+    '<div><div class="label">Save event</div><div class="value">team_save &mdash; not tagged as a lead</div></div>' +
     '<div style="flex:1;text-align:right">' +
-    '<a href="/buying-criteria.html" class="btn btn-primary btn-sm" style="display:inline-flex">Update buy box &rarr;</a></div>';
+      '<a href="/admin/" class="btn btn-ghost btn-sm" style="display:inline-flex;margin-right:8px">Admin home</a>' +
+      '<a href="#" onclick="signOutTools();return false" class="btn btn-primary btn-sm" style="display:inline-flex">Sign out</a>' +
+    '</div>';
 }
 
+function bootAdminTools(){
+  if(!window.AdminShell){ console.error("AdminShell not loaded — cannot gate admin tools page"); return; }
+  AdminShell.requireAuth(function(){
+    document.getElementById("app").classList.remove("hidden");
+    hydrateHub();
+    runAnalyzer(); runCapRate(); runDSCR(); runCoC(); runMortgage(); runSeller(); runSfr();
+  });
+}
 if(document.readyState === "loading"){
-  document.addEventListener("DOMContentLoaded", applyGate);
+  document.addEventListener("DOMContentLoaded", bootAdminTools);
 } else {
-  setTimeout(applyGate, 0);
+  setTimeout(bootAdminTools, 0);
 }
 
-/* React to login/buy box changes from another tab */
+/* If admin session is cleared in another tab, force re-gate here. */
 window.addEventListener("storage", function(e){
-  if(e.key === TFS_BUYER_KEY || e.key === TFS_BUYBOX_KEY){ applyGate(); }
+  if(e.key === "tfs_admin_pw" && !e.newValue){ location.reload(); }
 });
 
 /* =========================================================
@@ -2168,13 +2086,8 @@ function runSfrBrrrr(){
    SAVE A DEAL TO GHL
    ========================================================= */
 function saveDeal(kind){
-  const buyer = loadBuyer();
-  if(!buyer || !buyer.email){ applyGate(); return; }
-  /* Split buyer.name into first/last for GHL field mapping */
-  const _parts = (buyer.name || "").split(/\s+/).filter(Boolean);
-  const _first = _parts[0] || "";
-  const _last  = _parts.slice(1).join(" ") || "";
-  let payload = { event:"deal_save", calculator:kind, email: buyer.email, firstName: _first, lastName: _last, phone: buyer.phone || "" };
+  /* Team saves: no buyer attribution. Distinct event name keeps team usage out of lead reporting. */
+  let payload = { event:"team_save", calculator:kind, source:"admin/tools", savedAt:new Date().toISOString() };
   if(kind==="analyzer") payload.analysis = window._lastAnalyzer;
   if(kind==="caprate")  payload.analysis = window._lastCaprate;
   if(kind==="dscr")     payload.analysis = window._lastDSCR;
