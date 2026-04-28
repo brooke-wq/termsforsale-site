@@ -50,40 +50,23 @@ This is intentional — see "Build order" below. **Do not flip
 
 ---
 
-## 7 questions for Brooke (before going live)
+## Operator decisions (answered)
 
-These were called out in the original brief. Defaults are baked into
-`.env.example`; override before production:
+| # | Question | Decision |
+|---|---|---|
+| 1 | GHL sub-account for commercial leads | **NEW sub-account "Commercial Stack" — create before Phase B deploy** |
+| 2 | Buyer entity on LOIs | `Deal Pros LLC` (default kept) |
+| 3 | Earnest money | **Case-by-case per deal** — operator sets in LOI form, no auto-tier |
+| 4 | Inspection / DD timeline | **Case-by-case per deal** — env defaults are starting points only, LOI form requires confirmation |
+| 5 | Repo location | **Standalone `brooke-wq/acquisitions` repo** — see `docs/REPO_MIGRATION.md` |
+| 6 | Slack channel | `#commercial-deals` — Brooke to create + grab webhook URL |
+| 7 | SMS phone for HOT leads | `+1 480-637-3117` (default confirmed) |
 
-1. **Which GHL sub-account hosts commercial leads?**
-   Default assumption: existing TFS sub-account `7IyUgu1zpi38MDYpSDTs`.
-   If you want a separate `Commercial Stack` sub, create it and set
-   `GHL_LOCATION_ID` accordingly.
-
-2. **Buyer entity name on LOIs?**
-   Default: `Deal Pros LLC` (`LOI_BUYER_ENTITY` in `.env`).
-
-3. **Earnest money tiers?**
-   Hard-coded into `prompts/loi-generation-prompt.md`:
-   `<$500k → $1k`, `$500k–$2M → $2.5k`, `>$2M → $5k`.
-   Edit the prompt + redeploy if you want different tiers.
-
-4. **Inspection/DD period?**
-   Default: 30 days (`LOI_DEFAULT_INSPECTION_DAYS=30`). Closing 60 days.
-
-5. **Standalone repo or paperclip integration?**
-   Currently lives at `commercial-stack-engine/` inside `termsforsale-site`
-   on branch `claude/setup-acquisition-system-YUtAb`. Move to a dedicated
-   `acquisitions` GitHub repo when you grant access.
-
-6. **Slack channel for digest?**
-   `#commercial-deals` — create the channel + an Incoming Webhook,
-   paste the URL into `SLACK_WEBHOOK_URL`. Optional; if unset, only the
-   email digest fires.
-
-7. **SMS alert phone for HOT leads?**
-   Default: `+1 480-637-3117` (`BROOKE_PHONE` per CLAUDE.md). Verify
-   this is your current cell.
+**Implication of #1**: until the new GHL sub-account exists, the system runs
+in **Phase A** mode — scrape + enrich + score, with HOT scores accumulating
+in the `scores` table. No GHL push, no SMS. Brooke can review HOT leads via
+the daily digest email + a Postgres query. **Phase B** flips on once the sub
+is created and `GHL_API_KEY` / `GHL_LOCATION_ID` are filled.
 
 ---
 

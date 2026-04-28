@@ -33,13 +33,37 @@ Estimated time: 60-90 minutes for first deploy, 10 minutes for redeploys.
 
 ---
 
-## Step 2 — GHL pipeline setup (~10 min, in GHL UI)
+## Phase A vs Phase B — deploy sequence
 
-You need a pipeline + stage for commercial leads. If you already have
-a "Commercial / Multifamily" pipeline (per CLAUDE.md, ID
-`HTpFvaMGATSXsECYFhoB`), you can reuse it OR create a new one.
+Per Brooke's decision, commercial leads will live in a **NEW** GHL
+sub-account ("Commercial Stack") that doesn't exist yet. The deploy is
+therefore split into two phases:
 
-**To create a new "Commercial Stack" pipeline:**
+**Phase A (do this now):**
+- Deploy the scraper service + Postgres + n8n workflows
+- Run scraping → enrichment → scoring end-to-end
+- Workflow 04 (Hot Lead Router) silently no-ops because GHL_API_KEY
+  is blank
+- Brooke reviews HOT scores via the daily email digest + a Postgres
+  query (`SELECT * FROM v_hot_leads_24h`)
+- Lets us validate the pipeline + tune scoring on real listings
+  before any GHL integration
+
+**Phase B (do this after Phase A is stable, ~1-2 weeks later):**
+- Create the new "Commercial Stack" GHL sub-account
+- Build the pipeline + stages (steps below)
+- Fill `GHL_API_KEY`, `GHL_LOCATION_ID`, `GHL_PIPELINE_ID_COMMERCIAL`,
+  `GHL_STAGE_STACK_CANDIDATE` in `.env`
+- Activate workflow 04 → hot leads start pushing to GHL with SMS
+
+If you're in Phase A, **skip Step 2 below** — the rest of SETUP works
+without GHL configured.
+
+---
+
+## Step 2 — GHL pipeline setup (Phase B only, ~15 min)
+
+You need a NEW GHL sub-account first. Once created:
 
 1. Log into GHL (the Terms For Sale sub-account)
 2. **Settings → Pipelines → Create New Pipeline**

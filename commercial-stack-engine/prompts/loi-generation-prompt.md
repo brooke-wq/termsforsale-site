@@ -50,10 +50,11 @@ The LOI uses the following variables:
 ═══════════════════════════════════════════════════════════════════════════
 RULES
 ═══════════════════════════════════════════════════════════════════════════
-1. earnest_money tier:
-     purchase_price < $500k        → $1,000
-     $500k - $2M                   → $2,500
-     >$2M                          → $5,000
+1. earnest_money is set CASE-BY-CASE per deal. The buyer (Brooke) supplies
+   the value via `offer_override.earnest_money` — never auto-pick a tier.
+   If `offer_override.earnest_money` is missing or null, return the literal
+   string "TBD — Brooke to set" so the LOI is clearly incomplete and won't
+   accidentally ship with a wrong amount.
 2. monthly_payment must be standard P&I amortization given the
    seller_carry_amount, interest_rate, term_years.
    M = P*r*(1+r)^n / ((1+r)^n - 1)
@@ -67,7 +68,12 @@ RULES
    from the score (e.g. for vintage <1980 add "Buyer's review of structural,
    electrical, and roofing inspections"; for MHP add "Buyer's review of
    park lot rent rolls and infrastructure maintenance records").
-5. Closing timeline: 45-60 days from acceptance. Default 60.
+5. inspection_days and closing_days are CASE-BY-CASE per deal. The buyer
+   supplies them via `offer_override.inspection_days` and
+   `offer_override.closing_days`. If either is missing, fall back to the
+   `buyer_config.default_*` values, but flag this in the
+   `summary_paragraph` (e.g. "Default 30-day inspection used — confirm
+   before sending").
 
 ═══════════════════════════════════════════════════════════════════════════
 OUTPUT FORMAT — STRICT JSON
@@ -138,8 +144,12 @@ OUTPUT FORMAT — STRICT JSON
 ```
 
 If `offer_override` is provided (object with any of: purchase_price,
-down_payment_percent, interest_rate, term_years, balloon_years), use those
-values instead of the score's recommendation.
+earnest_money, down_payment_percent, interest_rate, term_years,
+balloon_years, inspection_days, closing_days), use those values instead
+of the score's recommendation. Per CASE-BY-CASE rules:
+- earnest_money is REQUIRED in offer_override (no default)
+- inspection_days / closing_days are REQUIRED in offer_override; if
+  missing, fall back to buyer_config defaults but flag in summary
 
 ---
 
