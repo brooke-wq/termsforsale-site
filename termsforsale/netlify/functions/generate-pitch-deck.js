@@ -6,7 +6,7 @@
 const crypto = require('crypto');
 
 const NOTION_BASE = 'https://api.notion.com/v1';
-const RENDER_DECK_URL = (process.env.RENDER_SERVICE_URL || 'http://64.23.204.220:3001/render').replace(/\/render$/, '/render-deck');
+const RENDER_DECK_URL = (process.env.RENDER_SERVICE_URL || 'http://64.23.204.220:3001/render').replace(/\/render$/, '/render-deck-v2');
 const RENDER_TOKEN = process.env.RENDER_SERVICE_TOKEN;
 const EMDASH = '—';
 
