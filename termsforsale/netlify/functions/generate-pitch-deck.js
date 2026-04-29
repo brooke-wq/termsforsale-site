@@ -55,7 +55,7 @@ function prop(page, name) {
 
 function fmtMoney(n) { if (n == null || n === '' || isNaN(Number(n))) return EMDASH; return '$' + Math.round(Number(n)).toLocaleString(); }
 function fmtMoneyShort(n) { if (n == null || n === '' || isNaN(Number(n))) return EMDASH; const num = Number(n); if (num >= 1000) return '$' + Math.round(num / 1000) + 'K'; return '$' + Math.round(num).toLocaleString(); }
-function fmtPct(n, decimals) { if (n == null || n === '' || isNaN(Number(n))) return EMDASH; return Number(n).toFixed(decimals != null ? decimals : 2) + '%'; }
+function fmtPct(n, decimals) { if (n == null || n === '' || isNaN(Number(n))) return EMDASH; const num = Number(n); const pct = Math.abs(num) < 1 ? num * 100 : num; return pct.toFixed(decimals != null ? decimals : 2) + '%'; }
 function fmtNumber(n) { if (n == null || n === '' || isNaN(Number(n))) return EMDASH; return Number(n).toLocaleString(); }
 function fmtDate(iso) { if (!iso) return EMDASH; try { const d = new Date(iso); return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return EMDASH; } }
 function emOrStr(s) { return (s != null && s !== '') ? String(s) : EMDASH; }
