@@ -11,3 +11,8 @@ node_modules/
 # Build outputs (keep repo clean)
 dist/
 build/
+
+# Runtime state files written by senders/cron jobs on the droplet
+# (jobs/sent-log.json is updated on every blast; tracking it caused
+# constant divergence between droplet and main)
+jobs/sent-log.json
