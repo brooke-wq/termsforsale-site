@@ -44,6 +44,7 @@ const {
   loadDynamicFieldIds,
   getCF,
   CF,
+  slugifyAddress,
 } = legacy;
 
 // Optional helpers — load if present, skip gracefully if not
@@ -366,6 +367,44 @@ async function ghlSendEmail(apiKey, contactId, subject, body) {
   });
 }
 
+// Write the per-deal audit tags the legacy sender used to write. The
+// admin Deal Buyer List dashboard (and admin-analytics.js) queries
+// GHL for `sent:[slug]` to compute per-deal engagement, so without
+// this write the new sender is invisible to those views. Best-effort
+// — never fail the send if tag write fails.
+//
+// Tags written (matches notify-buyers.js.DISABLED behavior):
+//   - new-deal-alert         (lifetime engagement)
+//   - sent:[slug]            (per-deal audit; queried by admin views)
+//   - tier{N}:[slug]         (match-quality, only if buyer has .tier)
+//   - alerted-{shortId}      (legacy GHL-side dedup)
+async function writeDealAlertTags(apiKey, contact, deal) {
+  const slug = slugifyAddress(deal.streetAddress, deal.city, deal.state);
+  const tierNum = contact.tier || contact._tier;
+  const dealIdShort = (deal.id || '').slice(0, 8);
+
+  const tags = ['new-deal-alert'];
+  if (slug) tags.push('sent:' + slug);
+  if (slug && tierNum) tags.push('tier' + tierNum + ':' + slug);
+  if (dealIdShort) tags.push('alerted-' + dealIdShort);
+
+  try {
+    const r = await httpRequest(GHL_BASE + '/contacts/' + contact.id + '/tags', {
+      method: 'POST',
+      headers: ghlHeaders(apiKey),
+    }, { tags });
+    if (r.status >= 400) {
+      warn('tag write failed for ' + contact.id + ' deal=' + (deal.dealCode || deal.id)
+        + ': HTTP ' + r.status + ' ' + r.body.slice(0, 200));
+    } else {
+      log('tags written for ' + contact.id + ' deal=' + (deal.dealCode || deal.id)
+        + ' [' + tags.join(', ') + ']');
+    }
+  } catch (e) {
+    warn('tag write threw for ' + contact.id + ' deal=' + (deal.dealCode || deal.id) + ': ' + e.message);
+  }
+}
+
 // ─── COMPLIANCE GATE ────────────────────────────────────────────────────
 
 // Opt-in tags — buyer must have ONE of these to receive marketing SMS/email.
@@ -467,6 +506,10 @@ async function sendToBuyer(apiKey, contact, deal, dryRun) {
 
   // Rule 3 — write idempotency mark (AFTER sends, best-effort)
   await writeLastDealSent(apiKey, contact.id, deal);
+
+  // Per-deal audit tags (sent:[slug], tier{N}:[slug], alerted-{shortId},
+  // new-deal-alert). Best-effort — see writeDealAlertTags() above.
+  await writeDealAlertTags(apiKey, contact, deal);
 
   recordSend();
   return { sent: true, reason: 'sent' };
