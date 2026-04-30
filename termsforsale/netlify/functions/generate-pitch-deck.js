@@ -96,6 +96,7 @@ function buildTokenMap(page, pageId) {
   const ltrRent       = prop(page, 'LTR Market Rent');
   const loanType      = prop(page, 'Loan Type');
   const nearestMetro  = prop(page, 'Nearest Metro');
+  const photosFolderUrl = prop(page, 'Photos');
   const description   = prop(page, 'Description');
   const uwVerdict     = prop(page, 'UW Verdict');
   const contractedPrice = prop(page, 'Contracted Price');
