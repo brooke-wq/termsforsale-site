@@ -10,7 +10,7 @@ pure infra prep.
 |---|---|---|---|
 | TFS | Terms For Sale (existing `7IyUgu1zpi38MDYpSDTs`) | `info@termsforsale.com` | `+1 480-637-3117` |
 | DB | Dispo Buddy (NEW) | `partners@dispobuddy.com` | existing DID (BYOC port-in) |
-| ACQ | Acquisitions (NEW) | `acquisitions@dealpros.com` | existing DID (BYOC port-in) |
+| ACQ | Acquisitions (NEW) | `acquisitions@mydealpros.com` | existing DID (BYOC port-in) |
 
 **Estimated time:** 1–2 working days end-to-end. Real bottleneck is A2P
 10DLC re-registration on the new numbers (24–72h carrier review).
@@ -21,7 +21,7 @@ pure infra prep.
 
 - [ ] Confirm GHL plan supports adding 2 more sub-accounts (Agency Pro tier
       typically allows unlimited; if on Starter, upgrade first)
-- [ ] Confirm `dealpros.com` is owned by you and you have DNS access
+- [ ] Confirm `mydealpros.com` is owned by you and you have DNS access
       (Squarespace registrar)
 - [ ] Identify the two existing DIDs you want to port in. Have:
   - the carrier name + account number
@@ -67,20 +67,20 @@ pure infra prep.
 Same as Step 1 but:
    - Name: `Acquisitions`
    - Business name: `Deal Pros LLC` (legal entity owns the brand)
-   - Email: `acquisitions@dealpros.com`
+   - Email: `acquisitions@mydealpros.com`
    - Same scopes on the Private Integration token
    - Save to secure-note as **`GHL_API_TOKEN_ACQ`** + **`GHL_LOCATION_ID_ACQ`**
 
 ## Step 3 — Verify the email sending domains (20 min + DNS propagation)
 
 DB sender is `partners@dispobuddy.com`. ACQ sender is
-`acquisitions@dealpros.com`. Both need SPF + DKIM verified per sub-account
+`acquisitions@mydealpros.com`. Both need SPF + DKIM verified per sub-account
 (GHL handles each location's email reputation independently).
 
 For each new sub-account:
 
 1. **Settings → Email Services → Dedicated Domain** → Add Domain
-2. Enter the bare domain (`dispobuddy.com` for DB, `dealpros.com` for ACQ)
+2. Enter the bare domain (`dispobuddy.com` for DB, `mydealpros.com` for ACQ)
 3. GHL gives you 3 DNS records:
    - 1× TXT for SPF (or merge into existing `v=spf1` record — don't create
      a second one, you can only have one SPF record per domain)
@@ -93,7 +93,7 @@ For each new sub-account:
    personal inbox; check that it lands in inbox (not spam) and the
    `Authentication-Results` header shows `spf=pass` + `dkim=pass`
 
-**`dealpros.com` is the new one** — this domain may not have any prior
+**`mydealpros.com` is the new one** — this domain may not have any prior
 email verification. Confirm Squarespace registrar still has the DNS panel
 exposed for it before you book the sub-account work.
 
@@ -225,7 +225,7 @@ existing functions; refactor in Phase 2.
 
 - [ ] DB sub-account exists, has API token, has Location ID recorded
 - [ ] ACQ sub-account exists, has API token, has Location ID recorded
-- [ ] Both `dispobuddy.com` and `dealpros.com` show DKIM=verified in their
+- [ ] Both `dispobuddy.com` and `mydealpros.com` show DKIM=verified in their
       respective sub-accounts
 - [ ] Both ported numbers show "Active" + A2P 10DLC campaign approved
       (or A2P paperwork submitted and acknowledged)
