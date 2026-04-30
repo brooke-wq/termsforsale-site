@@ -1,0 +1,66 @@
+field_key,display_name,type,purpose,set_by
+contact_role,Contact Role,Multi-select,"Identifies contact as Seller / Agent / BirdDog / EquityExit (analog to TFS Contact Role=Buyer gate)",lead-intake.js + acquisition-assist.js
+referral_source,Referral Source,Text,"How the seller found us (website / agent / bird dog / direct mail / etc.)",lead-intake.js + acquisition-assist.js
+seller_motivation,Seller Motivation,Large Text,Free-form motivation narrative captured at intake,lead-intake.js
+seller_timeline,Seller Timeline,Select,How fast the seller wants to close (ASAP / 30d / 60d / 90d+),lead-intake.js
+seller_verified,Seller Verified,Single Checkbox,Set true when ownership/title verified by Eddie,seller-call-prep.js
+fast_close_needed,Fast Close Needed,Single Checkbox,Seller flagged urgent close,acquisition-assist.js
+property_address,Property Address,Text,Street address (subject property),acquisition-assist.js + lead-intake.js
+property_city,Property City,Text,City,acquisition-assist.js + lead-intake.js
+property_state,Property State,Text,State,acquisition-assist.js + lead-intake.js
+property_zip,Property Zip,Text,ZIP,acquisition-assist.js
+asset_type,Asset Type,Select,SFR / Condo / Townhouse / Multifamily / Land / Commercial,acquisition-assist.js
+property_beds,Property Beds,Number,Bedroom count,acquisition-assist.js
+property_baths,Property Baths,Number,Bathroom count,acquisition-assist.js
+property_sqft,Property SqFt,Number,Living area,acquisition-assist.js
+property_year_built,Property Year Built,Number,Year built,acquisition-assist.js
+property_condition,Property Condition,Select,A / B / C / D condition tier,acquisition-assist.js
+property_occupancy,Property Occupancy,Select,Owner-occupied / Tenant / Vacant,acquisition-assist.js
+prop_description,Property Description,Large Text,Free-form property description,acquisition-assist.js
+known_repairs,Known Repairs,Large Text,Repair list / known issues,acquisition-assist.js
+photo_link,Photo Link,URL,Drive / Imgur link to seller-supplied photos,acquisition-assist.js
+listing_link,Listing Link,URL,MLS or Zillow URL if listed,acquisition-assist.js
+comp_report_link,Comp Report Link,URL,RentCast or PropStream comp doc,seller-call-prep.js + auto-enrich.js
+access_type,Access Type,Select,Lockbox / Tenant / Owner / Showing window,acquisition-assist.js
+current_rent,Current Rent,Number,Monthly rent if tenant-occupied,acquisition-assist.js
+estimated_rent,Estimated Rent,Number,LTR market rent estimate (RentCast),auto-enrich.js
+has_solar,Has Solar,Select,Yes / No / Paid Off (free-form per CLAUDE.md solar conventions),acquisition-assist.js
+has_hoa,Has HOA,Single Checkbox,Property has HOA,acquisition-assist.js
+hoa_monthly,HOA Monthly,Number,HOA dues per month,acquisition-assist.js
+deal_structure,Deal Structure,Select,Cash / SubTo / Seller Finance / Hybrid / Open to all,lead-intake.js + acquisition-assist.js
+under_contract,Under Contract,Select,Yes / No / JV with wholesaler,acquisition-assist.js
+contract_exp_date,Contract Expiration,Date,Contract expiry date if under contract,acquisition-assist.js
+seller_asking_price,Seller Asking Price,Number,What the seller wants,acquisition-assist.js
+estimated_arv,Estimated ARV,Number,After-repair value estimate (RentCast AVM),acquisition-assist.js + auto-enrich.js
+estimated_repairs,Estimated Repairs,Number,Rehab budget estimate,acquisition-assist.js
+emd_amount,EMD Amount,Number,Earnest money seller wants,acquisition-assist.js
+is_free_and_clear,Is Free and Clear,Single Checkbox,No mortgage / lien on the property,acquisition-assist.js
+subto_loan_balance,SubTo Loan Balance,Number,Existing loan balance (SubTo deals),acquisition-assist.js
+subto_loan_status,SubTo Loan Status,Select,Current / Behind / Notice of Default,acquisition-assist.js
+subto_payments_behind,SubTo Payments Behind,Number,Number of missed payments,acquisition-assist.js
+subto_rate,SubTo Rate,Number,Existing loan rate %,acquisition-assist.js
+subto_piti,SubTo PITI,Number,Monthly PITI on the existing loan,acquisition-assist.js
+subto_maturity_date,SubTo Maturity,Date,Loan maturity / payoff date,acquisition-assist.js
+subto_has_balloon,SubTo Has Balloon,Single Checkbox,Existing loan has balloon,acquisition-assist.js
+subto_balloon_detail,SubTo Balloon Detail,Large Text,Balloon terms,acquisition-assist.js
+subto_cash_to_seller,SubTo Cash to Seller,Number,Cash needed at close (SubTo),acquisition-assist.js
+subto_lender_name,SubTo Lender Name,Text,Existing lender,acquisition-assist.js
+subto_lender_contact,SubTo Lender Contact,Text,Lender phone/email,acquisition-assist.js
+sf_underlying_balance,SF Underlying Balance,Number,Wrap balance (Seller Finance deals),acquisition-assist.js
+sf_down_payment,SF Down Payment,Number,Down payment seller wants,acquisition-assist.js
+sf_monthly_payment,SF Monthly Payment,Number,Monthly payment proposed,acquisition-assist.js
+sf_rate,SF Rate,Number,Proposed seller-financed rate %,acquisition-assist.js
+sf_term,SF Term,Number,Years to amortize / balloon,acquisition-assist.js
+sf_has_balloon,SF Has Balloon,Single Checkbox,Seller-finance loan has balloon,acquisition-assist.js
+sf_balloon_detail,SF Balloon Detail,Large Text,Balloon terms,acquisition-assist.js
+open_to_jv_split,Open to JV Split,Single Checkbox,Seller / agent open to JV,acquisition-assist.js
+jv_compensation_type,JV Compensation Type,Select,Flat fee / % of profit / 50/50,acquisition-assist.js
+jv_fee_desired,JV Fee Desired,Number,Dollar amount or % desired,acquisition-assist.js
+jv_notes,JV Notes,Large Text,JV terms commentary,acquisition-assist.js
+is_licensed_agent,Is Licensed Agent,Single Checkbox,Submitter is a licensed agent,acquisition-assist.js
+wholesaler_markets,Wholesaler Markets,Large Text,Markets the wholesaler operates in,acquisition-assist.js
+additional_notes,Additional Notes,Large Text,Catch-all notes,acquisition-assist.js
+lead_score,Lead Score,Number,1-50 lead score from Claude (lead-intake),lead-intake.js
+deal_confidence,Deal Confidence,Select,Low / Medium / High (Claude underwriting verdict),underwriting-poller.js
+last_uw_at,Last Underwritten At,Date,Timestamp of last underwriting run,underwriting-poller.js
+last_uw_summary,Last Underwriting Summary,Large Text,Latest Claude underwriting verdict,underwriting-poller.js

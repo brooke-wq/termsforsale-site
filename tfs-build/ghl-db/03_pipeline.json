@@ -1,0 +1,70 @@
+{
+  "sub_account": "Dispo Buddy",
+  "pipeline_name": "JV Deals",
+  "notes": "Source: docs/ghl-reference/dispobuddy/dispobuddy-opportunities.csv. Stage advancement is driven by partner-stage-notify.js which fires on the GHL 'Opportunity Stage Changed' workflow trigger. The first stage is auto-created by dispo-buddy-submit.js; subsequent stages are operator-driven in GHL UI.",
+  "stages": [
+    {
+      "order": 1,
+      "name": "New JV Lead",
+      "color": "#2563EB",
+      "trigger_event": "dispo-buddy-submit creates opportunity here on every submission",
+      "fires_workflow": "Customer notification + internal SMS/email"
+    },
+    {
+      "order": 2,
+      "name": "Under Review",
+      "color": "#7C3AED",
+      "trigger_event": "Operator advances after manual triage",
+      "fires_workflow": "partner-stage-notify (Under Review email/SMS)"
+    },
+    {
+      "order": 3,
+      "name": "JV Agreement Sent",
+      "color": "#0891B2",
+      "trigger_event": "Operator advances after sending JV terms",
+      "fires_workflow": "partner-stage-notify (Agreement sent notification)"
+    },
+    {
+      "order": 4,
+      "name": "JV Agreement Signed",
+      "color": "#16A34A",
+      "trigger_event": "Operator advances after PA executed (or e-sign webhook)",
+      "fires_workflow": "partner-stage-notify (Agreement signed notification)"
+    },
+    {
+      "order": 5,
+      "name": "Actively Marketing",
+      "color": "#CA8A04",
+      "trigger_event": "Operator advances after deal listed on TFS marketplace",
+      "fires_workflow": "partner-stage-notify (Marketing live notification)"
+    },
+    {
+      "order": 6,
+      "name": "Assignment Sent",
+      "color": "#DC2626",
+      "trigger_event": "Operator advances after sending buyer contract",
+      "fires_workflow": "partner-stage-notify (Assignment sent)"
+    },
+    {
+      "order": 7,
+      "name": "Assigned with EMD",
+      "color": "#EA580C",
+      "trigger_event": "Operator advances after EMD received",
+      "fires_workflow": "partner-stage-notify (EMD received)"
+    },
+    {
+      "order": 8,
+      "name": "Closed",
+      "color": "#10B981",
+      "trigger_event": "Operator advances after funding",
+      "fires_workflow": "partner-stage-notify (Closed - partner paid)"
+    },
+    {
+      "order": 9,
+      "name": "Lost",
+      "color": "#6B7280",
+      "trigger_event": "Operator advances on dead deal",
+      "fires_workflow": "partner-stage-notify (Lost notification)"
+    }
+  ]
+}

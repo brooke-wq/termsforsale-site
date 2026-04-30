@@ -114,7 +114,6 @@ explain later.
 
 ## Common ops
 
-<<<<<<< HEAD
 | Task | Command |
 |---|---|
 | List jobs | `pm2 list` + `crontab -l` |
@@ -123,59 +122,8 @@ explain later.
 | Deploy | commit to `main`, push → Netlify auto-deploys |
 | See recent deploys | https://app.netlify.com/sites/jolly-marzipan-8fc443/deploys |
 
-## Weekly health audit
+## Architecture reference
 
-See `docs/ops/weekly-health-audit.md` for the Monday 8am MST playbook. Catches
-the class of bugs that caused the 2026-04-22 incident before they become one.
-
-## Incident history
-
-- `2026-04-22` — Duplicate sender incident. Three overlapping schedulers sending
-  2×–4× to buyers. Full root cause + permanent rules in
-  `docs/incidents/2026-04-22-duplicate-sender-incident.md`.
-- `fcba383` — hardcoded marketing kill-switch in 3 sender functions (preventive).
-
-## Recent buyer-page upgrades (2026-04-26)
-
-Lennar-style premium polish on the buyer-facing surfaces. All Tier 1 items
-from the audit, all client-side compute (no new paid APIs).
-
-- `deal.html` — new **Pro Forma** tab with live underwriting calculator
-  (price, down %, rate, rent, vacancy, mgmt, taxes, ins, HOA, maint, capex,
-  appreciation, hold). Outputs P&I, NOI, cap rate, CoC, 5/10-yr total return,
-  break-even rent. Side-by-side **Conservative / Base / Aggressive** scenarios.
-  Defaults: 25% down at 6.5% / 30yr, 5% vacancy, 8% mgmt, 1.2% tax, 0.5% ins,
-  5%/5% maint+capex, 3% appreciation. SubTo deals pre-fill rate from
-  `subtoRate`. Math is `calcProForma()` in deal.html.
-- `deal.html` — **Hero stat strip** above the photo grid: headline price,
-  4 spec tiles (beds/baths/sqft/year), deal-type pill, screened-strategy pill.
-- `deal.html` — Info-icon tooltips on Terms-table labels for "Entry Fee",
-  "PITI", "Principal & Interest", "Cap Rate", "DSCR Ratio", and others. See
-  `TERM_GLOSSARY` in `renderDeal()`.
-- `deal.html` — **Rental Comps** panel inside the Pro Forma tab. Lazy-fetches
-  `/api/rental-comps?dealId=<notionPageId>` on first tab open. Comps cached on
-  the Notion page in a `Rent Comps JSON` rich_text property (auto-created
-  best-effort). City/state/zip only — comp street addresses stripped.
-- `deals.html` — **Expected Return badge** on every active card (top-right of
-  photo). Green ≥8% CoC, yellow 4–8%, red <4%. Suppressed when rent or price
-  missing. Helper: `computeQuickReturn(deal)`.
-- `deals.html` + `dashboard.html` — **Buy Box Match Score** badge. Reads
-  `tfs_buybox` from localStorage (written by `/buy-box.html`) and scores each
-  deal 0–100. Shown on cards (logged-in only via the localStorage read) and
-  as the default "For You" tab on the dashboard, sorted by score desc.
-- `deals.html` + `map.html` — **Map pin clustering** via the
-  `leaflet.markercluster@1.5.3` CDN plugin. Brand-colored cluster icons. Falls
-  back to direct map placement if the plugin fails to load.
-- `netlify/functions/rental-comps.js` (NEW) — RentCast `/avm/rent/long-term`
-  proxy. Notion cache write with `Rent Comps JSON` property. Routed via
-  `/api/rental-comps` in `netlify.toml`. Requires `NOTION_TOKEN` +
-  `RENTCAST_API_KEY` env vars (already configured for `auto-enrich`).
-- The existing **Analysis** tab (Buy & Hold / Fix & Flip / BRRRR / Co-Living)
-  was kept intact — Pro Forma is a new tab, not a replacement.
-
-Tier 2 features (neighborhood data, school scores, GREEN/YELLOW/RED verdict,
-deeper account dashboard) deliberately deferred per the Lennar-audit prompt.
-=======
 ### DigitalOcean Droplet
 
 - **Name:** paperclip
@@ -255,6 +203,61 @@ All form submissions send confirmation SMS + email:
 - DigitalOcean Droplet: $6/mo
 - Claude API (Sonnet): ~$4/mo at current volume
 - **Total: ~$10/mo**
+
+## Weekly health audit
+
+See `docs/ops/weekly-health-audit.md` for the Monday 8am MST playbook. Catches
+the class of bugs that caused the 2026-04-22 incident before they become one.
+
+## Incident history
+
+- `2026-04-22` — Duplicate sender incident. Three overlapping schedulers sending
+  2×–4× to buyers. Full root cause + permanent rules in
+  `docs/incidents/2026-04-22-duplicate-sender-incident.md`.
+- `fcba383` — hardcoded marketing kill-switch in 3 sender functions (preventive).
+
+---
+
+## Completed — April 26 2026 Lennar Buyer-Page Polish
+
+Lennar-style premium polish on the buyer-facing surfaces. All Tier 1 items
+from the audit, all client-side compute (no new paid APIs).
+
+- `deal.html` — new **Pro Forma** tab with live underwriting calculator
+  (price, down %, rate, rent, vacancy, mgmt, taxes, ins, HOA, maint, capex,
+  appreciation, hold). Outputs P&I, NOI, cap rate, CoC, 5/10-yr total return,
+  break-even rent. Side-by-side **Conservative / Base / Aggressive** scenarios.
+  Defaults: 25% down at 6.5% / 30yr, 5% vacancy, 8% mgmt, 1.2% tax, 0.5% ins,
+  5%/5% maint+capex, 3% appreciation. SubTo deals pre-fill rate from
+  `subtoRate`. Math is `calcProForma()` in deal.html.
+- `deal.html` — **Hero stat strip** above the photo grid: headline price,
+  4 spec tiles (beds/baths/sqft/year), deal-type pill, screened-strategy pill.
+- `deal.html` — Info-icon tooltips on Terms-table labels for "Entry Fee",
+  "PITI", "Principal & Interest", "Cap Rate", "DSCR Ratio", and others. See
+  `TERM_GLOSSARY` in `renderDeal()`.
+- `deal.html` — **Rental Comps** panel inside the Pro Forma tab. Lazy-fetches
+  `/api/rental-comps?dealId=<notionPageId>` on first tab open. Comps cached on
+  the Notion page in a `Rent Comps JSON` rich_text property (auto-created
+  best-effort). City/state/zip only — comp street addresses stripped.
+- `deals.html` — **Expected Return badge** on every active card (top-right of
+  photo). Green ≥8% CoC, yellow 4–8%, red <4%. Suppressed when rent or price
+  missing. Helper: `computeQuickReturn(deal)`.
+- `deals.html` + `dashboard.html` — **Buy Box Match Score** badge. Reads
+  `tfs_buybox` from localStorage (written by `/buy-box.html`) and scores each
+  deal 0–100. Shown on cards (logged-in only via the localStorage read) and
+  as the default "For You" tab on the dashboard, sorted by score desc.
+- `deals.html` + `map.html` — **Map pin clustering** via the
+  `leaflet.markercluster@1.5.3` CDN plugin. Brand-colored cluster icons. Falls
+  back to direct map placement if the plugin fails to load.
+- `netlify/functions/rental-comps.js` (NEW) — RentCast `/avm/rent/long-term`
+  proxy. Notion cache write with `Rent Comps JSON` property. Routed via
+  `/api/rental-comps` in `netlify.toml`. Requires `NOTION_TOKEN` +
+  `RENTCAST_API_KEY` env vars (already configured for `auto-enrich`).
+- The existing **Analysis** tab (Buy & Hold / Fix & Flip / BRRRR / Co-Living)
+  was kept intact — Pro Forma is a new tab, not a replacement.
+
+Tier 2 features (neighborhood data, school scores, GREEN/YELLOW/RED verdict,
+deeper account dashboard) deliberately deferred per the Lennar-audit prompt.
 
 ---
 
@@ -4000,4 +4003,3 @@ Stages (in order): Profile Completed → NDA Requested → NDA Signed → Packag
 - NEVER expose data room URLs or CIM URLs in any client-side response — always wrap in tokenized links
 - Webhook MUST validate provider signature before doing anything
 - All outbound (email + GHL stage move) must honor `TEST_MODE`
->>>>>>> 475461a (Add Weekly Team Digest system (email + Slack + Notion))

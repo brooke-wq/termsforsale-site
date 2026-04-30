@@ -1,0 +1,70 @@
+{
+  "sub_account": "Acquisitions",
+  "pipeline_name": "Seller Lifecycle",
+  "notes": "Source: docs/ghl-reference/acquisitions/acquisitions-opportunities.csv. Primary pipeline for seller leads. Bird-Dog Triage and Equity Exit pipelines are secondary — author manually in GHL UI after primary lifecycle is live (the provisioner v1 only creates one pipeline per run; re-run with a different config to add more, or build manually).",
+  "stages": [
+    {
+      "order": 1,
+      "name": "New Lead",
+      "color": "#2563EB",
+      "trigger_event": "lead-new tag applied (form submission or manual)",
+      "fires_workflow": "lead-intake (Claude scoring 1-50)"
+    },
+    {
+      "order": 2,
+      "name": "Triaged",
+      "color": "#7C3AED",
+      "trigger_event": "lead-intake completed scoring",
+      "fires_workflow": "Branches: hot (35+) → uw-requested; warm (20-34) → nurture; cold → manual"
+    },
+    {
+      "order": 3,
+      "name": "Underwriting",
+      "color": "#0891B2",
+      "trigger_event": "uw-requested tag applied",
+      "fires_workflow": "underwriting-poller (Claude underwriting → GHL note)"
+    },
+    {
+      "order": 4,
+      "name": "Call Booked",
+      "color": "#16A34A",
+      "trigger_event": "uw-complete tag applied + seller-call-prep finished",
+      "fires_workflow": "seller-call-prep (Eddie's call brief)"
+    },
+    {
+      "order": 5,
+      "name": "Contract Sent",
+      "color": "#CA8A04",
+      "trigger_event": "Operator advances after PA sent",
+      "fires_workflow": "Optional: confirmation SMS to seller"
+    },
+    {
+      "order": 6,
+      "name": "Under Contract",
+      "color": "#DC2626",
+      "trigger_event": "Operator advances after PA executed",
+      "fires_workflow": "Optional: hand-off notification to TFS / Dispo Buddy"
+    },
+    {
+      "order": 7,
+      "name": "Marketing Package Ready",
+      "color": "#EA580C",
+      "trigger_event": "pkg-complete tag applied",
+      "fires_workflow": "deal-package-poller (Claude marketing package → GHL note)"
+    },
+    {
+      "order": 8,
+      "name": "Funded",
+      "color": "#10B981",
+      "trigger_event": "Operator advances after closing at title",
+      "fires_workflow": "Seller paid notification + revenue tracking"
+    },
+    {
+      "order": 9,
+      "name": "Lost",
+      "color": "#6B7280",
+      "trigger_event": "Operator advances on dead deal",
+      "fires_workflow": "None — dead-letter parking stage"
+    }
+  ]
+}

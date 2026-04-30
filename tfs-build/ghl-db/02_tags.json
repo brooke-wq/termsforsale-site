@@ -1,0 +1,29 @@
+{
+  "sub_account": "Dispo Buddy",
+  "notes": "Source: docs/ghl-reference/dispobuddy/dispobuddy-tags.csv. Lowercase exactly — GHL stores tags lowercased anyway, but workflow filters are case-sensitive on the original spec.",
+  "tags": [
+    { "name": "dispo-buddy", "category": "Identity", "purpose": "Segments from TFS buyers in campaigns. Set on every Dispo Buddy form submission." },
+    { "name": "jv-partner", "category": "Identity", "purpose": "JV wholesale partner identity. Set on every Dispo Buddy form submission." },
+    { "name": "jv-submitted", "category": "Identity", "purpose": "Trigger for dispo-buddy-triage cron (DEFERRED). Applied on deal submission only." },
+    { "name": "db-cash", "category": "Deal Type", "purpose": "deal_type contains 'cash'." },
+    { "name": "db-subto", "category": "Deal Type", "purpose": "deal_type contains 'subto' or 'subject'. Also set for Hybrid and Morby." },
+    { "name": "db-seller-finance", "category": "Deal Type", "purpose": "deal_type contains 'seller finance'. Also set for Hybrid and Morby." },
+    { "name": "db-hybrid", "category": "Deal Type", "purpose": "deal_type contains 'hybrid'." },
+    { "name": "db-morby", "category": "Deal Type", "purpose": "deal_type contains 'morby' or 'stack'." },
+    { "name": "db-lease-option", "category": "Deal Type", "purpose": "deal_type contains 'lease'." },
+    { "name": "db-novation", "category": "Deal Type", "purpose": "deal_type contains 'novation'." },
+    { "name": "db-first-deal", "category": "Relationship", "purpose": "is_this_your_first_deal = Yes. First-time partner." },
+    { "name": "db-affiliate-referred", "category": "Relationship", "purpose": "Came via affiliate link. affiliate_id field present." },
+    { "name": "db-direct-to-seller", "category": "Relationship", "purpose": "Contract path = direct-to-seller or agent." },
+    { "name": "db-jv-with-wholesaler", "category": "Relationship", "purpose": "Contract path = JV agreement with another wholesaler." },
+    { "name": "jv-viable", "category": "Triage", "purpose": "Claude viability screen pass (DEFERRED)." },
+    { "name": "jv-rejected", "category": "Triage", "purpose": "Claude viability screen fail (DEFERRED)." },
+    { "name": "opt in", "category": "Consent", "purpose": "Required gate before any marketing SMS/email (mirrors TFS opt-in rule)." },
+    { "name": "migrated:db", "category": "Migration", "purpose": "One-shot tag during sub-account split. Identifies contacts moved from TFS to DB (rollback safety net)." }
+  ],
+  "rules": [
+    "Tags are mutually-OR'd within each category — a deal can be db-cash AND db-subto if hybrid.",
+    "opt in is REQUIRED on a contact before any campaign SMS/email per CLAUDE.md global rule.",
+    "jv-submitted is the per-deal trigger; do not apply on partner-onboard (only on actual deal submission)."
+  ]
+}

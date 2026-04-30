@@ -1,0 +1,37 @@
+tag,category,trigger,effect,set_by
+seller,Identity,Any seller-side intake,Marks contact as seller (Acquisitions sub-account analog of TFS 'tfs buyer'),lead-intake.js + acquisition-assist.js
+agent,Identity,Submitter checked is_licensed_agent,Licensed agent submitter,acquisition-assist.js
+bird-dog,Identity,Bird-dog student submission,Bird-dog student lead,deal-dog-poller.js
+equity-exit,Identity,Equity-exit form submission,Co-ownership / equity-exit inquiry,equity-exit-intake.js
+opt in,Consent,Explicit consent on intake form,Required gate before any marketing SMS/email (mirrors TFS 'opt in' rule),lead-intake.js + acquisition-assist.js
+acquisition-source-website,Source,Web form submission,Came in via termsforsale.com seller form,acquisition-assist.js
+acquisition-source-direct-mail,Source,Phone-in citing direct mail,Direct mail attribution,lead-intake.js (manual)
+acquisition-source-referral,Source,Existing seller referred,Referral attribution,lead-intake.js (manual)
+acquisition-source-agent,Source,Agent-submitted lead,Agent attribution,acquisition-assist.js
+acquisition-source-bird-dog,Source,Bird-dog student submission,Bird-dog attribution,deal-dog-poller.js
+lead-new,Status,New lead created,Trigger for lead-intake cron,lead-intake.js + equity-exit-intake.js + deal-dog-poller.js
+lead-scored,Status,lead-intake completed scoring,Lead has been scored 1-50,lead-intake.js
+lead-unscored,Status,lead-intake failed (Claude error),Score generation failed - manual review,lead-intake.js
+lead-warm,Status,Score 20-34,Warm lead - continue nurture,lead-intake.js
+lead-hot,Status,Score 35+,Hot lead - immediately route to underwriting,lead-intake.js
+lead-stale,Status,No response in 7 days (lead-warm/lead-hot),Trigger for follow-up-nudge,follow-up-nudge.js
+lead-dead,Status,Manual disposition or 30+ days no response,Dead lead - drop from cadences,(manual / future)
+follow-up-sent,Status,Auto-nudge SMS sent,Idempotency for follow-up-nudge,follow-up-nudge.js
+uw-requested,Underwriting,Hot lead routed,Trigger for underwriting-poller cron,lead-intake.js + deal-dog-poller.js
+uw-complete,Underwriting,underwriting-poller finished,Trigger for seller-call-prep cron,underwriting-poller.js
+call-prepped,Underwriting,seller-call-prep finished,Brief is ready for Eddie's outbound call,seller-call-prep.js
+call-completed,Underwriting,Eddie marked call done in GHL,Manual stage advance,(GHL workflow / manual)
+contract-sent,Pipeline,Purchase agreement sent to seller,Pipeline stage,(GHL workflow / manual)
+contract-signed,Pipeline,PA executed,Pipeline stage,(GHL workflow / manual)
+contract-canceled,Pipeline,PA terminated,Dead deal,(GHL workflow / manual)
+pkg-requested,Marketing,Operator requests marketing package,Trigger for deal-package-poller cron,(GHL workflow / manual)
+pkg-complete,Marketing,deal-package-poller finished,Marketing package generated,deal-package-poller.js
+birddog-submitted,BirdDog,Bird-dog form submission,Trigger for deal-dog-poller cron,(form / future endpoint)
+birddog-reviewed,BirdDog,Bird-dog deal reviewed by Claude,AI screen complete,deal-dog-poller.js
+birddog-approved,BirdDog,Bird-dog deal approved,Promoted to lead-new for full intake,deal-dog-poller.js
+birddog-rejected,BirdDog,Bird-dog deal rejected,Dead bird-dog deal,deal-dog-poller.js
+equity-exit-inquiry,EquityExit,Equity-exit form submission,Trigger for equity-exit-intake cron,equity-exit-intake.js
+equity-exit-qualified,EquityExit,equity-exit-intake passed,Qualified for co-ownership program,equity-exit-intake.js
+equity-exit-declined,EquityExit,equity-exit-intake declined,Did not qualify,equity-exit-intake.js
+acquisition-assist,Identity,acquisition-assist form submission,Generic seller-side assistance request,acquisition-assist.js
+migrated:acq,Migration,One-shot tag during sub-account split,Identifies contacts moved from TFS to ACQ (rollback safety net),scripts/migrate-contacts.js

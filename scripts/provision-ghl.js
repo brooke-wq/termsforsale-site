@@ -1,33 +1,56 @@
 #!/usr/bin/env node
 /**
- * TFS Buyer Lifecycle — GHL Provisioner (Phase 2)
+ * GHL Provisioner (multi-brand)
  *
- * Creates in the Terms For Sale GHL sub-account, in order:
- *   1. "Buyer Profile" custom-field folder
- *   2. 21 custom fields from tfs-build/ghl/01_custom_fields.json
- *   3. 5 additional "latest deal" fields from WF02 JSON
- *   4. 9 tags from tfs-build/ghl/02_tags.json
- *   5. "Buyer Lifecycle" pipeline with 12 stages from tfs-build/ghl/03_pipeline.json
+ * Provisions a single GHL sub-account from JSON specs. Supports three brands:
+ *   tfs  → tfs-build/ghl/*       (Terms For Sale — buyer side)
+ *   db   → tfs-build/ghl-db/*    (Dispo Buddy — JV partners)
+ *   acq  → tfs-build/ghl-acq/*   (Acquisitions — sellers/agents)
+ *
+ * Per brand, in order:
+ *   1. Custom-field folder (skipped — GHL API doesn't support folder creation)
+ *   2. Custom fields from <dir>/01_custom_fields.json (+ WF02 extras for tfs only)
+ *   3. Tags from <dir>/02_tags.json
+ *   4. Pipeline + stages from <dir>/03_pipeline.json
  *
  * Idempotent: every resource is GET-first, skip-if-exists. Safe to re-run.
- * Saves generated IDs to:
- *   - tfs-build/ghl/01_custom_fields_IDS.json
- *   - tfs-build/ghl/02_tags_IDS.json
- *   - tfs-build/ghl/03_pipeline_IDS.json
+ * Saves generated IDs to <dir>/01_custom_fields_IDS.json, 02_tags_IDS.json,
+ * 03_pipeline_IDS.json.
  *
  * USAGE (from repo root):
- *   node scripts/provision-ghl.js                # live run
- *   DRY_RUN=1 node scripts/provision-ghl.js      # preview only (no POSTs)
+ *   node scripts/provision-ghl.js                  # default brand=tfs
+ *   node scripts/provision-ghl.js --brand=db       # provision Dispo Buddy
+ *   node scripts/provision-ghl.js --brand=acq      # provision Acquisitions
+ *   DRY_RUN=1 node scripts/provision-ghl.js --brand=db    # preview only
  *
- * ENV (from .env):
- *   GHL_API_TOKEN      Private Integration Token (pit-...)
- *   GHL_LOCATION_ID    TFS sub-account location id
+ * ENV (from .env or shell). Brand-suffixed vars take priority; legacy fallback
+ * keeps tfs runs working without changes:
+ *   GHL_API_TOKEN_TFS / GHL_API_TOKEN  Private Integration Token (pit-...)
+ *   GHL_LOCATION_ID_TFS / GHL_LOCATION_ID  TFS sub-account location id
+ *   GHL_API_TOKEN_DB / GHL_LOCATION_ID_DB    DB sub-account
+ *   GHL_API_TOKEN_ACQ / GHL_LOCATION_ID_ACQ  ACQ sub-account
  */
 
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
+
+// ---------- args ----------
+function parseArgs() {
+  const out = { brand: 'tfs' };
+  for (const arg of process.argv.slice(2)) {
+    const m = arg.match(/^--brand=(\w+)$/);
+    if (m) out.brand = m[1].toLowerCase();
+  }
+  if (!['tfs', 'db', 'acq'].includes(out.brand)) {
+    console.error(`FATAL: --brand must be tfs|db|acq (got "${out.brand}")`);
+    process.exit(1);
+  }
+  return out;
+}
+const ARGS = parseArgs();
+const BRAND = ARGS.brand;
 
 // ---------- env ----------
 function loadEnv() {
@@ -41,14 +64,26 @@ function loadEnv() {
 }
 loadEnv();
 
-const TOKEN = process.env.GHL_API_TOKEN;
-const LOCATION_ID = process.env.GHL_LOCATION_ID;
+// brand-suffixed first, legacy second. legacy is kept so existing tfs runs
+// don't break.
+function resolveBrandEnv(baseName) {
+  const suffixed = `${baseName}_${BRAND.toUpperCase()}`;
+  return process.env[suffixed] || process.env[baseName];
+}
+
+const TOKEN = resolveBrandEnv('GHL_API_TOKEN');
+const LOCATION_ID = resolveBrandEnv('GHL_LOCATION_ID');
 const DRY_RUN = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true';
 
 if (!TOKEN || !LOCATION_ID) {
-  console.error('FATAL: GHL_API_TOKEN and GHL_LOCATION_ID must be set (via .env or shell)');
+  console.error(`FATAL: GHL_API_TOKEN_${BRAND.toUpperCase()} (or legacy GHL_API_TOKEN)`);
+  console.error(`       AND GHL_LOCATION_ID_${BRAND.toUpperCase()} (or legacy GHL_LOCATION_ID)`);
+  console.error(`       must be set via .env or shell.`);
   process.exit(1);
 }
+
+// per-brand config directory
+const CONFIG_DIR = BRAND === 'tfs' ? 'tfs-build/ghl' : `tfs-build/ghl-${BRAND}`;
 
 const BASE = 'https://services.leadconnectorhq.com';
 const HEADERS = {
@@ -92,12 +127,19 @@ async function api(method, url, body) {
 const TYPE_MAP = {
   'Text': 'TEXT',
   'Text (long)': 'LARGE_TEXT',
+  'Large text': 'LARGE_TEXT',
   'Number': 'NUMERICAL',
   'Monetary': 'MONETORY', // GHL spells it this way
   'Date': 'DATE',
+  'Date/Text': 'TEXT', // CSV uses this for free-form date strings
   'Checkbox': 'CHECKBOX',
   'Dropdown (single)': 'SINGLE_OPTIONS',
-  'Multi-select': 'MULTIPLE_OPTIONS'
+  'Select': 'TEXT', // CSV often uses Select for fields whose options aren't pinned; treat as text
+  'Multi-select': 'MULTIPLE_OPTIONS',
+  'Phone': 'PHONE',
+  'Email': 'EMAIL',
+  'URL': 'TEXT', // GHL has no dedicated URL type
+  'Text/Number': 'TEXT'
 };
 
 function mapType(t) {
@@ -163,14 +205,24 @@ async function upsertField(spec, folderId, existingByName) {
 }
 
 async function provisionFields() {
-  const folderId = await ensureFieldFolder('Buyer Profile');
+  const profileSpec = read(`${CONFIG_DIR}/01_custom_fields.json`);
+  const folderName = profileSpec.folder_name || 'Profile';
+  const folderId = await ensureFieldFolder(folderName);
 
-  console.log(`\n[2/5] Custom fields: 21 profile + 5 "latest deal" = 26 total`);
-  const profile = read('tfs-build/ghl/01_custom_fields.json').fields;
-  const wf02 = read('tfs-build/ghl/WF02_deal_match_send.json').additional_custom_fields_required_for_wf02
-    .map(f => ({ name: f.name, field_key: f.field_key, type: f.type }));
-
+  const profile = profileSpec.fields;
+  // WF02 "latest deal" extras are TFS-specific; only inject for the buyer brand.
+  let wf02 = [];
+  if (BRAND === 'tfs') {
+    const wf02Path = `${CONFIG_DIR}/WF02_deal_match_send.json`;
+    if (fs.existsSync(path.join(ROOT, wf02Path))) {
+      wf02 = read(wf02Path).additional_custom_fields_required_for_wf02
+        .map(f => ({ name: f.name, field_key: f.field_key, type: f.type }));
+    }
+  }
   const all = [...profile, ...wf02];
+
+  console.log(`\n[2/5] Custom fields: ${profile.length} profile${wf02.length ? ` + ${wf02.length} WF02 extras` : ''} = ${all.length} total`);
+
   const existing = await listExistingFields();
   const existingByName = new Map(existing.map(f => [(f.name || '').toLowerCase().trim(), f]));
 
@@ -182,12 +234,14 @@ async function provisionFields() {
 
   const out = {
     generated_at: new Date().toISOString(),
+    brand: BRAND,
     location_id: LOCATION_ID,
-    folder: { name: 'Buyer Profile', id: folderId },
+    folder: { name: folderName, id: folderId },
     fields: results
   };
-  write('tfs-build/ghl/01_custom_fields_IDS.json', out);
-  console.log(`\n  wrote tfs-build/ghl/01_custom_fields_IDS.json (${results.length} fields)`);
+  const outPath = `${CONFIG_DIR}/01_custom_fields_IDS.json`;
+  write(outPath, out);
+  console.log(`\n  wrote ${outPath} (${results.length} fields)`);
   return out;
 }
 
@@ -198,8 +252,8 @@ async function listExistingTags() {
 }
 
 async function provisionTags() {
-  console.log(`\n[3/5] Tags`);
-  const tagsSpec = read('tfs-build/ghl/02_tags.json').tags;
+  const tagsSpec = read(`${CONFIG_DIR}/02_tags.json`).tags;
+  console.log(`\n[3/5] Tags (${tagsSpec.length})`);
   const existing = await listExistingTags();
   const existingByName = new Map(existing.map(t => [(t.name || '').toLowerCase().trim(), t]));
 
@@ -224,16 +278,17 @@ async function provisionTags() {
     }
   }
 
-  const out = { generated_at: new Date().toISOString(), location_id: LOCATION_ID, tags: results };
-  write('tfs-build/ghl/02_tags_IDS.json', out);
-  console.log(`\n  wrote tfs-build/ghl/02_tags_IDS.json (${results.length} tags)`);
+  const out = { generated_at: new Date().toISOString(), brand: BRAND, location_id: LOCATION_ID, tags: results };
+  const outPath = `${CONFIG_DIR}/02_tags_IDS.json`;
+  write(outPath, out);
+  console.log(`\n  wrote ${outPath} (${results.length} tags)`);
   return out;
 }
 
 // ---------- STEP 5: pipeline ----------
 async function provisionPipeline() {
-  console.log(`\n[4/5] Pipeline: Buyer Lifecycle (12 stages)`);
-  const spec = read('tfs-build/ghl/03_pipeline.json');
+  const spec = read(`${CONFIG_DIR}/03_pipeline.json`);
+  console.log(`\n[4/5] Pipeline: ${spec.pipeline_name} (${spec.stages.length} stages)`);
 
   const list = await api('GET', `/opportunities/pipelines?locationId=${LOCATION_ID}`);
   const pipelines = list.pipelines || list.data || [];
@@ -289,18 +344,23 @@ async function provisionPipeline() {
 
   const out = {
     generated_at: new Date().toISOString(),
+    brand: BRAND,
     location_id: LOCATION_ID,
     pipeline: { name: spec.pipeline_name, id: pipelineObj.id || null },
     stages
   };
-  write('tfs-build/ghl/03_pipeline_IDS.json', out);
-  console.log(`\n  wrote tfs-build/ghl/03_pipeline_IDS.json (${stages.length} stages)`);
+  const outPath = `${CONFIG_DIR}/03_pipeline_IDS.json`;
+  write(outPath, out);
+  console.log(`\n  wrote ${outPath} (${stages.length} stages)`);
   return out;
 }
 
 // ---------- main ----------
+const BRAND_LABEL = { tfs: 'Terms For Sale', db: 'Dispo Buddy', acq: 'Acquisitions' }[BRAND];
+
 (async () => {
-  console.log(`===== GHL Provisioner — Terms For Sale =====`);
+  console.log(`===== GHL Provisioner — ${BRAND_LABEL} (--brand=${BRAND}) =====`);
+  console.log(`Config:   ${CONFIG_DIR}/`);
   console.log(`Location: ${LOCATION_ID}`);
   console.log(`Dry run:  ${DRY_RUN ? 'YES (no POSTs)' : 'no'}`);
 
@@ -310,7 +370,7 @@ async function provisionPipeline() {
     const name = loc.location && loc.location.name;
     console.log(`  ✓ auth OK — location: ${name || '(name not returned)'}`);
   } catch (e) {
-    console.error(`\nFATAL: GHL auth failed (${e.status}): ${JSON.stringify(e.body).slice(0, 240)}`);
+    console.error(`\nFATAL: GHL auth failed (${e.status || 'no-status'}): ${e.body ? JSON.stringify(e.body).slice(0, 240) : e.message}`);
     process.exit(1);
   }
 
@@ -331,11 +391,11 @@ async function provisionPipeline() {
     if (failed.length) {
       console.log(`\n  ${failed.length} item(s) FAILED:`);
       for (const f of failed) console.log(`    - ${f}`);
-      console.log(`  → check tfs-build/ghl/*_IDS.json for error details`);
+      console.log(`  → check ${CONFIG_DIR}/*_IDS.json for error details`);
       process.exit(2);
     }
 
-    console.log(`\n✓ Phase 2 (GHL foundation) complete. Commit the *_IDS.json files.`);
+    console.log(`\n✓ ${BRAND_LABEL} GHL foundation complete. Commit the ${CONFIG_DIR}/*_IDS.json files.`);
   } catch (e) {
     console.error(`\nFATAL:`, e.message);
     if (e.body) console.error('body:', JSON.stringify(e.body).slice(0, 500));

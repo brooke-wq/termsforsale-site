@@ -1,0 +1,18 @@
+pipeline_name,pipeline_id,stage_name,stage_id,written_by,notes
+Seller Lifecycle,(provisioned),New Lead,(provisioned),lead-intake.js,Auto-created when 'lead-new' tag applied; before scoring
+Seller Lifecycle,(provisioned),Triaged,(provisioned),lead-intake.js,Lead-intake completed scoring; lead-warm or lead-hot
+Seller Lifecycle,(provisioned),Underwriting,(provisioned),underwriting-poller.js,Claude underwriting in progress (uw-requested → uw-complete)
+Seller Lifecycle,(provisioned),Call Booked,(provisioned),seller-call-prep.js,Brief generated; Eddie's call scheduled
+Seller Lifecycle,(provisioned),Contract Sent,(GHL manual),partner-stage-notify.js (acq variant) or manual,Purchase agreement sent to seller
+Seller Lifecycle,(provisioned),Under Contract,(GHL manual),manual,PA executed
+Seller Lifecycle,(provisioned),Marketing Package Ready,(provisioned),deal-package-poller.js,pkg-complete - deal ready to hand to TFS / Dispo Buddy
+Seller Lifecycle,(provisioned),Funded,(GHL manual),manual,Closed at title - seller paid
+Seller Lifecycle,(provisioned),Lost,(GHL manual),manual,Dead deal - did not close
+Bird-Dog Triage,(provisioned),Submitted,(provisioned),deal-dog-poller.js,Bird-dog student submitted a lead
+Bird-Dog Triage,(provisioned),Reviewed,(provisioned),deal-dog-poller.js,Claude AI screen complete
+Bird-Dog Triage,(provisioned),Approved,(provisioned),deal-dog-poller.js,Promoted to Seller Lifecycle pipeline
+Bird-Dog Triage,(provisioned),Rejected,(provisioned),deal-dog-poller.js,Did not qualify
+Equity Exit,(provisioned),Inquiry Received,(provisioned),equity-exit-intake.js,New equity-exit form submission
+Equity Exit,(provisioned),Qualified,(provisioned),equity-exit-intake.js,Passed eligibility screen
+Equity Exit,(provisioned),Program Enrolled,(GHL manual),manual,Co-ownership program enrolled
+Equity Exit,(provisioned),Declined,(provisioned),equity-exit-intake.js,Did not qualify
