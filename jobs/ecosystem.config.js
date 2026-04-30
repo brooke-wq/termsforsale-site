@@ -71,15 +71,6 @@ module.exports = {
       max_memory_restart: '150M',
     },
     {
-      name: 'notify-buyers-poller',
-      script: './run-job.js',
-      args: 'notify-buyers',
-      cron_restart: '*/30 * * * *',
-      autorestart: false,
-      watch: false,
-      max_memory_restart: '200M',
-    },
-    {
       name: 'deal-dog-poller',
       script: './run-job.js',
       args: 'deal-dog-poller',
